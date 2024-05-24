@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2024-05-02 09:48:00.605338",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2024-05-02 09:48:00.605338",
+ "modified_by": "Administrator",
+ "module": "Selling",
+ "name": "order-list",
+ "owner": "Administrator",
+ "page_name": "order-list",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Order List"
+}
