@@ -227,3 +227,25 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+
+# custom_app/hooks.py
+doc_events = {
+    "POS Invoice": {
+        "before_insert": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_insert",
+        # "validate": "custom_app.customapp.doctype.sample.sample.custom_validate",
+        # "on_submit": "custom_app.customapp.doctype.sample.sample.custom_on_submit"
+        "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
+        "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
+        
+    }
+}
+
+# your_app/hooks.py
+jenv = {
+    'methods': [
+        'custom_format_datetime=custom_app.customapp.utils.custom_format_datetime'
+    ]
+}
+
+
+
