@@ -48,3 +48,44 @@ def set_new_custom_naming_series(doc):
     custom_invoice_series = frappe.db.get_value("POS Profile", pos_profile, "custom_naming_series")
     
     return make_autoname(custom_invoice_series)
+
+
+@frappe.whitelist()
+def export_pos_invoices(invoice_name):
+    # Retrieve the POS Invoice document
+    invoice = frappe.get_doc('POS Invoice', invoice_name)
+    
+    # Generate the text content
+    content = f"POS Invoice: {invoice.name}\n"
+    content += f"Customer: {invoice.customer}\n"
+    content += f"Date: {invoice.posting_date}\n"
+    content += f"Total: {invoice.grand_total}\n"
+    content += "\nItems:\n"
+    
+    for item in invoice.items:
+        content += f" - {item.item_name} ({item.qty} x {item.rate}): {item.amount}\n"
+    
+    return content
+
+import json
+@frappe.whitelist()
+def export_multiple_pos_invoices(invoice_names):
+    invoice_names = json.loads(invoice_names)  # Parse the JSON string into a list
+    content = ""
+    for invoice_name in invoice_names:
+        # Retrieve the POS Invoice document
+        invoice = frappe.get_doc('POS Invoice', invoice_name)
+        
+        # Append the invoice content
+        content += f"POS Invoice: {invoice.custom_invoice_series}\n"
+        content += f"Customer: {invoice.customer}\n"
+        content += f"Date: {invoice.posting_date}\n"
+        content += f"Total: {invoice.grand_total}\n"
+        content += "\nItems:\n"
+        
+        for item in invoice.items:
+            content += f" - {item.item_name} ({item.qty} x {item.rate}): {item.amount}\n"
+        
+        content += "\n---\n\n"
+
+    return content
