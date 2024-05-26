@@ -1,4 +1,4 @@
-erpnext.PointOfSale.Controller = class {
+custom_app.PointOfSale.Controller = class {
 	constructor(wrapper) {
 		this.wrapper = $(wrapper).find(".layout-main-section");
 		this.page = wrapper.page;
@@ -57,7 +57,7 @@ erpnext.PointOfSale.Controller = class {
 		});
 
 		frappe.call({
-			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_pos_profile_data",
+			method: "custom_app.customapp.page.packing_list.packing_list.get_pos_profile_data",
 			args: { pos_profile: this.pos_profile },
 			callback: (res) => {
 				const profile = res.message;
@@ -162,7 +162,7 @@ erpnext.PointOfSale.Controller = class {
 					default: selectedWarehouse, 
                     reqd: 1,
                     get_query: () => ({
-                        query: "erpnext.selling.page.order_list.order_list.warehouse_query",
+                        query: "custom_app.customapp.page.packing_list.packing_list.warehouse_query",
                         filters: { company: frappe.defaults.get_default("company") }
                     })
                 }
@@ -210,7 +210,7 @@ erpnext.PointOfSale.Controller = class {
 	
 		// Fetch Warehouses and populate the select options
 		frappe.call({
-			method: "erpnext.selling.page.order_list.order_list.warehouse_query",
+			method: "custom_app.customapp.page.packing_list.packing_list.warehouse_query",
 			args: {
 				doctype: "Warehouse",
 				txt: "",
@@ -279,7 +279,7 @@ erpnext.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				frappe.call({
-					method: "erpnext.selling.page.order_list.order_list.confirm_user_password",
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
@@ -327,7 +327,7 @@ erpnext.PointOfSale.Controller = class {
 	set_pharmacist_assist(frm) {
 		// console.log(frm.doc)
 		frappe.call({
-			method: "erpnext.selling.page.order_list.order_list.get_pharmacist_user", // Adjust path as needed
+			method: "custom_app.customapp.page.packing_list.packing_list.get_pharmacist_user", // Adjust path as needed
 			callback: (response) => {
 				if (response.message) {
 					const pharmacistUser = response.message;
@@ -355,7 +355,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	init_item_selector() {
-		this.item_selector = new erpnext.PointOfSale.ItemSelector({
+		this.item_selector = new custom_app.PointOfSale.ItemSelector({
 			wrapper: this.$components_wrapper,
 			pos_profile: this.pos_profile,
 			settings: this.settings,
@@ -363,7 +363,7 @@ erpnext.PointOfSale.Controller = class {
 				item_selected: (args) => {
 					// Fetch the warehouse from POS Profile
 					frappe.call({
-						method: 'erpnext.selling.page.order_list.order_list.get_pos_warehouse',
+						method: 'custom_app.customapp.page.packing_list.packing_list.get_pos_warehouse',
 						args: {
 							pos_profile: this.pos_profile
 						},
@@ -400,7 +400,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 	
 	init_item_cart() {
-		this.cart = new erpnext.PointOfSale.ItemCart({
+		this.cart = new custom_app.PointOfSale.ItemCart({
 			wrapper: this.$components_wrapper,
 			settings: this.settings,
 			events: {
@@ -431,7 +431,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	init_item_details() {
-		this.item_details = new erpnext.PointOfSale.ItemDetails({
+		this.item_details = new custom_app.PointOfSale.ItemDetails({
 			wrapper: this.$components_wrapper,
 			settings: this.settings,
 			events: {
@@ -501,7 +501,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	init_payments() {
-		this.payment = new erpnext.PointOfSale.Payment({
+		this.payment = new custom_app.PointOfSale.Payment({
 			wrapper: this.$components_wrapper,
 			events: {
 				get_frm: () => this.frm || {},
@@ -540,7 +540,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	init_recent_order_list() {
-		this.recent_order_list = new erpnext.PointOfSale.PastOrderList({
+		this.recent_order_list = new custom_app.PointOfSale.PastOrderList({
 			wrapper: this.$components_wrapper,
 			events: {
 				open_invoice_data: (name) => {
@@ -558,7 +558,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	init_order_summary() {
-		this.order_summary = new erpnext.PointOfSale.PastOrderSummary({
+		this.order_summary = new custom_app.PointOfSale.PastOrderSummary({
 			wrapper: this.$components_wrapper,
 			events: {
 				get_frm: () => this.frm,
