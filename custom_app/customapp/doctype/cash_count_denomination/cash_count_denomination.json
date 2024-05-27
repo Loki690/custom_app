@@ -6,7 +6,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "denomination",
+  "cash_denomination_amount",
   "currency",
   "remarks",
   "column_break_xlhf",
@@ -14,12 +14,6 @@
   "total_amount"
  ],
  "fields": [
-  {
-   "fieldname": "denomination",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Denomination"
-  },
   {
    "fieldname": "currency",
    "fieldtype": "Float",
@@ -37,7 +31,7 @@
   },
   {
    "fieldname": "quantity",
-   "fieldtype": "Float",
+   "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Quantity"
   },
@@ -46,12 +40,19 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Total Amount"
+  },
+  {
+   "fieldname": "cash_denomination_amount",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cash Denomination Amount",
+   "options": "Cash Amounts"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-05-27 09:06:18.923109",
+ "modified": "2024-05-27 11:14:00.084352",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "Cash Count Denomination",

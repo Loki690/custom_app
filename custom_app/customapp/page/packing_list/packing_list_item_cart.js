@@ -477,8 +477,8 @@ custom_app.PointOfSale.ItemCart = class {
 							if (this.value) {
 								const frm = me.events.get_frm();
 								frappe.dom.freeze();
-								frappe.model.set_value(frm.doc.doctype, frm.doc.name, "doctors_information", this.value);
-								frm.script_manager.trigger("doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
+								frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
+								frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
 									frappe.run_serially([
 										// () => me.fetch_doctors_details(this.value),
 										// () => me.update_doctors_section(),

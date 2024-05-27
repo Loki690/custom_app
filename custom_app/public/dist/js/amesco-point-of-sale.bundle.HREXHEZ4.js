@@ -1115,8 +1115,8 @@
             if (this.value) {
               const frm = me.events.get_frm();
               frappe.dom.freeze();
-              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "Doctor", this.value);
-              frm.script_manager.trigger("Doctor", frm.doc.doctype, frm.doc.name).then(() => {
+              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
+              frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
                 frappe.run_serially([
                   () => frappe.dom.unfreeze()
                 ]);
@@ -4336,4 +4336,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.4G2NWO3Z.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.HREXHEZ4.js.map

@@ -4670,8 +4670,8 @@
               if (this.value) {
                 const frm = me.events.get_frm();
                 frappe.dom.freeze();
-                frappe.model.set_value(frm.doc.doctype, frm.doc.name, "doctors_information", this.value);
-                frm.script_manager.trigger("doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
+                frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
+                frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
                   frappe.run_serially([
                     () => frappe.dom.unfreeze()
                   ]);
@@ -7747,4 +7747,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.QEIWJTDR.js.map
+//# sourceMappingURL=packing-list.bundle.KV47V4GS.js.map
