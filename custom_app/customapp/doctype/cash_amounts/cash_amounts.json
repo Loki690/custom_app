@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-27 09:02:28.903165",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "cash_amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "cash_amount",
+   "fieldtype": "Int",
+   "label": "Cash Amount"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-05-27 09:03:15.281572",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "Cash Amounts",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
