@@ -168,6 +168,7 @@ custom_app.PointOfSale.Controller = class {
 		this.prepare_dom();
 		this.prepare_components();
 		this.toggle_recent_order_list(true);
+		this.add_buttons_to_toolbar();
 		this.prepare_menu();
 		this.make_new_invoice();
 
@@ -205,21 +206,69 @@ custom_app.PointOfSale.Controller = class {
 		this.page.clear_menu();
 
 		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
-
+		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
-			__("Toggle Recent Orders"),
+			__("Pendeng Transaction (F2)"),
 			this.toggle_recent_order.bind(this),
 			false,
-			"Ctrl+O"
+			"f2"
 		);
 
-		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "Ctrl+S");
+		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
 
 		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "Shift+Ctrl+B");
 
 		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 
 	}
+
+
+	add_buttons_to_toolbar() {
+		const buttons = [
+			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
+			{label: __("Pendeng Transaction (F2)"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
+			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
+			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
+			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
+			{label: __("Close the POS"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
+		];
+	
+		// Clear existing buttons to avoid duplication
+		$('.page-actions .btn-custom').remove();
+	
+		buttons.forEach(btn => {
+			this.page.add_button(btn.label, btn.action, {shortcut: btn.shortcut}).addClass('btn-custom');
+		});
+	}
+
+
+
+
+
+
+	
+
+	cash_voucher() {
+		if (!this.$components_wrapper.is(":visible")) return;
+		let voucher = frappe.model.get_new_doc("Cash Voucher Entry");
+		// voucher.custom_pos_profile = this.frm.doc.pos_profile;
+		// voucher.user = frappe.session.user;
+		// voucher.custom_pos_opening_entry_id = this.pos_opening;
+		frappe.set_route("Form", "Cash Voucher Entry", voucher.name);
+	}
+
+	add_new_order() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),
+			() => this.frm.call("reset_mode_of_payments"),
+			() => this.make_new_invoice(),
+			() => this.cart.load_invoice(),
+			() => this.item_selector.toggle_component(true),
+			() => frappe.dom.unfreeze(),
+			() => this.toggle_recent_order_list(false)
+		]);
+	}
+
 
 	open_form_view() {
 		frappe.model.sync(this.frm.doc);
