@@ -36,17 +36,18 @@ def before_save(doc, method):
     if not doc.name:
         doc.name = make_autoname(doc.naming_series)
     # Set the barcode to the document name
-    doc.barcode = doc.name
+    # doc.barcode = doc.name
+    doc.custom_barcode = doc.name
 
 
 def before_submit(doc, method):
     doc.custom_invoice_series = set_new_custom_naming_series(doc)
+    doc.is_printed = '1'
     
 def set_new_custom_naming_series(doc):
      # Retrieve the custom naming series for the POS Profile
     pos_profile = doc.pos_profile
     custom_invoice_series = frappe.db.get_value("POS Profile", pos_profile, "custom_naming_series")
-    
     return make_autoname(custom_invoice_series)
 
 
