@@ -170,7 +170,7 @@ custom_app.PointOfSale.Payment = class {
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
 
 				me.selected_mode = me[`${mode}_control`];
-				me.selected_mode && me.selected_mode.$input.get(1).focus();
+				me.selected_mode && me.selected_mode.$input.get(1).focus(1);
 				me.auto_set_remaining_amount();
 			}
 		});
@@ -449,6 +449,8 @@ custom_app.PointOfSale.Payment = class {
 		payments.forEach((p) => {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 			const me = this;
+			const bankname = p.custom_bank_name;
+
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
 					label: p.mode_of_payment,
@@ -470,10 +472,14 @@ custom_app.PointOfSale.Payment = class {
 				render_input: true,
 			});
 
-			if (mode === "credit_card" || mode === 'debit_card') {
+			if (p.mode_of_payment === "Credit Card" || p.mode_of_payment  === "Debit Cart" || p.mode_of_payment  === "Card" ) {
 
-				// Create control for bank_name
-				this[`bank_name_control_${mode}`] = frappe.ui.form.make_control({
+
+
+				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+
+				// Create the bank_name_control with the existing value if it exists
+				let bank_name_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Bank',
 						fieldtype: "Data",
@@ -486,8 +492,16 @@ custom_app.PointOfSale.Payment = class {
 					render_input: true,
 				});
 
-				// Create control for name_on_card
-				this[`name_on_card_control_${mode}`] = frappe.ui.form.make_control({
+				// Set the existing value and refresh the control
+				bank_name_control.set_value(existing_custom_bank_name || '');
+				bank_name_control.refresh();
+
+
+
+				let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
+
+
+				let name_on_card_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Name on Card',
 						fieldtype: "Data",
@@ -500,8 +514,16 @@ custom_app.PointOfSale.Payment = class {
 					render_input: true,
 				});
 
+				// Set the existing value and refresh the control
+				name_on_card_control.set_value(existing_custom_card_name || '');
+				name_on_card_control.refresh();
+
+
+
+				let existing_custom_card_type= frappe.model.get_value(p.doctype, p.name, "custom_card_type");
+
 				// Card Type Control
-				this[`card_type_control_${mode}`] = frappe.ui.form.make_control({
+				let card_type_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Card Type',
 						fieldtype: "Select",
@@ -534,26 +556,37 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.card_type_control`),
 					render_input: true,
 				});
+				card_type_control.set_value(existing_custom_card_type || '');
+				card_type_control.refresh();
 
-				this[`card_name_control_${mode}`] = frappe.ui.form.make_control({
+
+				let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
+
+				let card_number_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Card Number',
 						fieldtype: "Data",
 						placeholder: 'Last 4 digits',
 						onchange: function () {
 							const value = this.value;
-							if (validateLastFourDigits(value)) {
+							if (value === '') {
+								frappe.model.set_value(p.doctype, p.name, "custom_card_number", '');
+							} else if (validateLastFourDigits(value)) {
 								frappe.model.set_value(p.doctype, p.name, "custom_card_number", value);
 							} else {
 								frappe.msgprint(__('Card number must be exactly 4 digits.'));
-								frappe.model.set_value(p.doctype, p.name, "custom_card_number", '');
-								this.value = '';
+								this.set_value('');
 							}
 						},
+						maxlength: 4
 					},
 					parent: this.$payment_modes.find(`.${mode}.card-number`),
 					render_input: true,
+					default: existing_custom_card_number || ''
 				});
+
+				card_number_control.set_value(existing_custom_card_number || '');
+				card_number_control.refresh();
 
 				function validateLastFourDigits(value) {
 					const regex = /^\d{4}$/;
@@ -561,7 +594,9 @@ custom_app.PointOfSale.Payment = class {
 				}
 
 
-				this[`expiry_date_control_${mode}`] = frappe.ui.form.make_control({
+				let existing_custom_card_expiration_date= frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
+
+				let expiry_date_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Card Expiration Date',
 						fieldtype: "Data",
@@ -572,9 +607,18 @@ custom_app.PointOfSale.Payment = class {
 					},
 					parent: this.$payment_modes.find(`.${mode}.expiry-date`),
 					render_input: true,
+					default: p.custom_card_expiration_date || ''
 				});
+				expiry_date_control.set_value(existing_custom_card_expiration_date || '');
+				expiry_date_control.refresh();
 
-				this[`reference_number_control_${mode}`] = frappe.ui.form.make_control({
+
+
+
+				let existing_reference_no= frappe.model.get_value(p.doctype, p.name, "reference_no");
+
+
+				let reference_no_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Reference No',
 						fieldtype: "Data",
@@ -586,13 +630,17 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.reference-number`),
 					render_input: true,
 				});
+				reference_no_control.set_value(existing_reference_no || '');
+				reference_no_control.refresh();
 
 			}
 
-			if (mode === "gcash" || mode === 'paymaya') {
+			if (p.mode_of_payment  === "GCash" || p.mode_of_payment  === 'PayMaya') {
 
-				// Create control for bank_name
-				this[`phone_number_control_${mode}`] = frappe.ui.form.make_control({
+
+				let existing_custom_phone_number = frappe.model.get_value(p.doctype, p.name, "custom_phone_number");
+
+				let phone_number_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Number',
 						fieldtype: "Data",
@@ -604,8 +652,14 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.mobile-number`),
 					render_input: true,
 				});
+				phone_number_control.set_value(existing_custom_phone_number || '');
+				phone_number_control.refresh();
 
-				this[`reference_number_control_${mode}`] = frappe.ui.form.make_control({
+
+
+				let existing_custom_epayment_reference_number= frappe.model.get_value(p.doctype, p.name, "reference_no");
+
+				let epayment_reference_number_controller= frappe.ui.form.make_control({
 					df: {
 						label: 'Reference No',
 						fieldtype: "Data",
@@ -616,11 +670,18 @@ custom_app.PointOfSale.Payment = class {
 					},
 					parent: this.$payment_modes.find(`.${mode}.reference-number`),
 					render_input: true,
+					default: p.reference_no || ''
 				});
+
+				epayment_reference_number_controller.set_value(existing_custom_epayment_reference_number || '');
+				epayment_reference_number_controller.refresh();
 			}
 
-			if (mode === "cheque") {
-				this[`reference_number_control_${mode}`] = frappe.ui.form.make_control({
+
+
+			if (p.mode_of_payment === "Cheque") {
+				let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
+				let reference_number_controller = frappe.ui.form.make_control({
 					df: {
 						label: "Reference Number",
 						fieldtype: "Data",
@@ -631,10 +692,19 @@ custom_app.PointOfSale.Payment = class {
 					},
 					parent: this.$payment_modes.find(`.${mode}.reference-number`),
 					render_input: true,
+					default: p.reference_no || ''
 				});
+
+
+				reference_number_controller.set_value(existing_reference_no || '');
+				reference_number_controller.refresh();
 			}
+
 			this[`${mode}_control`].toggle_label(false);
 			this[`${mode}_control`].set_value(p.amount);
+		
+
+
 		});
 
 		this.render_loyalty_points_payment_mode();
