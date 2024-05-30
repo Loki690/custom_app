@@ -4453,39 +4453,8 @@
           this.show_discount_control();
       });
       this.$totals_section.on("click", ".edit-cart-btn", () => {
-        const passwordDialog = new frappe.ui.Dialog({
-          title: __("Enter OIC Account"),
-          fields: [
-            {
-              fieldname: "password",
-              fieldtype: "Password",
-              label: __("Password"),
-              reqd: 1
-            }
-          ],
-          primary_action_label: __("Edit Order"),
-          primary_action: (values) => {
-            let password = values.password;
-            let role = "oic";
-            frappe.call({
-              method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
-              args: { password, role },
-              callback: (r) => {
-                if (r.message) {
-                  this.events.edit_cart();
-                  this.toggle_checkout_btn(true);
-                  passwordDialog.hide();
-                } else {
-                  frappe.show_alert({
-                    message: __("Incorrect password or user is not an OIC"),
-                    indicator: "red"
-                  });
-                }
-              }
-            });
-          }
-        });
-        passwordDialog.show();
+        this.events.edit_cart();
+        this.toggle_checkout_btn(true);
       });
       this.$component.on("click", ".add-discount-wrapper", () => {
         if (!this.is_oic_authenticated) {
@@ -5805,7 +5774,6 @@
     }
     init_component() {
       this.prepare_dom();
-      this.initialize_numpad();
       this.bind_events();
       this.attach_shortcuts();
     }
@@ -7824,4 +7792,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.3QYZQLOF.js.map
+//# sourceMappingURL=packing-list.bundle.ZTQG6KAP.js.map

@@ -28,8 +28,8 @@ custom_app.PointOfSale.ItemSelector = class {
 			`<section class="items-selector">
 				<div class="filter-section">
 					<div class="label">${__("All Items")}</div>
-					<div class="search-field"></div>
 					<div class="item-group-field"></div>
+					<div class="search-field"></div>
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">

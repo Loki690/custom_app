@@ -8,7 +8,7 @@ custom_app.PointOfSale.Payment = class {
 
 	init_component() {
 		this.prepare_dom();
-		this.initialize_numpad();
+		// this.initialize_numpad();
 		this.bind_events();
 		this.attach_shortcuts();
 	}
@@ -28,7 +28,7 @@ custom_app.PointOfSale.Payment = class {
 				<div class="totals-section">
 					<div class="totals"></div>
 				</div>
-				<div class="submit-order-btn">${__("Complete Order")}</div>
+				<div class="submit-order-btn">${__("Print Order List")}</div>
 			</section>`
 		);
 		this.$component = this.wrapper.find(".payment-container");
@@ -127,6 +127,7 @@ custom_app.PointOfSale.Payment = class {
 
 		
 		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
+
 			const mode_clicked = $(this);
 			// if clicked element doesn't have .mode-of-payment class then return
 			if (!$(e.target).is(mode_clicked)) return;
@@ -179,7 +180,10 @@ custom_app.PointOfSale.Payment = class {
 				me.auto_set_remaining_amount();
 			}
 		});
+
+	
 		
+
 		frappe.ui.form.on("POS Invoice", "contact_mobile", (frm) => {
 			const contact = frm.doc.contact_mobile;
 			const request_button = $(this.request_for_payment_field?.$input[0]);

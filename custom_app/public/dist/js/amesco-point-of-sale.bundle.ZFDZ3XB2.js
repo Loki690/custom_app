@@ -399,8 +399,8 @@
         `<section class="items-selector">
 				<div class="filter-section">
 					<div class="label">${__("All Items")}</div>
-					<div class="search-field"></div>
 					<div class="item-group-field"></div>
+					<div class="search-field"></div>
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">
@@ -831,7 +831,7 @@
           ["", "", "", "Remove"]
         ],
         css_classes: [
-          ["", "", "", "col-span-2"],
+          ["", "", "", "col-span-2 remove-btn"],
           ["", "", "", "col-span-2"],
           ["", "", "", "col-span-2"],
           ["", "", "", "col-span-2 remove-btn"]
@@ -1095,7 +1095,8 @@
     }
     make_doctor_selector() {
       this.$doctor_section.html(`
-			<div class="doctor-field"></div>
+			<div class="doctor-field">
+			</div>
 		`);
       const me = this;
       const allowed_doctor_group = this.allowed_doctor_groups || [];
@@ -4410,4 +4411,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.WIIZ43BT.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.ZFDZ3XB2.js.map

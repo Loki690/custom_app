@@ -166,11 +166,12 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".expiry-date").css("display", "flex");
 				mode_clicked.find(".confirmation-code").css("display", "flex");
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
-				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
+				me.$payment_modes.find(`.${mode}-amount`).css("display", "inline");
+				me.selected_mode.find( `.${mode}_control`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
 
 				me.selected_mode = me[`${mode}_control`];
-				me.selected_mode && me.selected_mode.$input.get(1).focus(1);
+				me.selected_mode && me.selected_mode.$input.get(2).focus();
 				me.auto_set_remaining_amount();
 			}
 		});

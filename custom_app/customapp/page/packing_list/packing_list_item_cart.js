@@ -35,12 +35,17 @@ custom_app.PointOfSale.ItemCart = class {
 		this.make_customer_selector();
 	}
 
-	init_doctors_selector() {
-		this.$component.append(`<div class="doctors-section"></div>`);
-		this.$doctors_section = this.$component.find(".doctors-section");
-		this.make_doctors_selector();
-		// console.log('init doctors section')
-	}
+	init_doctor_selector() {
+        this.$component.append(<div class="doctor-section" style="display: flex;
+        flex-direction: column;
+        padding: var(--padding-md) var(--padding-lg);
+        overflow: visible; background-color: var(--fg-color);
+        box-shadow: var(--shadow-base);
+        border-radius: var(--border-radius-md);
+      }; margin-top: 1em;"></div>);
+        this.$doctor_section = this.$component.find(".doctor-section");
+        this.make_doctor_selector();
+    }
 
 	reset_customer_selector() {
 		const frm = this.events.get_frm();
@@ -196,6 +201,8 @@ custom_app.PointOfSale.ItemCart = class {
             this.numpad_value = "";
         });
 
+
+
 		this.$component.on("click", ".checkout-btn", async function () {
 			if ($(this).attr("style").indexOf("--blue-500") == -1) return;
 
@@ -217,44 +224,8 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$totals_section.on("click", ".edit-cart-btn", () => {
-			// Show password dialog for OIC authentication
-			const passwordDialog = new frappe.ui.Dialog({
-				title: __('Enter OIC Account'),
-				fields: [
-					{
-						fieldname: 'password',
-						fieldtype: 'Password',
-						label: __('Password'),
-						reqd: 1
-					}
-				],
-				primary_action_label: __('Edit Order'),
-				primary_action: (values) => {
-					let password = values.password;
-					let role = "oic";
-		
-					frappe.call({
-						method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
-						args: { password: password, role: role },
-						callback: (r) => {
-							if (r.message) {
-								// OIC authentication successful, proceed with editing the cart
-								this.events.edit_cart();
-								this.toggle_checkout_btn(true);
-								passwordDialog.hide();
-							} else {
-								// Show alert for incorrect password or unauthorized user
-								frappe.show_alert({
-									message: __('Incorrect password or user is not an OIC'),
-									indicator: 'red'
-								});
-							}
-						}
-					});
-				}
-			});
-		
-			passwordDialog.show();
+			this.events.edit_cart();
+			this.toggle_checkout_btn(true);			
 		});
 		
 		this.$component.on("click", ".add-discount-wrapper", () => {
@@ -452,49 +423,46 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 		this.customer_field.toggle_label(true);
 	}
-
-	make_doctors_selector() {
-
-		this.$doctors_section.html(
-			`
-			<div class="doctors-field"></div>
-			`
-		)
-		const me = this;
-
-		// console.log(me.events)
-		this.doctors_field
-
-			= frappe.ui.form.make_control(
-				{
-					df: {
-						label: `Doctor's Information`,
-						fieldtype: "Link",
-						options: "Doctor",
-						placeholder: `Select Doctor`,
-						onchange: function () {
-
-							if (this.value) {
-								const frm = me.events.get_frm();
-								frappe.dom.freeze();
-								frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
-								frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
-									frappe.run_serially([
-										// () => me.fetch_doctors_details(this.value),
-										// () => me.update_doctors_section(),
-										() => frappe.dom.unfreeze(),
-									]);
-								})
-							}
-						},
-
-					},
-					parent: this.$doctors_section.find(".doctors-field"),
-					render_input: true,
-				}
-			)
-		this.doctors_field.toggle_label(true)
-	}
+	make_doctor_selector() {
+        this.$doctor_section.html(
+            <div class="doctor-field"></div>
+        );
+        const me = this;
+        const allowed_doctor_group = this.allowed_doctor_groups || [];
+        let filters = {};
+        if (allowed_doctor_group.length) {
+            filters = {
+                doctor_group: ["in", allowed_doctor_group],
+            };
+		}
+        this.doctor_field = frappe.ui.form.make_control({
+            df: {
+                label: ("Doctor"),
+                fieldtype: "Link",
+                options: "Doctor",
+                placeholder: ("Doctor"),
+                onchange: function () {
+                    if (this.value) {
+                        const frm = me.events.get_frm();
+                        frappe.dom.freeze();
+                        frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
+                        frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
+                            frappe.run_serially([
+                                // () => me.fetch_customer_details(this.value),
+                                // () => me.events.customer_details_updated(me.customer_info),
+                                // () => me.update_customer_section(),
+                                // () => me.update_totals_section(),
+                                () => frappe.dom.unfreeze(),
+                            ]);
+                        });
+                    }
+                },
+            },
+            parent: this.$doctor_section.find(".doctor-field"),
+            render_input: true,
+        });
+        this.doctor_field.toggle_label(false);
+    }
 
 	fetch_customer_details(customer) {
 		if (customer) {

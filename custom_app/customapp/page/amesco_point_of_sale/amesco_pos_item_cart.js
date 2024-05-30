@@ -150,7 +150,7 @@ custom_app.PointOfSale.ItemCart = class {
 				[  "", "", "", "Remove"],
 			],
 			css_classes: [
-				["", "", "", "col-span-2"],
+				["", "", "", "col-span-2 remove-btn"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2 remove-btn"],
@@ -200,7 +200,6 @@ custom_app.PointOfSale.ItemCart = class {
 
 		this.$doctor_section.on("click", ".doctor-display", function (e) {
 			if ($(e.target).closest(".reset-doctor-btn").length) return;
-
 			const show = me.$cart_container.is(":visible");
 			me.toggle_doctor_info(show);
 		});
@@ -464,7 +463,8 @@ custom_app.PointOfSale.ItemCart = class {
 
 	make_doctor_selector() {
 		this.$doctor_section.html(`
-			<div class="doctor-field"></div>
+			<div class="doctor-field">
+			</div>
 		`);
 		const me = this;
 		const allowed_doctor_group = this.allowed_doctor_groups || [];
