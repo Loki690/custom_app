@@ -331,8 +331,8 @@ def serial_number():
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, limit=20): #added filter per pos profile and custom_pl_series
-	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile", "custom_pl_series"]
+def get_past_order_list(search_term, status, pos_profile, limit=20):
+	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
 	if search_term and status:
@@ -340,6 +340,7 @@ def get_past_order_list(search_term, status, pos_profile, limit=20): #added filt
 			"POS Invoice",
 			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
 			fields=fields,
+			order_by="posting_time asc", 
 			page_length=limit,
 		)
 		invoices_by_name = frappe.db.get_all(
@@ -352,9 +353,9 @@ def get_past_order_list(search_term, status, pos_profile, limit=20): #added filt
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, page_length=limit
+			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
-
+		
 	return invoice_list
 
 

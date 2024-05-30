@@ -23,6 +23,10 @@ custom_app.PointOfSale.Controller = class {
 		});
 	}
 
+
+	// Example JavaScript code to make the API call
+
+
 	create_opening_voucher() {
 		const me = this;
 		const table_fields = [
@@ -208,7 +212,7 @@ custom_app.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
-			__("Pendeng Transaction (F2)"),
+			__("Pending Transaction (F2)"),
 			this.toggle_recent_order.bind(this),
 			false,
 			"f2"
@@ -216,7 +220,9 @@ custom_app.PointOfSale.Controller = class {
 
 		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
 
-		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "Shift+Ctrl+B");
+		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
+
+		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
 
 		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 
@@ -226,7 +232,7 @@ custom_app.PointOfSale.Controller = class {
 	add_buttons_to_toolbar() {
 		const buttons = [
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
-			{label: __("Pendeng Transaction (F2)"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
+			{label: __("Pending Transaction (F2)"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
@@ -247,7 +253,7 @@ custom_app.PointOfSale.Controller = class {
 
 
 	
-
+	//Cash Voucher
 	cash_voucher() {
 		if (!this.$components_wrapper.is(":visible")) return;
 		let voucher = frappe.model.get_new_doc("Cash Voucher Entry");
@@ -255,6 +261,14 @@ custom_app.PointOfSale.Controller = class {
 		// voucher.user = frappe.session.user;
 		// voucher.custom_pos_opening_entry_id = this.pos_opening;
 		frappe.set_route("Form", "Cash Voucher Entry", voucher.name);
+	}
+	
+
+	//Check Encashment
+	check_encashment() {
+		if (!this.$components_wrapper.is(":visible")) return;
+		let voucher = frappe.model.get_new_doc("Check Encashment Entry")
+		frappe.set_route("Form", "Check Encashment Entry", voucher.name)
 	}
 
 	add_new_order() {
