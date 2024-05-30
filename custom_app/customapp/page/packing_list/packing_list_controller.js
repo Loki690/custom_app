@@ -408,7 +408,7 @@ custom_app.PointOfSale.Controller = class {
 
 				cart_item_clicked: (item, frm) => {
 
-					console.log(frm)
+					// console.log(frm)
 
 					const item_row = this.get_item_from_frm(item);
 					this.item_details.toggle_item_details_section(item_row);
@@ -695,12 +695,15 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	async on_cart_update(args) {
+		console.log(args)
 		frappe.dom.freeze();
 		let item_row = undefined;
 		try {
 			let { field, value, item } = args;
 			item_row = this.get_item_from_frm(item);
 			const item_row_exists = !$.isEmptyObject(item_row);
+
+			
 
 			const from_selector = field === "qty" && value === "+1";
 			if (from_selector) value = flt(item_row.stock_qty) + flt(value);
@@ -774,6 +777,7 @@ custom_app.PointOfSale.Controller = class {
 		let item_row = null;
 		if (name) {
 			item_row = this.frm.doc.items.find((i) => i.name == name);
+			console.log(item_code)
 		} else {
 			// if item is clicked twice from item selector
 			// then "item_code, batch_no, uom, rate" will help in getting the exact item

@@ -4,13 +4,17 @@
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2024-05-23 17:34:03.041451",
+ "modified": "2024-05-27 17:14:40.078849",
  "modified_by": "Administrator",
- "module": "Customapp",
+ "module": "customapp",
  "name": "packing-list",
  "owner": "Administrator",
  "page_name": "packing-list",
- "roles": [],
+ "roles": [
+  {
+   "role": "Pharmacist Assistant"
+  }
+ ],
  "script": null,
  "standard": "Yes",
  "style": null,

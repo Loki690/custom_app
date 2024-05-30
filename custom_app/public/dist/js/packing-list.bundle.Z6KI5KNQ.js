@@ -4052,7 +4052,7 @@
 				<td class="item-code">${item_code}</td> 
 				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-				<td class="item-uom"> ${uom} / count per uom </td>
+				<td class="item-uom"> ${uom} </td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
 			</tr>`;
     }
@@ -4329,7 +4329,7 @@
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
-						<div class="rate-amount-header">${__("Amount")}</div>
+						<div class="rate-amount-header">${__("Price")}</div>
 					</div>
 					<div class="cart-items-section"></div>
 					<div class="cart-totals-section"></div>
@@ -4369,13 +4369,16 @@
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
 			</div>
+			<div class="vatable-sales-container mt-2"></div>
+			<div class="vat-exempt-container"></div>
+			<div class="zero-rated-container"></div>
 			<div class="net-total-container">
-				<div class="net-total-label">${__("Net Total")}</div>
+				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
 			<div class="taxes-container"></div>
 			<div class="grand-total-container">
-				<div>${__("Grand Total")}</div>
+				<div>${__("Total")}</div>
 				<div>0.00</div>
 			</div>
 			<div class="checkout-btn">${__("Order")}</div>
@@ -4610,7 +4613,6 @@
       this.$customer_section.html(`
 			<div class="customer-field"></div>
 		`);
-      console.log(this.$customer_section);
       const me = this;
       const allowed_customer_group = this.allowed_customer_groups || [];
       let filters = {};
@@ -4724,7 +4726,6 @@
         return new Promise((resolve) => {
           frappe.db.get_value("Doctor", doctor, ["first_name", "last_name", "prc_number"]).then(({ message }) => {
             this.doctors_info = __spreadProps(__spreadValues({}, message), { doctor });
-            console.log(this.doctors_info);
             resolve();
           });
         });
@@ -4870,6 +4871,9 @@
     update_totals_section(frm) {
       if (!frm)
         frm = this.events.get_frm();
+      this.render_vatable_sales(frm.doc.custom_vatable_sales);
+      this.render_vat_exempt_sales(frm.doc.custom_vatexempt_sales);
+      this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
       this.render_net_total(frm.doc.net_total);
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
@@ -4878,21 +4882,33 @@
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".net-total-container").html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".net-total-container").html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
+    }
+    render_vatable_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".vatable-sales-container").html(`<div>${__("VATable Sales")}: ${format_currency(value, currency)}</div>`);
+    }
+    render_vat_exempt_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".vat-exempt-container").html(`<div>${__("VAT-Exempt Sales")}: ${format_currency(value, currency)}</div>`);
+    }
+    render_zero_rated_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".zero-rated-container").html(`<div>${__("Zero Rated Sales")}: ${format_currency(value, currency)}</div>`);
     }
     render_total_item_qty(items) {
       var total_item_qty = 0;
       items.map((item) => {
         total_item_qty = total_item_qty + item.qty;
       });
-      this.$totals_section.find(".item-qty-total-container").html(`<div>${__("Total Quantitydddddddd")}</div><div>${total_item_qty}</div>`);
-      this.$numpad_section.find(".numpad-item-qty-total").html(`<div>${__("Total Quantityddd")}: <span>${total_item_qty}</span></div>`);
+      this.$totals_section.find(".item-qty-total-container").html(`<div>${__("Total Quantity")}</div><div>${total_item_qty}</div>`);
+      this.$numpad_section.find(".numpad-item-qty-total").html(`<div>${__("Total Quantity")}: <span>${total_item_qty}</span></div>`);
     }
     render_grand_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".grand-total-container").html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".grand-total-container").html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
     }
     render_taxes(taxes) {
       if (taxes && taxes.length) {
@@ -4931,7 +4947,26 @@
       this.highlight_checkout_btn(no_of_cart_items > 0);
       this.update_empty_cart_section(no_of_cart_items);
     }
+    updateItemRate(item_data, frm) {
+      console.log("use", item_data.item_name);
+      console.log("doc", frm.doc);
+      frappe.call({
+        method: "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.update_price_list_rate",
+        args: {
+          item: item_data,
+          doc: frm.doc
+        },
+        callback: function(response) {
+          if (response.message) {
+            frappe.model.set_value(frm.doc.doctype, item_data.item_name, "price_list_rate", response.message.toFixed(2));
+            frm.refresh_field("items");
+          }
+        }
+      });
+    }
     render_cart_item(item_data, $item_to_update) {
+      const doc = this.events.get_frm();
+      this.updateItemRate(item_data, doc);
       const currency = this.events.get_frm().doc.currency;
       const me = this;
       if (!$item_to_update.length) {
@@ -5440,7 +5475,7 @@
       }
     }
     render_dom(item) {
-      let { item_name, description, image, price_list_rate } = item;
+      let { item_name, description, image, price_list_rate, amount } = item;
       function get_description_html() {
         if (description) {
           description = description.indexOf("...") === -1 && description.length > 140 ? description.substr(0, 139) + "..." : description;
@@ -5450,7 +5485,7 @@
       }
       this.$item_name.html(item_name);
       this.$item_description.html(get_description_html());
-      this.$item_price.html(format_currency(price_list_rate, this.currency));
+      this.$item_price.html(format_currency(amount, this.currency));
       if (!this.hide_images && image) {
         this.$item_image.html(
           `<img
@@ -5470,10 +5505,10 @@
     render_discount_dom(item) {
       if (item.discount_percentage) {
         this.$dicount_section.html(
-          `<div class="item-rate">${format_currency(item.price_list_rate, this.currency)}</div>
+          `<div class="item-rate">${format_currency(item.amount, this.currency)}</div>
 				<div class="item-discount">${item.discount_percentage}% off</div>`
         );
-        this.$item_price.html(format_currency(item.rate, this.currency));
+        this.$item_price.html(format_currency(item.amount, this.currency));
       } else {
         this.$dicount_section.html(``);
       }
@@ -5564,6 +5599,8 @@
         "conversion_factor",
         "discount_percentage",
         "discount_amount",
+        "custom_vat",
+        "custom_no_vat",
         "custom_free"
       ];
       if (item.has_serial_no)
@@ -7310,7 +7347,6 @@
         events: {
           get_frm: () => this.frm,
           cart_item_clicked: (item, frm) => {
-            console.log(frm);
             const item_row = this.get_item_from_frm(item);
             this.item_details.toggle_item_details_section(item_row);
           },
@@ -7552,6 +7588,7 @@
       this.page.set_indicator(this.pos_profile, "blue");
     }
     async on_cart_update(args) {
+      console.log(args);
       frappe.dom.freeze();
       let item_row = void 0;
       try {
@@ -7617,6 +7654,7 @@
       let item_row = null;
       if (name) {
         item_row = this.frm.doc.items.find((i) => i.name == name);
+        console.log(item_code);
       } else {
         const has_batch_no = batch_no !== "null" && batch_no !== null;
         item_row = this.frm.doc.items.find(
@@ -7747,4 +7785,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.KV47V4GS.js.map
+//# sourceMappingURL=packing-list.bundle.Z6KI5KNQ.js.map

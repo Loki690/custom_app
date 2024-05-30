@@ -90,3 +90,48 @@ def export_multiple_pos_invoices(invoice_names):
         content += "\n---\n\n"
 
     return content
+
+@frappe.whitelist()
+def get_item_vat_exempt(item_code):
+    try:
+        item = frappe.get_doc("Item", item_code)
+        is_vat_exempt = item.get("custom_is_vatexempt", False)
+        return is_vat_exempt
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"Error in get_item_vat_exempt: {e}")
+        return False
+    
+
+# Server script to update price_list_rate
+import frappe
+
+@frappe.whitelist()
+def update_price_list_rate(item, doc):
+    item = frappe.parse_json(item)
+    doc = frappe.parse_json(doc)
+
+    # Retrieve the tax rate
+    tax_rate = 0
+    if doc.get('taxes') and len(doc['taxes']) > 0:
+        tax_rate = doc['taxes'][0].get('rate', 0) / 100
+    
+    vat_rate = tax_rate
+
+    # Base price without VAT
+    price_without_vat = item['price_list_rate'] / (1 + vat_rate)
+
+    return price_without_vat
+
+
+
+ # # Calculate the discounted price
+    # if item.get('discount_percentage'):
+    #     discounted_price_without_vat = price_without_vat * (1 - (item['discount_percentage'] / 100))
+    # elif item.get('discount_amount'):
+    #     discounted_price_without_vat = price_without_vat - item['discount_amount']
+    # else:
+    #     discounted_price_without_vat = price_without_vat
+
+    # # Calculate final price with original VAT applied on the discounted price without VAT
+    # final_price_with_vat = discounted_price_without_vat * (1 + vat_rate)
+    

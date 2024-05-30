@@ -237,15 +237,17 @@ doc_events = {
         "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
+    },
+    "Warehouse": {
+       "before_insert": "custom_app.customapp.doctype.warehouse_custom.warehouse_custom.before_insert",
     }
 }
 
-# your_app/hooks.py
-jenv = {
-    'methods': [
-        'custom_format_datetime=custom_app.customapp.utils.custom_format_datetime'
-    ]
-}
+# jenv = {
+#     'methods': [
+#         'custom_format_datetime=custom_app.customapp.utils.custom_format_datetime'
+#     ]
+# }
 
 
 

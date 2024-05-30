@@ -115,7 +115,8 @@ custom_app.PointOfSale.ItemDetails = class {
 	}
 
 	render_dom(item) {
-		let { item_name, description, image, price_list_rate } = item;
+		//console.log(item)
+		let { item_name, description, image, price_list_rate, amount } = item;
 
 		function get_description_html() {
 			if (description) {
@@ -130,7 +131,7 @@ custom_app.PointOfSale.ItemDetails = class {
 
 		this.$item_name.html(item_name);
 		this.$item_description.html(get_description_html());
-		this.$item_price.html(format_currency(price_list_rate, this.currency));
+		this.$item_price.html(format_currency(amount, this.currency));
 		if (!this.hide_images && image) {
 			this.$item_image.html(
 				`<img
@@ -152,10 +153,10 @@ custom_app.PointOfSale.ItemDetails = class {
 	render_discount_dom(item) {
 		if (item.discount_percentage) {
 			this.$dicount_section.html(
-				`<div class="item-rate">${format_currency(item.price_list_rate, this.currency)}</div>
+				`<div class="item-rate">${format_currency(item.amount, this.currency)}</div>
 				<div class="item-discount">${item.discount_percentage}% off</div>`
 			);
-			this.$item_price.html(format_currency(item.rate, this.currency));
+			this.$item_price.html(format_currency(item.amount, this.currency));
 		} else {
 			this.$dicount_section.html(``);
 		}
@@ -278,7 +279,15 @@ custom_app.PointOfSale.ItemDetails = class {
 			//"actual_qty",
 			//"price_list_rate",
 			// "is_free_item",
-			"custom_free"
+			// "custom_is_vatable",
+			// "custom_is_vatexempt"
+			"custom_vat",
+			//"custom_vatable",
+			"custom_no_vat",
+			"custom_free",
+			// 'custom_is_vatable',
+			// 'custom_is_vatable_pos',
+			// 'custom_is_vatexempt' 
 		];
 		if (item.has_serial_no) fields.push("serial_no");
 		if (item.has_batch_no) fields.push("batch_no");

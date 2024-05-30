@@ -4,13 +4,17 @@
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2024-05-25 17:29:07.199006",
+ "modified": "2024-05-27 17:14:29.034669",
  "modified_by": "Administrator",
- "module": "Customapp",
+ "module": "customapp",
  "name": "amesco-point-of-sale",
  "owner": "Administrator",
  "page_name": "amesco-point-of-sale",
- "roles": [],
+ "roles": [
+  {
+   "role": "Cashier"
+  }
+ ],
  "script": null,
  "standard": "Yes",
  "style": null,
