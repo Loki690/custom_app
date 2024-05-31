@@ -357,12 +357,20 @@ def set_customer_info(fieldname, customer, value=""):
 		frappe.db.set_value("Customer", customer, "customer_primary_contact", contact)
 
 	contact_doc = frappe.get_doc("Contact", contact)
+
 	if fieldname == "email_id":
 		contact_doc.set("email_ids", [{"email_id": value, "is_primary": 1}])
 		frappe.db.set_value("Customer", customer, "email_id", value)
 	elif fieldname == "mobile_no":
 		contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
 		frappe.db.set_value("Customer", customer, "mobile_no", value)
+	elif fieldname == "custom_oscapwdid":
+		contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
+		frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
+	elif fieldname == "custom_transaction_type":
+		contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
+		frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
+
 	contact_doc.save()
 
 

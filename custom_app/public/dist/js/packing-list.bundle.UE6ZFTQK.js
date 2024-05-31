@@ -4688,7 +4688,7 @@
     fetch_customer_details(customer) {
       if (customer) {
         return new Promise((resolve) => {
-          frappe.db.get_value("Customer", customer, ["email_id", "mobile_no", "image", "loyalty_program"]).then(({ message }) => {
+          frappe.db.get_value("Customer", customer, ["email_id", "mobile_no", "custom_oscapwdid", "custom_transaction_type", "image", "loyalty_program"]).then(({ message }) => {
             const { loyalty_program } = message;
             if (loyalty_program) {
               frappe.call({
@@ -5174,6 +5174,8 @@
 				<div class="customer-fields-container">
 					<div class="email_id-field"></div>
 					<div class="mobile_no-field"></div>
+					<div class="custom_transaction_type-field"></div>
+					<div class="custom_oscapwdid-field"></div>
 					<div class="loyalty_program-field"></div>
 					<div class="loyalty_points-field"></div>
 				</div>
@@ -5206,6 +5208,19 @@
           label: __("Phone Number"),
           fieldtype: "Data",
           placeholder: __("Enter customer's phone number")
+        },
+        {
+          fieldname: "custom_transaction_type",
+          label: __("Transaction Type"),
+          fieldtype: "Select",
+          options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
+          placeholder: __("Enter customer's transaction type")
+        },
+        {
+          fieldname: "custom_oscapwdid",
+          label: __("Osca or PWD ID"),
+          fieldtype: "Data",
+          placeholder: __("Enter customer's Osca or PWD ID")
         },
         {
           fieldname: "loyalty_program",
@@ -7874,4 +7889,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.CUN27S7M.js.map
+//# sourceMappingURL=packing-list.bundle.UE6ZFTQK.js.map

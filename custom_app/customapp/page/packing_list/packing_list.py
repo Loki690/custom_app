@@ -396,8 +396,14 @@ def set_customer_info(fieldname, customer, value=""):
 	elif fieldname == "mobile_no":
 		contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
 		frappe.db.set_value("Customer", customer, "mobile_no", value)
-	contact_doc.save()
+	elif fieldname == "custom_oscapwdid":
+		contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
+		frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
+	elif fieldname == "custom_transaction_type":
+		contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
+		frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
 
+	contact_doc.save()
 
 @frappe.whitelist()
 def get_pos_profile_data(pos_profile):
