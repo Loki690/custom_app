@@ -8,7 +8,7 @@ custom_app.PointOfSale.Payment = class {
 
 	init_component() {
 		this.prepare_dom();
-		this.initialize_numpad();
+		// this.initialize_numpad();
 		this.bind_events();
 		this.attach_shortcuts();
 	}
@@ -28,7 +28,7 @@ custom_app.PointOfSale.Payment = class {
 				<div class="totals-section">
 					<div class="totals"></div>
 				</div>
-				<div class="submit-order-btn">${__("Complete Order")}</div>
+				<div class="submit-order-btn">${__("Print Order List")}</div>
 			</section>`
 		);
 		this.$component = this.wrapper.find(".payment-container");
@@ -137,7 +137,6 @@ custom_app.PointOfSale.Payment = class {
 
 			const mode = mode_clicked.attr("data-mode");
 			// hide all control fields and shortcuts
-			$(`.Credit_Card .GCash .mode-of-payment-control`).css("display", "none");
 			$(`.mode-of-payment-control`).css("display", "none");
 			$(`.mobile-number`).css("display", "none");
 			$(`.reference-number`).css("display", "none");
@@ -148,8 +147,12 @@ custom_app.PointOfSale.Payment = class {
 			$(`.expiry-date`).css("display", "none");
 			$(`.confirmation-code`).css("display", "none");
 			$(`.cash-shortcuts`).css("display", "none");
+			$(`.check-name`).css("display", "none");
+			$(`.check-number`).css("display", "none");
+			$(`.check-date`).css("display", "none");
 			me.$payment_modes.find(`.pay-amount`).css("display", "inline");
 			me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
+
 
 			// remove highlight from all mode-of-payments
 			$(".mode-of-payment").removeClass("border-primary");
@@ -170,12 +173,15 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".card-number").css("display", "flex");
 				mode_clicked.find(".expiry-date").css("display", "flex");
 				mode_clicked.find(".confirmation-code").css("display", "flex");
+				mode_clicked.find(".check-name").css("display", "flex");
+				mode_clicked.find(".check-number").css("display", "flex");
+				mode_clicked.find(".check-date").css("display", "flex");
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
 				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
 
 				me.selected_mode = me[`${mode}_control`];
-				me.selected_mode && me.selected_mode.$input.get(1).focus(1);
+				me.selected_mode && me.selected_mode.$input.get().focus();
 				me.auto_set_remaining_amount();
 			}
 		});
@@ -425,8 +431,8 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} reference-number" style="margin-top:10px;"></div>
 						`;
 						break;
-					case "Credit Card":
-					case "Debit Card":
+				
+					case "Cards":
 						paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
 							<div class="${mode} holder-name"></div>
@@ -444,7 +450,10 @@ custom_app.PointOfSale.Payment = class {
 						break;
 					case "Cheque":
 						paymentModeHtml += `
-							<div class="${mode} reference-number" style="margin-top:10px;"></div>
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} check-name"></div>	
+							<div class="${mode} check-number"></div>
+							<div class="${mode} check-date"></div>	
 						`;
 						break;
 				}
@@ -461,8 +470,7 @@ custom_app.PointOfSale.Payment = class {
 		payments.forEach((p) => {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 			const me = this;
-			const bankname = p.custom_bank_name;
-
+	
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
 					label: p.mode_of_payment,
@@ -484,10 +492,7 @@ custom_app.PointOfSale.Payment = class {
 				render_input: true,
 			});
 
-			if (p.mode_of_payment === "Credit Card" || p.mode_of_payment  === "Debit Cart" || p.mode_of_payment  === "Card" ) {
-
-
-
+			if (p.mode_of_payment === "Cards") {
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
 
 				// Create the bank_name_control with the existing value if it exists
@@ -692,24 +697,81 @@ custom_app.PointOfSale.Payment = class {
 
 
 			if (p.mode_of_payment === "Cheque") {
-				let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
-				let reference_number_controller = frappe.ui.form.make_control({
+
+				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+
+				// Create the bank_name_control with the existing value if it exists
+				let bank_name_control = frappe.ui.form.make_control({
 					df: {
-						label: "Reference Number",
+						label: 'Bank',
 						fieldtype: "Data",
-						placeholder: 'Reference No.',
+						placeholder: 'Bank Name',
 						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
+							frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
 						},
 					},
-					parent: this.$payment_modes.find(`.${mode}.reference-number`),
+					parent: this.$payment_modes.find(`.${mode}.bank-name`),
 					render_input: true,
-					default: p.reference_no || ''
 				});
 
+				// Set the existing value and refresh the control
+				bank_name_control.set_value(existing_custom_bank_name || '');
+				bank_name_control.refresh();
 
-				reference_number_controller.set_value(existing_reference_no || '');
-				reference_number_controller.refresh();
+
+				let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_check_name");
+				let check_name_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Name On Check',
+						fieldtype: "Data",
+						placeholder: 'Check Name',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_check_name", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.check-name`),
+					render_input: true,
+				});
+				// Set the existing value and refresh the control
+				check_name_control.set_value(existing_custom_check_name || '');
+				check_name_control.refresh();
+
+				let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
+				let check_number_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Check Number',
+						fieldtype: "Data",
+						placeholder: 'Check Number',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_check_number", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.check-number`),
+					render_input: true,
+				});
+				// Set the existing value and refresh the control
+				check_number_control.set_value(existing_custom_check_number || '');
+				check_number_control.refresh();
+
+				let existing_custom_check_date = frappe.model.get_value(p.doctype, p.name, "custom_check_date");
+				let check_date_control = frappe.ui.form.make_control({
+					df: {
+						fieldname: 'custom_check_date',
+						label: 'Check Date',
+						fieldtype: "Date",
+						placeholder: 'Check Date',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_check_date", this.get_value());
+						}
+					},
+					parent: this.$payment_modes.find(`.${mode}.check-date`),
+					render_input: true
+				});
+				// Set the existing value and refresh the control
+				check_date_control.set_value(existing_custom_check_date || frappe.datetime.nowdate());
+				check_date_control.refresh();
+
+
 			}
 
 			this[`${mode}_control`].toggle_label(false);
