@@ -104,13 +104,17 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
 			</div>
+			<div class="vatable-sales-container mt-2"></div>
+			<div class="vat-exempt-container"></div>
+			<div class="zero-rated-container"></div>
+			<div class="vat-container"></div>
 			<div class="net-total-container">
-				<div class="net-total-label">${__("Net Total")}</div>
+				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
 			<div class="taxes-container"></div>
 			<div class="grand-total-container">
-				<div>${__("Grand Total")}</div>
+				<div>${__("Total")}</div>
 				<div>0.00</div>
 			</div>
 			<div class="checkout-btn">${__("Order")}</div>
@@ -119,6 +123,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 		this.$add_discount_elem = this.$component.find(".add-discount-wrapper");
 	}
+
 
 	make_cart_numpad() {
 		this.$numpad_section = this.$component.find(".numpad-section");
@@ -701,7 +706,11 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-
+		//console.log(frm.doc);
+		this.render_vatable_sales(frm.doc.custom_vatable_sales);
+		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
+		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
+		this.render_vat(frm.doc.custom_vat_amount)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
 
@@ -710,7 +719,6 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-
 		this.render_taxes(frm.doc.taxes);
 	}
 
@@ -718,12 +726,41 @@ custom_app.PointOfSale.ItemCart = class {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".net-total-container")
-			.html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-net-total")
-			.html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
+
+	render_vatable_sales(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".vatable-sales-container")
+			.html(`<div>${__("VATable Sales")}: ${format_currency(value, currency)}</div>`);
+	}
+
+	render_vat_exempt_sales(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".vat-exempt-container")
+			.html(`<div>${__("VAT-Exempt Sales")}: ${format_currency(value, currency)}</div>`);
+	}
+
+	render_zero_rated_sales(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".zero-rated-container")
+			.html(`<div>${__("Zero Rated Sales")}: ${format_currency(value, currency)}</div>`);
+	}
+
+	render_vat(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".vat-container")
+			.html(`<div>${__("VAT 12%")}: ${format_currency(value, currency)}</div>`);
+	}
+
 
 	render_total_item_qty(items) {
 		var total_item_qty = 0;
@@ -733,22 +770,22 @@ custom_app.PointOfSale.ItemCart = class {
 
 		this.$totals_section
 			.find(".item-qty-total-container")
-			.html(`<div>${__("Total Quantitydddddddd")}</div><div>${total_item_qty}</div>`);
+			.html(`<div>${__("Total Quantity")}</div><div>${total_item_qty}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-item-qty-total")
-			.html(`<div>${__("Total Quantityddd")}: <span>${total_item_qty}</span></div>`);
+			.html(`<div>${__("Total Quantity")}: <span>${total_item_qty}</span></div>`);
 	}
 
 	render_grand_total(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".grand-total-container")
-			.html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-grand-total")
-			.html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
 	render_taxes(taxes) {
@@ -1240,6 +1277,7 @@ custom_app.PointOfSale.ItemCart = class {
 			if (frm.doc.items.length) {
 				this.$cart_items_wrapper.html("");
 				frm.doc.items.forEach((item) => {
+					//console.log(item);
 					this.update_item_html(item);
 				});
 			}
