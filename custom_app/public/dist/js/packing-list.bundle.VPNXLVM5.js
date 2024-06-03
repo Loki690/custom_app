@@ -4373,15 +4373,18 @@
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
 			<div class="vat-container"></div>
-			<div class="net-total-container">
+			<div class="ex-total-container"></div>
+		<!--	<div class="net-total-container">
 				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
-			</div>
+			</div> -->
+
 			<div class="taxes-container"></div>
-			<div class="grand-total-container">
+		<!--	<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
-			</div>
+			</div> -->
+
 			<div class="checkout-btn">${__("Order")}</div>
 			<div class="edit-cart-btn">${__("Edit Cart")}</div>`
       );
@@ -4878,10 +4881,9 @@
       this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
       this.render_vat(frm.doc.custom_vat_amount);
-      this.render_net_total(frm.doc.net_total);
+      this.render_ex_total(frm.doc.custom_ex_total);
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
-      this.render_grand_total(grand_total);
       this.render_taxes(frm.doc.taxes);
     }
     render_net_total(value) {
@@ -4904,6 +4906,10 @@
     render_vat(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".vat-container").html(`<div>${__("VAT 12%")}: ${format_currency(value, currency)}</div>`);
+    }
+    render_ex_total(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".ex-total-container").html(`<div>${__("Ex Total")}: ${format_currency(value, currency)}</div>`);
     }
     render_total_item_qty(items) {
       var total_item_qty = 0;
@@ -4992,12 +4998,12 @@
         me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
       }
       function get_rate_discount_html() {
-        if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+        if (item_data.rate && item_data.custom_ex_amount && item_data.rate !== item_data.custom_ex_amount) {
           return `
 					<div class="item-qty-rate">
 						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
+							<div class="item-rate">${format_currency(item_data.custom_ex_amount, currency)}</div>
 							<div class="item-amount">${format_currency(item_data.rate, currency)}</div>
 						</div>
 					</div>`;
@@ -7771,4 +7777,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.P73AAZY4.js.map
+//# sourceMappingURL=packing-list.bundle.VPNXLVM5.js.map
