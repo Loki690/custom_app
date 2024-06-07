@@ -109,16 +109,16 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="zero-rated-container"></div>
 			<div class="vat-container"></div>
 			<div class="ex-total-container"></div>
-		<!--	<div class="net-total-container">
+				<div class="net-total-container">
 				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
-			</div> -->
+			</div>
 
 			<div class="taxes-container"></div>
-		<!--	<div class="grand-total-container">
+			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
-			</div> -->
+			</div> 
 
 			<div class="checkout-btn">${__("Order")}</div>
 			<div class="edit-cart-btn">${__("Edit Cart")}</div>`
@@ -333,8 +333,8 @@ custom_app.PointOfSale.ItemCart = class {
 				if (typeof btn !== "string") continue; // do not make shortcuts for numbers
 
 				let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
-				if (btn === "Delete") shortcut_key = "ctrl+backspace";
-				if (btn === "Remove") shortcut_key = "shift+ctrl+backspace";
+				if (btn === "Delete") shortcut_key = "delete";
+				if (btn === "Remove") shortcut_key = "crtl+backspace";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map
@@ -715,14 +715,14 @@ custom_app.PointOfSale.ItemCart = class {
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
 		this.render_vat(frm.doc.custom_vat_amount)
 		this.render_ex_total(frm.doc.custom_ex_total)
-		//this.render_net_total(frm.doc.net_total);
+		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
 
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.grand_total
 			: frm.doc.rounded_total;
 			
-		//this.render_grand_total(grand_total);
+		this.render_grand_total(grand_total);
 		this.render_taxes(frm.doc.taxes);
 	}
 
@@ -892,12 +892,12 @@ custom_app.PointOfSale.ItemCart = class {
 		}
 
 		function get_rate_discount_html() {
-			if (item_data.rate && item_data.custom_ex_amount && item_data.rate !== item_data.custom_ex_amount) {
+			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 				return `
 					<div class="item-qty-rate">
 						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.custom_ex_amount, currency)}</div>
+							<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
 							<div class="item-amount">${format_currency(item_data.rate, currency)}</div>
 						</div>
 					</div>`;

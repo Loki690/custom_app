@@ -6,6 +6,7 @@ def before_insert(doc, method):
     # if not doc.custom_pl_series:
     #     doc.custom_pl_series = generate_pl_series(doc)
     set_custom_naming_series(doc)
+    set_custom_ex_total(doc)
     
     # Set the barcode field to the value of custom_pl_series
     # doc.barcode = doc.custom_pl_series
@@ -31,6 +32,15 @@ def set_custom_naming_series(doc):
     else:
         # Set a default naming series if none is found in POS Profile
         doc.naming_series = 'POS-INV#-.YYYY.-.MM.-.#####'
+
+def set_custom_ex_total(doc): 
+    
+    if doc.custom_ex_total:
+        doc.grand_total = doc.custom_ex_total
+        #doc.total = doc.custom_ex_total
+    else:
+        doc.grand_total = 00
+    
 
 def before_save(doc, method):
     if not doc.name:
