@@ -84,7 +84,7 @@ custom_app.PointOfSale.Controller = class {
 		this.prepare_menu(); 
 		this.add_buttons_to_toolbar();
 		this.make_new_invoice();
-		this.setup_shortcuts();
+		// this.setup_shortcuts();
 	}
 
 	prepare_dom() {
@@ -456,7 +456,7 @@ custom_app.PointOfSale.Controller = class {
 
 				cart_item_clicked: (item, frm) => {
 
-					console.log(frm)
+					//console.log(frm)
 
 					const item_row = this.get_item_from_frm(item);
 					this.item_details.toggle_item_details_section(item_row);
