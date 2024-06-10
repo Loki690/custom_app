@@ -327,7 +327,7 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				frappe.call({
-					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {

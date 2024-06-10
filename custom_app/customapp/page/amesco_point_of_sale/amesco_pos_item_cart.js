@@ -117,16 +117,23 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
 			</div>
-			<div class="net-total-container">
-				<div class="net-total-label">${__("Net Total")}</div>
+			<div class="vatable-sales-container mt-2"></div>
+			<div class="vat-exempt-container"></div>
+			<div class="zero-rated-container"></div>
+			<div class="vat-container"></div>
+			<div class="ex-total-container"></div>
+				<div class="net-total-container">
+				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
+
 			<div class="taxes-container"></div>
 			<div class="grand-total-container">
-				<div>${__("Grand Total")}</div>
+				<div>${__("Total")}</div>
 				<div>0.00</div>
-			</div>
-			<div class="checkout-btn">${__("Checkout")}</div>
+			</div> 
+
+			<div class="checkout-btn">${__("Order")}</div>
 			<div class="edit-cart-btn">${__("Edit Cart")}</div>`
 		);
 
@@ -150,7 +157,7 @@ custom_app.PointOfSale.ItemCart = class {
 				[  "", "", "", "Remove"],
 			],
 			css_classes: [
-				["", "", "", "col-span-2"],
+				["", "", "", "col-span-2 remove-btn"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2 remove-btn"],
@@ -730,15 +737,21 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-
+		//console.log(frm.doc);
+		this.render_vatable_sales(frm.doc.custom_vatable_sales);
+		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
+		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
+		this.render_vat(frm.doc.custom_vat_amount)
+		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
+
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.grand_total
 			: frm.doc.rounded_total;
+			
 		this.render_grand_total(grand_total);
-
-		this.render_taxes(frm.doc.taxes);
+		// this.render_taxes(frm.doc.taxes);
 	}
 
 	render_net_total(value) {
@@ -751,6 +764,67 @@ custom_app.PointOfSale.ItemCart = class {
 			.find(".numpad-net-total")
 			.html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
+
+	render_vatable_sales(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".vatable-sales-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VATable Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
+	
+	render_vat_exempt_sales(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".vat-exempt-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
+
+	render_zero_rated_sales(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".zero-rated-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
+
+	render_vat(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".vat-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT 12%")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
+
+	// render_ex_total(value) {
+	// 	const currency = this.events.get_frm().doc.currency;
+	// 	this.$totals_section
+	// 		.find(".ex-total-container")
+	// 		.html(`
+	// 			<div style="display: flex; justify-content: space-between;">
+	// 				<span style="flex: 1;">${__("Ex Total")}: </span>
+	// 				<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+	// 			</div>
+	// 		`);
+	// }
+
 
 	render_total_item_qty(items) {
 		var total_item_qty = 0;
@@ -778,29 +852,29 @@ custom_app.PointOfSale.ItemCart = class {
 			.html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
-	render_taxes(taxes) {
-		if (taxes && taxes.length) {
-			const currency = this.events.get_frm().doc.currency;
-			const taxes_html = taxes
-				.map((t) => {
-					if (t.tax_amount_after_discount_amount == 0.0) return;
-					// if tax rate is 0, don't print it.
-					const description = /[0-9]+/.test(t.description)
-						? t.description
-						: t.rate != 0
-						? `${t.description} @ ${t.rate}%`
-						: t.description;
-					return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-				})
-				.join("");
-			this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-		} else {
-			this.$totals_section.find(".taxes-container").css("display", "none").html("");
-		}
-	}
+	// render_taxes(taxes) {
+	// 	if (taxes && taxes.length) {
+	// 		const currency = this.events.get_frm().doc.currency;
+	// 		const taxes_html = taxes
+	// 			.map((t) => {
+	// 				if (t.tax_amount_after_discount_amount == 0.0) return;
+	// 				// if tax rate is 0, don't print it.
+	// 				const description = /[0-9]+/.test(t.description)
+	// 					? t.description
+	// 					: t.rate != 0
+	// 					? `${t.description} @ ${t.rate}%`
+	// 					: t.description;
+	// 				return `<div class="tax-row">
+	// 				<div class="tax-label">${description}</div>
+	// 				<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+	// 			</div>`;
+	// 			})
+	// 			.join("");
+	// 		this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+	// 	} else {
+	// 		this.$totals_section.find(".taxes-container").css("display", "none").html("");
+	// 	}
+	// }
 
 	get_cart_item({ name }) {
 		const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -816,7 +890,15 @@ custom_app.PointOfSale.ItemCart = class {
 		const $item = this.get_cart_item(item);
 
 		if (remove_item) {
-			$item && $item.next().remove() && $item.remove();
+			if ($item) {
+				$item.next().remove();
+				$item.remove();
+				this.remove_customer(); // Call remove_customer function after removing item
+				this.set_cash_customer(); // Set customer to "Cash" after removing item
+				frappe.run_serially([
+					() => frappe.dom.unfreeze(),
+				]);
+			}
 		} else {
 			const item_row = this.get_item_from_frm(item);
 			this.render_cart_item(item_row, $item);
@@ -824,8 +906,19 @@ custom_app.PointOfSale.ItemCart = class {
 
 		const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
 		this.highlight_checkout_btn(no_of_cart_items > 0);
-
 		this.update_empty_cart_section(no_of_cart_items);
+	}
+
+	remove_customer() {
+		const frm = this.events.get_frm();
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
+		this.update_customer_section();
+	}
+
+	set_cash_customer() {
+		const frm = this.events.get_frm();
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", 'cash');
+		this.update_customer_section();
 	}
 
 	render_cart_item(item_data, $item_to_update) {

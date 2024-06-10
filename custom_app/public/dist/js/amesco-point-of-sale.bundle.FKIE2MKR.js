@@ -472,7 +472,7 @@
       return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
 				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
 				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-				data-rate="${escape(price_list_rate || 0)}">
+				data-rate="${escape(price_list_rate || 0)}"
 				<td class="item-code">${item_code}</td> 
 				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
@@ -805,16 +805,23 @@
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
 			</div>
-			<div class="net-total-container">
-				<div class="net-total-label">${__("Net Total")}</div>
+			<div class="vatable-sales-container mt-2"></div>
+			<div class="vat-exempt-container"></div>
+			<div class="zero-rated-container"></div>
+			<div class="vat-container"></div>
+			<div class="ex-total-container"></div>
+				<div class="net-total-container">
+				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
+
 			<div class="taxes-container"></div>
 			<div class="grand-total-container">
-				<div>${__("Grand Total")}</div>
+				<div>${__("Total")}</div>
 				<div>0.00</div>
-			</div>
-			<div class="checkout-btn">${__("Checkout")}</div>
+			</div> 
+
+			<div class="checkout-btn">${__("Order")}</div>
 			<div class="edit-cart-btn">${__("Edit Cart")}</div>`
       );
       this.$add_discount_elem = this.$component.find(".add-discount-wrapper");
@@ -831,7 +838,7 @@
           ["", "", "", "Remove"]
         ],
         css_classes: [
-          ["", "", "", "col-span-2"],
+          ["", "", "", "col-span-2 remove-btn"],
           ["", "", "", "col-span-2"],
           ["", "", "", "col-span-2"],
           ["", "", "", "col-span-2 remove-btn"]
@@ -1327,16 +1334,55 @@
     update_totals_section(frm) {
       if (!frm)
         frm = this.events.get_frm();
+      this.render_vatable_sales(frm.doc.custom_vatable_sales);
+      this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
+      this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
+      this.render_vat(frm.doc.custom_vat_amount);
       this.render_net_total(frm.doc.net_total);
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".net-total-container").html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
       this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
+    }
+    render_vatable_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".vatable-sales-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VATable Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
+    render_vat_exempt_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".vat-exempt-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
+    render_zero_rated_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".zero-rated-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
+    render_vat(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".vat-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT 12%")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
     }
     render_total_item_qty(items) {
       var total_item_qty = 0;
@@ -1351,23 +1397,6 @@
       this.$totals_section.find(".grand-total-container").html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
       this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
     }
-    render_taxes(taxes) {
-      if (taxes && taxes.length) {
-        const currency = this.events.get_frm().doc.currency;
-        const taxes_html = taxes.map((t) => {
-          if (t.tax_amount_after_discount_amount == 0)
-            return;
-          const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
-          return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-        }).join("");
-        this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-      } else {
-        this.$totals_section.find(".taxes-container").css("display", "none").html("");
-      }
-    }
     get_cart_item({ name }) {
       const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
       return this.$cart_items_wrapper.find(item_selector);
@@ -1379,7 +1408,15 @@
     update_item_html(item, remove_item) {
       const $item = this.get_cart_item(item);
       if (remove_item) {
-        $item && $item.next().remove() && $item.remove();
+        if ($item) {
+          $item.next().remove();
+          $item.remove();
+          this.remove_customer();
+          this.set_cash_customer();
+          frappe.run_serially([
+            () => frappe.dom.unfreeze()
+          ]);
+        }
       } else {
         const item_row = this.get_item_from_frm(item);
         this.render_cart_item(item_row, $item);
@@ -1387,6 +1424,16 @@
       const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
       this.highlight_checkout_btn(no_of_cart_items > 0);
       this.update_empty_cart_section(no_of_cart_items);
+    }
+    remove_customer() {
+      const frm = this.events.get_frm();
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "");
+      this.update_customer_section();
+    }
+    set_cash_customer() {
+      const frm = this.events.get_frm();
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "cash");
+      this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
       const currency = this.events.get_frm().doc.currency;
@@ -3285,25 +3332,35 @@
         return ``;
       }
     }
+    get_vatable_sales_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VATable Sales")}</div>
+					<div>${format_currency(doc.custom_vatable_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_vatable_exempt_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VAT-Exempt Sales")}</div>
+					<div>${format_currency(doc.custom_vat_exempt_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_zero_rated_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("Zero-Rated")}</div>
+					<div>${format_currency(doc.custom_zero_rated_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_vat_amount_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VAT 12%")}</div>
+					<div>${format_currency(doc.custom_vat_amount, doc.currency)}</div>
+				</div>`;
+    }
     get_net_total_html(doc) {
       return `<div class="summary-row-wrapper">
 					<div>${__("Net Total")}</div>
 					<div>${format_currency(doc.net_total, doc.currency)}</div>
 				</div>`;
-    }
-    get_taxes_html(doc) {
-      if (!doc.taxes.length)
-        return "";
-      let taxes_html = doc.taxes.map((t) => {
-        const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
-        return `
-				<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
-				</div>
-			`;
-      }).join("");
-      return `<div class="taxes-wrapper">${taxes_html}</div>`;
     }
     get_grand_total_html(doc) {
       return `<div class="summary-row-wrapper grand-total">
@@ -3537,11 +3594,17 @@
     attach_totals_info(doc) {
       this.$totals_container.html("");
       const net_total_dom = this.get_net_total_html(doc);
-      const taxes_dom = this.get_taxes_html(doc);
+      const vatable_sale_dom = this.get_vatable_sales_html(doc);
+      const vat_exempt_dom = this.get_vatable_exempt_html(doc);
+      const zero_rated_dom = this.get_zero_rated_html(doc);
+      const vat_amount_dom = this.get_vat_amount_html(doc);
       const discount_dom = this.get_discount_html(doc);
       const grand_total_dom = this.get_grand_total_html(doc);
       this.$totals_container.append(net_total_dom);
-      this.$totals_container.append(taxes_dom);
+      this.$totals_container.append(vatable_sale_dom);
+      this.$totals_container.append(vat_exempt_dom);
+      this.$totals_container.append(zero_rated_dom);
+      this.$totals_container.append(vat_amount_dom);
       this.$totals_container.append(discount_dom);
       this.$totals_container.append(grand_total_dom);
     }
@@ -4476,4 +4539,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.MXZM2ZUB.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.FKIE2MKR.js.map
