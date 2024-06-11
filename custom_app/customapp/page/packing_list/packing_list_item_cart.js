@@ -142,10 +142,10 @@ custom_app.PointOfSale.ItemCart = class {
 				// [4, 5, 6, "Discount"],
 				// [7, 8, 9, "Rate"],
 				// [".", 0, "Delete", "Remove"],
-				[  "", "", "", "Remove"],
+				["Remove"],
 			],
 			css_classes: [
-				["", "", "", "col-span-2 remove-btn"],
+				["col-span-2 remove-btn"],
 			],
 			fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" },
 		});
@@ -250,7 +250,7 @@ custom_app.PointOfSale.ItemCart = class {
 						let role = "oic";
 		
 						frappe.call({
-							method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+							method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
 							args: { password: password, role: role },
 							callback: (r) => {
 								if (r.message) {
@@ -697,7 +697,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 		this.$numpad_section
 			.find(".numpad-net-total")
-			.html(`<div>${__("Sub Total")} <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
 	render_vatable_sales(value) {
@@ -706,7 +706,7 @@ custom_app.PointOfSale.ItemCart = class {
 			.find(".vatable-sales-container")
 			.html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VATable Sales")} </span>
+					<span style="flex: 1;">${__("VATable Sales")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -718,7 +718,7 @@ custom_app.PointOfSale.ItemCart = class {
 			.find(".vat-exempt-container")
 			.html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VAT-Exempt Sales")} </span>
+					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -730,7 +730,7 @@ custom_app.PointOfSale.ItemCart = class {
 			.find(".zero-rated-container")
 			.html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Zero Rated Sales")} </span>
+					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -742,7 +742,7 @@ custom_app.PointOfSale.ItemCart = class {
 			.find(".vat-container")
 			.html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VAT 12%")} </span>
+					<span style="flex: 1;">${__("VAT 12%")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -820,6 +820,7 @@ custom_app.PointOfSale.ItemCart = class {
 		const doc = this.events.get_frm().doc;
 		return doc.items.find((i) => i.name == item.name);
 	}
+
 	
 	update_item_html(item, remove_item) {
 		const $item = this.get_cart_item(item);
@@ -830,7 +831,9 @@ custom_app.PointOfSale.ItemCart = class {
 				$item.remove();
 				this.remove_customer(); // Call remove_customer function after removing item
 				this.set_cash_customer(); // Set customer to "Cash" after removing item
-			
+				frappe.run_serially([
+					() => frappe.dom.unfreeze(),
+				]);
 			}
 		} else {
 			const item_row = this.get_item_from_frm(item);
@@ -844,17 +847,32 @@ custom_app.PointOfSale.ItemCart = class {
 
 	remove_customer() {
 		const frm = this.events.get_frm();
+		// Get the current value of the "customer" field
+		const currentCustomer = frm.doc.customer;
+	
+		// Set the value of "custom_customer_2" to the current customer
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
+	
+		// Clear the "customer" field
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
+		// Update the customer section
 		this.update_customer_section();
 	}
+
 	set_cash_customer() {
 		const frm = this.events.get_frm();
-		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", 'cash');
+	
+		// Get the value of "custom_customer_2"
+		const customCustomer2Value = frm.doc.custom_customer_2;
+	
+		// Set the value of "customer" to the value of "custom_customer_2"
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
+	
+		// Update the customer section
 		this.update_customer_section();
 	}
 	
 
-	
 	render_cart_item(item_data, $item_to_update) {
 		//console.log(item_data)
 		const currency = this.events.get_frm().doc.currency;

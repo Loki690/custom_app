@@ -911,13 +911,28 @@ custom_app.PointOfSale.ItemCart = class {
 
 	remove_customer() {
 		const frm = this.events.get_frm();
+		// Get the current value of the "customer" field
+		const currentCustomer = frm.doc.customer;
+	
+		// Set the value of "custom_customer_2" to the current customer
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
+	
+		// Clear the "customer" field
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
+		// Update the customer section
 		this.update_customer_section();
 	}
 
 	set_cash_customer() {
 		const frm = this.events.get_frm();
-		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", 'cash');
+	
+		// Get the value of "custom_customer_2"
+		const customCustomer2Value = frm.doc.custom_customer_2;
+	
+		// Set the value of "customer" to the value of "custom_customer_2"
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
+	
+		// Update the customer section
 		this.update_customer_section();
 	}
 

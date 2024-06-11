@@ -3963,6 +3963,7 @@
 							<tr>
 								<th>Item Code</th>
 								<th>Name</th>
+								<th>Vat</th>
 								<th>Price</th>
 								<th>UOM</th>
 								<th>QTY</th>
@@ -4031,7 +4032,7 @@
     }
     get_item_html(item) {
       const me = this;
-      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number } = item;
+      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
@@ -4051,6 +4052,7 @@
 				data-rate="${escape(price_list_rate || 0)}">
 				<td class="item-code">${item_code}</td> 
 				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
 				<td class="item-uom"> ${uom} / count per uom </td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
@@ -4399,10 +4401,10 @@
         },
         cols: 5,
         keys: [
-          ["", "", "", "Remove"]
+          ["Remove"]
         ],
         css_classes: [
-          ["", "", "", "col-span-2 remove-btn"]
+          ["col-span-2 remove-btn"]
         ],
         fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" }
       });
@@ -4481,7 +4483,7 @@
               let password = values.password;
               let role = "oic";
               frappe.call({
-                method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+                method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
                 args: { password, role },
                 callback: (r) => {
                   if (r.message) {
@@ -4859,13 +4861,13 @@
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".net-total-container").html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Sub Total")} <span>${format_currency(value, currency)}</span></div>`);
+      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
     }
     render_vatable_sales(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".vatable-sales-container").html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VATable Sales")} </span>
+					<span style="flex: 1;">${__("VATable Sales")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -4874,7 +4876,7 @@
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".vat-exempt-container").html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VAT-Exempt Sales")} </span>
+					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -4883,7 +4885,7 @@
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".zero-rated-container").html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Zero Rated Sales")} </span>
+					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -4892,7 +4894,7 @@
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".vat-container").html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VAT 12%")} </span>
+					<span style="flex: 1;">${__("VAT 12%")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -4926,6 +4928,9 @@
           $item.remove();
           this.remove_customer();
           this.set_cash_customer();
+          frappe.run_serially([
+            () => frappe.dom.unfreeze()
+          ]);
         }
       } else {
         const item_row = this.get_item_from_frm(item);
@@ -4937,12 +4942,15 @@
     }
     remove_customer() {
       const frm = this.events.get_frm();
+      const currentCustomer = frm.doc.customer;
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
       frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "");
       this.update_customer_section();
     }
     set_cash_customer() {
       const frm = this.events.get_frm();
-      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "cash");
+      const customCustomer2Value = frm.doc.custom_customer_2;
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
       this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
@@ -7228,6 +7236,25 @@
       this.init_recent_order_list();
       this.init_order_summary();
     }
+    make_app() {
+      this.prepare_dom();
+      this.prepare_components();
+      this.add_buttons_to_toolbar();
+      this.prepare_menu();
+      this.make_new_invoice();
+    }
+    prepare_dom() {
+      this.wrapper.append(`<div class="point-of-sale-app"></div>`);
+      this.$components_wrapper = this.wrapper.find(".point-of-sale-app");
+    }
+    prepare_components() {
+      this.init_item_selector();
+      this.init_item_details();
+      this.init_item_cart();
+      this.init_payments();
+      this.init_recent_order_list();
+      this.init_order_summary();
+    }
     prepare_menu() {
       this.page.clear_menu();
       this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
@@ -7919,4 +7946,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.SUEJAPKL.js.map
+//# sourceMappingURL=packing-list.bundle.KMJNCLJZ.js.map

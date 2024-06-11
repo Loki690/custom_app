@@ -124,16 +124,17 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
 	items_data = frappe.db.sql(
 		"""
-		SELECT
-			item.name AS item_code,
-			item.item_name,
-			item.description,
-			item.stock_uom,
-			item.image AS item_image,
-			item.is_stock_item,
-			MAX(batch.name) as batch_number,
-			MAX(batch.expiry_date) AS latest_expiry_date
-		FROM
+		 SELECT
+            item.name AS item_code,
+            item.item_name,
+            item.description,
+			item.custom_is_vatable,
+            item.stock_uom,
+            item.image AS item_image,
+            item.is_stock_item,
+            MAX(batch.name) as batch_number,
+            MAX(batch.expiry_date) AS latest_expiry_date
+        FROM
 			`tabItem` item
 		LEFT JOIN
 			`tabBatch` batch ON batch.item = item.name

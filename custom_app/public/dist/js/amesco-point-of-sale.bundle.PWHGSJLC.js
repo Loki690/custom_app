@@ -395,12 +395,15 @@
       this.attach_shortcuts();
     }
     prepare_dom() {
+      const selectedWarehouse = localStorage.getItem("selected_warehouse");
       this.wrapper.append(
         `<section class="items-selector">
 				<div class="filter-section">
-					<div class="label">${__("All Items")}</div>
-					<div class="search-field"></div>
+				<div class="label">
+				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
+			</div>
 					<div class="item-group-field"></div>
+					<div class="search-field"></div>
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">
@@ -408,6 +411,7 @@
 							<tr>
 								<th>Item Code</th>
 								<th>Name</th>
+								<th>Vat</th>
 								<th>Price</th>
 								<th>UOM</th>
 								<th>QTY</th>
@@ -455,7 +459,7 @@
     }
     get_item_html(item) {
       const me = this;
-      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number } = item;
+      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
@@ -472,9 +476,10 @@
       return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
 				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
 				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-				data-rate="${escape(price_list_rate || 0)}"
+				data-rate="${escape(price_list_rate || 0)}">
 				<td class="item-code">${item_code}</td> 
 				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
 				<td class="item-uom"> ${uom} / count per uom </td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
@@ -1427,12 +1432,15 @@
     }
     remove_customer() {
       const frm = this.events.get_frm();
+      const currentCustomer = frm.doc.customer;
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
       frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "");
       this.update_customer_section();
     }
     set_cash_customer() {
       const frm = this.events.get_frm();
-      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "cash");
+      const customCustomer2Value = frm.doc.custom_customer_2;
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
       this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
@@ -4539,4 +4547,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.FKIE2MKR.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.PWHGSJLC.js.map

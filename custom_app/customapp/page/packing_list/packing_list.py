@@ -135,6 +135,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.name AS item_code,
             item.item_name,
             item.description,
+			item.custom_is_vatable,
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
