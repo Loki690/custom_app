@@ -114,7 +114,7 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			<div class="taxes-container"></div>
+		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
@@ -714,7 +714,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
 		this.render_vat(frm.doc.custom_vat_amount)
-		this.render_ex_total(frm.doc.custom_ex_total)
+		//this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
 
@@ -834,20 +834,39 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	update_item_html(item, remove_item) {
-		const $item = this.get_cart_item(item);
+        const $item = this.get_cart_item(item);
 
-		if (remove_item) {
-			$item && $item.next().remove() && $item.remove();
-		} else {
-			const item_row = this.get_item_from_frm(item);
-			this.render_cart_item(item_row, $item);
-		}
+        if (remove_item) {
+            if ($item) {
+                $item.next().remove();
+                $item.remove();
+                this.remove_customer(); // Call remove_customer function after removing item
+                this.set_cash_customer(); // Set customer to "Cash" after removing item
+                frappe.run_serially([
+                    () => frappe.dom.unfreeze(),
+                ]);
+            }
+        } else {
+            const item_row = this.get_item_from_frm(item);
+            this.render_cart_item(item_row, $item);
+        }
 
-		const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
-		this.highlight_checkout_btn(no_of_cart_items > 0);
+        const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
+        this.highlight_checkout_btn(no_of_cart_items > 0);
+        this.update_empty_cart_section(no_of_cart_items);
+    }
 
-		this.update_empty_cart_section(no_of_cart_items);
-	}
+    remove_customer() {
+        const frm = this.events.get_frm();
+        frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
+        this.update_customer_section();
+    }
+
+    set_cash_customer() {
+        const frm = this.events.get_frm();
+        frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", 'Cash');
+        this.update_customer_section();
+    }
 
 	render_cart_item(item_data, $item_to_update) {
 		//console.log(item_data)

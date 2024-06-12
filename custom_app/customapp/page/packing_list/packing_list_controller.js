@@ -967,9 +967,7 @@ custom_app.PointOfSale.Controller = class {
 				frappe.dom.unfreeze();
 			})
 			.catch((e) => console.log(e));
-	}
-
-	async save_and_checkout() {
+	}	async save_and_checkout() {
 		if (this.frm.is_dirty()) {
 			let save_error = false;
 			// await this.frm.save(null, null, null, () => (save_error = true));
