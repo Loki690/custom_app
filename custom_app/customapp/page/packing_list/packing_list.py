@@ -135,6 +135,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.name AS item_code,
             item.item_name,
             item.description,
+			item.custom_is_vatable,
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
@@ -454,11 +455,27 @@ def get_user_password():
 #     return stored_password_hash
     
 # def check_if_match(stored_password_hash, password):
-
+from frappe.utils.password import get_decrypted_password
+from frappe.utils.password import check_password
+from frappe.exceptions import AuthenticationError
+from frappe.utils.password import check_oic_password, check_password
 @frappe.whitelist()
-def confirm_user_password(password):
+def confirm_user_password(password,role):
+    # Check if the provided role is "oic"
+    try:
+        # Check if the entered password matches the stored hashed password
+        if check_oic_password(password, role):
+            return True
+        else:
+            return False
+    except frappe.AuthenticationError:
+        return False
+	
+@frappe.whitelist()
+def confirm_user_acc_password(password):
     # Get the current user
     user = frappe.session.user
+
     try:
         # Check if the entered password matches the stored hashed password
         if check_password(user, password):

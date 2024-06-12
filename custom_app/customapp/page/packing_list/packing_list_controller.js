@@ -102,6 +102,30 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 
+	make_app() {
+		this.prepare_dom();
+		this.prepare_components();
+		this.add_buttons_to_toolbar();
+		this.prepare_menu();
+		this.make_new_invoice();
+	}
+
+	prepare_dom() {
+		this.wrapper.append(`<div class="point-of-sale-app"></div>`);
+
+		this.$components_wrapper = this.wrapper.find(".point-of-sale-app");
+	}
+
+	prepare_components() {
+		this.init_item_selector();
+		this.init_item_details();
+		this.init_item_cart();
+		this.init_payments();
+		this.init_recent_order_list();
+		this.init_order_summary();
+	}
+
+
 	prepare_menu() {
 		this.page.clear_menu();
 
@@ -327,7 +351,7 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				frappe.call({
-					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {

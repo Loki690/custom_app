@@ -225,44 +225,9 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$totals_section.on("click", ".edit-cart-btn", () => {
-			// Show password dialog for OIC authentication
-			const passwordDialog = new frappe.ui.Dialog({
-				title: __('Enter OIC Account'),
-				fields: [
-					{
-						fieldname: 'password',
-						fieldtype: 'Password',
-						label: __('Password'),
-						reqd: 1
-					}
-				],
-				primary_action_label: __('Edit Order'),
-				primary_action: (values) => {
-					let password = values.password;
-					let role = "oic";
-		
-					frappe.call({
-						method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
-						args: { password: password, role: role },
-						callback: (r) => {
-							if (r.message) {
-								// OIC authentication successful, proceed with editing the cart
-								this.events.edit_cart();
-								this.toggle_checkout_btn(true);
-								passwordDialog.hide();
-							} else {
-								// Show alert for incorrect password or unauthorized user
-								frappe.show_alert({
-									message: __('Incorrect password or user is not an OIC'),
-									indicator: 'red'
-								});
-							}
-						}
-					});
-				}
-			});
-		
-			passwordDialog.show();
+			this.events.edit_cart();
+			this.toggle_checkout_btn(true);
+			passwordDialog.hide();			
 		});
 		
 		this.$component.on("click", ".add-discount-wrapper", () => {
@@ -394,8 +359,6 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 
-
-		
 	}
 
 	toggle_item_highlight(item) {
@@ -714,7 +677,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
 		this.render_vat(frm.doc.custom_vat_amount)
-		//this.render_ex_total(frm.doc.custom_ex_total)
+		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
 
@@ -723,7 +686,7 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		this.render_taxes(frm.doc.taxes);
+		// this.render_taxes(frm.doc.taxes);
 	}
 
 	render_net_total(value) {
@@ -741,36 +704,61 @@ custom_app.PointOfSale.ItemCart = class {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".vatable-sales-container")
-			.html(`<div>${__("VATable Sales")}: ${format_currency(value, currency)}</div>`);
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VATable Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
 	}
-
+	
 	render_vat_exempt_sales(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".vat-exempt-container")
-			.html(`<div>${__("VAT-Exempt Sales")}: ${format_currency(value, currency)}</div>`);
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
 	}
 
 	render_zero_rated_sales(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".zero-rated-container")
-			.html(`<div>${__("Zero Rated Sales")}: ${format_currency(value, currency)}</div>`);
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
 	}
 
 	render_vat(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".vat-container")
-			.html(`<div>${__("VAT 12%")}: ${format_currency(value, currency)}</div>`);
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT 12%")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
 	}
 
-	render_ex_total(value) {
-		const currency = this.events.get_frm().doc.currency;
-		this.$totals_section
-			.find(".ex-total-container")
-			.html(`<div>${__("Ex Total")}: ${format_currency(value, currency)}</div>`);
-	}
+	// render_ex_total(value) {
+	// 	const currency = this.events.get_frm().doc.currency;
+	// 	this.$totals_section
+	// 		.find(".ex-total-container")
+	// 		.html(`
+	// 			<div style="display: flex; justify-content: space-between;">
+	// 				<span style="flex: 1;">${__("Ex Total")}: </span>
+	// 				<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+	// 			</div>
+	// 		`);
+	// }
 
 
 	render_total_item_qty(items) {
@@ -799,29 +787,29 @@ custom_app.PointOfSale.ItemCart = class {
 			.html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
-	render_taxes(taxes) {
-		if (taxes && taxes.length) {
-			const currency = this.events.get_frm().doc.currency;
-			const taxes_html = taxes
-				.map((t) => {
-					if (t.tax_amount_after_discount_amount == 0.0) return;
-					// if tax rate is 0, don't print it.
-					const description = /[0-9]+/.test(t.description)
-						? t.description
-						: t.rate != 0
-							? `${t.description} @ ${t.rate}%`
-							: t.description;
-					return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-				})
-				.join("");
-			this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-		} else {
-			this.$totals_section.find(".taxes-container").css("display", "none").html("");
-		}
-	}
+	// render_taxes(taxes) {
+	// 	if (taxes && taxes.length) {
+	// 		const currency = this.events.get_frm().doc.currency;
+	// 		const taxes_html = taxes
+	// 			.map((t) => {
+	// 				if (t.tax_amount_after_discount_amount == 0.0) return;
+	// 				// if tax rate is 0, don't print it.
+	// 				const description = /[0-9]+/.test(t.description)
+	// 					? t.description
+	// 					: t.rate != 0
+	// 						? `${t.description} @ ${t.rate}%`
+	// 						: t.description;
+	// 				return `<div class="tax-row">
+	// 				<div class="tax-label">${description}</div>
+	// 				<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+	// 			</div>`;
+	// 			})
+	// 			.join("");
+	// 		this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+	// 	} else {
+	// 		this.$totals_section.find(".taxes-container").css("display", "none").html("");
+	// 	}
+	// }
 
 	get_cart_item({ name }) {
 		const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -833,40 +821,58 @@ custom_app.PointOfSale.ItemCart = class {
 		return doc.items.find((i) => i.name == item.name);
 	}
 
+	
 	update_item_html(item, remove_item) {
-        const $item = this.get_cart_item(item);
+		const $item = this.get_cart_item(item);
 
-        if (remove_item) {
-            if ($item) {
-                $item.next().remove();
-                $item.remove();
-                this.remove_customer(); // Call remove_customer function after removing item
-                this.set_cash_customer(); // Set customer to "Cash" after removing item
-                frappe.run_serially([
-                    () => frappe.dom.unfreeze(),
-                ]);
-            }
-        } else {
-            const item_row = this.get_item_from_frm(item);
-            this.render_cart_item(item_row, $item);
-        }
+		if (remove_item) {
+			if ($item) {
+				$item.next().remove();
+				$item.remove();
+				this.remove_customer(); // Call remove_customer function after removing item
+				this.set_cash_customer(); // Set customer to "Cash" after removing item
+				frappe.run_serially([
+					() => frappe.dom.unfreeze(),
+				]);
+			}
+		} else {
+			const item_row = this.get_item_from_frm(item);
+			this.render_cart_item(item_row, $item);
+		}
 
-        const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
-        this.highlight_checkout_btn(no_of_cart_items > 0);
-        this.update_empty_cart_section(no_of_cart_items);
-    }
+		const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
+		this.highlight_checkout_btn(no_of_cart_items > 0);
+		this.update_empty_cart_section(no_of_cart_items);
+	}
 
-    remove_customer() {
-        const frm = this.events.get_frm();
-        frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
-        this.update_customer_section();
-    }
 
-    set_cash_customer() {
-        const frm = this.events.get_frm();
-        frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", 'Cash');
-        this.update_customer_section();
-    }
+	remove_customer() {
+		const frm = this.events.get_frm();
+		// Get the current value of the "customer" field
+		const currentCustomer = frm.doc.customer;
+	
+		// Set the value of "custom_customer_2" to the current customer
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
+	
+		// Clear the "customer" field
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
+		// Update the customer section
+		this.update_customer_section();
+	}
+
+	set_cash_customer() {
+		const frm = this.events.get_frm();
+	
+		// Get the value of "custom_customer_2"
+		const customCustomer2Value = frm.doc.custom_customer_2;
+	
+		// Set the value of "customer" to the value of "custom_customer_2"
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
+	
+		// Update the customer section
+		this.update_customer_section();
+	}
+	
 
 	render_cart_item(item_data, $item_to_update) {
 		//console.log(item_data)
