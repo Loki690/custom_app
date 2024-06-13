@@ -102,13 +102,6 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 
-	make_app() {
-		this.prepare_dom();
-		this.prepare_components();
-		this.add_buttons_to_toolbar();
-		this.prepare_menu();
-		this.make_new_invoice();
-	}
 
 	prepare_dom() {
 		this.wrapper.append(`<div class="point-of-sale-app"></div>`);
@@ -116,14 +109,6 @@ custom_app.PointOfSale.Controller = class {
 		this.$components_wrapper = this.wrapper.find(".point-of-sale-app");
 	}
 
-	prepare_components() {
-		this.init_item_selector();
-		this.init_item_details();
-		this.init_item_cart();
-		this.init_payments();
-		this.init_recent_order_list();
-		this.init_order_summary();
-	}
 
 
 	prepare_menu() {

@@ -4401,10 +4401,13 @@
         },
         cols: 5,
         keys: [
-          ["Remove"]
+          ["", "", "", "Remove"]
         ],
         css_classes: [
-          ["col-span-2 remove-btn"]
+          ["", "", "", "col-span-2 remove-btn"],
+          ["", "", "", "col-span-2"],
+          ["", "", "", "col-span-2"],
+          ["", "", "", "col-span-2 remove-btn"]
         ],
         fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" }
       });
@@ -4611,17 +4614,31 @@
           },
           onchange: function() {
             if (this.value) {
+              const originalValue = this.value;
+              const temporaryValue = "cash";
               const frm = me.events.get_frm();
               frappe.dom.freeze();
-              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
+              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", temporaryValue);
               frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
                 frappe.run_serially([
-                  () => me.fetch_customer_details(this.value),
+                  () => me.fetch_customer_details(temporaryValue),
                   () => me.events.customer_details_updated(me.customer_info),
                   () => me.update_customer_section(),
                   () => me.update_totals_section(),
                   () => frappe.dom.unfreeze()
-                ]);
+                ]).then(() => {
+                  frappe.dom.freeze();
+                  frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", originalValue);
+                  frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
+                    frappe.run_serially([
+                      () => me.fetch_customer_details(originalValue),
+                      () => me.events.customer_details_updated(me.customer_info),
+                      () => me.update_customer_section(),
+                      () => me.update_totals_section(),
+                      () => frappe.dom.unfreeze()
+                    ]);
+                  });
+                });
               });
             }
           }
@@ -4849,6 +4866,7 @@
     update_totals_section(frm) {
       if (!frm)
         frm = this.events.get_frm();
+      console.log(frm.doc);
       this.render_vatable_sales(frm.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
@@ -4899,6 +4917,15 @@
 				</div>
 			`);
     }
+    render_ex_total(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".ex-total-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Ex Total")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
     render_total_item_qty(items) {
       var total_item_qty = 0;
       items.map((item) => {
@@ -4928,9 +4955,6 @@
           $item.remove();
           this.remove_customer();
           this.set_cash_customer();
-          frappe.run_serially([
-            () => frappe.dom.unfreeze()
-          ]);
         }
       } else {
         const item_row = this.get_item_from_frm(item);
@@ -7236,24 +7260,9 @@
       this.init_recent_order_list();
       this.init_order_summary();
     }
-    make_app() {
-      this.prepare_dom();
-      this.prepare_components();
-      this.add_buttons_to_toolbar();
-      this.prepare_menu();
-      this.make_new_invoice();
-    }
     prepare_dom() {
       this.wrapper.append(`<div class="point-of-sale-app"></div>`);
       this.$components_wrapper = this.wrapper.find(".point-of-sale-app");
-    }
-    prepare_components() {
-      this.init_item_selector();
-      this.init_item_details();
-      this.init_item_cart();
-      this.init_payments();
-      this.init_recent_order_list();
-      this.init_order_summary();
     }
     prepare_menu() {
       this.page.clear_menu();
@@ -7946,4 +7955,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.KMJNCLJZ.js.map
+//# sourceMappingURL=packing-list.bundle.WLU4FAHK.js.map
