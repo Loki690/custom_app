@@ -30,21 +30,16 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	init_customer_selector() {
-		this.$component.append(`<div class="customer-section mb-2 mt-4"></div>`);
+		this.$component.append(`<div class="customer-section mb-2"></div>`);
 		this.$customer_section = this.$component.find(".customer-section");
 		this.make_customer_selector();
 	}
 
 	init_doctors_selector() {
-		this.$component.append(`<div class="doctors-section" style="display: flex;
-		flex-direction: column;
-		padding: var(--padding-md) var(--padding-lg);
-		overflow: visible; background-color: var(--fg-color);
-		box-shadow: var(--shadow-base);
-		border-radius: var(--border-radius-md);
-	  }; margin-top: 1em;"></div>`);
+		this.$component.append(`<div class="doctors-section"></div>`);
 		this.$doctors_section = this.$component.find(".doctors-section");
 		this.make_doctors_selector();
+		// console.log('init doctors section')
 	}
 
 	reset_customer_selector() {
