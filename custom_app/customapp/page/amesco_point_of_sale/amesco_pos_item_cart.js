@@ -424,7 +424,10 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$customer_section.html(`
 			<div class="customer-field"></div>
 		`);
+		console.log(this.$customer_section);
+	
 		const me = this;
+	
 		const allowed_customer_group = this.allowed_customer_groups || [];
 		let filters = {};
 		if (allowed_customer_group.length) {
@@ -437,7 +440,7 @@ custom_app.PointOfSale.ItemCart = class {
 				label: __("Customer"),
 				fieldtype: "Link",
 				options: "Customer",
-				placeholder: __("Search by customer name, phone, email."),
+				placeholder: __("Select Customer"),
 				get_query: function () {
 					return {
 						filters: filters,
@@ -445,17 +448,35 @@ custom_app.PointOfSale.ItemCart = class {
 				},
 				onchange: function () {
 					if (this.value) {
+						const originalValue = this.value;
+						const temporaryValue = "cash";  // A temporary customer value
 						const frm = me.events.get_frm();
+	
 						frappe.dom.freeze();
-						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
+	
+						// First change to a temporary value
+						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", temporaryValue);
 						frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
 							frappe.run_serially([
-								() => me.fetch_customer_details(this.value),
+								() => me.fetch_customer_details(temporaryValue),
 								() => me.events.customer_details_updated(me.customer_info),
 								() => me.update_customer_section(),
 								() => me.update_totals_section(),
 								() => frappe.dom.unfreeze(),
-							]);
+							]).then(() => {
+								// Now change back to the original value
+								frappe.dom.freeze();
+								frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", originalValue);
+								frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
+									frappe.run_serially([
+										() => me.fetch_customer_details(originalValue),
+										() => me.events.customer_details_updated(me.customer_info),
+										() => me.update_customer_section(),
+										() => me.update_totals_section(),
+										() => frappe.dom.unfreeze(),
+									]);
+								});
+							});
 						});
 					}
 				},
@@ -463,9 +484,9 @@ custom_app.PointOfSale.ItemCart = class {
 			parent: this.$customer_section.find(".customer-field"),
 			render_input: true,
 		});
-		this.customer_field.toggle_label(false);
+		this.customer_field.toggle_label(true);
 	}
-
+	
 
 	//Doctors
 
@@ -894,10 +915,9 @@ custom_app.PointOfSale.ItemCart = class {
 				$item.next().remove();
 				$item.remove();
 				this.remove_customer(); // Call remove_customer function after removing item
-				this.set_cash_customer(); // Set customer to "Cash" after removing item
-				frappe.run_serially([
-					() => frappe.dom.unfreeze(),
-				]);
+				this.set_cash_customer();
+				 // Set customer to "Cash" after removing item
+				
 			}
 		} else {
 			const item_row = this.get_item_from_frm(item);
@@ -913,14 +933,13 @@ custom_app.PointOfSale.ItemCart = class {
 		const frm = this.events.get_frm();
 		// Get the current value of the "customer" field
 		const currentCustomer = frm.doc.customer;
-	
 		// Set the value of "custom_customer_2" to the current customer
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
-	
 		// Clear the "customer" field
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
 		// Update the customer section
 		this.update_customer_section();
+	
 	}
 
 	set_cash_customer() {
@@ -934,7 +953,9 @@ custom_app.PointOfSale.ItemCart = class {
 	
 		// Update the customer section
 		this.update_customer_section();
+		
 	}
+	
 
 	render_cart_item(item_data, $item_to_update) {
 		const currency = this.events.get_frm().doc.currency;
