@@ -229,7 +229,7 @@ custom_app.PointOfSale.ItemDetails = class {
 					let role = "oic";
 		
 					frappe.call({
-						method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
+						method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
 						args: { password: password, role: role },
 						callback: (r) => {
 							if (r.message) {
@@ -270,7 +270,9 @@ custom_app.PointOfSale.ItemDetails = class {
 		const fields = [
 			"qty",
 			"uom",
+			'price_list_rate',
 			"rate",
+			"amount",
 			"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field

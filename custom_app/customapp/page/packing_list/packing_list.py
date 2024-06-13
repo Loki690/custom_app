@@ -163,6 +163,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.name AS item_code,
             item.item_name,
             item.description,
+			item.custom_is_vatable,
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
@@ -359,8 +360,8 @@ def serial_number():
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, limit=20): #added filter per pos profile and custom_pl_series
-	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile", "custom_pl_series"]
+def get_past_order_list(search_term, status, pos_profile, limit=20):
+	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
 	if search_term and status:
@@ -368,6 +369,7 @@ def get_past_order_list(search_term, status, pos_profile, limit=20): #added filt
 			"POS Invoice",
 			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
 			fields=fields,
+			order_by="posting_time asc", 
 			page_length=limit,
 		)
 		invoices_by_name = frappe.db.get_all(
@@ -380,9 +382,9 @@ def get_past_order_list(search_term, status, pos_profile, limit=20): #added filt
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, page_length=limit
+			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
-
+		
 	return invoice_list
 
 
@@ -423,8 +425,14 @@ def set_customer_info(fieldname, customer, value=""):
 	elif fieldname == "mobile_no":
 		contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
 		frappe.db.set_value("Customer", customer, "mobile_no", value)
-	contact_doc.save()
+	elif fieldname == "custom_oscapwdid":
+		contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
+		frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
+	elif fieldname == "custom_transaction_type":
+		contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
+		frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
 
+	contact_doc.save()
 
 @frappe.whitelist()
 def get_pos_profile_data(pos_profile):
@@ -475,11 +483,27 @@ def get_user_password():
 #     return stored_password_hash
     
 # def check_if_match(stored_password_hash, password):
-
+from frappe.utils.password import get_decrypted_password
+from frappe.utils.password import check_password
+from frappe.exceptions import AuthenticationError
+from frappe.utils.password import check_oic_password, check_password
 @frappe.whitelist()
-def confirm_user_password(password):
+def confirm_user_password(password,role):
+    # Check if the provided role is "oic"
+    try:
+        # Check if the entered password matches the stored hashed password
+        if check_oic_password(password, role):
+            return True
+        else:
+            return False
+    except frappe.AuthenticationError:
+        return False
+	
+@frappe.whitelist()
+def confirm_user_acc_password(password):
     # Get the current user
     user = frappe.session.user
+
     try:
         # Check if the entered password matches the stored hashed password
         if check_password(user, password):

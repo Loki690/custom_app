@@ -125,16 +125,17 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
 	items_data = frappe.db.sql(
 		"""
-		SELECT
-			item.name AS item_code,
-			item.item_name,
-			item.description,
-			item.stock_uom,
-			item.image AS item_image,
-			item.is_stock_item,
-			MAX(batch.name) as batch_number,
-			MAX(batch.expiry_date) AS latest_expiry_date
-		FROM
+		 SELECT
+            item.name AS item_code,
+            item.item_name,
+            item.description,
+			item.custom_is_vatable,
+            item.stock_uom,
+            item.image AS item_image,
+            item.is_stock_item,
+            MAX(batch.name) as batch_number,
+            MAX(batch.expiry_date) AS latest_expiry_date
+        FROM
 			`tabItem` item
 		LEFT JOIN
 			`tabBatch` batch ON batch.item = item.name
@@ -359,9 +360,9 @@ def get_past_order_list(search_term, status, pos_profile, limit=20):
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, page_length=limit
+			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
-
+		
 	return invoice_list
 
 
@@ -396,12 +397,20 @@ def set_customer_info(fieldname, customer, value=""):
 		frappe.db.set_value("Customer", customer, "customer_primary_contact", contact)
 
 	contact_doc = frappe.get_doc("Contact", contact)
+
 	if fieldname == "email_id":
 		contact_doc.set("email_ids", [{"email_id": value, "is_primary": 1}])
 		frappe.db.set_value("Customer", customer, "email_id", value)
 	elif fieldname == "mobile_no":
 		contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
 		frappe.db.set_value("Customer", customer, "mobile_no", value)
+	elif fieldname == "custom_oscapwdid":
+		contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
+		frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
+	elif fieldname == "custom_transaction_type":
+		contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
+		frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
+
 	contact_doc.save()
 
 

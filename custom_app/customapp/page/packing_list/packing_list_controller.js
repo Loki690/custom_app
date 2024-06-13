@@ -81,9 +81,10 @@ custom_app.PointOfSale.Controller = class {
 	make_app() {
 		this.prepare_dom();
 		this.prepare_components();
-		this.prepare_buttons(); // Change from prepare_menu to prepare_buttons
+		this.prepare_menu(); 
+		this.add_buttons_to_toolbar();
 		this.make_new_invoice();
-		this.setup_shortcuts();
+		// this.setup_shortcuts();
 	}
 
 	prepare_dom() {
@@ -100,52 +101,123 @@ custom_app.PointOfSale.Controller = class {
 		this.init_order_summary();
 	}
 
-	prepare_buttons() {
-		this.page.clear_actions(); // Clear any existing buttons
-		this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-		this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-		this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-		// Add a button for "Toggle Recent Orders"
-		this.page.add_button(__("Toggle Pending Transaction (F6)"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary", "Ctrl+O");
-	
-		// Add a button for "Complete Order"
-		//this.page.add_button(__("Complete Order"), this.save_draft_invoice.bind(this), "octicon octicon-check", "btn-primary");
-	
-		// Add a button for "Branch Item Lookup"
-		this.page.add_button(__("Branch Item Lookup"), () => {
-			this.show_branch_selection_dialog()
-		}, "octicon octicon-search", "btn-secondary");
+
+	make_app() {
+		this.prepare_dom();
+		this.prepare_components();
+		this.add_buttons_to_toolbar();
+		this.prepare_menu();
+		this.make_new_invoice();
 	}
 
-	setup_shortcuts() {
-		// Add shortcut for "Toggle Recent Orders" - F1
-		frappe.ui.keys.add_shortcut({
-			shortcut: 'f1',
-			action: () => this.toggle_recent_order(),
-			description: __('Toggle Recent Orders'),
-			page: this.page
-		});
+	prepare_dom() {
+		this.wrapper.append(`<div class="point-of-sale-app"></div>`);
+
+		this.$components_wrapper = this.wrapper.find(".point-of-sale-app");
+	}
+
+	prepare_components() {
+		this.init_item_selector();
+		this.init_item_details();
+		this.init_item_cart();
+		this.init_payments();
+		this.init_recent_order_list();
+		this.init_order_summary();
+	}
+
+
+	prepare_menu() {
+		this.page.clear_menu();
+
+		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
+		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
+		this.page.add_menu_item(
+			__("Pending Transaction (F2)"),
+			this.toggle_recent_order.bind(this),
+			false,
+			"f2"
+		);
+		this.page.add_menu_item(__("Branch Item Lookup (F3)"), this.show_branch_selection_dialog.bind(this), false, "f4");
+		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
+
+
+	}
+
+
+	add_buttons_to_toolbar() {
+		const buttons = [
+			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
+			{label: __("Pending Transaction (F2"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
+			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
+			{label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4"},
+		];
 	
-		// Add shortcut for "Complete Order" - F2
-		frappe.ui.keys.add_shortcut({
-			shortcut: 'f2',
-			action: () => this.save_draft_invoice(),
-			description: __('Complete Order'),
-			page: this.page
-		});
+		// Clear existing buttons to avoid duplication
+		$('.page-actions .btn-custom').remove();
 	
-		// Add shortcut for "Branch Item Lookup" - F3
-		frappe.ui.keys.add_shortcut({
-			shortcut: 'f3',
-			action: () => this.show_branch_selection_dialog(),
-			description: __('Branch Item Lookup'),
-			page: this.page
+		buttons.forEach(btn => {
+			this.page.add_button(btn.label, btn.action, {shortcut: btn.shortcut}).addClass('btn-custom');
 		});
 	}
 
-	buttons() {
-		page.set_secondary_action('Refresh', () => refresh(), 'octicon octicon-sync')
+	add_new_order() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),
+			() => this.frm.call("reset_mode_of_payments"),
+			() => this.make_new_invoice(),
+			() => this.cart.load_invoice(),
+			() => this.item_selector.toggle_component(true),
+			() => frappe.dom.unfreeze(),
+			() => this.toggle_recent_order_list(false)
+		]);
 	}
+
+	// prepare_buttons() {
+	// 	this.page.clear_actions(); // Clear any existing buttons
+	// 	this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
+	// 	this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
+	// 	this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
+	// 	// Add a button for "Toggle Recent Orders"
+	// 	this.page.add_button(__("Toggle Pending Transaction (F6)"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary", "Ctrl+O");
+	
+	// 	// Add a button for "Complete Order"
+	// 	//this.page.add_button(__("Complete Order"), this.save_draft_invoice.bind(this), "octicon octicon-check", "btn-primary");
+	
+	// 	// Add a button for "Branch Item Lookup"
+	// 	this.page.add_button(__("Branch Item Lookup"), () => {
+	// 		this.show_branch_selection_dialog()
+	// 	}, "octicon octicon-search", "btn-secondary");
+	// }
+
+	// setup_shortcuts() {
+	// 	// Add shortcut for "Toggle Recent Orders" - F1
+	// 	frappe.ui.keys.add_shortcut({
+	// 		shortcut: 'f1',
+	// 		action: () => this.toggle_recent_order(),
+	// 		description: __('Toggle Recent Orders'),
+	// 		page: this.page
+	// 	});
+	
+	// 	// Add shortcut for "Complete Order" - F2
+	// 	frappe.ui.keys.add_shortcut({
+	// 		shortcut: 'f2',
+	// 		action: () => this.save_draft_invoice(),
+	// 		description: __('Complete Order'),
+	// 		page: this.page
+	// 	});
+	
+	// 	// Add shortcut for "Branch Item Lookup" - F3
+	// 	frappe.ui.keys.add_shortcut({
+	// 		shortcut: 'f3',
+	// 		action: () => this.show_branch_selection_dialog(),
+	// 		description: __('Branch Item Lookup'),
+	// 		page: this.page
+	// 	});
+	// }
+
+	// buttons() {
+	// 	page.set_secondary_action('Refresh', () => refresh(), 'octicon octicon-sync')
+	// }
 
 
 
@@ -279,7 +351,7 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				frappe.call({
-					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
@@ -408,7 +480,7 @@ custom_app.PointOfSale.Controller = class {
 
 				cart_item_clicked: (item, frm) => {
 
-					console.log(frm)
+					//console.log(frm)
 
 					const item_row = this.get_item_from_frm(item);
 					this.item_details.toggle_item_details_section(item_row);
@@ -919,9 +991,7 @@ custom_app.PointOfSale.Controller = class {
 				frappe.dom.unfreeze();
 			})
 			.catch((e) => console.log(e));
-	}
-
-	async save_and_checkout() {
+	}	async save_and_checkout() {
 		if (this.frm.is_dirty()) {
 			let save_error = false;
 			// await this.frm.save(null, null, null, () => (save_error = true));

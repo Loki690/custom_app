@@ -1,5 +1,6 @@
 import onScan from "onscan.js";
 custom_app.PointOfSale.ItemSelector = class {
+  
     constructor({ frm, wrapper, events, pos_profile, settings }) {
         this.wrapper = wrapper;
         this.events = events;
@@ -28,6 +29,7 @@ custom_app.PointOfSale.ItemSelector = class {
 		const css = `
 			.highlight {
 				background-color: #f2f2f2;
+
 			}
             .text{
                 font-size: 1em;
@@ -54,7 +56,7 @@ custom_app.PointOfSale.ItemSelector = class {
 		}
 		document.head.appendChild(style);
 	}
-
+  
     prepare_dom() {
         this.wrapper.append(
             `<section class="items-selector">

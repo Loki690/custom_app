@@ -73,6 +73,7 @@ custom_app.PointOfSale.ItemSelector = class {
 							<tr>
 								<th>Item Code</th>
 								<th>Name</th>
+								<th>Vat</th>
 								<th>Price</th>
 								<th>UOM</th>
 								<th>QTY</th>
@@ -140,6 +141,7 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$items_container.append(item_html);
         });
 
+
         this.highlighted_row_index = 0;
         this.highlight_row(this.highlighted_row_index);
     }
@@ -147,7 +149,7 @@ custom_app.PointOfSale.ItemSelector = class {
     get_item_html(item) {
         const me = this;
     
-        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number} = item;
+       const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number,custom_is_vatable} = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
@@ -164,25 +166,19 @@ custom_app.PointOfSale.ItemSelector = class {
             qty_to_display = "";
         }
 
-        
-
-    
-        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
-            data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
-            data-description="${escape(description)}" 
-            data-item-name="${escape(item.item_name)}"
-            data-item-uom="${escape(item.uom)}"
-            data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-            data-rate="${escape(price_list_rate || 0)}">
-            <td class="item-code">${item_code}</td> 
-            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-            <td class="batch-number">${batch_number}</td> 
-            <td class="item-expiry">${latest_expiry_date || ''}</td> <!-- Add the latest_expiry_date field -->
-            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-            <td class="item-uom"> ${uom} / count per uom </td>
-            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
-        </tr>`;
-        }
+		return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
+				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
+				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
+				data-rate="${escape(price_list_rate || 0)}">
+				<td class="item-code">${item_code}</td> 
+				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+				<td class="item-uom"> ${uom} / count per uom </td>
+				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+			</tr>`;
+		//<td class="item-description text-break">${description}</td>
+	}
 
     handle_broken_image($img) {
         const item_abbr = $($img).attr("alt");
