@@ -385,39 +385,71 @@
       this.pos_profile = pos_profile;
       this.hide_images = settings.hide_images;
       this.auto_add_item = settings.auto_add_item_to_cart;
-      this.inti_component();
+      this.init_component();
     }
-    inti_component() {
+    init_component() {
       this.prepare_dom();
       this.make_search_bar();
       this.load_items_data();
       this.bind_events();
       this.attach_shortcuts();
+      this.inject_css();
+    }
+    inject_css() {
+      const css = `
+			.highlight {
+				background-color: #f2f2f2;
+			}
+            .text{
+                font-size: 1em;
+                font-weight: semi-bold;
+            }
+            .text-description{
+                font-size: 1em;
+                font-weight: semi-bold;
+            }
+            .quantity-field{
+                width: 1rem;
+                height: 10rem;
+            }
+            .custom-quantity-field {
+                width: 200px; /* Adjust the width as needed */
+            }
+		`;
+      const style = document.createElement("style");
+      style.type = "text/css";
+      if (style.styleSheet) {
+        style.styleSheet.cssText = css;
+      } else {
+        style.appendChild(document.createTextNode(css));
+      }
+      document.head.appendChild(style);
     }
     prepare_dom() {
       this.wrapper.append(
         `<section class="items-selector">
-				<div class="filter-section">
-					<div class="label">${__("All Items")}</div>
-					<div class="search-field"></div>
-					<div class="item-group-field"></div>
-				</div>
-				<div class="table-responsive">
-					<table class="table items-table">
-					    <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
-							<tr>
-								<th>Item Code</th>
-								<th>Name</th>
-								<th>Price</th>
-								<th>UOM</th>
-								<th>QTY</th>
-							</tr>
-						</thead>
-
-						<tbody class="items-container"></tbody>
-					</table>
-				</div>
-			</section>`
+                <div class="filter-section">
+                    <div class="label">${__("All Items")}</div>
+                    <div class="item-group-field"></div>
+                    <div class="search-field"></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table items-table">
+                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Name</th>
+                                <th>Batch No.</th>
+                                <th>Exp Date</th>
+                                <th>Price</th>
+                                <th>UOM</th>
+                                <th>QTY</th>
+                            </tr>
+                        </thead>
+                        <tbody class="items-container"></tbody>
+                    </table>
+                </div>
+            </section>`
       );
       this.$component = this.wrapper.find(".items-selector");
       this.$items_container = this.$component.find(".items-container");
@@ -448,10 +480,13 @@
     }
     render_item_list(items) {
       this.$items_container.html("");
+      this.items = items;
       items.forEach((item) => {
         const item_html = this.get_item_html(item);
         this.$items_container.append(item_html);
       });
+      this.highlighted_row_index = 0;
+      this.highlight_row(this.highlighted_row_index);
     }
     get_item_html(item) {
       const me = this;
@@ -470,15 +505,20 @@
         qty_to_display = "";
       }
       return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
-				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
-				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-				data-rate="${escape(price_list_rate || 0)}">
-				<td class="item-code">${item_code}</td> 
-				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-				<td class="item-uom"> ${uom} / count per uom </td>
-				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
-			</tr>`;
+            data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
+            data-description="${escape(description)}" 
+            data-item-name="${escape(item.item_name)}"
+            data-item-uom="${escape(item.uom)}"
+            data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
+            data-rate="${escape(price_list_rate || 0)}">
+            <td class="item-code">${item_code}</td> 
+            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+            <td class="batch-number">${batch_number}</td> 
+            <td class="item-expiry">${latest_expiry_date || ""}</td> <!-- Add the latest_expiry_date field -->
+            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
+            <td class="item-uom"> ${uom} / count per uom </td>
+            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+        </tr>`;
     }
     handle_broken_image($img) {
       const item_abbr = $($img).attr("alt");
@@ -528,10 +568,10 @@
     attach_clear_btn() {
       this.search_field.$wrapper.find(".control-input").append(
         `<span class="link-btn" style="top: 2px;">
-				<a class="btn-open no-decoration" title="${__("Clear")}">
-					${frappe.utils.icon("close", "sm")}
-				</a>
-			</span>`
+                <a class="btn-open no-decoration" title="${__("Clear")}">
+                    ${frappe.utils.icon("close", "sm")}
+                </a>
+            </span>`
       );
       this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn");
       this.$clear_search_btn.on("click", "a", () => {
@@ -581,23 +621,129 @@
           }
         }
       });
-      this.$component.on("click", ".item-wrapper", function() {
+      let selectedUOM2;
+      this.$component.on("click", ".item-wrapper", async function() {
         const $item = $(this);
+        me.selectedItem = $item;
         const item_code = unescape($item.attr("data-item-code"));
-        let batch_no = unescape($item.attr("data-batch-no"));
-        let serial_no = unescape($item.attr("data-serial-no"));
-        let uom = unescape($item.attr("data-uom"));
-        let rate = unescape($item.attr("data-rate"));
-        batch_no = batch_no === "undefined" ? void 0 : batch_no;
-        serial_no = serial_no === "undefined" ? void 0 : serial_no;
-        uom = uom === "undefined" ? void 0 : uom;
-        rate = rate === "undefined" ? void 0 : rate;
-        me.events.item_selected({
-          field: "qty",
-          value: "+1",
-          item: { item_code, batch_no, serial_no, uom, rate }
+        const uom = unescape($item.attr("data-uom"));
+        const rate2 = parseFloat(unescape($item.attr("data-rate")));
+        const description = unescape($item.attr("data-description"));
+        frappe.call({
+          method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_item_uoms",
+          args: {
+            item_code
+          },
+          callback: function(response) {
+            if (response.message) {
+              const uomOptions = response.message.uoms.map((uom2) => ({
+                label: uom2.uom,
+                value: uom2.uom
+              }));
+              const dialog2 = new frappe.ui.Dialog({
+                title: __("Item Details"),
+                fields: [
+                  {
+                    fieldtype: "HTML",
+                    label: __("Item Code and Description"),
+                    options: `
+                                        <div class="row mb-4">
+                                            <div class="col-lg-6">
+                                                <div class="card w-80 h-80">
+                                                    <div class="card-body">
+                                                        <p class="text-description">${item_code}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="card w-80 h-80">
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <p class="text-description">${description}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                  },
+                  {
+                    fieldtype: "HTML",
+                    label: __("Quantity"),
+                    options: `
+                                    <div class="row">
+                                        <div class="col-lg">
+                                            <div class="form-group">
+                                                <label class="control-label">${__("Quantity")}</label>
+                                                <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    `
+                  },
+                  {
+                    fieldtype: "Select",
+                    label: __("UOM"),
+                    fieldname: "uom",
+                    options: uomOptions,
+                    default: "PC"
+                  },
+                  {
+                    fieldtype: "HTML",
+                    label: __("Amount"),
+                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Amount</label>
+                                                    <input class="form-control" data-fieldname="total_amount" value="${rate2.toFixed(2)}" readonly />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                  }
+                ],
+                primary_action_label: __("Ok"),
+                primary_action: function() {
+                  const quantity2 = parseFloat(dialog2.wrapper.find('input[data-fieldname="quantity"]').val());
+                  const selectedUOM3 = dialog2.wrapper.find('select[data-fieldname="uom"]').val();
+                  const totalAmount = parseFloat(dialog2.wrapper.find('input[data-fieldname="total_amount"]').val());
+                  if (!quantity2 || quantity2 <= 0) {
+                    frappe.msgprint(__("Please enter a valid quantity."));
+                    return;
+                  }
+                  dialog2.hide();
+                  if (!me.selectedItem) {
+                    frappe.msgprint(__("No item selected."));
+                    return;
+                  }
+                  me.selectedItem.find(".item-uom").text(selectedUOM3);
+                  const itemCode = unescape(me.selectedItem.attr("data-item-code"));
+                  const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
+                  const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+                  me.events.item_selected({
+                    field: "qty",
+                    value: quantity2,
+                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM3, quantity: quantity2, rate: totalAmount }
+                  });
+                  me.search_field.set_focus();
+                }
+              });
+              dialog2.show();
+              dialog2.wrapper.find('input[data-fieldname="quantity"]').on("input", function() {
+                const quantity2 = parseFloat($(this).val());
+                if (!isNaN(quantity2)) {
+                  const totalAmount = (quantity2 * rate2).toFixed(2);
+                  dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                } else {
+                  dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(rate2.toFixed(2));
+                }
+              });
+            }
+          }
         });
-        me.search_field.set_focus();
       });
       this.search_field.$input.on("input", (e) => {
         clearTimeout(this.last_search);
@@ -609,6 +755,28 @@
       });
       this.search_field.$input.on("focus", () => {
         this.$clear_search_btn.toggle(Boolean(this.search_field.$input.val()));
+      });
+      this.$component.on("keydown", (e) => {
+        const key = e.which || e.keyCode;
+        switch (key) {
+          case 38:
+            e.preventDefault();
+            this.navigate_up();
+            break;
+          case 40:
+            e.preventDefault();
+            this.navigate_down();
+            break;
+          case 9:
+            e.preventDefault();
+            this.navigate_down();
+            this.focus_next_field();
+            break;
+          case 13:
+            e.preventDefault();
+            this.select_highlighted_item();
+            break;
+        }
       });
     }
     attach_shortcuts() {
@@ -633,6 +801,7 @@
       });
       frappe.ui.keys.on("enter", () => {
         const selector_is_visible = this.$component.is(":visible");
+        const dialog_is_open = document.querySelector(".modal.show");
         if (!selector_is_visible || this.search_field.get_value() === "")
           return;
         if (this.items.length == 1) {
@@ -648,7 +817,47 @@
           this.barcode_scanned = false;
           this.set_search_value("");
         }
+        if (dialog_is_open && document.activeElement.tagName === "SELECT") {
+          this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
+          const itemCode = unescape(this.selectedItem.attr("data-item-code"));
+          const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
+          const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
+          this.events.item_selected({
+            field: "qty",
+            value: quantity,
+            item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate }
+          });
+          this.search_field.set_focus();
+        }
       });
+    }
+    focus_next_field() {
+      const customerField = document.querySelector("_init_customer_selector");
+      const doctorField = document.querySelector("init_doctor_selector");
+      if (document.activeElement === this.search_field.$input[0]) {
+        customerField.focus();
+      } else if (document.activeElement === customerField) {
+        doctorField.focus();
+      }
+    }
+    navigate_up() {
+      if (this.highlighted_row_index > 0) {
+        this.highlighted_row_index--;
+        this.highlight_row(this.highlighted_row_index);
+      }
+    }
+    navigate_down() {
+      if (this.highlighted_row_index < this.items.length - 1) {
+        this.highlighted_row_index++;
+        this.highlight_row(this.highlighted_row_index);
+      }
+    }
+    highlight_row(index) {
+      this.$items_container.find(".item-wrapper").removeClass("highlight");
+      this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+    }
+    select_highlighted_item() {
+      this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index).click();
     }
     filter_items({ search_term = "" } = {}) {
       if (search_term) {
@@ -677,23 +886,10 @@
       this.set_search_value("");
     }
     resize_selector(minimize) {
-      if (minimize) {
-        this.$component.css({
-          "opacity": "0",
-          "pointer-events": "none",
-          "grid-column": "span 1 / span 1",
-          "grid-template-columns": "repeat(13, minmax(0, 1fr))"
-        });
-      } else {
-        this.$component.css({
-          "opacity": "1",
-          "pointer-events": "auto",
-          "grid-column": "span 6 / span 6"
-        });
-        this.$component.find(".filter-section").css("grid-template-columns", "repeat(12, minmax(0, 1fr))");
-        this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
-        this.$items_container.css("grid-template-columns", "repeat(4, minmax(0, 1fr))");
-      }
+      minimize ? this.$component.find(".filter-section").css("grid-template-columns", "repeat(1, minmax(0, 1fr))") : this.$component.find(".filter-section").css("grid-template-columns", "repeat(12, minmax(0, 1fr))");
+      minimize ? this.$component.find(".search-field").css("margin", "var(--margin-sm) 0px") : this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
+      minimize ? this.$component.css("grid-column", "span 2 / span 2") : this.$component.css("grid-column", "span 6 / span 6");
+      minimize ? this.$items_container.css("grid-template-columns", "repeat(1, minmax(0, 1fr))") : this.$items_container.css("grid-template-columns", "repeat(4, minmax(0, 1fr))");
     }
     toggle_component(show2) {
       this.set_search_value("");
@@ -1952,6 +2148,9 @@
         this[`${fieldname}_control`] = frappe.ui.form.make_control({
           df: __spreadProps(__spreadValues({}, field_meta), {
             onchange: function() {
+              if (fieldname === "uom") {
+                me.calculate_conversion_factor(this.value, item);
+              }
               me.events.form_updated(me.current_item, fieldname, this.value);
               me.is_oic_authenticated = false;
             }
@@ -1970,6 +2169,12 @@
       });
       this.make_auto_serial_selection_btn(item);
       this.bind_custom_control_change_event();
+    }
+    calculate_conversion_factor(selected_uom, item) {
+      const default_uom = item.stock_uom;
+      const conversion_factor = frappe.convert_uom(1, default_uom, selected_uom);
+      const amount = item.rate * conversion_factor;
+      this.$item_price.html(format_currency(amount, this.currency));
     }
     oic_authentication(fieldname) {
       const me = this;
@@ -3489,10 +3694,10 @@
           label: "Opening Amount",
           options: "company:company_currency",
           change: function() {
-            dialog.fields_dict.balance_details.df.data.some((d) => {
+            dialog2.fields_dict.balance_details.df.data.some((d) => {
               if (d.idx == this.doc.idx) {
                 d.opening_amount = this.value;
-                dialog.fields_dict.balance_details.grid.refresh();
+                dialog2.fields_dict.balance_details.grid.refresh();
                 return true;
               }
             });
@@ -3500,19 +3705,19 @@
         }
       ];
       const fetch_pos_payment_methods = () => {
-        const pos_profile = dialog.fields_dict.pos_profile.get_value();
+        const pos_profile = dialog2.fields_dict.pos_profile.get_value();
         if (!pos_profile)
           return;
         frappe.db.get_doc("POS Profile", pos_profile).then(({ payments }) => {
-          dialog.fields_dict.balance_details.df.data = [];
+          dialog2.fields_dict.balance_details.df.data = [];
           payments.forEach((pay) => {
             const { mode_of_payment } = pay;
-            dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: "0" });
+            dialog2.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: "0" });
           });
-          dialog.fields_dict.balance_details.grid.refresh();
+          dialog2.fields_dict.balance_details.grid.refresh();
         });
       };
-      const dialog = new frappe.ui.Dialog({
+      const dialog2 = new frappe.ui.Dialog({
         title: __("Create POS Opening Entry"),
         static: true,
         fields: [
@@ -3560,15 +3765,15 @@
             freeze: true
           });
           !res.exc && me.prepare_app_defaults(res.message);
-          dialog.hide();
+          dialog2.hide();
         },
         primary_action_label: __("Submit")
       });
-      dialog.show();
+      dialog2.show();
       const pos_profile_query = () => {
         return {
           query: "erpnext.accounts.doctype.pos_profile.pos_profile.pos_profile_query",
-          filters: { company: dialog.fields_dict.company.get_value() }
+          filters: { company: dialog2.fields_dict.company.get_value() }
         };
       };
     }
@@ -4128,10 +4333,10 @@
         } else {
           if (!this.frm.doc.customer)
             return this.raise_customer_selection_alert();
-          const { item_code, batch_no, serial_no, rate, uom } = item;
+          const { item_code, batch_no, serial_no, rate: rate2, uom } = item;
           if (!item_code)
             return;
-          const new_item = { item_code, batch_no, rate, uom, [field]: value };
+          const new_item = { item_code, batch_no, rate: rate2, uom, [field]: value };
           if (serial_no) {
             await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
             new_item["serial_no"] = serial_no;
@@ -4166,14 +4371,14 @@
       });
       frappe.utils.play_sound("error");
     }
-    get_item_from_frm({ name, item_code, batch_no, uom, rate }) {
+    get_item_from_frm({ name, item_code, batch_no, uom, rate: rate2 }) {
       let item_row = null;
       if (name) {
         item_row = this.frm.doc.items.find((i) => i.name == name);
       } else {
         const has_batch_no = batch_no !== "null" && batch_no !== null;
         item_row = this.frm.doc.items.find(
-          (i) => i.item_code === item_code && (!has_batch_no || has_batch_no && i.batch_no === batch_no) && i.uom === uom && i.rate === flt(rate)
+          (i) => i.item_code === item_code && (!has_batch_no || has_batch_no && i.batch_no === batch_no) && i.uom === uom && i.rate === flt(rate2)
         );
       }
       return item_row || {};
@@ -4336,4 +4541,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.HREXHEZ4.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.BIB5ZJOJ.js.map
