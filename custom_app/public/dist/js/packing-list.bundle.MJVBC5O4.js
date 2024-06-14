@@ -3993,6 +3993,7 @@
 							<tr>
 								<th>Item Code</th>
 								<th>Name</th>
+								<th>Vat</th>
 								<th>Price</th>
 								<th>UOM</th>
 								<th>QTY</th>
@@ -4052,7 +4053,7 @@
     }
     get_item_html(item) {
       const me = this;
-      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number } = item;
+      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
@@ -4067,20 +4068,16 @@
         qty_to_display = "";
       }
       return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
-            data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
-            data-description="${escape(description)}" 
-            data-item-name="${escape(item.item_name)}"
-            data-item-uom="${escape(item.uom)}"
-            data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-            data-rate="${escape(price_list_rate || 0)}">
-            <td class="item-code">${item_code}</td> 
-            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-            <td class="batch-number">${batch_number}</td> 
-            <td class="item-expiry">${latest_expiry_date || ""}</td> <!-- Add the latest_expiry_date field -->
-            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-            <td class="item-uom"> ${uom} / count per uom </td>
-            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
-        </tr>`;
+				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
+				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
+				data-rate="${escape(price_list_rate || 0)}">
+				<td class="item-code">${item_code}</td> 
+				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
+				<td class="item-uom"> ${uom} / count per uom </td>
+				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+			</tr>`;
     }
     handle_broken_image($img) {
       const item_abbr = $($img).attr("alt");
@@ -4448,10 +4445,23 @@
       this.set_search_value("");
     }
     resize_selector(minimize) {
-      minimize ? this.$component.find(".filter-section").css("grid-template-columns", "repeat(1, minmax(0, 1fr))") : this.$component.find(".filter-section").css("grid-template-columns", "repeat(12, minmax(0, 1fr))");
-      minimize ? this.$component.find(".search-field").css("margin", "var(--margin-sm) 0px") : this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
-      minimize ? this.$component.css("grid-column", "span 2 / span 2") : this.$component.css("grid-column", "span 6 / span 6");
-      minimize ? this.$items_container.css("grid-template-columns", "repeat(1, minmax(0, 1fr))") : this.$items_container.css("grid-template-columns", "repeat(4, minmax(0, 1fr))");
+      if (minimize) {
+        this.$component.css({
+          "opacity": "0",
+          "pointer-events": "none",
+          "grid-column": "span 1 / span 1",
+          "grid-template-columns": "repeat(13, minmax(0, 1fr))"
+        });
+      } else {
+        this.$component.css({
+          "opacity": "1",
+          "pointer-events": "auto",
+          "grid-column": "span 6 / span 6"
+        });
+        this.$component.find(".filter-section").css("grid-template-columns", "repeat(12, minmax(0, 1fr))");
+        this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
+        this.$items_container.css("grid-template-columns", "repeat(4, minmax(0, 1fr))");
+      }
     }
     toggle_component(show) {
       this.set_search_value("");
@@ -4557,15 +4567,22 @@
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
 			</div>
-			<div class="net-total-container">
-				<div class="net-total-label">${__("Net Total")}</div>
+			<div class="vatable-sales-container mt-2"></div>
+			<div class="vat-exempt-container"></div>
+			<div class="zero-rated-container"></div>
+			<div class="vat-container"></div>
+			<div class="ex-total-container"></div>
+				<div class="net-total-container">
+				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
-			<div class="taxes-container"></div>
+
+		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
-				<div>${__("Grand Total")}</div>
+				<div>${__("Total")}</div>
 				<div>0.00</div>
-			</div>
+			</div> 
+
 			<div class="checkout-btn">${__("Order")}</div>
 			<div class="edit-cart-btn">${__("Edit Cart")}</div>`
       );
@@ -4580,10 +4597,13 @@
         },
         cols: 5,
         keys: [
-          ["Remove"]
+          ["", "", "", "Remove"]
         ],
         css_classes: [
-          ["col-span-2 remove-btn"]
+          ["", "", "", "col-span-2 remove-btn"],
+          ["", "", "", "col-span-2"],
+          ["", "", "", "col-span-2"],
+          ["", "", "", "col-span-2 remove-btn"]
         ],
         fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" }
       });
@@ -4641,43 +4661,13 @@
           this.show_discount_control();
       });
       this.$totals_section.on("click", ".edit-cart-btn", () => {
-        const passwordDialog = new frappe.ui.Dialog({
-          title: __("Enter OIC Account"),
-          fields: [
-            {
-              fieldname: "password",
-              fieldtype: "Password",
-              label: __("Password"),
-              reqd: 1
-            }
-          ],
-          primary_action_label: __("Edit Order"),
-          primary_action: (values) => {
-            let password = values.password;
-            let role = "oic";
-            frappe.call({
-              method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
-              args: { password, role },
-              callback: (r) => {
-                if (r.message) {
-                  this.events.edit_cart();
-                  this.toggle_checkout_btn(true);
-                  passwordDialog.hide();
-                } else {
-                  frappe.show_alert({
-                    message: __("Incorrect password or user is not an OIC"),
-                    indicator: "red"
-                  });
-                }
-              }
-            });
-          }
-        });
-        passwordDialog.show();
+        this.events.edit_cart();
+        this.toggle_checkout_btn(true);
+        passwordDialog.hide();
       });
       this.$component.on("click", ".add-discount-wrapper", () => {
         if (!this.is_oic_authenticated) {
-          const passwordDialog = new frappe.ui.Dialog({
+          const passwordDialog2 = new frappe.ui.Dialog({
             title: __("Enter OIC Password"),
             fields: [
               {
@@ -4698,7 +4688,7 @@
                   if (r.message) {
                     this.is_oic_authenticated = true;
                     this.show_discount_control();
-                    passwordDialog.hide();
+                    passwordDialog2.hide();
                   } else {
                     frappe.show_alert({
                       message: __("Incorrect password or user is not an OIC"),
@@ -4709,7 +4699,7 @@
               });
             }
           });
-          passwordDialog.show();
+          passwordDialog2.show();
         } else {
           const can_edit_discount = this.$add_discount_elem.find(".edit-discount-btn").length;
           if (!this.discount_field || can_edit_discount)
@@ -4731,9 +4721,9 @@
             continue;
           let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
           if (btn === "Delete")
-            shortcut_key = "ctrl+backspace";
+            shortcut_key = "delete";
           if (btn === "Remove")
-            shortcut_key = "shift+ctrl+backspace";
+            shortcut_key = "crtl+backspace";
           if (btn === ".")
             shortcut_key = "ctrl+>";
           const fieldname = this.number_pad.fieldnames[btn] ? this.number_pad.fieldnames[btn] : typeof btn === "string" ? frappe.scrub(btn) : btn;
@@ -4820,17 +4810,31 @@
           },
           onchange: function() {
             if (this.value) {
+              const originalValue = this.value;
+              const temporaryValue = "cash";
               const frm = me.events.get_frm();
               frappe.dom.freeze();
-              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
+              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", temporaryValue);
               frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
                 frappe.run_serially([
-                  () => me.fetch_customer_details(this.value),
+                  () => me.fetch_customer_details(temporaryValue),
                   () => me.events.customer_details_updated(me.customer_info),
                   () => me.update_customer_section(),
                   () => me.update_totals_section(),
                   () => frappe.dom.unfreeze()
-                ]);
+                ]).then(() => {
+                  frappe.dom.freeze();
+                  frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", originalValue);
+                  frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
+                    frappe.run_serially([
+                      () => me.fetch_customer_details(originalValue),
+                      () => me.events.customer_details_updated(me.customer_info),
+                      () => me.update_customer_section(),
+                      () => me.update_totals_section(),
+                      () => frappe.dom.unfreeze()
+                    ]);
+                  });
+                });
               });
             }
           }
@@ -4876,7 +4880,7 @@
     fetch_customer_details(customer) {
       if (customer) {
         return new Promise((resolve) => {
-          frappe.db.get_value("Customer", customer, ["email_id", "mobile_no", "image", "loyalty_program"]).then(({ message }) => {
+          frappe.db.get_value("Customer", customer, ["email_id", "mobile_no", "custom_oscapwdid", "custom_transaction_type", "image", "loyalty_program"]).then(({ message }) => {
             const { loyalty_program } = message;
             if (loyalty_program) {
               frappe.call({
@@ -5058,46 +5062,78 @@
     update_totals_section(frm) {
       if (!frm)
         frm = this.events.get_frm();
+      console.log(frm.doc);
+      this.render_vatable_sales(frm.doc.custom_vatable_sales);
+      this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
+      this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
+      this.render_vat(frm.doc.custom_vat_amount);
       this.render_net_total(frm.doc.net_total);
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".net-total-container").html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".net-total-container").html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
+    }
+    render_vatable_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".vatable-sales-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VATable Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
+    render_vat_exempt_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".vat-exempt-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
+    render_zero_rated_sales(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".zero-rated-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
+    render_vat(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".vat-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT 12%")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
+    render_ex_total(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".ex-total-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Ex Total")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
     }
     render_total_item_qty(items) {
       var total_item_qty = 0;
       items.map((item) => {
         total_item_qty = total_item_qty + item.qty;
       });
-      this.$totals_section.find(".item-qty-total-container").html(`<div>${__("Total Quantitydddddddd")}</div><div>${total_item_qty}</div>`);
-      this.$numpad_section.find(".numpad-item-qty-total").html(`<div>${__("Total Quantityddd")}: <span>${total_item_qty}</span></div>`);
+      this.$totals_section.find(".item-qty-total-container").html(`<div>${__("Total Quantity")}</div><div>${total_item_qty}</div>`);
+      this.$numpad_section.find(".numpad-item-qty-total").html(`<div>${__("Total Quantity")}: <span>${total_item_qty}</span></div>`);
     }
     render_grand_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".grand-total-container").html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
-    }
-    render_taxes(taxes) {
-      if (taxes && taxes.length) {
-        const currency = this.events.get_frm().doc.currency;
-        const taxes_html = taxes.map((t) => {
-          if (t.tax_amount_after_discount_amount == 0)
-            return;
-          const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
-          return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-        }).join("");
-        this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-      } else {
-        this.$totals_section.find(".taxes-container").css("display", "none").html("");
-      }
+      this.$totals_section.find(".grand-total-container").html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
     }
     get_cart_item({ name }) {
       const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -5110,7 +5146,12 @@
     update_item_html(item, remove_item) {
       const $item = this.get_cart_item(item);
       if (remove_item) {
-        $item && $item.next().remove() && $item.remove();
+        if ($item) {
+          $item.next().remove();
+          $item.remove();
+          this.remove_customer();
+          this.set_cash_customer();
+        }
       } else {
         const item_row = this.get_item_from_frm(item);
         this.render_cart_item(item_row, $item);
@@ -5118,6 +5159,19 @@
       const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
       this.highlight_checkout_btn(no_of_cart_items > 0);
       this.update_empty_cart_section(no_of_cart_items);
+    }
+    remove_customer() {
+      const frm = this.events.get_frm();
+      const currentCustomer = frm.doc.customer;
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "");
+      this.update_customer_section();
+    }
+    set_cash_customer() {
+      const frm = this.events.get_frm();
+      const customCustomer2Value = frm.doc.custom_customer_2;
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
+      this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
       const currency = this.events.get_frm().doc.currency;
@@ -5362,6 +5416,8 @@
 				<div class="customer-fields-container">
 					<div class="email_id-field"></div>
 					<div class="mobile_no-field"></div>
+					<div class="custom_transaction_type-field"></div>
+					<div class="custom_oscapwdid-field"></div>
 					<div class="loyalty_program-field"></div>
 					<div class="loyalty_points-field"></div>
 				</div>
@@ -5394,6 +5450,19 @@
           label: __("Phone Number"),
           fieldtype: "Data",
           placeholder: __("Enter customer's phone number")
+        },
+        {
+          fieldname: "custom_transaction_type",
+          label: __("Transaction Type"),
+          fieldtype: "Select",
+          options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
+          placeholder: __("Enter customer's transaction type")
+        },
+        {
+          fieldname: "custom_oscapwdid",
+          label: __("Osca or PWD ID"),
+          fieldtype: "Data",
+          placeholder: __("Enter customer's Osca or PWD ID")
         },
         {
           fieldname: "loyalty_program",
@@ -5703,7 +5772,7 @@
     }
     oic_authentication(fieldname) {
       const me = this;
-      const passwordDialog = new frappe.ui.Dialog({
+      const passwordDialog2 = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
           {
@@ -5718,7 +5787,7 @@
           let password = values.password;
           let role = "oic";
           frappe.call({
-            method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
             args: { password, role },
             callback: (r) => {
               if (r.message) {
@@ -5726,7 +5795,7 @@
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog.hide();
+                passwordDialog2.hide();
                 me.enable_discount_input(fieldname);
                 me.is_oic_authenticated = true;
               } else {
@@ -5739,7 +5808,7 @@
           });
         }
       });
-      passwordDialog.show();
+      passwordDialog2.show();
     }
     enable_discount_input(fieldname) {
       this.$form_container.find(`.${fieldname}-control input`).prop("disabled", false);
@@ -5748,7 +5817,9 @@
       const fields = [
         "qty",
         "uom",
+        "price_list_rate",
         "rate",
+        "amount",
         "conversion_factor",
         "discount_percentage",
         "discount_amount",
@@ -5993,7 +6064,6 @@
     }
     init_component() {
       this.prepare_dom();
-      this.initialize_numpad();
       this.bind_events();
       this.attach_shortcuts();
     }
@@ -6012,7 +6082,7 @@
 				<div class="totals-section">
 					<div class="totals"></div>
 				</div>
-				<div class="submit-order-btn">${__("Complete Order")}</div>
+				<div class="submit-order-btn">${__("Print Order List")}</div>
 			</section>`
       );
       this.$component = this.wrapper.find(".payment-container");
@@ -6101,14 +6171,18 @@
         me.$payment_modes.animate({ scrollLeft });
         const mode = mode_clicked.attr("data-mode");
         $(`.mode-of-payment-control`).css("display", "none");
-        $(`.bank_name_control`).css("display", "none");
+        $(`.mobile-number`).css("display", "none");
+        $(`.reference-number`).css("display", "none");
+        $(`.bank-name`).css("display", "none");
+        $(`.holder-name`).css("display", "none");
         $(`.card_type_control`).css("display", "none");
-        $(`.name_on_card_control`).css("display", "none");
-        $(`.card_number_control`).css("display", "none");
-        $(`.card_exp_date_control`).css("display", "none");
-        $(`.phone_number_control`).css("display", "none");
-        $(`.reference_no_control`).css("display", "none");
+        $(`.card-number`).css("display", "none");
+        $(`.expiry-date`).css("display", "none");
+        $(`.confirmation-code`).css("display", "none");
         $(`.cash-shortcuts`).css("display", "none");
+        $(`.check-name`).css("display", "none");
+        $(`.check-number`).css("display", "none");
+        $(`.check-date`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
         $(".mode-of-payment").removeClass("border-primary");
@@ -6118,18 +6192,22 @@
         } else {
           mode_clicked.addClass("border-primary");
           mode_clicked.find(".mode-of-payment-control").css("display", "flex");
-          mode_clicked.find(".bank_name_control").css("display", "flex");
+          mode_clicked.find(".mobile-number").css("display", "flex");
+          mode_clicked.find(".reference-number").css("display", "flex");
+          mode_clicked.find(".bank-name").css("display", "flex");
+          mode_clicked.find(".holder-name").css("display", "flex");
           mode_clicked.find(".card_type_control").css("display", "flex");
-          mode_clicked.find(".name_on_card_control").css("display", "flex");
-          mode_clicked.find(".card_number_control").css("display", "flex");
-          mode_clicked.find(".card_exp_date_control").css("display", "flex");
-          mode_clicked.find(".phone_number_control").css("display", "flex");
-          mode_clicked.find(".reference_no_control").css("display", "flex");
+          mode_clicked.find(".card-number").css("display", "flex");
+          mode_clicked.find(".expiry-date").css("display", "flex");
+          mode_clicked.find(".confirmation-code").css("display", "flex");
+          mode_clicked.find(".check-name").css("display", "flex");
+          mode_clicked.find(".check-number").css("display", "flex");
+          mode_clicked.find(".check-date").css("display", "flex");
           mode_clicked.find(".cash-shortcuts").css("display", "grid");
           me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
           me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
           me.selected_mode = me[`${mode}_control`];
-          me.selected_mode && me.selected_mode.$input.get(0).focus();
+          me.selected_mode && me.selected_mode.$input.get().focus();
           me.auto_set_remaining_amount();
         }
       });
@@ -6323,22 +6401,50 @@
           const payment_type = p.type;
           const margin = i % 2 === 0 ? "pr-2" : "pl-2";
           const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
-          return `
+          let paymentModeHtml = `
 					<div class="payment-mode-wrapper">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
 							${p.mode_of_payment}
 							<div class="${mode}-amount pay-amount">${amount}</div>
 							<div class="${mode} mode-of-payment-control"></div>
-							<div class="${mode} bank_name_control"></div>
+				`;
+          switch (p.mode_of_payment) {
+            case "GCash":
+              paymentModeHtml += `
+							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
+							<div class="${mode} reference-number" style="margin-top:10px;"></div>
+						`;
+              break;
+            case "Cards":
+              paymentModeHtml += `
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} holder-name"></div>
 							<div class="${mode} card_type_control"></div>
-							<div class="${mode} name_on_card_control"></div>
-							<div class="${mode} card_number_control"></div>
-							<div class="${mode} card_exp_date_control"></div>
-							<div class="${mode} phone_number_control"></div>
-							<div class="${mode} reference_no_control"></div>
+							<div class="${mode} card-number"></div>
+							<div class="${mode} expiry-date"></div>
+							<div class="${mode} reference-number"></div>
+						`;
+              break;
+            case "PayMaya":
+              paymentModeHtml += `
+							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
+							<div class="${mode} reference-number" style="margin-top:10px;"></div>
+						`;
+              break;
+            case "Cheque":
+              paymentModeHtml += `
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} check-name"></div>	
+							<div class="${mode} check-number"></div>
+							<div class="${mode} check-date"></div>	
+						`;
+              break;
+          }
+          paymentModeHtml += `
 						</div>
 					</div>
 				`;
+          return paymentModeHtml;
         }).join("")}`
       );
       payments.forEach((p) => {
@@ -6361,148 +6467,236 @@
           parent: this.$payment_modes.find(`.${mode}.mode-of-payment-control`),
           render_input: true
         });
-        if (mode === "credit_card" || mode === "debit_card" || mode === "card") {
-          this.card_payments_control(mode, p);
+        if (p.mode_of_payment === "Cards") {
+          let validateLastFourDigits2 = function(value) {
+            const regex = /^\d{4}$/;
+            return regex.test(value);
+          };
+          var validateLastFourDigits = validateLastFourDigits2;
+          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+          let bank_name_control = frappe.ui.form.make_control({
+            df: {
+              label: "Bank",
+              fieldtype: "Data",
+              placeholder: "Bank Name",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.bank-name`),
+            render_input: true
+          });
+          bank_name_control.set_value(existing_custom_bank_name || "");
+          bank_name_control.refresh();
+          let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
+          let name_on_card_control = frappe.ui.form.make_control({
+            df: {
+              label: "Name on Card",
+              fieldtype: "Data",
+              placeholder: "Card name holder",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_card_name", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.holder-name`),
+            render_input: true
+          });
+          name_on_card_control.set_value(existing_custom_card_name || "");
+          name_on_card_control.refresh();
+          let existing_custom_card_type = frappe.model.get_value(p.doctype, p.name, "custom_card_type");
+          let card_type_control = frappe.ui.form.make_control({
+            df: {
+              label: "Card Type",
+              fieldtype: "Select",
+              options: [
+                { label: "Select Card Type", value: "" },
+                { label: "Visa", value: "Visa" },
+                { label: "Visa Debit", value: "Visa Debit" },
+                { label: "Visa Electron", value: "Visa Electron" },
+                { label: "Credit Card", value: "Credit Card" },
+                { label: "Mastercard", value: "Mastercard" },
+                { label: "Mastercard Debit", value: "Mastercard Debit" },
+                { label: "Maestro", value: "Maestro" },
+                { label: "American Express (Amex)", value: "American Express (Amex)" },
+                { label: "Discover", value: "Discover" },
+                { label: "Diners Club", value: "Diners Club" },
+                { label: "JCB", value: "JCB" },
+                { label: "UnionPay", value: "UnionPay" },
+                { label: "RuPay", value: "RuPay" },
+                { label: "Interac", value: "Interac" },
+                { label: "Carte Bancaire (CB)", value: "Carte Bancaire (CB)" },
+                { label: "Elo", value: "Elo" },
+                { label: "Mir", value: "Mir" },
+                { label: "Others", value: "Others" }
+              ],
+              onchange: function() {
+                const value = this.value;
+                frappe.model.set_value(p.doctype, p.name, "custom_card_type", value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.card_type_control`),
+            render_input: true
+          });
+          card_type_control.set_value(existing_custom_card_type || "");
+          card_type_control.refresh();
+          let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
+          let card_number_control = frappe.ui.form.make_control({
+            df: {
+              label: "Card Number",
+              fieldtype: "Data",
+              placeholder: "Last 4 digits",
+              onchange: function() {
+                const value = this.value;
+                if (value === "") {
+                  frappe.model.set_value(p.doctype, p.name, "custom_card_number", "");
+                } else if (validateLastFourDigits2(value)) {
+                  frappe.model.set_value(p.doctype, p.name, "custom_card_number", value);
+                } else {
+                  frappe.msgprint(__("Card number must be exactly 4 digits."));
+                  this.set_value("");
+                }
+              },
+              maxlength: 4
+            },
+            parent: this.$payment_modes.find(`.${mode}.card-number`),
+            render_input: true,
+            default: existing_custom_card_number || ""
+          });
+          card_number_control.set_value(existing_custom_card_number || "");
+          card_number_control.refresh();
+          let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
+          let expiry_date_control = frappe.ui.form.make_control({
+            df: {
+              label: "Card Expiration Date",
+              fieldtype: "Data",
+              placeholder: "MM/YY",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.expiry-date`),
+            render_input: true,
+            default: p.custom_card_expiration_date || ""
+          });
+          expiry_date_control.set_value(existing_custom_card_expiration_date || "");
+          expiry_date_control.refresh();
+          let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
+          let reference_no_control = frappe.ui.form.make_control({
+            df: {
+              label: "Reference No",
+              fieldtype: "Data",
+              placeholder: "Reference No.",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.reference-number`),
+            render_input: true
+          });
+          reference_no_control.set_value(existing_reference_no || "");
+          reference_no_control.refresh();
         }
-        if (mode === "gcash" || mode === "paymaya") {
-          this.gcash_maya_payment_control(mode, p);
+        if (p.mode_of_payment === "GCash" || p.mode_of_payment === "PayMaya") {
+          let existing_custom_phone_number = frappe.model.get_value(p.doctype, p.name, "custom_phone_number");
+          let phone_number_control = frappe.ui.form.make_control({
+            df: {
+              label: "Number",
+              fieldtype: "Data",
+              placeholder: "09876543212",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_phone_number", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.mobile-number`),
+            render_input: true
+          });
+          phone_number_control.set_value(existing_custom_phone_number || "");
+          phone_number_control.refresh();
+          let existing_custom_epayment_reference_number = frappe.model.get_value(p.doctype, p.name, "reference_no");
+          let epayment_reference_number_controller = frappe.ui.form.make_control({
+            df: {
+              label: "Reference No",
+              fieldtype: "Data",
+              placeholder: "Reference No.",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.reference-number`),
+            render_input: true,
+            default: p.reference_no || ""
+          });
+          epayment_reference_number_controller.set_value(existing_custom_epayment_reference_number || "");
+          epayment_reference_number_controller.refresh();
         }
-        if (mode === "cheque") {
-          this.cheque_payment_control(mode, p);
+        if (p.mode_of_payment === "Cheque") {
+          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+          let bank_name_control = frappe.ui.form.make_control({
+            df: {
+              label: "Bank",
+              fieldtype: "Data",
+              placeholder: "Bank Name",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.bank-name`),
+            render_input: true
+          });
+          bank_name_control.set_value(existing_custom_bank_name || "");
+          bank_name_control.refresh();
+          let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_check_name");
+          let check_name_control = frappe.ui.form.make_control({
+            df: {
+              label: "Name On Check",
+              fieldtype: "Data",
+              placeholder: "Check Name",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_check_name", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.check-name`),
+            render_input: true
+          });
+          check_name_control.set_value(existing_custom_check_name || "");
+          check_name_control.refresh();
+          let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
+          let check_number_control = frappe.ui.form.make_control({
+            df: {
+              label: "Check Number",
+              fieldtype: "Data",
+              placeholder: "Check Number",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_check_number", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.check-number`),
+            render_input: true
+          });
+          check_number_control.set_value(existing_custom_check_number || "");
+          check_number_control.refresh();
+          let existing_custom_check_date = frappe.model.get_value(p.doctype, p.name, "custom_check_date");
+          let check_date_control = frappe.ui.form.make_control({
+            df: {
+              fieldname: "custom_check_date",
+              label: "Check Date",
+              fieldtype: "Date",
+              placeholder: "Check Date",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_check_date", this.get_value());
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.check-date`),
+            render_input: true
+          });
+          check_date_control.set_value(existing_custom_check_date || frappe.datetime.nowdate());
+          check_date_control.refresh();
         }
         this[`${mode}_control`].toggle_label(false);
         this[`${mode}_control`].set_value(p.amount);
       });
       this.render_loyalty_points_payment_mode();
       this.attach_cash_shortcuts(doc);
-    }
-    card_payments_control(mode, p) {
-      this[`bank_name_control_${mode}`] = frappe.ui.form.make_control({
-        df: {
-          label: "Bank",
-          fieldtype: "Data",
-          placeholder: "Bank Name",
-          onchange: function() {
-            frappe.model.set_value(p.doctype, p.name, "custom_bank", this.value);
-          }
-        },
-        parent: this.$payment_modes.find(`.${mode}.bank_name_control`),
-        render_input: true
-      });
-      this[`name_on_card_control_${mode}`] = frappe.ui.form.make_control({
-        df: {
-          label: "Name on Card",
-          fieldtype: "Data",
-          placeholder: "Card name holder",
-          onchange: function() {
-            frappe.model.set_value(p.doctype, p.name, "custom_name", this.value);
-          }
-        },
-        parent: this.$payment_modes.find(`.${mode}.name_on_card_control`),
-        render_input: true
-      });
-      this[`card_type_control_${mode}`] = frappe.ui.form.make_control({
-        df: {
-          label: "Card Type",
-          fieldtype: "Select",
-          options: [
-            { label: "Select Card Type", value: "" },
-            { label: "Visa", value: "Visa" },
-            { label: "Visa Debit", value: "Visa Debit" },
-            { label: "Visa Electron", value: "Visa Electron" },
-            { label: "Credit Card", value: "Credit Card" },
-            { label: "Mastercard", value: "Mastercard" },
-            { label: "Mastercard Debit", value: "Mastercard Debit" },
-            { label: "Maestro", value: "Maestro" },
-            { label: "American Express (Amex)", value: "American Express (Amex)" },
-            { label: "Discover", value: "Discover" },
-            { label: "Diners Club", value: "Diners Club" },
-            { label: "JCB", value: "JCB" },
-            { label: "UnionPay", value: "UnionPay" },
-            { label: "RuPay", value: "RuPay" },
-            { label: "Interac", value: "Interac" },
-            { label: "Carte Bancaire (CB)", value: "Carte Bancaire (CB)" },
-            { label: "Elo", value: "Elo" },
-            { label: "Mir", value: "Mir" },
-            { label: "Others", value: "Others" }
-          ],
-          onchange: function() {
-            const value = this.value;
-            frappe.model.set_value(p.doctype, p.name, "custom_card_type", value);
-          }
-        },
-        parent: this.$payment_modes.find(`.${mode}.card_type_control`),
-        render_input: true
-      });
-      this[`card_number_control_${mode}`] = frappe.ui.form.make_control({
-        df: {
-          label: "Card Number",
-          fieldtype: "Data",
-          placeholder: "Last 4 digits",
-          onchange: function() {
-            const value = this.value;
-            if (validateLastFourDigits(value)) {
-              frappe.model.set_value(p.doctype, p.name, "custom_card_no", value);
-            } else {
-              frappe.msgprint(__("Card number must be exactly 4 digits."));
-              frappe.model.set_value(p.doctype, p.name, "custom_card_no", "");
-              this.value = "";
-            }
-          }
-        },
-        parent: this.$payment_modes.find(`.${mode}.card_number_control`),
-        render_input: true
-      });
-      function validateLastFourDigits(value) {
-        const regex = /^\d{4}$/;
-        return regex.test(value);
-      }
-      this[`card_exp_date_control_${mode}`] = frappe.ui.form.make_control({
-        df: {
-          label: "Card Expiration Date",
-          fieldtype: "Data",
-          placeholder: "MM/YY",
-          onchange: function() {
-            const value = this.value;
-            frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", value);
-          }
-        },
-        parent: this.$payment_modes.find(`.${mode}.card_exp_date_control`),
-        render_input: true
-      });
-      this.reference_no_control(mode, p);
-    }
-    gcash_maya_payment_control(mode, p) {
-      this[`phone_number_control_${mode}`] = frappe.ui.form.make_control({
-        df: {
-          label: "Number",
-          fieldtype: "Data",
-          placeholder: "09876543212",
-          onchange: function() {
-            frappe.model.set_value(p.doctype, p.name, "phone_number", this.value);
-          }
-        },
-        parent: this.$payment_modes.find(`.${mode}.phone_number_control`),
-        render_input: true
-      });
-      this.reference_no_control(mode);
-    }
-    cheque_payment_control(mode, p) {
-      this.reference_no_control(mode, p);
-    }
-    reference_no_control(mode, p) {
-      return this[`reference_no_control_${mode}`] = frappe.ui.form.make_control({
-        df: {
-          label: "Reference No",
-          fieldtype: "Data",
-          placeholder: "Reference No.",
-          onchange: function() {
-            frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
-          }
-        },
-        parent: this.$payment_modes.find(`.${mode}.reference_no_control`),
-        render_input: true
-      });
     }
     focus_on_default_mop() {
       const doc = this.events.get_frm().doc;
@@ -6884,25 +7078,35 @@
         return ``;
       }
     }
+    get_vatable_sales_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VATable Sales")}</div>
+					<div>${format_currency(doc.custom_vatable_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_vatable_exempt_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VAT-Exempt Sales")}</div>
+					<div>${format_currency(doc.custom_vat_exempt_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_zero_rated_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("Zero-Rated")}</div>
+					<div>${format_currency(doc.custom_zero_rated_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_vat_amount_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VAT 12%")}</div>
+					<div>${format_currency(doc.custom_vat_amount, doc.currency)}</div>
+				</div>`;
+    }
     get_net_total_html(doc) {
       return `<div class="summary-row-wrapper">
 					<div>${__("Net Total")}</div>
 					<div>${format_currency(doc.net_total, doc.currency)}</div>
 				</div>`;
-    }
-    get_taxes_html(doc) {
-      if (!doc.taxes.length)
-        return "";
-      let taxes_html = doc.taxes.map((t) => {
-        const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
-        return `
-				<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
-				</div>
-			`;
-      }).join("");
-      return `<div class="taxes-wrapper">${taxes_html}</div>`;
     }
     get_grand_total_html(doc) {
       return `<div class="summary-row-wrapper grand-total">
@@ -7141,11 +7345,17 @@
     attach_totals_info(doc) {
       this.$totals_container.html("");
       const net_total_dom = this.get_net_total_html(doc);
-      const taxes_dom = this.get_taxes_html(doc);
+      const vatable_sale_dom = this.get_vatable_sales_html(doc);
+      const vat_exempt_dom = this.get_vatable_exempt_html(doc);
+      const zero_rated_dom = this.get_zero_rated_html(doc);
+      const vat_amount_dom = this.get_vat_amount_html(doc);
       const discount_dom = this.get_discount_html(doc);
       const grand_total_dom = this.get_grand_total_html(doc);
       this.$totals_container.append(net_total_dom);
-      this.$totals_container.append(taxes_dom);
+      this.$totals_container.append(vatable_sale_dom);
+      this.$totals_container.append(vat_exempt_dom);
+      this.$totals_container.append(zero_rated_dom);
+      this.$totals_container.append(vat_amount_dom);
       this.$totals_container.append(discount_dom);
       this.$totals_container.append(grand_total_dom);
     }
@@ -7230,9 +7440,9 @@
     make_app() {
       this.prepare_dom();
       this.prepare_components();
-      this.prepare_buttons();
+      this.prepare_menu();
+      this.add_buttons_to_toolbar();
       this.make_new_invoice();
-      this.setup_shortcuts();
     }
     prepare_dom() {
       this.wrapper.append(`<div class="point-of-sale-app"></div>`);
@@ -7246,38 +7456,45 @@
       this.init_recent_order_list();
       this.init_order_summary();
     }
-    prepare_buttons() {
-      this.page.clear_actions();
-      this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-      this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-      this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-      this.page.add_button(__("Toggle Pending Transaction (F6)"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary", "Ctrl+O");
-      this.page.add_button(__("Branch Item Lookup"), () => {
-        this.show_branch_selection_dialog();
-      }, "octicon octicon-search", "btn-secondary");
+    prepare_dom() {
+      this.wrapper.append(`<div class="point-of-sale-app"></div>`);
+      this.$components_wrapper = this.wrapper.find(".point-of-sale-app");
     }
-    setup_shortcuts() {
-      frappe.ui.keys.add_shortcut({
-        shortcut: "f1",
-        action: () => this.toggle_recent_order(),
-        description: __("Toggle Recent Orders"),
-        page: this.page
-      });
-      frappe.ui.keys.add_shortcut({
-        shortcut: "f2",
-        action: () => this.save_draft_invoice(),
-        description: __("Complete Order"),
-        page: this.page
-      });
-      frappe.ui.keys.add_shortcut({
-        shortcut: "f3",
-        action: () => this.show_branch_selection_dialog(),
-        description: __("Branch Item Lookup"),
-        page: this.page
+    prepare_menu() {
+      this.page.clear_menu();
+      this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
+      this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
+      this.page.add_menu_item(
+        __("Pending Transaction (F2)"),
+        this.toggle_recent_order.bind(this),
+        false,
+        "f2"
+      );
+      this.page.add_menu_item(__("Branch Item Lookup (F3)"), this.show_branch_selection_dialog.bind(this), false, "f4");
+      this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
+    }
+    add_buttons_to_toolbar() {
+      const buttons = [
+        { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
+        { label: __("Pending Transaction (F2"), action: this.toggle_recent_order.bind(this), shortcut: "f2" },
+        { label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
+        { label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4" }
+      ];
+      $(".page-actions .btn-custom").remove();
+      buttons.forEach((btn) => {
+        this.page.add_button(btn.label, btn.action, { shortcut: btn.shortcut }).addClass("btn-custom");
       });
     }
-    buttons() {
-      page.set_secondary_action("Refresh", () => refresh(), "octicon octicon-sync");
+    add_new_order() {
+      frappe.run_serially([
+        () => frappe.dom.freeze(),
+        () => this.frm.call("reset_mode_of_payments"),
+        () => this.make_new_invoice(),
+        () => this.cart.load_invoice(),
+        () => this.item_selector.toggle_component(true),
+        () => frappe.dom.unfreeze(),
+        () => this.toggle_recent_order_list(false)
+      ]);
     }
     show_branch_selection_dialog() {
       const selectedWarehouse = localStorage.getItem("selected_warehouse") || "";
@@ -7372,7 +7589,7 @@
         frappe.utils.play_sound("error");
         return;
       }
-      const passwordDialog = new frappe.ui.Dialog({
+      const passwordDialog2 = new frappe.ui.Dialog({
         title: __("Enter Your Password"),
         fields: [
           {
@@ -7386,7 +7603,7 @@
         primary_action: (values) => {
           let password = values.password;
           frappe.call({
-            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
             args: { password },
             callback: (r) => {
               if (r.message) {
@@ -7403,7 +7620,7 @@
                     () => this.make_new_invoice(),
                     () => frappe.dom.unfreeze()
                   ]);
-                  passwordDialog.hide();
+                  passwordDialog2.hide();
                   this.order_summary.load_summary_of(this.frm.doc, true);
                   this.order_summary.print_receipt();
                   window.location.reload();
@@ -7422,7 +7639,7 @@
           });
         }
       });
-      passwordDialog.show();
+      passwordDialog2.show();
     }
     set_pharmacist_assist(frm) {
       frappe.call({
@@ -7498,7 +7715,6 @@
         events: {
           get_frm: () => this.frm,
           cart_item_clicked: (item, frm) => {
-            console.log(frm);
             const item_row = this.get_item_from_frm(item);
             this.item_details.toggle_item_details_section(item_row);
           },
@@ -7701,8 +7917,8 @@
     }
     get_new_frm(_frm) {
       const doctype = "POS Invoice";
-      const page2 = $("<div>");
-      const frm = _frm || new frappe.ui.form.Form(doctype, page2, false);
+      const page = $("<div>");
+      const frm = _frm || new frappe.ui.form.Form(doctype, page, false);
       const name = frappe.model.make_new_doc_and_get_name(doctype, true);
       frm.refresh(name);
       return frm;
@@ -7935,4 +8151,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.FF7Z6ENX.js.map
+//# sourceMappingURL=packing-list.bundle.MJVBC5O4.js.map
