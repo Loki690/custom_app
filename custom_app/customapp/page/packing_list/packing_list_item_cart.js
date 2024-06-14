@@ -713,6 +713,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	render_net_total(value) {
 		const currency = this.events.get_frm().doc.currency;
+		
 		this.$totals_section
 			.find(".net-total-container")
 			.html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
