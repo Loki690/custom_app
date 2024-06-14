@@ -427,30 +427,33 @@
       document.head.appendChild(style);
     }
     prepare_dom() {
+      const selectedWarehouse = localStorage.getItem("selected_warehouse");
       this.wrapper.append(
         `<section class="items-selector">
-                <div class="filter-section">
-                    <div class="label">${__("All Items")}</div>
-                    <div class="item-group-field"></div>
-                    <div class="search-field"></div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table items-table">
-                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
-                            <tr>
-                                <th>Item Code</th>
-                                <th>Name</th>
-                                <th>Batch No.</th>
-                                <th>Exp Date</th>
-                                <th>Price</th>
-                                <th>UOM</th>
-                                <th>QTY</th>
-                            </tr>
-                        </thead>
-                        <tbody class="items-container"></tbody>
-                    </table>
-                </div>
-            </section>`
+				<div class="filter-section">
+				<div class="label">
+				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
+			</div>
+					<div class="item-group-field"></div>
+					<div class="search-field"></div>
+				</div>
+				<div class="table-responsive">
+					<table class="table items-table">
+					    <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
+							<tr>
+								<th>Item Code</th>
+								<th>Name</th>
+								<th>Vat</th>
+								<th>Price</th>
+								<th>UOM</th>
+								<th>QTY</th>
+							</tr>
+						</thead>
+
+						<tbody class="items-container"></tbody>
+					</table>
+				</div>
+			</section>`
       );
       this.$component = this.wrapper.find(".items-selector");
       this.$items_container = this.$component.find(".items-container");
@@ -491,7 +494,7 @@
     }
     get_item_html(item) {
       const me = this;
-      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number } = item;
+      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
@@ -506,20 +509,16 @@
         qty_to_display = "";
       }
       return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
-            data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
-            data-description="${escape(description)}" 
-            data-item-name="${escape(item.item_name)}"
-            data-item-uom="${escape(item.uom)}"
-            data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-            data-rate="${escape(price_list_rate || 0)}">
-            <td class="item-code">${item_code}</td> 
-            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-            <td class="batch-number">${batch_number}</td> 
-            <td class="item-expiry">${latest_expiry_date || ""}</td> <!-- Add the latest_expiry_date field -->
-            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-            <td class="item-uom"> ${uom} / count per uom </td>
-            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
-        </tr>`;
+				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
+				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
+				data-rate="${escape(price_list_rate || 0)}">
+				<td class="item-code">${item_code}</td> 
+				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
+				<td class="item-uom"> ${uom} / count per uom </td>
+				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+			</tr>`;
     }
     handle_broken_image($img) {
       const item_abbr = $($img).attr("alt");
@@ -4773,4 +4772,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.Z372H3S6.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.PQ4DUNTB.js.map

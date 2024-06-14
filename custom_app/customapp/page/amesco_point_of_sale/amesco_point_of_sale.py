@@ -124,8 +124,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 		)
 
 	items_data = frappe.db.sql(
-		"""
-		 SELECT
+        """
+        SELECT
             item.name AS item_code,
             item.item_name,
             item.description,
@@ -136,36 +136,36 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             MAX(batch.name) as batch_number,
             MAX(batch.expiry_date) AS latest_expiry_date
         FROM
-			`tabItem` item
-		LEFT JOIN
-			`tabBatch` batch ON batch.item = item.name
-		{bin_join_selection}
-		WHERE
-			item.disabled = 0
-			AND item.has_variants = 0
-			AND item.is_sales_item = 1
-			AND item.is_fixed_asset = 0
-			AND item.item_group IN (SELECT name FROM `tabItem Group` WHERE lft >= {lft} AND rgt <= {rgt})
-			AND {condition}
-			{bin_join_condition}
-		GROUP BY
-			item.name, item.item_name, item.description, item.stock_uom, item.image, item.is_stock_item
-		ORDER BY
-			item.name ASC
-		LIMIT
-			{page_length} OFFSET {start}
-		""".format(
-			start=cint(start),
-			page_length=cint(page_length),
-			lft=cint(lft),
-			rgt=cint(rgt),
-			condition=condition,
-			bin_join_selection=bin_join_selection,
-			bin_join_condition=bin_join_condition,
-		),
-		{"warehouse": warehouse},
-		as_dict=1,
-	)
+            `tabItem` item
+        LEFT JOIN
+            `tabBatch` batch ON batch.item = item.name
+        {bin_join_selection}
+        WHERE
+            item.disabled = 0
+            AND item.has_variants = 0
+            AND item.is_sales_item = 1
+            AND item.is_fixed_asset = 0
+            AND item.item_group IN (SELECT name FROM `tabItem Group` WHERE lft >= {lft} AND rgt <= {rgt})
+            AND {condition}
+            {bin_join_condition}
+        GROUP BY
+            item.name, item.item_name, item.description, item.stock_uom, item.image, item.is_stock_item
+        ORDER BY
+            item.item_name ASC
+        LIMIT
+            {page_length} OFFSET {start}
+        """.format(
+            start=cint(start),
+            page_length=cint(page_length),
+            lft=cint(lft),
+            rgt=cint(rgt),
+            condition=condition,
+            bin_join_selection=bin_join_selection,
+            bin_join_condition=bin_join_condition,
+        ),
+        {"warehouse": warehouse},
+        as_dict=1,
+    )
 
 	# return (empty) list if there are no results
 	if not items_data:
