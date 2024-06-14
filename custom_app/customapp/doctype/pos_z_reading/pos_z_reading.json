@@ -1,0 +1,172 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "Z-Reading-.########",
+ "creation": "2024-06-10 09:02:56.681228",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "pos_profile",
+  "column_break_yfhm",
+  "date_from",
+  "date_to",
+  "section_break_qyz7",
+  "sales_details",
+  "sales_details_total",
+  "section_break_nznb",
+  "payment_details",
+  "payment_details_total",
+  "section_break_ahmo",
+  "confirmed_transaction",
+  "confirmed_transaction_total",
+  "section_break_dzex",
+  "clerk_sales",
+  "section_break_fczr",
+  "column_break_glwo",
+  "column_break_adyb",
+  "clerk_sales_no_of_transaction_total",
+  "column_break_zlon",
+  "clerk_sales_amount_total",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_qyz7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sales_details",
+   "fieldtype": "Table",
+   "label": "Sales Details",
+   "options": "Z Sales Details"
+  },
+  {
+   "fieldname": "payment_details",
+   "fieldtype": "Table",
+   "label": "Payment Details",
+   "options": "Z Payment Details"
+  },
+  {
+   "fieldname": "confirmed_transaction",
+   "fieldtype": "Table",
+   "label": "Confirmed Transaction",
+   "options": "Z Confirmed Trasaction"
+  },
+  {
+   "fieldname": "clerk_sales",
+   "fieldtype": "Table",
+   "label": "Clerk Sales",
+   "options": "Z Clerk Sales"
+  },
+  {
+   "fieldname": "sales_details_total",
+   "fieldtype": "Currency",
+   "label": "Sales Details Total"
+  },
+  {
+   "fieldname": "section_break_ahmo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_nznb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "payment_details_total",
+   "fieldtype": "Currency",
+   "label": "Payment Details Total"
+  },
+  {
+   "fieldname": "confirmed_transaction_total",
+   "fieldtype": "Int",
+   "label": "Confirmed Transaction Total"
+  },
+  {
+   "fieldname": "section_break_dzex",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_fczr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_glwo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_adyb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "clerk_sales_no_of_transaction_total",
+   "fieldtype": "Int",
+   "label": "Clerk Sales No of Transaction Total"
+  },
+  {
+   "fieldname": "column_break_zlon",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "clerk_sales_amount_total",
+   "fieldtype": "Currency",
+   "label": "Clerk Sales Amount Total"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "POS Z Reading",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "pos_profile",
+   "fieldtype": "Link",
+   "label": "POS Profile",
+   "options": "POS Profile"
+  },
+  {
+   "fieldname": "column_break_yfhm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "date_from",
+   "fieldtype": "Date",
+   "label": "Date From"
+  },
+  {
+   "fieldname": "date_to",
+   "fieldtype": "Date",
+   "label": "Date To"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-06-10 09:55:40.621304",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "POS Z Reading",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

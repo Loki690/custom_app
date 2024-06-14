@@ -93,6 +93,34 @@ def search_by_term(search_term, warehouse, price_list):
 
 	return {"items": [item]}
 
+import frappe
+
+@frappe.whitelist()
+def get_item_uoms(item_code):
+    item = frappe.get_doc('Item', item_code)
+    
+    uom_conversions = frappe.db.sql("""
+        SELECT uom, conversion_factor
+        FROM `tabUOM Conversion Detail`
+        WHERE parent = %s
+    """, (item_code,), as_dict=True)
+    
+    uoms = []
+    for conversion in uom_conversions:
+        uoms.append({
+            'uom': conversion.uom,
+            'conversion_factor': conversion.conversion_factor
+        })
+    
+    response = {
+        'item_code': item.item_code,
+        'description': item.description,
+        'rate': item.standard_rate,
+        'uoms': uoms  # List of UOM conversion details
+    }
+
+    return response
+
 
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None):

@@ -1,0 +1,50 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-06-10 09:11:37.525709",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "clerk_name",
+  "amount",
+  "column_break_wdqa",
+  "no_of_trasaction"
+ ],
+ "fields": [
+  {
+   "fieldname": "clerk_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Clerk Name"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount"
+  },
+  {
+   "fieldname": "column_break_wdqa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "no_of_trasaction",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "No of Trasaction"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-06-10 09:17:58.192409",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "Z Clerk Sales",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
