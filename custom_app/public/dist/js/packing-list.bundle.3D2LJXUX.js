@@ -3963,6 +3963,7 @@
 							<tr>
 								<th>Item Code</th>
 								<th>Name</th>
+								<th>Vat</th>
 								<th>Price</th>
 								<th>UOM</th>
 								<th>QTY</th>
@@ -4031,7 +4032,7 @@
     }
     get_item_html(item) {
       const me = this;
-      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number } = item;
+      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
@@ -4051,6 +4052,7 @@
 				data-rate="${escape(price_list_rate || 0)}">
 				<td class="item-code">${item_code}</td> 
 				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
 				<td class="item-uom"> ${uom} / count per uom </td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
@@ -4372,12 +4374,14 @@
 			<div class="vatable-sales-container mt-2"></div>
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
-			<div class="vat-container"></div>
+			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
-				<div class="net-total-label">${__("Sub Total")}</div>
+				<div class="net-total-label">${__("Sub Totaldddddd")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
+
+			<div class="vat-container"></div>
 
 		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
@@ -4460,43 +4464,13 @@
           this.show_discount_control();
       });
       this.$totals_section.on("click", ".edit-cart-btn", () => {
-        const passwordDialog = new frappe.ui.Dialog({
-          title: __("Enter OIC Account"),
-          fields: [
-            {
-              fieldname: "password",
-              fieldtype: "Password",
-              label: __("Password"),
-              reqd: 1
-            }
-          ],
-          primary_action_label: __("Edit Order"),
-          primary_action: (values) => {
-            let password = values.password;
-            let role = "oic";
-            frappe.call({
-              method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
-              args: { password, role },
-              callback: (r) => {
-                if (r.message) {
-                  this.events.edit_cart();
-                  this.toggle_checkout_btn(true);
-                  passwordDialog.hide();
-                } else {
-                  frappe.show_alert({
-                    message: __("Incorrect password or user is not an OIC"),
-                    indicator: "red"
-                  });
-                }
-              }
-            });
-          }
-        });
-        passwordDialog.show();
+        this.events.edit_cart();
+        this.toggle_checkout_btn(true);
+        passwordDialog.hide();
       });
       this.$component.on("click", ".add-discount-wrapper", () => {
         if (!this.is_oic_authenticated) {
-          const passwordDialog = new frappe.ui.Dialog({
+          const passwordDialog2 = new frappe.ui.Dialog({
             title: __("Enter OIC Password"),
             fields: [
               {
@@ -4517,7 +4491,7 @@
                   if (r.message) {
                     this.is_oic_authenticated = true;
                     this.show_discount_control();
-                    passwordDialog.hide();
+                    passwordDialog2.hide();
                   } else {
                     frappe.show_alert({
                       message: __("Incorrect password or user is not an OIC"),
@@ -4528,7 +4502,7 @@
               });
             }
           });
-          passwordDialog.show();
+          passwordDialog2.show();
         } else {
           const can_edit_discount = this.$add_discount_elem.find(".edit-discount-btn").length;
           if (!this.discount_field || can_edit_discount)
@@ -4885,7 +4859,6 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -4894,23 +4867,48 @@
     }
     render_vatable_sales(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".vatable-sales-container").html(`<div>${__("VATable Sales")}: ${format_currency(value, currency)}</div>`);
+      this.$totals_section.find(".vatable-sales-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VATable Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
     }
     render_vat_exempt_sales(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".vat-exempt-container").html(`<div>${__("VAT-Exempt Sales")}: ${format_currency(value, currency)}</div>`);
+      this.$totals_section.find(".vat-exempt-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
     }
     render_zero_rated_sales(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".zero-rated-container").html(`<div>${__("Zero Rated Sales")}: ${format_currency(value, currency)}</div>`);
+      this.$totals_section.find(".zero-rated-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
     }
     render_vat(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".vat-container").html(`<div>${__("VAT 12%")}: ${format_currency(value, currency)}</div>`);
+      this.$totals_section.find(".vat-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("VAT 12%")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
     }
     render_ex_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".ex-total-container").html(`<div>${__("Ex Total")}: ${format_currency(value, currency)}</div>`);
+      this.$totals_section.find(".ex-total-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Ex Total")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
     }
     render_total_item_qty(items) {
       var total_item_qty = 0;
@@ -4972,12 +4970,15 @@
     }
     remove_customer() {
       const frm = this.events.get_frm();
+      const currentCustomer = frm.doc.customer;
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
       frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "");
       this.update_customer_section();
     }
     set_cash_customer() {
       const frm = this.events.get_frm();
-      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "Cash");
+      const customCustomer2Value = frm.doc.custom_customer_2;
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
       this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
@@ -5579,7 +5580,7 @@
     }
     oic_authentication(fieldname) {
       const me = this;
-      const passwordDialog = new frappe.ui.Dialog({
+      const passwordDialog2 = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
           {
@@ -5594,7 +5595,7 @@
           let password = values.password;
           let role = "oic";
           frappe.call({
-            method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
             args: { password, role },
             callback: (r) => {
               if (r.message) {
@@ -5602,7 +5603,7 @@
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog.hide();
+                passwordDialog2.hide();
                 me.enable_discount_input(fieldname);
                 me.is_oic_authenticated = true;
               } else {
@@ -5615,22 +5616,25 @@
           });
         }
       });
-      passwordDialog.show();
+      passwordDialog2.show();
     }
     enable_discount_input(fieldname) {
       this.$form_container.find(`.${fieldname}-control input`).prop("disabled", false);
     }
     get_form_fields(item) {
       const fields = [
+        "custom_free",
         "qty",
-        "uom",
-        "price_list_rate",
-        "rate",
         "amount",
-        "conversion_factor",
+        "rate",
+        "uom",
         "discount_percentage",
         "discount_amount",
-        "custom_free"
+        "custom_item_discount_amount",
+        "custom_vat_amount",
+        "custom_vatable_amount",
+        "custom_vat_exempt_amount",
+        "custom_zero_rated_amount"
       ];
       if (item.has_serial_no)
         fields.push("serial_no");
@@ -5990,6 +5994,8 @@
         $(`.check-name`).css("display", "none");
         $(`.check-number`).css("display", "none");
         $(`.check-date`).css("display", "none");
+        $(`.actual-gov-one`).css("display", "none");
+        $(`.actual-gov-two`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
         $(".mode-of-payment").removeClass("border-primary");
@@ -6010,6 +6016,8 @@
           mode_clicked.find(".check-name").css("display", "flex");
           mode_clicked.find(".check-number").css("display", "flex");
           mode_clicked.find(".check-date").css("display", "flex");
+          mode_clicked.find(".actual-gov-one").css("display", "flex");
+          mode_clicked.find(".actual-gov-two").css("display", "flex");
           mode_clicked.find(".cash-shortcuts").css("display", "grid");
           me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
           me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
@@ -6245,6 +6253,16 @@
 							<div class="${mode} check-number"></div>
 							<div class="${mode} check-date"></div>	
 						`;
+              break;
+            case "2306":
+              paymentModeHtml += `
+							<div class="${mode} actual-gov-one"></div>
+						`;
+              break;
+            case "2307":
+              paymentModeHtml += `
+								<div class="${mode} actual-gov-two"></div>
+							`;
               break;
           }
           paymentModeHtml += `
@@ -6498,6 +6516,42 @@
           });
           check_date_control.set_value(existing_custom_check_date || frappe.datetime.nowdate());
           check_date_control.refresh();
+        }
+        if (p.mode_of_payment === "2306") {
+          let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
+          let check_form_2306 = frappe.ui.form.make_control({
+            df: {
+              label: `Expected 2306 Amount`,
+              fieldtype: "Currency",
+              placeholder: "Actual 2306",
+              read_only: 1,
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
+            render_input: true
+          });
+          check_form_2306.set_value(existing_custom_form_2306 || "");
+          check_form_2306.refresh();
+        }
+        if (p.mode_of_payment === "2307") {
+          let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
+          let check_form_2307 = frappe.ui.form.make_control({
+            df: {
+              label: `Expected 2307 Amount`,
+              fieldtype: "Currency",
+              placeholder: "Actual 2307",
+              read_only: 1,
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
+            render_input: true
+          });
+          check_form_2307.set_value(existing_custom_form_2307 || "");
+          check_form_2307.refresh();
         }
         this[`${mode}_control`].toggle_label(false);
         this[`${mode}_control`].set_value(p.amount);
@@ -6885,25 +6939,35 @@
         return ``;
       }
     }
+    get_vatable_sales_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VATable Sales")}</div>
+					<div>${format_currency(doc.custom_vatable_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_vatable_exempt_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VAT-Exempt Sales")}</div>
+					<div>${format_currency(doc.custom_vat_exempt_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_zero_rated_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("Zero-Rated")}</div>
+					<div>${format_currency(doc.custom_zero_rated_sales, doc.currency)}</div>
+				</div>`;
+    }
+    get_vat_amount_html(doc) {
+      return `<div class="summary-row-wrapper">
+					<div>${__("VAT 12%")}</div>
+					<div>${format_currency(doc.custom_vat_amount, doc.currency)}</div>
+				</div>`;
+    }
     get_net_total_html(doc) {
       return `<div class="summary-row-wrapper">
 					<div>${__("Net Total")}</div>
 					<div>${format_currency(doc.net_total, doc.currency)}</div>
 				</div>`;
-    }
-    get_taxes_html(doc) {
-      if (!doc.taxes.length)
-        return "";
-      let taxes_html = doc.taxes.map((t) => {
-        const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
-        return `
-				<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
-				</div>
-			`;
-      }).join("");
-      return `<div class="taxes-wrapper">${taxes_html}</div>`;
     }
     get_grand_total_html(doc) {
       return `<div class="summary-row-wrapper grand-total">
@@ -7142,11 +7206,17 @@
     attach_totals_info(doc) {
       this.$totals_container.html("");
       const net_total_dom = this.get_net_total_html(doc);
-      const taxes_dom = this.get_taxes_html(doc);
+      const vatable_sale_dom = this.get_vatable_sales_html(doc);
+      const vat_exempt_dom = this.get_vatable_exempt_html(doc);
+      const zero_rated_dom = this.get_zero_rated_html(doc);
+      const vat_amount_dom = this.get_vat_amount_html(doc);
       const discount_dom = this.get_discount_html(doc);
       const grand_total_dom = this.get_grand_total_html(doc);
       this.$totals_container.append(net_total_dom);
-      this.$totals_container.append(taxes_dom);
+      this.$totals_container.append(vatable_sale_dom);
+      this.$totals_container.append(vat_exempt_dom);
+      this.$totals_container.append(zero_rated_dom);
+      this.$totals_container.append(vat_amount_dom);
       this.$totals_container.append(discount_dom);
       this.$totals_container.append(grand_total_dom);
     }
@@ -7233,6 +7303,25 @@
       this.prepare_components();
       this.prepare_menu();
       this.add_buttons_to_toolbar();
+      this.make_new_invoice();
+    }
+    prepare_dom() {
+      this.wrapper.append(`<div class="point-of-sale-app"></div>`);
+      this.$components_wrapper = this.wrapper.find(".point-of-sale-app");
+    }
+    prepare_components() {
+      this.init_item_selector();
+      this.init_item_details();
+      this.init_item_cart();
+      this.init_payments();
+      this.init_recent_order_list();
+      this.init_order_summary();
+    }
+    make_app() {
+      this.prepare_dom();
+      this.prepare_components();
+      this.add_buttons_to_toolbar();
+      this.prepare_menu();
       this.make_new_invoice();
     }
     prepare_dom() {
@@ -7376,7 +7465,7 @@
         frappe.utils.play_sound("error");
         return;
       }
-      const passwordDialog = new frappe.ui.Dialog({
+      const passwordDialog2 = new frappe.ui.Dialog({
         title: __("Enter Your Password"),
         fields: [
           {
@@ -7390,7 +7479,7 @@
         primary_action: (values) => {
           let password = values.password;
           frappe.call({
-            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
             args: { password },
             callback: (r) => {
               if (r.message) {
@@ -7407,7 +7496,7 @@
                     () => this.make_new_invoice(),
                     () => frappe.dom.unfreeze()
                   ]);
-                  passwordDialog.hide();
+                  passwordDialog2.hide();
                   this.order_summary.load_summary_of(this.frm.doc, true);
                   this.order_summary.print_receipt();
                   window.location.reload();
@@ -7426,7 +7515,7 @@
           });
         }
       });
-      passwordDialog.show();
+      passwordDialog2.show();
     }
     set_pharmacist_assist(frm) {
       frappe.call({
@@ -7938,4 +8027,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.SJS4S274.js.map
+//# sourceMappingURL=packing-list.bundle.3D2LJXUX.js.map

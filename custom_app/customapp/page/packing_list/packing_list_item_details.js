@@ -268,19 +268,24 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	get_form_fields(item) {
 		const fields = [
+			"custom_free",
 			"qty",
-			"uom",
-			'price_list_rate',
-			"rate",
 			"amount",
-			"conversion_factor",
+			"rate",
+			"uom",
+			//'price_list_rate',
+			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field
+			"custom_item_discount_amount",
 			//"warehouse",
 			//"actual_qty",
 			//"price_list_rate",
 			// "is_free_item",
-			"custom_free"
+			'custom_vat_amount',
+			'custom_vatable_amount',
+			'custom_vat_exempt_amount',
+			'custom_zero_rated_amount'
 		];
 		if (item.has_serial_no) fields.push("serial_no");
 		if (item.has_batch_no) fields.push("batch_no");

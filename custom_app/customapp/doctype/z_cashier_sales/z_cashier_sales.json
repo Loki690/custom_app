@@ -1,0 +1,80 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-06-13 17:25:57.073206",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "shift",
+  "teller",
+  "name1",
+  "cash_count",
+  "voucher",
+  "refund",
+  "cash_sales",
+  "shortover"
+ ],
+ "fields": [
+  {
+   "fieldname": "shift",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Shift"
+  },
+  {
+   "fieldname": "teller",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Teller"
+  },
+  {
+   "fieldname": "name1",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name"
+  },
+  {
+   "fieldname": "cash_count",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Cash Count"
+  },
+  {
+   "fieldname": "voucher",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Voucher"
+  },
+  {
+   "fieldname": "refund",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Refund"
+  },
+  {
+   "fieldname": "cash_sales",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Cash Sales"
+  },
+  {
+   "fieldname": "shortover",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Short/Over"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-06-13 17:29:36.886313",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "Z Cashier Sales",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

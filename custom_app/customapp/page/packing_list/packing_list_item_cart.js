@@ -107,12 +107,14 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="vatable-sales-container mt-2"></div>
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
-			<div class="vat-container"></div>
+			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
-				<div class="net-total-label">${__("Sub Total")}</div>
+				<div class="net-total-label">${__("Sub Totaldddddd")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
+
+			<div class="vat-container"></div>
 
 		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
@@ -748,17 +750,17 @@ custom_app.PointOfSale.ItemCart = class {
 			`);
 	}
 
-	// render_ex_total(value) {
-	// 	const currency = this.events.get_frm().doc.currency;
-	// 	this.$totals_section
-	// 		.find(".ex-total-container")
-	// 		.html(`
-	// 			<div style="display: flex; justify-content: space-between;">
-	// 				<span style="flex: 1;">${__("Ex Total")}: </span>
-	// 				<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
-	// 			</div>
-	// 		`);
-	// }
+	render_ex_total(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".ex-total-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Ex Total")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
 
 
 	render_total_item_qty(items) {
@@ -787,29 +789,29 @@ custom_app.PointOfSale.ItemCart = class {
 			.html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
-	// render_taxes(taxes) {
-	// 	if (taxes && taxes.length) {
-	// 		const currency = this.events.get_frm().doc.currency;
-	// 		const taxes_html = taxes
-	// 			.map((t) => {
-	// 				if (t.tax_amount_after_discount_amount == 0.0) return;
-	// 				// if tax rate is 0, don't print it.
-	// 				const description = /[0-9]+/.test(t.description)
-	// 					? t.description
-	// 					: t.rate != 0
-	// 						? `${t.description} @ ${t.rate}%`
-	// 						: t.description;
-	// 				return `<div class="tax-row">
-	// 				<div class="tax-label">${description}</div>
-	// 				<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-	// 			</div>`;
-	// 			})
-	// 			.join("");
-	// 		this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-	// 	} else {
-	// 		this.$totals_section.find(".taxes-container").css("display", "none").html("");
-	// 	}
-	// }
+	render_taxes(taxes) {
+		if (taxes && taxes.length) {
+			const currency = this.events.get_frm().doc.currency;
+			const taxes_html = taxes
+				.map((t) => {
+					if (t.tax_amount_after_discount_amount == 0.0) return;
+					// if tax rate is 0, don't print it.
+					const description = /[0-9]+/.test(t.description)
+						? t.description
+						: t.rate != 0
+							? `${t.description} @ ${t.rate}%`
+							: t.description;
+					return `<div class="tax-row">
+					<div class="tax-label">${description}</div>
+					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+				</div>`;
+				})
+				.join("");
+			this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+		} else {
+			this.$totals_section.find(".taxes-container").css("display", "none").html("");
+		}
+	}
 
 	get_cart_item({ name }) {
 		const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
