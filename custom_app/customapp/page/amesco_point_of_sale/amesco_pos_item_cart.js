@@ -473,7 +473,14 @@ custom_app.PointOfSale.ItemCart = class {
 										() => me.events.customer_details_updated(me.customer_info),
 										() => me.update_customer_section(),
 										() => me.update_totals_section(),
-										() => frappe.dom.unfreeze(),
+										() => {
+											// Refresh form if customer group changes to Senior Citizen, Zero Rated, or Regular
+											const customer_group = frm.doc.customer_group;
+											if (customer_group === "Senior Citizen" || customer_group === "Zero Rated" || customer_group === "Regular") {
+												frm.refresh();
+											}
+											frappe.dom.unfreeze();
+										},
 									]);
 								});
 							});
@@ -486,6 +493,7 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 		this.customer_field.toggle_label(true);
 	}
+	
 	
 
 	//Doctors

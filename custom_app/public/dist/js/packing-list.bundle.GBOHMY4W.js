@@ -4635,7 +4635,13 @@
                       () => me.events.customer_details_updated(me.customer_info),
                       () => me.update_customer_section(),
                       () => me.update_totals_section(),
-                      () => frappe.dom.unfreeze()
+                      () => {
+                        const customer_group = frm.doc.customer_group;
+                        if (customer_group === "Senior Citizen" || customer_group === "Zero Rated" || customer_group === "Regular") {
+                          frm.refresh();
+                        }
+                        frappe.dom.unfreeze();
+                      }
                     ]);
                   });
                 });
@@ -7963,4 +7969,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.PTBUHWPD.js.map
+//# sourceMappingURL=packing-list.bundle.GBOHMY4W.js.map
