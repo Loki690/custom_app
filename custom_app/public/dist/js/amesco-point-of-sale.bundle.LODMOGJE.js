@@ -1064,7 +1064,6 @@
       this.$customer_section.html(`
 			<div class="customer-field"></div>
 		`);
-      console.log(this.$customer_section);
       const me = this;
       const allowed_customer_group = this.allowed_customer_groups || [];
       let filters = {};
@@ -1078,7 +1077,7 @@
           label: __("Customer"),
           fieldtype: "Link",
           options: "Customer",
-          placeholder: __("Select Customer"),
+          placeholder: __("Search by customer name, phone, email."),
           get_query: function() {
             return {
               filters
@@ -1086,37 +1085,17 @@
           },
           onchange: function() {
             if (this.value) {
-              const originalValue = this.value;
-              const temporaryValue = "cash";
               const frm = me.events.get_frm();
               frappe.dom.freeze();
-              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", temporaryValue);
+              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
               frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
                 frappe.run_serially([
-                  () => me.fetch_customer_details(temporaryValue),
+                  () => me.fetch_customer_details(this.value),
                   () => me.events.customer_details_updated(me.customer_info),
                   () => me.update_customer_section(),
                   () => me.update_totals_section(),
                   () => frappe.dom.unfreeze()
-                ]).then(() => {
-                  frappe.dom.freeze();
-                  frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", originalValue);
-                  frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
-                    frappe.run_serially([
-                      () => me.fetch_customer_details(originalValue),
-                      () => me.events.customer_details_updated(me.customer_info),
-                      () => me.update_customer_section(),
-                      () => me.update_totals_section(),
-                      () => {
-                        const customer_group = frm.doc.customer_group;
-                        if (customer_group === "Senior Citizen" || customer_group === "Zero Rated" || customer_group === "Regular") {
-                          frm.refresh();
-                        }
-                        frappe.dom.unfreeze();
-                      }
-                    ]);
-                  });
-                });
+                ]);
               });
             }
           }
@@ -1124,7 +1103,7 @@
         parent: this.$customer_section.find(".customer-field"),
         render_input: true
       });
-      this.customer_field.toggle_label(true);
+      this.customer_field.toggle_label(false);
     }
     make_doctor_selector() {
       this.$doctor_section.html(`
@@ -1439,6 +1418,9 @@
           $item.remove();
           this.remove_customer();
           this.set_cash_customer();
+          frappe.run_serially([
+            () => frappe.dom.unfreeze()
+          ]);
         }
       } else {
         const item_row = this.get_item_from_frm(item);
@@ -4565,4 +4547,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.QBUCQ2QR.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.LODMOGJE.js.map

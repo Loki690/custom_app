@@ -4285,9 +4285,9 @@
       this.wrapper = wrapper;
       this.events = events;
       this.customer_info = void 0;
-      this.doctors_info = void 0;
       this.hide_images = settings.hide_images;
       this.allowed_customer_groups = settings.customer_groups;
+      this.allowed_doctor_groups = settings.doctor_groups;
       this.allow_rate_change = settings.allow_rate_change;
       this.allow_discount_change = settings.allow_discount_change;
       this.init_component();
@@ -4304,24 +4304,36 @@
     }
     init_child_components() {
       this.init_customer_selector();
-      this.init_doctors_selector();
+      this.init_doctor_selector();
       this.init_cart_components();
     }
     init_customer_selector() {
-      this.$component.append(`<div class="customer-section mb-2"></div>`);
+      this.$component.append(`<div class="customer-section"></div>`);
       this.$customer_section = this.$component.find(".customer-section");
       this.make_customer_selector();
     }
-    init_doctors_selector() {
-      this.$component.append(`<div class="doctors-section"></div>`);
-      this.$doctors_section = this.$component.find(".doctors-section");
-      this.make_doctors_selector();
+    init_doctor_selector() {
+      this.$component.append(`<div class="doctor-section" style="display: flex;
+		flex-direction: column;
+		padding: var(--padding-md) var(--padding-lg);
+		overflow: visible; background-color: var(--fg-color);
+		box-shadow: var(--shadow-base);
+		border-radius: var(--border-radius-md);
+	  }; margin-top: 1em;"></div>`);
+      this.$doctor_section = this.$component.find(".doctor-section");
+      this.make_doctor_selector();
     }
     reset_customer_selector() {
       const frm = this.events.get_frm();
       frm.set_value("customer", "");
       this.make_customer_selector();
       this.customer_field.set_focus();
+    }
+    reset_doctor_selector() {
+      const frm = this.events.get_frm();
+      frm.set_value("doctor", "");
+      this.make_doctor_selector();
+      this.doctor_field.set_focus();
     }
     init_cart_components() {
       this.$component.append(
@@ -4419,7 +4431,7 @@
 			</div>`
       );
       this.$numpad_section.append(
-        `<div class="numpad-btn checkout-btn" data-button-value="checkout">${__("Order")}</div>`
+        `<div class="numpad-btn checkout-btn" data-button-value="checkout">${__("Checkout")}</div>`
       );
     }
     bind_events() {
@@ -4435,6 +4447,18 @@
           return;
         const show = me.$cart_container.is(":visible");
         me.toggle_customer_info(show);
+      });
+      this.$doctor_section.on("click", ".reset-doctor-btn", function() {
+        me.reset_doctor_selector();
+      });
+      this.$doctor_section.on("click", ".close-details-btn", function() {
+        me.toggle_doctor_info(false);
+      });
+      this.$doctor_section.on("click", ".doctor-display", function(e) {
+        if ($(e.target).closest(".reset-doctor-btn").length)
+          return;
+        const show = me.$cart_container.is(":visible");
+        me.toggle_doctor_info(show);
       });
       this.$cart_items_wrapper.on("click", ".cart-item-wrapper", function() {
         const $cart_item = $(this);
@@ -4456,22 +4480,43 @@
         me.allow_discount_change && me.$add_discount_elem.removeClass("d-none");
       });
       this.$totals_section.on("click", ".edit-cart-btn", () => {
-        this.events.edit_cart();
-        this.toggle_checkout_btn(true);
-      });
-      this.$component.on("click", ".add-discount-wrapper", () => {
-        const can_edit_discount = this.$add_discount_elem.find(".edit-discount-btn").length;
-        if (!this.discount_field || can_edit_discount)
-          this.show_discount_control();
-      });
-      this.$totals_section.on("click", ".edit-cart-btn", () => {
-        this.events.edit_cart();
-        this.toggle_checkout_btn(true);
-        passwordDialog.hide();
+        const passwordDialog = new frappe.ui.Dialog({
+          title: __("Enter OIC Password"),
+          fields: [
+            {
+              fieldname: "password",
+              fieldtype: "Password",
+              label: __("Password"),
+              reqd: 1
+            }
+          ],
+          primary_action_label: __("Edit Order"),
+          primary_action: (values) => {
+            let password = values.password;
+            let role = "oic";
+            frappe.call({
+              method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+              args: { password, role },
+              callback: (r) => {
+                if (r.message) {
+                  this.events.edit_cart();
+                  this.toggle_checkout_btn(true);
+                  passwordDialog.hide();
+                } else {
+                  frappe.show_alert({
+                    message: __("Incorrect password or user is not an OIC"),
+                    indicator: "red"
+                  });
+                }
+              }
+            });
+          }
+        });
+        passwordDialog.show();
       });
       this.$component.on("click", ".add-discount-wrapper", () => {
         if (!this.is_oic_authenticated) {
-          const passwordDialog2 = new frappe.ui.Dialog({
+          const passwordDialog = new frappe.ui.Dialog({
             title: __("Enter OIC Password"),
             fields: [
               {
@@ -4486,13 +4531,13 @@
               let password = values.password;
               let role = "oic";
               frappe.call({
-                method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
+                method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
                 args: { password, role },
                 callback: (r) => {
                   if (r.message) {
                     this.is_oic_authenticated = true;
                     this.show_discount_control();
-                    passwordDialog2.hide();
+                    passwordDialog.hide();
                   } else {
                     frappe.show_alert({
                       message: __("Incorrect password or user is not an OIC"),
@@ -4503,7 +4548,7 @@
               });
             }
           });
-          passwordDialog2.show();
+          passwordDialog.show();
         } else {
           const can_edit_discount = this.$add_discount_elem.find(".edit-discount-btn").length;
           if (!this.discount_field || can_edit_discount)
@@ -4525,9 +4570,9 @@
             continue;
           let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
           if (btn === "Delete")
-            shortcut_key = "delete";
+            shortcut_key = "ctrl+backspace";
           if (btn === "Remove")
-            shortcut_key = "crtl+backspace";
+            shortcut_key = "shift+ctrl+backspace";
           if (btn === ".")
             shortcut_key = "ctrl+>";
           const fieldname = this.number_pad.fieldnames[btn] ? this.number_pad.fieldnames[btn] : typeof btn === "string" ? frappe.scrub(btn) : btn;
@@ -4592,7 +4637,6 @@
       this.$customer_section.html(`
 			<div class="customer-field"></div>
 		`);
-      console.log(this.$customer_section);
       const me = this;
       const allowed_customer_group = this.allowed_customer_groups || [];
       let filters = {};
@@ -4606,7 +4650,7 @@
           label: __("Customer"),
           fieldtype: "Link",
           options: "Customer",
-          placeholder: __("Select Customer"),
+          placeholder: __("Search by customer name, phone, email."),
           get_query: function() {
             return {
               filters
@@ -4614,37 +4658,16 @@
           },
           onchange: function() {
             if (this.value) {
-              const originalValue = this.value;
-              const temporaryValue = "cash";
               const frm = me.events.get_frm();
               frappe.dom.freeze();
-              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", temporaryValue);
+              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
               frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
                 frappe.run_serially([
-                  () => me.fetch_customer_details(temporaryValue),
+                  () => me.fetch_customer_details(this.value),
                   () => me.events.customer_details_updated(me.customer_info),
                   () => me.update_customer_section(),
-                  () => me.update_totals_section(),
                   () => frappe.dom.unfreeze()
-                ]).then(() => {
-                  frappe.dom.freeze();
-                  frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", originalValue);
-                  frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
-                    frappe.run_serially([
-                      () => me.fetch_customer_details(originalValue),
-                      () => me.events.customer_details_updated(me.customer_info),
-                      () => me.update_customer_section(),
-                      () => me.update_totals_section(),
-                      () => {
-                        const customer_group = frm.doc.customer_group;
-                        if (customer_group === "Senior Citizen" || customer_group === "Zero Rated" || customer_group === "Regular") {
-                          frm.refresh();
-                        }
-                        frappe.dom.unfreeze();
-                      }
-                    ]);
-                  });
-                });
+                ]);
               });
             }
           }
@@ -4652,40 +4675,43 @@
         parent: this.$customer_section.find(".customer-field"),
         render_input: true
       });
-      this.customer_field.toggle_label(true);
+      this.customer_field.toggle_label(false);
     }
-    make_doctors_selector() {
-      this.$doctors_section.html(
-        `
-			<div class="doctors-field"></div>
-			`
-      );
+    make_doctor_selector() {
+      this.$doctor_section.html(`
+			<div class="doctor-field"></div>
+		`);
       const me = this;
-      this.doctors_field = frappe.ui.form.make_control(
-        {
-          df: {
-            label: `Doctor's Information`,
-            fieldtype: "Link",
-            options: "Doctor",
-            placeholder: `Select Doctor`,
-            onchange: function() {
-              if (this.value) {
-                const frm = me.events.get_frm();
-                frappe.dom.freeze();
-                frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
-                frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
-                  frappe.run_serially([
-                    () => frappe.dom.unfreeze()
-                  ]);
-                });
-              }
+      const allowed_doctor_group = this.allowed_doctor_groups || [];
+      let filters = {};
+      if (allowed_doctor_group.length) {
+        filters = {
+          doctor_group: ["in", allowed_doctor_group]
+        };
+      }
+      this.doctor_field = frappe.ui.form.make_control({
+        df: {
+          label: __("Doctor"),
+          fieldtype: "Link",
+          options: "Doctor",
+          placeholder: __("Doctor"),
+          onchange: function() {
+            if (this.value) {
+              const frm = me.events.get_frm();
+              frappe.dom.freeze();
+              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
+              frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
+                frappe.run_serially([
+                  () => frappe.dom.unfreeze()
+                ]);
+              });
             }
-          },
-          parent: this.$doctors_section.find(".doctors-field"),
-          render_input: true
-        }
-      );
-      this.doctors_field.toggle_label(true);
+          }
+        },
+        parent: this.$doctor_section.find(".doctor-field"),
+        render_input: true
+      });
+      this.doctor_field.toggle_label(false);
     }
     fetch_customer_details(customer) {
       if (customer) {
@@ -4721,18 +4747,18 @@
         });
       }
     }
-    fetch_doctors_details(doctor) {
+    fetch_doctor_details(doctor) {
       if (doctor) {
         return new Promise((resolve) => {
-          frappe.db.get_value("Doctor", doctor, ["first_name", "last_name", "prc_number"]).then(({ message }) => {
-            this.doctors_info = __spreadProps(__spreadValues({}, message), { doctor });
-            console.log(this.doctors_info);
+          frappe.db.get_value("Doctor", doctor, ["first_name", "last_name", "prc_number", "image"]).then(({ message }) => {
+            this.doctor_info = __spreadProps(__spreadValues({}, message), { doctor });
+            console.log(this.doctor_info);
             resolve();
           });
         });
       } else {
         return new Promise((resolve) => {
-          this.doctors_info = {};
+          this.doctor_info = {};
           resolve();
         });
       }
@@ -4798,7 +4824,7 @@
     }
     update_customer_section() {
       const me = this;
-      const { customer, email_id = "", mobile_no = "", image } = this.customer_info || {};
+      const { customer, email_id: email_id2 = "", mobile_no: mobile_no2 = "", image } = this.customer_info || {};
       if (customer) {
         this.$customer_section.html(
           `<div class="customer-details">
@@ -4820,44 +4846,49 @@
         this.reset_customer_selector();
       }
       function get_customer_description() {
-        if (!email_id && !mobile_no) {
+        if (!email_id2 && !mobile_no2) {
           return `<div class="customer-desc">${__("Click to add email / phone")}</div>`;
-        } else if (email_id && !mobile_no) {
-          return `<div class="customer-desc">${email_id}</div>`;
-        } else if (mobile_no && !email_id) {
-          return `<div class="customer-desc">${mobile_no}</div>`;
+        } else if (email_id2 && !mobile_no2) {
+          return `<div class="customer-desc">${email_id2}</div>`;
+        } else if (mobile_no2 && !email_id2) {
+          return `<div class="customer-desc">${mobile_no2}</div>`;
         } else {
-          return `<div class="customer-desc">${email_id} - ${mobile_no}</div>`;
+          return `<div class="customer-desc">${email_id2} - ${mobile_no2}</div>`;
         }
       }
     }
-    update_doctors_section() {
+    update_doctor_section() {
       const me = this;
-      const { doctor, first_name, last_name, prc_number } = this.doctors_info || {};
+      const { doctor, first_name = "", last_name = "", prc_number = "", image } = this.doctor_info || {};
       if (doctor) {
-        this.$doctors_section.html(
-          `
-				<div class="doctors-details">
-					<div class="doctors-display">
-						<div class="doctors-name-desc">
-							<div class="doctors-name">
-							${doctor}
-							</div>
-							${get_doctors_description()}
+        this.$doctor_section.html(
+          `<div class="doctor-details">
+					<div class="doctor-display">
+						${this.get_doctor_image()}
+						<div class="doctor-name-desc">
+							<div class="doctor-name">${doctor}</div>
+							${get_doctor_description()}
+						</div>
+						<div class="reset-doctors-btn" data-doctors="${escape(doctors)}">
+							<svg width="32" height="32" viewBox="0 0 14 14" fill="none">
+								<path d="M4.93764 4.93759L7.00003 6.99998M9.06243 9.06238L7.00003 6.99998M7.00003 6.99998L4.93764 9.06238L9.06243 4.93759" stroke="#8D99A6"/>
+							</svg>
 						</div>
 					</div>
-					<div class="reset-doctors-btn" data-doctors="${escape(doctor)}">
-						<svg width="32" height="32" viewBox="0 0 14 14" fill="none">
-							<path d="M4.93764 4.93759L7.00003 6.99998M9.06243 9.06238L7.00003 6.99998M7.00003 6.99998L4.93764 9.06238L9.06243 4.93759" stroke="#8D99A6"/>
-						</svg>
-					</div>
-				</div>
-				`
+				</div>`
         );
+      } else {
+        this.reset_doctor_selector();
       }
-      function get_doctors_description() {
-        if (prc_number) {
-          return `<div class="doctors-desc">${prc_number}</div>`;
+      function get_doctor_description() {
+        if (!email_id && !mobile_no) {
+          return `<div class="doctor-desc">${__("Click to add email / phone")}</div>`;
+        } else if (email_id && !mobile_no) {
+          return `<div class="doctor-desc">${email_id}</div>`;
+        } else if (mobile_no && !email_id) {
+          return `<div class="doctor-desc">${mobile_no}</div>`;
+        } else {
+          return `<div class="doctorvv-desc">${email_id} - ${mobile_no}</div>`;
         }
       }
     }
@@ -4869,10 +4900,17 @@
         return `<div class="customer-image customer-abbr">${frappe.get_abbr(customer)}</div>`;
       }
     }
+    get_doctor_image() {
+      const { doctor, image } = this.doctor_info || {};
+      if (image) {
+        return `<div class="doctor-image"><img src="${image}" alt="${image}""></div>`;
+      } else {
+        return `<div class="doctor-image doctor-abbr">${frappe.get_abbr(doctor)}</div>`;
+      }
+    }
     update_totals_section(frm) {
       if (!frm)
         frm = this.events.get_frm();
-      console.log(frm.doc);
       this.render_vatable_sales(frm.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
@@ -4881,11 +4919,12 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
+      this.render_taxes(frm.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".net-total-container").html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".net-total-container").html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
     }
     render_vatable_sales(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -4923,15 +4962,6 @@
 				</div>
 			`);
     }
-    render_ex_total(value) {
-      const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".ex-total-container").html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Ex Total")}: </span>
-					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
-				</div>
-			`);
-    }
     render_total_item_qty(items) {
       var total_item_qty = 0;
       items.map((item) => {
@@ -4942,8 +4972,25 @@
     }
     render_grand_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".grand-total-container").html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".grand-total-container").html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
+    }
+    render_taxes(taxes) {
+      if (taxes && taxes.length) {
+        const currency = this.events.get_frm().doc.currency;
+        const taxes_html = taxes.map((t) => {
+          if (t.tax_amount_after_discount_amount == 0)
+            return;
+          const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
+          return `<div class="tax-row">
+					<div class="tax-label">${description}</div>
+					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+				</div>`;
+        }).join("");
+        this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+      } else {
+        this.$totals_section.find(".taxes-container").css("display", "none").html("");
+      }
     }
     get_cart_item({ name }) {
       const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -4961,6 +5008,9 @@
           $item.remove();
           this.remove_customer();
           this.set_cash_customer();
+          frappe.run_serially([
+            () => frappe.dom.unfreeze()
+          ]);
         }
       } else {
         const item_row = this.get_item_from_frm(item);
@@ -5302,7 +5352,7 @@
         const current_customer = me.customer_info.customer;
         if (this.value && current_value != this.value && this.df.fieldname != "loyalty_points") {
           frappe.call({
-            method: "custom_app.customapp.page.packing_list.packing_list.set_customer_info",
+            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.set_customer_info",
             args: {
               fieldname: this.df.fieldname,
               customer: current_customer,
@@ -5582,7 +5632,7 @@
     }
     oic_authentication(fieldname) {
       const me = this;
-      const passwordDialog2 = new frappe.ui.Dialog({
+      const passwordDialog = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
           {
@@ -5605,7 +5655,7 @@
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog2.hide();
+                passwordDialog.hide();
                 me.enable_discount_input(fieldname);
                 me.is_oic_authenticated = true;
               } else {
@@ -5618,7 +5668,7 @@
           });
         }
       });
-      passwordDialog2.show();
+      passwordDialog.show();
     }
     enable_discount_input(fieldname) {
       this.$form_container.find(`.${fieldname}-control input`).prop("disabled", false);
@@ -7407,7 +7457,7 @@
         frappe.utils.play_sound("error");
         return;
       }
-      const passwordDialog2 = new frappe.ui.Dialog({
+      const passwordDialog = new frappe.ui.Dialog({
         title: __("Enter Your Password"),
         fields: [
           {
@@ -7438,7 +7488,7 @@
                     () => this.make_new_invoice(),
                     () => frappe.dom.unfreeze()
                   ]);
-                  passwordDialog2.hide();
+                  passwordDialog.hide();
                   this.order_summary.load_summary_of(this.frm.doc, true);
                   this.order_summary.print_receipt();
                   window.location.reload();
@@ -7457,7 +7507,7 @@
           });
         }
       });
-      passwordDialog2.show();
+      passwordDialog.show();
     }
     set_pharmacist_assist(frm) {
       frappe.call({
@@ -7969,4 +8019,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.GBOHMY4W.js.map
+//# sourceMappingURL=packing-list.bundle.RUGBHBGW.js.map

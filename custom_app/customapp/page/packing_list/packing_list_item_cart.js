@@ -3,9 +3,9 @@ custom_app.PointOfSale.ItemCart = class {
 		this.wrapper = wrapper;
 		this.events = events;
 		this.customer_info = undefined;
-		this.doctors_info = undefined;
 		this.hide_images = settings.hide_images;
 		this.allowed_customer_groups = settings.customer_groups;
+		this.allowed_doctor_groups = settings.doctor_groups; 
 		this.allow_rate_change = settings.allow_rate_change;
 		this.allow_discount_change = settings.allow_discount_change;
 		this.init_component();
@@ -20,26 +20,32 @@ custom_app.PointOfSale.ItemCart = class {
 
 	prepare_dom() {
 		this.wrapper.append(`<section class="customer-cart-container"></section>`);
+
 		this.$component = this.wrapper.find(".customer-cart-container");
 	}
 
 	init_child_components() {
 		this.init_customer_selector();
-		this.init_doctors_selector();
+		this.init_doctor_selector();
 		this.init_cart_components();
 	}
 
 	init_customer_selector() {
-		this.$component.append(`<div class="customer-section mb-2"></div>`);
+		this.$component.append(`<div class="customer-section"></div>`);
 		this.$customer_section = this.$component.find(".customer-section");
 		this.make_customer_selector();
 	}
 
-	init_doctors_selector() {
-		this.$component.append(`<div class="doctors-section"></div>`);
-		this.$doctors_section = this.$component.find(".doctors-section");
-		this.make_doctors_selector();
-		// console.log('init doctors section')
+	init_doctor_selector() {
+		this.$component.append(`<div class="doctor-section" style="display: flex;
+		flex-direction: column;
+		padding: var(--padding-md) var(--padding-lg);
+		overflow: visible; background-color: var(--fg-color);
+		box-shadow: var(--shadow-base);
+		border-radius: var(--border-radius-md);
+	  }; margin-top: 1em;"></div>`);
+		this.$doctor_section = this.$component.find(".doctor-section");
+		this.make_doctor_selector();
 	}
 
 	reset_customer_selector() {
@@ -47,6 +53,13 @@ custom_app.PointOfSale.ItemCart = class {
 		frm.set_value("customer", "");
 		this.make_customer_selector();
 		this.customer_field.set_focus();
+	}
+
+	reset_doctor_selector() {
+		const frm = this.events.get_frm();
+		frm.set_value("doctor", "");
+		this.make_doctor_selector();
+		this.doctor_field.set_focus();
 	}
 
 	init_cart_components() {
@@ -127,7 +140,6 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$add_discount_elem = this.$component.find(".add-discount-wrapper");
 	}
 
-
 	make_cart_numpad() {
 		this.$numpad_section = this.$component.find(".numpad-section");
 
@@ -162,7 +174,7 @@ custom_app.PointOfSale.ItemCart = class {
 		);
 
 		this.$numpad_section.append(
-			`<div class="numpad-btn checkout-btn" data-button-value="checkout">${__("Order")}</div>`
+			`<div class="numpad-btn checkout-btn" data-button-value="checkout">${__("Checkout")}</div>`
 		);
 	}
 
@@ -183,27 +195,36 @@ custom_app.PointOfSale.ItemCart = class {
 			me.toggle_customer_info(show);
 		});
 
+		//Doctors
+
+		this.$doctor_section.on("click", ".reset-doctor-btn", function () {
+			me.reset_doctor_selector();
+		});
+
+		this.$doctor_section.on("click", ".close-details-btn", function () {
+			me.toggle_doctor_info(false);
+		});
+
+		this.$doctor_section.on("click", ".doctor-display", function (e) {
+			if ($(e.target).closest(".reset-doctor-btn").length) return;
+
+			const show = me.$cart_container.is(":visible");
+			me.toggle_doctor_info(show);
+		});
+
+		
 		this.$cart_items_wrapper.on("click", ".cart-item-wrapper", function () {
             const $cart_item = $(this);
-
-            // Toggle item highlight
             me.toggle_item_highlight(this);
-
-            // Check if the payment section is visible
             const payment_section_hidden = !me.$totals_section.find(".edit-cart-btn").is(":visible");
-
             if (!payment_section_hidden) {
-                // Payment section is visible
-                // Edit cart first and then open item details section
+                // payment section is visible
+                // edit cart first and then open item details section
                 me.$totals_section.find(".edit-cart-btn").click();
-                // Since the payment section is visible, we restrict the cart item click event
                 return;
             }
             const item_row_name = unescape($cart_item.attr("data-row-name"));
-
-            // Trigger cart item click event
             me.events.cart_item_clicked({ name: item_row_name });
-
             this.numpad_value = "";
         });
 
@@ -217,20 +238,44 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$totals_section.on("click", ".edit-cart-btn", () => {
-			this.events.edit_cart();
-			this.toggle_checkout_btn(true);
-		});
-
-		this.$component.on("click", ".add-discount-wrapper", () => {
-			const can_edit_discount = this.$add_discount_elem.find(".edit-discount-btn").length;
-
-			if (!this.discount_field || can_edit_discount) this.show_discount_control();
-		});
-
-		this.$totals_section.on("click", ".edit-cart-btn", () => {
-			this.events.edit_cart();
-			this.toggle_checkout_btn(true);
-			passwordDialog.hide();			
+			// Show password dialog for OIC authentication
+			const passwordDialog = new frappe.ui.Dialog({
+				title: __('Enter OIC Password'),
+				fields: [
+					{
+						fieldname: 'password',
+						fieldtype: 'Password',
+						label: __('Password'),
+						reqd: 1
+					}
+				],
+				primary_action_label: __('Edit Order'),
+				primary_action: (values) => {
+					let password = values.password;
+					let role = "oic";
+		
+					frappe.call({
+						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+						args: { password: password, role: role },
+						callback: (r) => {
+							if (r.message) {
+								// OIC authentication successful, proceed with editing the cart
+								this.events.edit_cart();
+								this.toggle_checkout_btn(true);
+								passwordDialog.hide();
+							} else {
+								// Show alert for incorrect password or unauthorized user
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
+						}
+					});
+				}
+			});
+		
+			passwordDialog.show();
 		});
 		
 		this.$component.on("click", ".add-discount-wrapper", () => {
@@ -253,7 +298,7 @@ custom_app.PointOfSale.ItemCart = class {
 						let role = "oic";
 		
 						frappe.call({
-							method: "erpnext.selling.page.point_of_sale.point_of_sale.confirm_user_password",
+							method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
 							args: { password: password, role: role },
 							callback: (r) => {
 								if (r.message) {
@@ -287,7 +332,6 @@ custom_app.PointOfSale.ItemCart = class {
 			this.is_oic_authenticated = false;
 			this.$component.trigger("click", ".add-discount-wrapper");
 		});
-		
 
 		frappe.ui.form.on("POS Invoice", "paid_amount", (frm) => {
 			// called when discount is applied
@@ -301,16 +345,16 @@ custom_app.PointOfSale.ItemCart = class {
 				if (typeof btn !== "string") continue; // do not make shortcuts for numbers
 
 				let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
-				if (btn === "Delete") shortcut_key = "delete";
-				if (btn === "Remove") shortcut_key = "crtl+backspace";
+				if (btn === "Delete") shortcut_key = "ctrl+backspace";
+				if (btn === "Remove") shortcut_key = "shift+ctrl+backspace";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map
 				const fieldname = this.number_pad.fieldnames[btn]
 					? this.number_pad.fieldnames[btn]
 					: typeof btn === "string"
-						? frappe.scrub(btn)
-						: btn;
+					? frappe.scrub(btn)
+					: btn;
 
 				let shortcut_label = shortcut_key.split("+").map(frappe.utils.to_title_case).join("+");
 				shortcut_label = frappe.utils.is_mac() ? shortcut_label.replace("Ctrl", "⌘") : shortcut_label;
@@ -360,8 +404,6 @@ custom_app.PointOfSale.ItemCart = class {
 				this.discount_field.set_value(0);
 			}
 		});
-
-
 	}
 
 	toggle_item_highlight(item) {
@@ -382,10 +424,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$customer_section.html(`
 			<div class="customer-field"></div>
 		`);
-		console.log(this.$customer_section);
-	
 		const me = this;
-	
 		const allowed_customer_group = this.allowed_customer_groups || [];
 		let filters = {};
 		if (allowed_customer_group.length) {
@@ -398,7 +437,7 @@ custom_app.PointOfSale.ItemCart = class {
 				label: __("Customer"),
 				fieldtype: "Link",
 				options: "Customer",
-				placeholder: __("Select Customer"),
+				placeholder: __("Search by customer name, phone, email."),
 				get_query: function () {
 					return {
 						filters: filters,
@@ -406,42 +445,16 @@ custom_app.PointOfSale.ItemCart = class {
 				},
 				onchange: function () {
 					if (this.value) {
-						const originalValue = this.value;
-						const temporaryValue = "cash";  // A temporary customer value
 						const frm = me.events.get_frm();
-	
 						frappe.dom.freeze();
-	
-						// First change to a temporary value
-						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", temporaryValue);
+						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
 						frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
 							frappe.run_serially([
-								() => me.fetch_customer_details(temporaryValue),
+								() => me.fetch_customer_details(this.value),
 								() => me.events.customer_details_updated(me.customer_info),
 								() => me.update_customer_section(),
-								() => me.update_totals_section(),
 								() => frappe.dom.unfreeze(),
-							]).then(() => {
-								// Now change back to the original value
-								frappe.dom.freeze();
-								frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", originalValue);
-								frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
-									frappe.run_serially([
-										() => me.fetch_customer_details(originalValue),
-										() => me.events.customer_details_updated(me.customer_info),
-										() => me.update_customer_section(),
-										() => me.update_totals_section(),
-										() => {
-											// Refresh form if customer group changes to Senior Citizen, Zero Rated, or Regular
-											const customer_group = frm.doc.customer_group;
-											if (customer_group === "Senior Citizen" || customer_group === "Zero Rated" || customer_group === "Regular") {
-												frm.refresh();
-											}
-											frappe.dom.unfreeze();
-										},
-									]);
-								});
-							});
+							]);
 						});
 					}
 				},
@@ -449,52 +462,53 @@ custom_app.PointOfSale.ItemCart = class {
 			parent: this.$customer_section.find(".customer-field"),
 			render_input: true,
 		});
-		this.customer_field.toggle_label(true);
+		this.customer_field.toggle_label(false);
 	}
-	
-	
-	make_doctors_selector() {
 
-		this.$doctors_section.html(
-			`
-			<div class="doctors-field"></div>
-			`
-		)
+
+	//Doctors
+
+	make_doctor_selector() {
+		this.$doctor_section.html(`
+			<div class="doctor-field"></div>
+		`);
 		const me = this;
-
-		// console.log(me.events)
-		this.doctors_field
-
-			= frappe.ui.form.make_control(
-				{
-					df: {
-						label: `Doctor's Information`,
-						fieldtype: "Link",
-						options: "Doctor",
-						placeholder: `Select Doctor`,
-						onchange: function () {
-
-							if (this.value) {
-								const frm = me.events.get_frm();
-								frappe.dom.freeze();
-								frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
-								frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
-									frappe.run_serially([
-										// () => me.fetch_doctors_details(this.value),
-										// () => me.update_doctors_section(),
-										() => frappe.dom.unfreeze(),
-									]);
-								})
-							}
-						},
-
-					},
-					parent: this.$doctors_section.find(".doctors-field"),
-					render_input: true,
-				}
-			)
-		this.doctors_field.toggle_label(true)
+		const allowed_doctor_group = this.allowed_doctor_groups || [];
+		let filters = {};
+		if (allowed_doctor_group.length) {
+			filters = {
+				doctor_group: ["in", allowed_doctor_group],
+			};
+}
+		this.doctor_field = frappe.ui.form.make_control({
+			df: {
+				label: __("Doctor"),
+				fieldtype: "Link",
+				options: "Doctor",
+				placeholder: __("Doctor"),
+				onchange: function () {
+					if (this.value) {
+						const frm = me.events.get_frm();
+						frappe.dom.freeze();
+						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
+						frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
+							frappe.run_serially([
+								// () => me.fetch_customer_details(this.value),
+								// () => me.events.customer_details_updated(me.customer_info),
+								// () => me.update_customer_section(),
+								// () => me.update_totals_section(),
+								() => frappe.dom.unfreeze(),
+							]);
+						});
+					}
+				},
+			},
+			parent: this.$doctor_section.find(".doctor-field"),
+			render_input: true,
+		});
+		this.doctor_field.toggle_label(false);
 	}
+
 
 	fetch_customer_details(customer) {
 		if (customer) {
@@ -536,23 +550,24 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 
-	fetch_doctors_details(doctor) {
+	fetch_doctor_details(doctor) {
 		if (doctor) {
 			return new Promise((resolve) => {
-
-				frappe.db.get_value("Doctor", doctor, ["first_name", "last_name", "prc_number"]).
-				then(({message}) => {
-					this.doctors_info = { ...message, doctor };
-					console.log(this.doctors_info);
-					resolve();
-				} )
-
-			})
+				frappe.db
+					.get_value("Doctor", doctor, ["first_name", "last_name", "prc_number", "image"])
+					.then(({ message }) => {
+						// const { loyalty_program } = message;
+						// if loyalty program then fetch loyalty points too
+						this.doctor_info = { ...message, doctor };
+						console.log(this.doctor_info);
+						resolve();
+					});
+			});
 		} else {
 			return new Promise((resolve) => {
-				this.doctors_info = {};
+				this.doctor_info = {};
 				resolve();
-			})
+			});
 		}
 	}
 
@@ -655,39 +670,50 @@ custom_app.PointOfSale.ItemCart = class {
 				return `<div class="customer-desc">${email_id} - ${mobile_no}</div>`;
 			}
 		}
+
+
 	}
 
+	//doctor
 
-	update_doctors_section() {
+	update_doctor_section() {
 		const me = this;
-		const { doctor, first_name, last_name, prc_number } = this.doctors_info || {};
+		const { doctor, first_name = "", last_name = "", prc_number = "", image } = this.doctor_info || {};
+
 		if (doctor) {
-			this.$doctors_section.html(
-				`
-				<div class="doctors-details">
-					<div class="doctors-display">
-						<div class="doctors-name-desc">
-							<div class="doctors-name">
-							${doctor}
-							</div>
-							${get_doctors_description()}
+			this.$doctor_section.html(
+				`<div class="doctor-details">
+					<div class="doctor-display">
+						${this.get_doctor_image()}
+						<div class="doctor-name-desc">
+							<div class="doctor-name">${doctor}</div>
+							${get_doctor_description()}
+						</div>
+						<div class="reset-doctors-btn" data-doctors="${escape(doctors)}">
+							<svg width="32" height="32" viewBox="0 0 14 14" fill="none">
+								<path d="M4.93764 4.93759L7.00003 6.99998M9.06243 9.06238L7.00003 6.99998M7.00003 6.99998L4.93764 9.06238L9.06243 4.93759" stroke="#8D99A6"/>
+							</svg>
 						</div>
 					</div>
-					<div class="reset-doctors-btn" data-doctors="${escape(doctor)}">
-						<svg width="32" height="32" viewBox="0 0 14 14" fill="none">
-							<path d="M4.93764 4.93759L7.00003 6.99998M9.06243 9.06238L7.00003 6.99998M7.00003 6.99998L4.93764 9.06238L9.06243 4.93759" stroke="#8D99A6"/>
-						</svg>
-					</div>
-				</div>
-				`
-			)
+				</div>`
+			);
+		} else {
+			// reset doctor selector
+			this.reset_doctor_selector();
 		}
 
-		function get_doctors_description() {
-			if(prc_number){
-				return `<div class="doctors-desc">${prc_number}</div>`;
+		function get_doctor_description() {
+			if (!email_id && !mobile_no) {
+				return `<div class="doctor-desc">${__("Click to add email / phone")}</div>`;
+			} else if (email_id && !mobile_no) {
+				return `<div class="doctor-desc">${email_id}</div>`;
+			} else if (mobile_no && !email_id) {
+				return `<div class="doctor-desc">${mobile_no}</div>`;
+			} else {
+				return `<div class="doctorvv-desc">${email_id} - ${mobile_no}</div>`;
 			}
 		}
+
 	}
 
 	get_customer_image() {
@@ -699,9 +725,18 @@ custom_app.PointOfSale.ItemCart = class {
 		}
 	}
 
+	get_doctor_image() {
+		const { doctor, image } = this.doctor_info || {};
+		if (image) {
+			return `<div class="doctor-image"><img src="${image}" alt="${image}""></div>`;
+		} else {
+			return `<div class="doctor-image doctor-abbr">${frappe.get_abbr(doctor)}</div>`;
+		}
+	}
+
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-		console.log(frm.doc);
+		//console.log(frm.doc);
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
@@ -715,18 +750,18 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		// this.render_taxes(frm.doc.taxes);
+		this.render_taxes(frm.doc.taxes);
 	}
 
 	render_net_total(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".net-total-container")
-			.html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-net-total")
-			.html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
 	render_vatable_sales(value) {
@@ -777,17 +812,17 @@ custom_app.PointOfSale.ItemCart = class {
 			`);
 	}
 
-	render_ex_total(value) {
-		const currency = this.events.get_frm().doc.currency;
-		this.$totals_section
-			.find(".ex-total-container")
-			.html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Ex Total")}: </span>
-					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
-				</div>
-			`);
-	}
+	// render_ex_total(value) {
+	// 	const currency = this.events.get_frm().doc.currency;
+	// 	this.$totals_section
+	// 		.find(".ex-total-container")
+	// 		.html(`
+	// 			<div style="display: flex; justify-content: space-between;">
+	// 				<span style="flex: 1;">${__("Ex Total")}: </span>
+	// 				<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+	// 			</div>
+	// 		`);
+	// }
 
 
 	render_total_item_qty(items) {
@@ -809,36 +844,36 @@ custom_app.PointOfSale.ItemCart = class {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".grand-total-container")
-			.html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);	
+			.html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-grand-total")
-			.html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
-	// render_taxes(taxes) {
-	// 	if (taxes && taxes.length) {
-	// 		const currency = this.events.get_frm().doc.currency;
-	// 		const taxes_html = taxes
-	// 			.map((t) => {
-	// 				if (t.tax_amount_after_discount_amount == 0.0) return;
-	// 				// if tax rate is 0, don't print it.
-	// 				const description = /[0-9]+/.test(t.description)
-	// 					? t.description
-	// 					: t.rate != 0
-	// 						? `${t.description} @ ${t.rate}%`
-	// 						: t.description;
-	// 				return `<div class="tax-row">
-	// 				<div class="tax-label">${description}</div>
-	// 				<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-	// 			</div>`;
-	// 			})
-	// 			.join("");
-	// 		this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-	// 	} else {
-	// 		this.$totals_section.find(".taxes-container").css("display", "none").html("");
-	// 	}
-	// }
+	render_taxes(taxes) {
+		if (taxes && taxes.length) {
+			const currency = this.events.get_frm().doc.currency;
+			const taxes_html = taxes
+				.map((t) => {
+					if (t.tax_amount_after_discount_amount == 0.0) return;
+					// if tax rate is 0, don't print it.
+					const description = /[0-9]+/.test(t.description)
+						? t.description
+						: t.rate != 0
+						? `${t.description} @ ${t.rate}%`
+						: t.description;
+					return `<div class="tax-row">
+					<div class="tax-label">${description}</div>
+					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+				</div>`;
+				})
+				.join("");
+			this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+		} else {
+			this.$totals_section.find(".taxes-container").css("display", "none").html("");
+		}
+	}
 
 	get_cart_item({ name }) {
 		const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -850,7 +885,6 @@ custom_app.PointOfSale.ItemCart = class {
 		return doc.items.find((i) => i.name == item.name);
 	}
 
-	
 	update_item_html(item, remove_item) {
 		const $item = this.get_cart_item(item);
 
@@ -859,9 +893,10 @@ custom_app.PointOfSale.ItemCart = class {
 				$item.next().remove();
 				$item.remove();
 				this.remove_customer(); // Call remove_customer function after removing item
-				this.set_cash_customer();
-				 // Set customer to "Cash" after removing item
-				
+				this.set_cash_customer(); // Set customer to "Cash" after removing item
+				frappe.run_serially([
+					() => frappe.dom.unfreeze(),
+				]);
 			}
 		} else {
 			const item_row = this.get_item_from_frm(item);
@@ -877,13 +912,14 @@ custom_app.PointOfSale.ItemCart = class {
 		const frm = this.events.get_frm();
 		// Get the current value of the "customer" field
 		const currentCustomer = frm.doc.customer;
+	
 		// Set the value of "custom_customer_2" to the current customer
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
+	
 		// Clear the "customer" field
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
 		// Update the customer section
 		this.update_customer_section();
-	
 	}
 
 	set_cash_customer() {
@@ -897,12 +933,9 @@ custom_app.PointOfSale.ItemCart = class {
 	
 		// Update the customer section
 		this.update_customer_section();
-		
 	}
-	
 
 	render_cart_item(item_data, $item_to_update) {
-		//console.log(item_data)
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
 
@@ -1048,8 +1081,8 @@ custom_app.PointOfSale.ItemCart = class {
 		const action_is_field_edit = ["qty", "discount_percentage", "rate"].includes(current_action);
 		const action_is_allowed = action_is_field_edit
 			? (current_action == "rate" && this.allow_rate_change) ||
-			(current_action == "discount_percentage" && this.allow_discount_change) ||
-			current_action == "qty"
+			  (current_action == "discount_percentage" && this.allow_discount_change) ||
+			  current_action == "qty"
 			: true;
 
 		const action_is_pressed_twice = this.prev_action === current_action;
@@ -1200,7 +1233,7 @@ custom_app.PointOfSale.ItemCart = class {
 			);
 			// transactions need to be in diff div from sticky elem for scrolling
 			this.$customer_section.append(`<div class="customer-transactions"></div>`);
-			
+
 			this.render_customer_fields();
 			this.fetch_customer_transactions();
 		} else {
@@ -1258,7 +1291,7 @@ custom_app.PointOfSale.ItemCart = class {
 				read_only: 1,
 			},
 		];
-		
+
 		const me = this;
 		dfs.forEach((df) => {
 			this[`customer_${df.fieldname}_field`] = frappe.ui.form.make_control({
@@ -1275,7 +1308,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 			if (this.value && current_value != this.value && this.df.fieldname != "loyalty_points") {
 				frappe.call({
-					method: "custom_app.customapp.page.packing_list.packing_list.set_customer_info",
+					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.set_customer_info",
 					args: {
 						fieldname: this.df.fieldname,
 						customer: current_customer,
@@ -1356,7 +1389,6 @@ custom_app.PointOfSale.ItemCart = class {
 			if (frm.doc.items.length) {
 				this.$cart_items_wrapper.html("");
 				frm.doc.items.forEach((item) => {
-					//console.log(item);
 					this.update_item_html(item);
 				});
 			}
