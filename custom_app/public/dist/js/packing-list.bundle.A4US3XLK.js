@@ -4919,7 +4919,6 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -4974,23 +4973,6 @@
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".grand-total-container").html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
       this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
-    }
-    render_taxes(taxes) {
-      if (taxes && taxes.length) {
-        const currency = this.events.get_frm().doc.currency;
-        const taxes_html = taxes.map((t) => {
-          if (t.tax_amount_after_discount_amount == 0)
-            return;
-          const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
-          return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-        }).join("");
-        this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-      } else {
-        this.$totals_section.find(".taxes-container").css("display", "none").html("");
-      }
     }
     get_cart_item({ name }) {
       const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -7721,13 +7703,7 @@
             });
           },
           edit_order: (name) => {
-            this.recent_order_list.toggle_component(false);
-            frappe.run_serially([
-              () => this.frm.refresh(name),
-              () => this.frm.call("reset_mode_of_payments"),
-              () => this.cart.load_invoice(),
-              () => this.item_selector.toggle_component(true)
-            ]);
+            this.oic_edit_confirm(name);
           },
           delete_order: (name) => {
             frappe.model.delete_doc(this.frm.doc.doctype, name, () => {
@@ -7744,6 +7720,47 @@
           }
         }
       });
+    }
+    oic_edit_confirm(name) {
+      const passwordDialog = new frappe.ui.Dialog({
+        title: __("Enter OIC Password"),
+        fields: [
+          {
+            fieldname: "password",
+            fieldtype: "Password",
+            label: __("Password"),
+            reqd: 1
+          }
+        ],
+        primary_action_label: __("Edit Order"),
+        primary_action: (values) => {
+          let password = values.password;
+          let role = "oic";
+          frappe.call({
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+            args: { password, role },
+            callback: (r) => {
+              if (r.message) {
+                this.recent_order_list.toggle_component(false);
+                frappe.run_serially([
+                  () => this.frm.refresh(name),
+                  () => this.cart.load_invoice(),
+                  () => this.item_selector.toggle_component(true),
+                  () => this.toggle_recent_order_list(false)
+                ]);
+                passwordDialog.hide();
+              } else {
+                frappe.show_alert({
+                  message: __("Incorrect password or user is not an OIC"),
+                  indicator: "red"
+                });
+              }
+            }
+          });
+        }
+      });
+      passwordDialog.show();
+      this.toggle_component(true);
     }
     toggle_recent_order_list(show) {
       this.toggle_components(!show);
@@ -8019,4 +8036,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.RUGBHBGW.js.map
+//# sourceMappingURL=packing-list.bundle.A4US3XLK.js.map
