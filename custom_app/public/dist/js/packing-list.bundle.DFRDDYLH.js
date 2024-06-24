@@ -4047,12 +4047,12 @@
         qty_to_display = "";
       }
       return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
-				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
+				data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
 				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
 				data-rate="${escape(price_list_rate || 0)}">
 				<td class="item-code">${item_code}</td> 
-				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+				<td class="item-name text-break">${frappe.ellipsis(item.description, 18)}</td>
+				<td class="item-vat">${custom_is_vatable}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
 				<td class="item-uom"> ${uom} / count per uom </td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
@@ -4342,6 +4342,7 @@
 					<div class="cart-label">${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
+				        <div class="qty-header">${__("Vat")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -5016,6 +5017,7 @@
       this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
+      console.log("ITEMS", item_data);
       const currency = this.events.get_frm().doc.currency;
       const me = this;
       if (!$item_to_update.length) {
@@ -5033,7 +5035,12 @@
 				</div>
 				${get_description_html()}
 			</div>
-			${get_rate_discount_html()}`
+			<div class="item-vat">
+				  <strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
+			</div>
+		
+			${get_rate_discount_html()}
+			`
       );
       set_dynamic_rate_header_width();
       function set_dynamic_rate_header_width() {
@@ -5050,6 +5057,8 @@
           max_width = "";
         me.$cart_header.find(".rate-amount-header").css("width", max_width);
         me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
+      }
+      function get_rate_discount_html() {
       }
       function get_rate_discount_html() {
         if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
@@ -5539,7 +5548,7 @@
       }
     }
     render_dom(item) {
-      let { item_name, description, image, price_list_rate } = item;
+      let { item_name, description, image, price_list_rate, custom_remarks, custom_vat } = item;
       function get_description_html() {
         if (description) {
           description = description.indexOf("...") === -1 && description.length > 140 ? description.substr(0, 139) + "..." : description;
@@ -5579,6 +5588,7 @@
     }
     render_form(item) {
       const fields_to_display = this.get_form_fields(item);
+      console.log(item);
       this.$form_container.html("");
       this.original_rate = item.rate;
       fields_to_display.forEach((fieldname, idx) => {
@@ -5665,7 +5675,7 @@
         "conversion_factor",
         "discount_percentage",
         "discount_amount",
-        "custom_free"
+        "custom_remarks"
       ];
       if (item.has_serial_no)
         fields.push("serial_no");
@@ -7868,7 +7878,7 @@
           if (!item_code)
             return;
           const new_item = { item_code, batch_no, rate, uom, [field]: value };
-          if (serial_no) {
+          if (serial_no && serial_no !== "undefined") {
             await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
             new_item["serial_no"] = serial_no;
           }
@@ -7978,8 +7988,8 @@
       const res = await frappe.call({ method, args });
       if (res.message.includes(serial_no)) {
         frappe.throw({
-          title: __("Not Available"),
-          message: __("Serial No: {0} has already been transacted into another POS Invoice.", [
+          title: "Not Available",
+          message: ("Serial No: {0} has already been transacted into another POS Invoice.", [
             serial_no.bold()
           ])
         });
@@ -8014,49 +8024,14 @@
       }
     }
     remove_item_from_cart() {
-      const passwordDialog = new frappe.ui.Dialog({
-        title: __("Enter OIC Password"),
-        fields: [
-          {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
-          }
-        ],
-        primary_action_label: __("Remove"),
-        primary_action: (values) => {
-          let password = values.password;
-          let role = "oic";
-          frappe.call({
-            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
-            args: { password, role },
-            callback: (r) => {
-              if (r.message) {
-                frappe.dom.freeze();
-                const { doctype, name, current_item } = this.item_details;
-                frappe.model.set_value(doctype, name, "qty", 0).then(() => {
-                  frappe.model.clear_doc(doctype, name);
-                  this.update_cart_html(current_item, true);
-                  this.item_details.toggle_item_details_section(null);
-                  frappe.dom.unfreeze();
-                  passwordDialog.hide();
-                }).catch((e) => {
-                  console.log(e);
-                  frappe.dom.unfreeze();
-                  passwordDialog.hide();
-                });
-              } else {
-                frappe.show_alert({
-                  message: __("Incorrect password or user is not an OIC"),
-                  indicator: "red"
-                });
-              }
-            }
-          });
-        }
-      });
-      passwordDialog.show();
+      frappe.dom.freeze();
+      const { doctype, name, current_item } = this.item_details;
+      return frappe.model.set_value(doctype, name, "qty", 0).then(() => {
+        frappe.model.clear_doc(doctype, name);
+        this.update_cart_html(current_item, true);
+        this.item_details.toggle_item_details_section(null);
+        frappe.dom.unfreeze();
+      }).catch((e) => console.log(e));
     }
     async save_and_checkout() {
       if (this.frm.is_dirty()) {
@@ -8071,4 +8046,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.6PG57AMP.js.map
+//# sourceMappingURL=packing-list.bundle.DFRDDYLH.js.map

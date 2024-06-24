@@ -138,6 +138,13 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         SELECT
             item.name AS item_code,
             item.item_name,
+			CONCAT(item.description, ' ', 
+				CASE 
+					WHEN item.custom_is_vatable = 1 THEN 'VT' 
+					WHEN item.custom_is_vatable = 0 THEN 'VE' 
+					ELSE '' 
+				END
+			) AS description,
             item.description,
 			item.custom_is_vatable,
             item.stock_uom,
@@ -213,6 +220,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
                     "currency": price.get("currency"),
                     "uom": price.uom or item.uom,
                     "batch_no": price.batch_no,
+					"batch_no": item.custom_is_vatable,
                 }
             )
             # Add latest_expiry_date to the item
