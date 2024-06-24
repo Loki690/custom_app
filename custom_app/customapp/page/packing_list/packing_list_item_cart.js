@@ -31,10 +31,12 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	init_customer_selector() {
-		this.$component.append(`<div class="customer-section"></div>`);
+		this.$component.append(`<div class="customer-section mb-2 mt-4"></div>`);
+
 		this.$customer_section = this.$component.find(".customer-section");
 		this.make_customer_selector();
 	}
+
 
 	init_doctor_selector() {
 		this.$component.append(`<div class="doctor-section" style="display: flex;
@@ -44,6 +46,7 @@ custom_app.PointOfSale.ItemCart = class {
 		box-shadow: var(--shadow-base);
 		border-radius: var(--border-radius-md);
 	  }; margin-top: 1em;"></div>`);
+
 		this.$doctor_section = this.$component.find(".doctor-section");
 		this.make_doctor_selector();
 	}
