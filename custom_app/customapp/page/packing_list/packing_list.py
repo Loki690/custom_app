@@ -11,6 +11,10 @@ from frappe.utils.nestedset import get_root_of
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
+from frappe.utils.password import get_decrypted_password
+from frappe.utils.password import check_password
+from frappe.exceptions import AuthenticationError
+from frappe.utils.password import check_oic_password, check_password
 
 import platform
 
@@ -422,6 +426,7 @@ def get_pos_profile_data(pos_profile):
 from frappe.utils.password import get_decrypted_password
 from frappe.utils.password import check_password
 from frappe.exceptions import AuthenticationError
+
 @frappe.whitelist()
 def get_user_password():
     # Get the current user
@@ -455,13 +460,12 @@ def get_user_password():
 #     return stored_password_hash
     
 # def check_if_match(stored_password_hash, password):
-from frappe.utils.password import get_decrypted_password
-from frappe.utils.password import check_password
-from frappe.exceptions import AuthenticationError
-from frappe.utils.password import check_oic_password, check_password
+
+
 @frappe.whitelist()
 def confirm_user_password(password,role):
     # Check if the provided role is "oic"
+   
     try:
         # Check if the entered password matches the stored hashed password
         if check_oic_password(password, role):
@@ -471,6 +475,7 @@ def confirm_user_password(password,role):
     except frappe.AuthenticationError:
         return False
 	
+
 @frappe.whitelist()
 def confirm_user_acc_password(password):
     # Get the current user
