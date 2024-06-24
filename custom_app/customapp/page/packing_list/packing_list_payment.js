@@ -469,6 +469,7 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} check-date"></div>	
 						`;
 						break;
+
 					case "2306":
 						paymentModeHtml += `
 							<div class="${mode} actual-gov-one"></div>
@@ -722,7 +723,7 @@ custom_app.PointOfSale.Payment = class {
 
 
 
-			if (p.mode_of_payment === "Cheque") {
+			if (p.mode_of_payment === "Cheque" || p.mode_of_payment  === 'Government') {
 
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
 
