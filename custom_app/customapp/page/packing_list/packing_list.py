@@ -336,7 +336,7 @@ def serial_number():
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, limit=20):
+def get_past_order_list(search_term, status, pos_profile, limit=100):
 	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 

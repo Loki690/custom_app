@@ -223,7 +223,8 @@ custom_app.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
 		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
-
+		this.page.add_menu_item(__('X Reading'), false, "f9");
+		this.page.add_menu_item(__('Z Reading'), false, "f9");
 		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 
 	}
@@ -236,6 +237,7 @@ custom_app.PointOfSale.Controller = class {
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
+			
 			{label: __("Close the POS"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
 		];
 	

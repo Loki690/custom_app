@@ -70,7 +70,7 @@ custom_app.PointOfSale.ItemSelector = class {
 		});
 	}
 
-	get_items({ start = 0, page_length = 40, search_term = "" }) {
+	get_items({ start = 0, page_length = 100, search_term = "" }) {
 		const doc = this.events.get_frm().doc;
 		const price_list = (doc && doc.selling_price_list) || this.price_list;
 		let { item_group, pos_profile } = this;
