@@ -439,7 +439,7 @@
         this.render_item_list(message.items);
       });
     }
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
+    get_items({ start = 0, page_length = 100, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list;
       let { item_group, pos_profile } = this;
@@ -3829,6 +3829,8 @@
       this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
       this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
       this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
+      this.page.add_menu_item(__("X Reading"), false, "f9");
+      this.page.add_menu_item(__("Z Reading"), false, "f9");
       this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
     }
     add_buttons_to_toolbar() {
@@ -4564,4 +4566,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.TOWGGY4H.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.FFV7WDHG.js.map

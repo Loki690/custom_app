@@ -3991,7 +3991,7 @@
         this.render_item_list(message.items);
       });
     }
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
+    get_items({ start = 0, page_length = 100, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list;
       let { item_group, pos_profile } = this;
@@ -4374,6 +4374,7 @@
 			<div class="vatable-sales-container mt-2"></div>
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
+			<div class="vat-container"></div>
 			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
@@ -4381,7 +4382,7 @@
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			<div class="vat-container"></div>
+			
 
 		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
@@ -4859,6 +4860,7 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
+      this.render_taxes(frm.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -5625,12 +5627,11 @@
       const fields = [
         "custom_free",
         "qty",
-        "amount",
+        "price_list_rate",
         "rate",
         "uom",
         "discount_percentage",
         "discount_amount",
-        "custom_item_discount_amount",
         "custom_vat_amount",
         "custom_vatable_amount",
         "custom_vat_exempt_amount",
@@ -6803,7 +6804,7 @@
       );
       return `<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
 				<div class="invoice-name-date">
-					<div class="invoice-name">${invoice.name}</div>
+					<div class="invoice-name">${invoice.name} - ${invoice.pos_profile} </div>
 					<div class="invoice-date">
 						<svg class="mr-2" width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -8027,4 +8028,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.3D2LJXUX.js.map
+//# sourceMappingURL=packing-list.bundle.6GYQ3IZB.js.map

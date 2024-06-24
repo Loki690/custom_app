@@ -270,14 +270,13 @@ custom_app.PointOfSale.ItemDetails = class {
 		const fields = [
 			"custom_free",
 			"qty",
-			"amount",
+			'price_list_rate',
 			"rate",
 			"uom",
-			//'price_list_rate',
 			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field
-			"custom_item_discount_amount",
+			//"custom_item_discount_amount",
 			//"warehouse",
 			//"actual_qty",
 			//"price_list_rate",

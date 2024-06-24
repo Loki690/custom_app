@@ -107,6 +107,7 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="vatable-sales-container mt-2"></div>
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
+			<div class="vat-container"></div>
 			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
@@ -114,7 +115,7 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			<div class="vat-container"></div>
+			
 
 		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
@@ -688,7 +689,7 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		// this.render_taxes(frm.doc.taxes);
+		this.render_taxes(frm.doc.taxes);
 	}
 
 	render_net_total(value) {
