@@ -1023,6 +1023,7 @@ custom_app.PointOfSale.Controller = class {
 
 
 	remove_item_from_cart() {
+
 		//Authenticate OIC to Remove
 		const passwordDialog = new frappe.ui.Dialog({
 			title: __('Enter OIC Password'),
@@ -1076,8 +1077,8 @@ custom_app.PointOfSale.Controller = class {
 		passwordDialog.show();
 	}
 
-
 	async save_and_checkout() {
+
 		if (this.frm.is_dirty()) {
 			let save_error = false;
 			// await this.frm.save(null, null, null, () => (save_error = true));

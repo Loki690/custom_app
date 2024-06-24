@@ -100,3 +100,38 @@ def export_multiple_pos_invoices(invoice_names):
         content += "\n---\n\n"
 
     return content
+
+from frappe import _
+@frappe.whitelist()
+def get_sales_invoice_payment(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'POS Payment Method', 
+            filters={'parent': parent},
+            fields=['name', 'parent', 'mode_of_payment']  # Specify the fields you want to fetch
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_sales_invoice_payment Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
+
+@frappe.whitelist()
+def get_sales_invoice_payment_amount(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'Sales Invoice Payment', 
+            filters={'parent': parent},
+            fields=['name', 'parent', 'mode_of_payment', 'amount']  # Specify the fields you want to fetch
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_sales_invoice_payment_amount Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag

@@ -127,7 +127,7 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			<div class="taxes-container"></div>
+		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
@@ -907,6 +907,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.highlight_checkout_btn(no_of_cart_items > 0);
 		this.update_empty_cart_section(no_of_cart_items);
 	}
+
 
 	remove_customer() {
 		const frm = this.events.get_frm();
