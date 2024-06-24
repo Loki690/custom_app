@@ -18,7 +18,7 @@
    "docstatus": 0,
    "dt": "POS Invoice Reference",
    "fetch_from": "pos_invoice.custom_invoice_series",
-   "fetch_if_empty": 0,
+   "fetch_if_empty": 1,
    "fieldname": "custom_invoice_series",
    "fieldtype": "Data",
    "hidden": 0,
