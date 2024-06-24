@@ -172,7 +172,7 @@ custom_app.PointOfSale.ItemSelector = class {
 				data-rate="${escape(price_list_rate || 0)}">
 				<td class="item-code">${item_code}</td> 
 				<td class="item-name text-break">${frappe.ellipsis(item.description, 18)}</td>
-				<td class="item-vat">${custom_is_vatable}</td>
+				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
 				<td class="item-uom"> ${uom} / count per uom </td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
@@ -625,26 +625,28 @@ custom_app.PointOfSale.ItemSelector = class {
         this.set_search_value("");
     }
 
-    resize_selector(minimize) {
-        minimize
-            ? this.$component
-                .find(".filter-section")
-                .css("grid-template-columns", "repeat(1, minmax(0, 1fr))")
-            : this.$component
-                .find(".filter-section")
+	resize_selector(minimize) {
+        if (minimize) {
+            this.$component.css({
+                "opacity": "0",               // Make the component invisible
+                "pointer-events": "none",     // Make the component non-interactive
+                "grid-column": "span 1 / span 1",
+                "grid-template-columns": "repeat(13, minmax(0, 1fr))"
+            });
+        } else {
+            this.$component.css({
+                "opacity": "1",               // Make the component visible
+                "pointer-events": "auto",     // Make the component interactive
+                "grid-column": "span 6 / span 6"
+            });
+
+            this.$component.find(".filter-section")
                 .css("grid-template-columns", "repeat(12, minmax(0, 1fr))");
 
-        minimize
-            ? this.$component.find(".search-field").css("margin", "var(--margin-sm) 0px")
-            : this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
+            this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
 
-        minimize
-            ? this.$component.css("grid-column", "span 2 / span 2")
-            : this.$component.css("grid-column", "span 6 / span 6");
-
-        minimize
-            ? this.$items_container.css("grid-template-columns", "repeat(1, minmax(0, 1fr))")
-            : this.$items_container.css("grid-template-columns", "repeat(4, minmax(0, 1fr))");
+            this.$items_container.css("grid-template-columns", "repeat(4, minmax(0, 1fr))");
+        }
     }
 
     toggle_component(show) {

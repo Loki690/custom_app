@@ -69,6 +69,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="cart-label">${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
+				        <div class="qty-header">${__("Vat")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -956,7 +957,12 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			${get_rate_discount_html()}`
+			<div class="item-vat">
+				  <strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
+			</div>
+		
+			${get_rate_discount_html()}
+			`
 		);
 
 		set_dynamic_rate_header_width();
