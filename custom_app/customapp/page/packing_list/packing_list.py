@@ -11,6 +11,10 @@ from frappe.utils.nestedset import get_root_of
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
+from frappe.utils.password import get_decrypted_password
+from frappe.utils.password import check_password
+from frappe.exceptions import AuthenticationError
+from frappe.utils.password import check_oic_password, check_password
 
 import platform
 
@@ -93,6 +97,34 @@ def search_by_term(search_term, warehouse, price_list):
 
 	return {"items": [item]}
 
+import frappe
+
+@frappe.whitelist()
+def get_item_uoms(item_code):
+    item = frappe.get_doc('Item', item_code)
+    
+    uom_conversions = frappe.db.sql("""
+        SELECT uom, conversion_factor
+        FROM `tabUOM Conversion Detail`
+        WHERE parent = %s
+    """, (item_code,), as_dict=True)
+    
+    uoms = []
+    for conversion in uom_conversions:
+        uoms.append({
+            'uom': conversion.uom,
+            'conversion_factor': conversion.conversion_factor
+        })
+    
+    response = {
+        'item_code': item.item_code,
+        'description': item.description,
+        'rate': item.standard_rate,
+        'uoms': uoms  # List of UOM conversion details
+    }
+
+    return response
+
 
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None):
@@ -135,6 +167,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.name AS item_code,
             item.item_name,
             item.description,
+			item.custom_is_vatable,
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
@@ -208,6 +241,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
                     "currency": price.get("currency"),
                     "uom": price.uom or item.uom,
                     "batch_no": price.batch_no,
+					"batch_no": item.custom_is_vatable,
                 }
             )
             # Add latest_expiry_date to the item
@@ -331,8 +365,8 @@ def serial_number():
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, limit=20): #added filter per pos profile and custom_pl_series
-	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile", "custom_pl_series"]
+def get_past_order_list(search_term, status, pos_profile, limit=100):
+	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
 	if search_term and status:
@@ -340,6 +374,7 @@ def get_past_order_list(search_term, status, pos_profile, limit=20): #added filt
 			"POS Invoice",
 			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
 			fields=fields,
+			order_by="posting_time asc", 
 			page_length=limit,
 		)
 		invoices_by_name = frappe.db.get_all(
@@ -352,9 +387,9 @@ def get_past_order_list(search_term, status, pos_profile, limit=20): #added filt
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, page_length=limit
+			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
-
+		
 	return invoice_list
 
 
@@ -395,8 +430,14 @@ def set_customer_info(fieldname, customer, value=""):
 	elif fieldname == "mobile_no":
 		contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
 		frappe.db.set_value("Customer", customer, "mobile_no", value)
-	contact_doc.save()
+	elif fieldname == "custom_oscapwdid":
+		contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
+		frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
+	elif fieldname == "custom_transaction_type":
+		contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
+		frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
 
+	contact_doc.save()
 
 @frappe.whitelist()
 def get_pos_profile_data(pos_profile):
@@ -414,6 +455,7 @@ def get_pos_profile_data(pos_profile):
 from frappe.utils.password import get_decrypted_password
 from frappe.utils.password import check_password
 from frappe.exceptions import AuthenticationError
+
 @frappe.whitelist()
 def get_user_password():
     # Get the current user
@@ -448,10 +490,26 @@ def get_user_password():
     
 # def check_if_match(stored_password_hash, password):
 
+
 @frappe.whitelist()
-def confirm_user_password(password):
+def confirm_user_password(password,role):
+    # Check if the provided role is "oic"
+   
+    try:
+        # Check if the entered password matches the stored hashed password
+        if check_oic_password(password, role):
+            return True
+        else:
+            return False
+    except frappe.AuthenticationError:
+        return False
+	
+
+@frappe.whitelist()
+def confirm_user_acc_password(password):
     # Get the current user
     user = frappe.session.user
+
     try:
         # Check if the entered password matches the stored hashed password
         if check_password(user, password):

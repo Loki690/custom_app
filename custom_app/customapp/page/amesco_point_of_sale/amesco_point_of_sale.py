@@ -5,6 +5,7 @@
 import json
 
 import frappe
+from frappe import _
 from frappe.exceptions import AuthenticationError
 from frappe.utils import cint
 from frappe.utils.nestedset import get_root_of
@@ -124,16 +125,17 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
 	items_data = frappe.db.sql(
 		"""
-		SELECT
-			item.name AS item_code,
-			item.item_name,
-			item.description,
-			item.stock_uom,
-			item.image AS item_image,
-			item.is_stock_item,
-			MAX(batch.name) as batch_number,
-			MAX(batch.expiry_date) AS latest_expiry_date
-		FROM
+		 SELECT
+            item.name AS item_code,
+            item.item_name,
+            item.description,
+			item.custom_is_vatable,
+            item.stock_uom,
+            item.image AS item_image,
+            item.is_stock_item,
+            MAX(batch.name) as batch_number,
+            MAX(batch.expiry_date) AS latest_expiry_date
+        FROM
 			`tabItem` item
 		LEFT JOIN
 			`tabBatch` batch ON batch.item = item.name
@@ -209,9 +211,45 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 	return {"items": result}
 
 
+import frappe
+
+@frappe.whitelist()
+def get_item_uoms(item_code):
+    item = frappe.get_doc('Item', item_code)
+    
+    uom_conversions = frappe.db.sql("""
+        SELECT uom, conversion_factor
+        FROM `tabUOM Conversion Detail`
+        WHERE parent = %s
+    """, (item_code,), as_dict=True)
+    
+    uoms = []
+    for conversion in uom_conversions:
+        uoms.append({
+            'uom': conversion.uom,
+            'conversion_factor': conversion.conversion_factor
+        })
+    
+    response = {
+        'item_code': item.item_code,
+        'description': item.description,
+        'rate': item.standard_rate,
+        'uoms': uoms  # List of UOM conversion details
+    }
+
+    return response
+
+
 @frappe.whitelist()
 def search_for_serial_or_batch_or_barcode_number(search_value: str) -> dict[str, str | None]:
-	return scan_barcode(search_value)
+	# return scan_barcode(search_value)
+	try: 
+
+		result = scan_barcode(search_value)
+		return result
+	except Exception as e: 
+	  frappe.throw(_("An error occurred while searching for serial, batch, or barcode number: {0}").format(str(e)))
+
 
 
 def get_conditions(search_term):
@@ -242,6 +280,8 @@ def get_item_group_condition(pos_profile):
 		cond = "and item.item_group in (%s)" % (", ".join(["%s"] * len(item_groups)))
 
 	return cond % tuple(item_groups)
+
+
 
 
 @frappe.whitelist()
@@ -320,9 +360,9 @@ def get_past_order_list(search_term, status, pos_profile, limit=20):
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, page_length=limit
+			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
-
+		
 	return invoice_list
 
 
@@ -357,12 +397,20 @@ def set_customer_info(fieldname, customer, value=""):
 		frappe.db.set_value("Customer", customer, "customer_primary_contact", contact)
 
 	contact_doc = frappe.get_doc("Contact", contact)
+
 	if fieldname == "email_id":
 		contact_doc.set("email_ids", [{"email_id": value, "is_primary": 1}])
 		frappe.db.set_value("Customer", customer, "email_id", value)
 	elif fieldname == "mobile_no":
 		contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
 		frappe.db.set_value("Customer", customer, "mobile_no", value)
+	elif fieldname == "custom_oscapwdid":
+		contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
+		frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
+	elif fieldname == "custom_transaction_type":
+		contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
+		frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
+
 	contact_doc.save()
 
 

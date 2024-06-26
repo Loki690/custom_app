@@ -6,6 +6,7 @@ def before_insert(doc, method):
     # if not doc.custom_pl_series:
     #     doc.custom_pl_series = generate_pl_series(doc)
     set_custom_naming_series(doc)
+    set_custom_ex_total(doc)
     
     # Set the barcode field to the value of custom_pl_series
     # doc.barcode = doc.custom_pl_series
@@ -31,6 +32,15 @@ def set_custom_naming_series(doc):
     else:
         # Set a default naming series if none is found in POS Profile
         doc.naming_series = 'POS-INV#-.YYYY.-.MM.-.#####'
+
+def set_custom_ex_total(doc): 
+    
+    if doc.custom_ex_total:
+        doc.grand_total = doc.custom_ex_total
+        #doc.total = doc.custom_ex_total
+    else:
+        doc.grand_total = 00
+    
 
 def before_save(doc, method):
     if not doc.name:
@@ -90,3 +100,66 @@ def export_multiple_pos_invoices(invoice_names):
         content += "\n---\n\n"
 
     return content
+
+from frappe import _
+@frappe.whitelist()
+def get_sales_invoice_payment(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'POS Payment Method', 
+            filters={'parent': parent},
+            fields=['name', 'parent', 'mode_of_payment']  # Specify the fields you want to fetch
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_sales_invoice_payment Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
+
+@frappe.whitelist()
+def get_sales_invoice_payment_amount(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'Sales Invoice Payment', 
+            filters={'parent': parent},
+            fields=['name', 'parent', 'mode_of_payment', 'amount']  # Specify the fields you want to fetch
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_sales_invoice_payment_amount Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
+        
+@frappe.whitelist()
+def get_pos_invoice_items(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'POS Invoice Item', 
+            filters={'parent': parent},
+            fields=['name', 'parent', 'mode_of_payment', 'amount']  # Specify the fields you want to fetch
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_sales_invoice_payment_amount Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
+        
+@frappe.whitelist()
+def get_pos_invoice_data(pos_invoice):
+    try:
+        # Fetch POS Invoice document
+        pos_invoice_doc = frappe.get_doc("POS Invoice", pos_invoice)
+        return pos_invoice_doc
+        
+    except Exception as e:
+        frappe.log_error(f"Error fetching POS Invoice {pos_invoice}: {e}")
+        return None

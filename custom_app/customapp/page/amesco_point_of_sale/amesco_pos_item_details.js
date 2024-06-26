@@ -9,9 +9,6 @@ custom_app.PointOfSale.ItemDetails = class {
 
 		this.init_component();
 	}
-
-
-
 	init_component() {
 		this.prepare_dom();
 		this.init_child_components();
@@ -191,6 +188,10 @@ custom_app.PointOfSale.ItemDetails = class {
 				df: {
 					...field_meta,
 					onchange: function () {
+						if (fieldname === "uom") {
+							// If the selected field is UOM, calculate and display the conversion factor
+							me.calculate_conversion_factor(this.value, item);
+						}
 						me.events.form_updated(me.current_item, fieldname, this.value);
 						me.is_oic_authenticated = false;
 					},
@@ -213,6 +214,16 @@ custom_app.PointOfSale.ItemDetails = class {
 		this.make_auto_serial_selection_btn(item);
 		this.bind_custom_control_change_event();
 	}
+	
+	calculate_conversion_factor(selected_uom, item) {
+		const default_uom = item.stock_uom;
+		const conversion_factor = frappe.convert_uom(1, default_uom, selected_uom);
+		const amount = item.rate * conversion_factor;
+	
+		// Update the amount field
+		this.$item_price.html(format_currency(amount, this.currency));
+	}
+	
 
 	// Function to trigger OTP authentication
 	oic_authentication(fieldname) {
@@ -275,20 +286,25 @@ custom_app.PointOfSale.ItemDetails = class {
 		const fields = [
 			"qty",
 			"uom",
+			'price_list_rate',
 			"rate",
+			"amount",
 			"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field
-			// "warehouse",
-			// "actual_qty",
-			// "price_list_rate",
+			//"warehouse",
+			//"actual_qty",
+			//"price_list_rate",
 			// "is_free_item",
-			"custom_free"
+			// "custom_free",
+			"custom_remarks",
+
 		];
 		if (item.has_serial_no) fields.push("serial_no");
 		if (item.has_batch_no) fields.push("batch_no");
 		return fields;
 	}
+	
 
 	make_auto_serial_selection_btn(item) {
 		if (item.has_serial_no || item.has_batch_no) {

@@ -23,6 +23,10 @@ custom_app.PointOfSale.Controller = class {
 		});
 	}
 
+
+	// Example JavaScript code to make the API call
+
+
 	create_opening_voucher() {
 		const me = this;
 		const table_fields = [
@@ -58,7 +62,14 @@ custom_app.PointOfSale.Controller = class {
 				dialog.fields_dict.balance_details.df.data = [];
 				payments.forEach((pay) => {
 					const { mode_of_payment } = pay;
-					dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: "0" });
+					let opening_amount = "0";
+
+					// Add conditional logic to set opening amount for Cash mode_of_payment
+					if (mode_of_payment === "Cash") {
+						opening_amount = "2000";
+					}
+
+					dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: opening_amount });
 				});
 				dialog.fields_dict.balance_details.grid.refresh();
 			});
@@ -83,6 +94,16 @@ custom_app.PointOfSale.Controller = class {
 					reqd: 1,
 					get_query: () => pos_profile_query(),
 					onchange: () => fetch_pos_payment_methods(),
+				},
+				{
+					fieldtype: "Select",
+					label: __("Shift"),
+					options: [
+						{ "label": __("Shift 1"), "value": "Shift 1" },
+						{ "label": __("Shift 2"), "value": "Shift 2" },
+					],
+					fieldname: "custom_shift",
+					reqd: 1,
 				},
 				{
 					fieldname: "balance_details",
@@ -168,6 +189,7 @@ custom_app.PointOfSale.Controller = class {
 		this.prepare_dom();
 		this.prepare_components();
 		this.toggle_recent_order_list(true);
+		this.add_buttons_to_toolbar();
 		this.prepare_menu();
 		this.make_new_invoice();
 
@@ -205,21 +227,81 @@ custom_app.PointOfSale.Controller = class {
 		this.page.clear_menu();
 
 		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
-
+		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
-			__("Toggle Recent Orders"),
+			__("Pending Transaction (F2)"),
 			this.toggle_recent_order.bind(this),
 			false,
-			"Ctrl+O"
+			"f2"
 		);
 
-		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "Ctrl+S");
+		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
 
-		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "Shift+Ctrl+B");
+		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
+		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
+		this.page.add_menu_item(__('X Reading'), false, "f9");
+		this.page.add_menu_item(__('Z Reading'), false, "f9");
 		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 
 	}
+
+
+	add_buttons_to_toolbar() {
+		const buttons = [
+			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
+			{label: __("Pending Transaction (F2)"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
+			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
+			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
+			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
+			
+			{label: __("Close the POS"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
+		];
+	
+		// Clear existing buttons to avoid duplication
+		$('.page-actions .btn-custom').remove();
+	
+		buttons.forEach(btn => {
+			this.page.add_button(btn.label, btn.action, {shortcut: btn.shortcut}).addClass('btn-custom');
+		});
+	}
+
+
+
+
+
+
+	
+	//Cash Voucher
+	cash_voucher() {
+		if (!this.$components_wrapper.is(":visible")) return;
+		let voucher = frappe.model.get_new_doc("Cash Voucher Entry");
+		// voucher.custom_pos_profile = this.frm.doc.pos_profile;
+		// voucher.user = frappe.session.user;
+		// voucher.custom_pos_opening_entry_id = this.pos_opening;
+		frappe.set_route("Form", "Cash Voucher Entry", voucher.name);
+	}
+	
+
+	//Check Encashment
+	check_encashment() {
+		if (!this.$components_wrapper.is(":visible")) return;
+		let voucher = frappe.model.get_new_doc("Check Encashment Entry")
+		frappe.set_route("Form", "Check Encashment Entry", voucher.name)
+	}
+
+	add_new_order() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),
+			() => this.frm.call("reset_mode_of_payments"),
+			() => this.make_new_invoice(),
+			() => this.cart.load_invoice(),
+			() => this.item_selector.toggle_component(true),
+			() => frappe.dom.unfreeze(),
+			() => this.toggle_recent_order_list(false)
+		]);
+	}
+
 
 	open_form_view() {
 		frappe.model.sync(this.frm.doc);
@@ -823,10 +905,11 @@ custom_app.PointOfSale.Controller = class {
 
 				const new_item = { item_code, batch_no, rate, uom, [field]: value };
 
-				if (serial_no) {
+				if (serial_no && serial_no !== "undefined") {
 					await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
 					new_item["serial_no"] = serial_no;
 				}
+				
 
 				if (field === "serial_no") new_item["qty"] = value.split(`\n`).length || 0;
 
@@ -960,20 +1043,20 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	async check_serial_no_availablilty(item_code, warehouse, serial_no) {
-		const method = "erpnext.stock.doctype.serial_no.serial_no.get_pos_reserved_serial_nos";
-		const args = { filters: { item_code, warehouse } };
-		const res = await frappe.call({ method, args });
+        const method = "erpnext.stock.doctype.serial_no.serial_no.get_pos_reserved_serial_nos";
+        const args = { filters: { item_code, warehouse } };
+        const res = await frappe.call({ method, args });
 
-		if (res.message.includes(serial_no)) {
-			frappe.throw({
-				title: __("Not Available"),
-				message: __("Serial No: {0} has already been transacted into another POS Invoice.", [
-					serial_no.bold(),
-				]),
-			});
-		}
-	}
-
+        if (res.message.includes(serial_no)) {
+            frappe.throw({
+                title: ("Not Available"),
+                message: ("Serial No: {0} has already been transacted into another POS Invoice.", [
+                    serial_no.bold(),
+                ]),
+            });
+        }
+    }
+	
 	get_available_stock(item_code, warehouse) {
 		const me = this;
 		return frappe.call({
