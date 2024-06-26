@@ -150,6 +150,8 @@ custom_app.PointOfSale.Payment = class {
 			$(`.check-name`).css("display", "none");
 			$(`.check-number`).css("display", "none");
 			$(`.check-date`).css("display", "none");
+			$(`.actual-gov-one`).css("display", "none");
+			$(`.actual-gov-two`).css("display", "none");
 			me.$payment_modes.find(`.pay-amount`).css("display", "inline");
 			me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
 
@@ -175,11 +177,13 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".confirmation-code").css("display", "flex");
 				mode_clicked.find(".check-name").css("display", "flex");
 				mode_clicked.find(".check-number").css("display", "flex");
-				mode_clicked.find(".check-date").css("display", "flex");
+				mode_clicked.find(".check-date").css("display", "flex"); 
+				mode_clicked.find(".actual-gov-one").css("display", "flex"); 
+				mode_clicked.find(".actual-gov-two").css("display", "flex"); 
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
 				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
-
+				
 				me.selected_mode = me[`${mode}_control`];
 				me.selected_mode && me.selected_mode.$input.get().focus();
 				me.auto_set_remaining_amount();
@@ -409,14 +413,23 @@ custom_app.PointOfSale.Payment = class {
 
 	render_payment_mode_dom() {
 		const doc = this.events.get_frm().doc;
+
 		const payments = doc.payments;
 		const currency = doc.currency;
+
 		this.$payment_modes.html(
 			`${payments.map((p, i) => {
 				const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 				const payment_type = p.type;
 				const margin = i % 2 === 0 ? "pr-2" : "pl-2";
 				const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
+
+				// Condition to check if the payment mode is "Government" and customer group is "Government"
+				//   if (p.mode_of_payment === "Government" && doc.customer_group !== "Government") {
+				// 	return ''; // Skip rendering this payment mode if condition is not met
+				// }
+
+
 				let paymentModeHtml = `
 					<div class="payment-mode-wrapper">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
@@ -456,14 +469,18 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} check-date"></div>	
 						`;
 						break;
-					case "Government":
+
+					case "2306":
 						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} check-name"></div>	
-							<div class="${mode} check-number"></div>
-							<div class="${mode} check-date"></div>	
+							<div class="${mode} actual-gov-one"></div>
 						`;
-					    break;
+						break;
+
+					case "2307":
+						paymentModeHtml += `
+								<div class="${mode} actual-gov-two"></div>
+							`;
+						break;
 				}
 
 				paymentModeHtml += `
@@ -478,7 +495,9 @@ custom_app.PointOfSale.Payment = class {
 		payments.forEach((p) => {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 			const me = this;
-	
+
+			// console.log(p.mode_of_payment);
+
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
 					label: p.mode_of_payment,
@@ -780,12 +799,56 @@ custom_app.PointOfSale.Payment = class {
 				check_date_control.refresh();
 
 
+			} 
+
+			if (p.mode_of_payment === "2306") {
+
+				// console.log(frm)
+
+				let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
+				let check_form_2306 = frappe.ui.form.make_control({
+					df: {
+						label: `Expected 2306 Amount`,
+						fieldtype: "Currency",
+						placeholder: 'Actual 2306',
+						read_only: 1, // Set the field to read-only
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306 );
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
+					render_input: true,
+				});
+				// Set the existing value and refresh the control
+				check_form_2306.set_value(existing_custom_form_2306 || '');
+				check_form_2306.refresh();
+
+			}
+
+			if (p.mode_of_payment === "2307") {
+
+				let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
+				let check_form_2307 = frappe.ui.form.make_control({
+					df: {
+						label: `Expected 2307 Amount`,
+						fieldtype: "Currency",
+						placeholder: 'Actual 2307',
+						read_only: 1, // Set the field to read-only
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307 );
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
+					render_input: true,
+				});
+				// Set the existing value and refresh the control
+				check_form_2307.set_value(existing_custom_form_2307 || '');
+				check_form_2307.refresh();
+
 			}
 
 			this[`${mode}_control`].toggle_label(false);
 			this[`${mode}_control`].set_value(p.amount);
-		
-
 
 		});
 

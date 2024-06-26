@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-06-13 17:35:32.342260",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "taxable",
+  "vat",
+  "total",
+  "cash",
+  "account",
+  "others",
+  "accumulated"
+ ],
+ "fields": [
+  {
+   "fieldname": "taxable",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Taxable"
+  },
+  {
+   "fieldname": "vat",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Vat"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total"
+  },
+  {
+   "fieldname": "cash",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Cash"
+  },
+  {
+   "fieldname": "account",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Account"
+  },
+  {
+   "fieldname": "others",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Others"
+  },
+  {
+   "fieldname": "accumulated",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Accumulated"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-06-13 17:37:17.006625",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "Z Sales Book",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

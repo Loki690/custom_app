@@ -62,7 +62,14 @@ custom_app.PointOfSale.Controller = class {
 				dialog.fields_dict.balance_details.df.data = [];
 				payments.forEach((pay) => {
 					const { mode_of_payment } = pay;
-					dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: "0" });
+					let opening_amount = "0";
+
+					// Add conditional logic to set opening amount for Cash mode_of_payment
+					if (mode_of_payment === "Cash") {
+						opening_amount = "2000";
+					}
+
+					dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: opening_amount });
 				});
 				dialog.fields_dict.balance_details.grid.refresh();
 			});
@@ -87,6 +94,16 @@ custom_app.PointOfSale.Controller = class {
 					reqd: 1,
 					get_query: () => pos_profile_query(),
 					onchange: () => fetch_pos_payment_methods(),
+				},
+				{
+					fieldtype: "Select",
+					label: __("Shift"),
+					options: [
+						{ "label": __("Shift 1"), "value": "Shift 1" },
+						{ "label": __("Shift 2"), "value": "Shift 2" },
+					],
+					fieldname: "custom_shift",
+					reqd: 1,
 				},
 				{
 					fieldname: "balance_details",
@@ -223,7 +240,8 @@ custom_app.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
 		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
-
+		this.page.add_menu_item(__('X Reading'), false, "f9");
+		this.page.add_menu_item(__('Z Reading'), false, "f9");
 		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 
 	}
@@ -236,6 +254,7 @@ custom_app.PointOfSale.Controller = class {
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
+			
 			{label: __("Close the POS"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
 		];
 	

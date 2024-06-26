@@ -135,3 +135,14 @@ def get_sales_invoice_payment_amount(parent):
         frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
+        
+@frappe.whitelist()
+def get_pos_invoice_data(pos_invoice):
+    try:
+        # Fetch POS Invoice document
+        pos_invoice_doc = frappe.get_doc("POS Invoice", pos_invoice)
+        return pos_invoice_doc
+        
+    except Exception as e:
+        frappe.log_error(f"Error fetching POS Invoice {pos_invoice}: {e}")
+        return None
