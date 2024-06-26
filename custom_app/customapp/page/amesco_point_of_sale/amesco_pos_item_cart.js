@@ -121,13 +121,14 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
 			<div class="vat-container"></div>
+			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
 				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			<div class="taxes-container"></div>
+		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
@@ -741,7 +742,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
-		this.render_vat(frm.doc.custom_vat_amount)
+		//this.render_vat(frm.doc.custom_vat_amount)
 		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
@@ -751,18 +752,18 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		// this.render_taxes(frm.doc.taxes);
+		this.render_taxes(frm.doc.taxes);
 	}
 
 	render_net_total(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".net-total-container")
-			.html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-net-total")
-			.html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
 	render_vatable_sales(value) {
@@ -813,17 +814,17 @@ custom_app.PointOfSale.ItemCart = class {
 			`);
 	}
 
-	// render_ex_total(value) {
-	// 	const currency = this.events.get_frm().doc.currency;
-	// 	this.$totals_section
-	// 		.find(".ex-total-container")
-	// 		.html(`
-	// 			<div style="display: flex; justify-content: space-between;">
-	// 				<span style="flex: 1;">${__("Ex Total")}: </span>
-	// 				<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
-	// 			</div>
-	// 		`);
-	// }
+	render_ex_total(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".ex-total-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Ex Total")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
 
 
 	render_total_item_qty(items) {
@@ -845,11 +846,11 @@ custom_app.PointOfSale.ItemCart = class {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".grand-total-container")
-			.html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-grand-total")
-			.html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
 	render_taxes(taxes) {

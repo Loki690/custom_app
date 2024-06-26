@@ -62,7 +62,14 @@ custom_app.PointOfSale.Controller = class {
 				dialog.fields_dict.balance_details.df.data = [];
 				payments.forEach((pay) => {
 					const { mode_of_payment } = pay;
-					dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: "0" });
+					let opening_amount = "0";
+
+					// Add conditional logic to set opening amount for Cash mode_of_payment
+					if (mode_of_payment === "Cash") {
+						opening_amount = "2000";
+					}
+
+					dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: opening_amount });
 				});
 				dialog.fields_dict.balance_details.grid.refresh();
 			});
@@ -87,6 +94,16 @@ custom_app.PointOfSale.Controller = class {
 					reqd: 1,
 					get_query: () => pos_profile_query(),
 					onchange: () => fetch_pos_payment_methods(),
+				},
+				{
+					fieldtype: "Select",
+					label: __("Shift"),
+					options: [
+						{ "label": __("Shift 1"), "value": "Shift 1" },
+						{ "label": __("Shift 2"), "value": "Shift 2" },
+					],
+					fieldname: "custom_shift",
+					reqd: 1,
 				},
 				{
 					fieldname: "balance_details",
