@@ -745,7 +745,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
-		//this.render_vat(frm.doc.custom_vat_amount)
+		this.render_vat(frm.doc.custom_vat_amount)
 		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
@@ -945,7 +945,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	render_cart_item(item_data, $item_to_update) {
 
-		console.log("ITEMS", item_data);
+		//console.log("ITEMS", item_data);
 
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;

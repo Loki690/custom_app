@@ -516,7 +516,7 @@
 				<td class="item-name text-break">${frappe.ellipsis(item.description, 18)}</td>
 				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-				<td class="item-uom"> ${uom} / count per uom </td>
+				<td class="item-uom"> ${uom}</td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
 			</tr>`;
     }
@@ -1019,13 +1019,14 @@
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
 			<div class="vat-container"></div>
+			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
 				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			<div class="taxes-container"></div>
+		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
@@ -1547,16 +1548,16 @@
       this.render_vatable_sales(frm.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
-      this.render_vat(frm.doc.custom_vat_amount);
       this.render_net_total(frm.doc.net_total);
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
+      this.render_taxes(frm.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".net-total-container").html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".net-total-container").html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
     }
     render_vatable_sales(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -1594,6 +1595,15 @@
 				</div>
 			`);
     }
+    render_ex_total(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".ex-total-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Ex Total")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
     render_total_item_qty(items) {
       var total_item_qty = 0;
       items.map((item) => {
@@ -1604,8 +1614,25 @@
     }
     render_grand_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".grand-total-container").html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".grand-total-container").html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
+    }
+    render_taxes(taxes) {
+      if (taxes && taxes.length) {
+        const currency = this.events.get_frm().doc.currency;
+        const taxes_html = taxes.map((t) => {
+          if (t.tax_amount_after_discount_amount == 0)
+            return;
+          const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
+          return `<div class="tax-row">
+					<div class="tax-label">${description}</div>
+					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+				</div>`;
+        }).join("");
+        this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+      } else {
+        this.$totals_section.find(".taxes-container").css("display", "none").html("");
+      }
     }
     get_cart_item({ name }) {
       const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -2671,6 +2698,8 @@
         $(`.check-name`).css("display", "none");
         $(`.check-number`).css("display", "none");
         $(`.check-date`).css("display", "none");
+        $(`.actual-gov-one`).css("display", "none");
+        $(`.actual-gov-two`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
         $(".mode-of-payment").removeClass("border-primary");
@@ -2691,6 +2720,8 @@
           mode_clicked.find(".check-name").css("display", "flex");
           mode_clicked.find(".check-number").css("display", "flex");
           mode_clicked.find(".check-date").css("display", "flex");
+          mode_clicked.find(".actual-gov-one").css("display", "flex");
+          mode_clicked.find(".actual-gov-two").css("display", "flex");
           mode_clicked.find(".cash-shortcuts").css("display", "grid");
           me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
           me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
@@ -2883,6 +2914,8 @@
       const doc = this.events.get_frm().doc;
       const payments = doc.payments;
       const currency = doc.currency;
+      const customer_group = doc.customer_group;
+      const allowed_payment_modes = ["2306", "2307"];
       this.$payment_modes.html(
         `${payments.map((p, i) => {
           const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
@@ -2890,7 +2923,7 @@
           const margin = i % 2 === 0 ? "pr-2" : "pl-2";
           const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
           let paymentModeHtml = `
-					<div class="payment-mode-wrapper">
+					<div class="payment-mode-wrapper ${margin}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
 							${p.mode_of_payment}
 							<div class="${mode}-amount pay-amount">${amount}</div>
@@ -2922,9 +2955,19 @@
             case "Cheque":
               paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
-							<div class="${mode} check-name"></div>	
+							<div class="${mode} check-name"></div>
 							<div class="${mode} check-number"></div>
-							<div class="${mode} check-date"></div>	
+							<div class="${mode} check-date"></div>
+						`;
+              break;
+            case "2306":
+              paymentModeHtml += `
+							<div class="${mode} actual-gov-one"></div>
+						`;
+              break;
+            case "2307":
+              paymentModeHtml += `
+							<div class="${mode} actual-gov-two"></div>
 						`;
               break;
           }
@@ -2938,6 +2981,7 @@
       payments.forEach((p) => {
         const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
         const me = this;
+        const allowed_payment_modes2 = ["2306", "2307"];
         this[`${mode}_control`] = frappe.ui.form.make_control({
           df: {
             label: p.mode_of_payment,
@@ -3179,6 +3223,42 @@
           });
           check_date_control.set_value(existing_custom_check_date || frappe.datetime.nowdate());
           check_date_control.refresh();
+        }
+        if (p.mode_of_payment === "2306") {
+          let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
+          let check_form_2306 = frappe.ui.form.make_control({
+            df: {
+              label: `Expected 2306 Amount`,
+              fieldtype: "Currency",
+              placeholder: "Actual 2306",
+              read_only: 1,
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
+            render_input: true
+          });
+          check_form_2306.set_value(existing_custom_form_2306 || "");
+          check_form_2306.refresh();
+        }
+        if (p.mode_of_payment === "2307") {
+          let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
+          let check_form_2307 = frappe.ui.form.make_control({
+            df: {
+              label: `Expected 2307 Amount`,
+              fieldtype: "Currency",
+              placeholder: "Actual 2307",
+              read_only: 1,
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
+            render_input: true
+          });
+          check_form_2307.set_value(existing_custom_form_2307 || "");
+          check_form_2307.refresh();
         }
         this[`${mode}_control`].toggle_label(false);
         this[`${mode}_control`].set_value(p.amount);
@@ -3899,7 +3979,11 @@
           dialog2.fields_dict.balance_details.df.data = [];
           payments.forEach((pay) => {
             const { mode_of_payment } = pay;
-            dialog2.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: "0" });
+            let opening_amount = "0";
+            if (mode_of_payment === "Cash") {
+              opening_amount = "2000";
+            }
+            dialog2.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
           });
           dialog2.fields_dict.balance_details.grid.refresh();
         });
@@ -3924,6 +4008,16 @@
             reqd: 1,
             get_query: () => pos_profile_query(),
             onchange: () => fetch_pos_payment_methods()
+          },
+          {
+            fieldtype: "Select",
+            label: __("Shift"),
+            options: [
+              { "label": __("Shift 1"), "value": "Shift 1" },
+              { "label": __("Shift 2"), "value": "Shift 2" }
+            ],
+            fieldname: "custom_shift",
+            reqd: 1
           },
           {
             fieldname: "balance_details",
@@ -4033,6 +4127,8 @@
       this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
       this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
       this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
+      this.page.add_menu_item(__("X Reading"), false, "f9");
+      this.page.add_menu_item(__("Z Reading"), false, "f9");
       this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
     }
     add_buttons_to_toolbar() {
@@ -4768,4 +4864,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.GCRYITNM.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.H7DBVDQG.js.map
