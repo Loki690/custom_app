@@ -115,7 +115,7 @@ custom_app.PointOfSale.ItemDetails = class {
 	}
 
 	render_dom(item) {
-		let { item_name, description, image, price_list_rate } = item;
+		let { item_name, description, image, price_list_rate, custom_remarks, custom_vat } = item;
 
 		function get_description_html() {
 			if (description) {
@@ -163,12 +163,14 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	render_form(item) {
 		const fields_to_display = this.get_form_fields(item);
+		console.log(item)
 		this.$form_container.html("");
 		
 		// Store the original rate
 		this.original_rate = item.rate;
 		
 		fields_to_display.forEach((fieldname, idx) => {
+			
 			this.$form_container.append(
 				`<div class="${fieldname}-control" data-fieldname="${fieldname}"></div>`
 			);
@@ -281,10 +283,13 @@ custom_app.PointOfSale.ItemDetails = class {
 			//"actual_qty",
 			//"price_list_rate",
 			// "is_free_item",
+
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
 			'custom_zero_rated_amount'
+			//"custom_free",
+			"custom_remarks",
 		];
 		if (item.has_serial_no) fields.push("serial_no");
 		if (item.has_batch_no) fields.push("batch_no");

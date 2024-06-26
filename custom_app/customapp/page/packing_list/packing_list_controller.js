@@ -827,11 +827,11 @@ custom_app.PointOfSale.Controller = class {
 
 				const new_item = { item_code, batch_no, rate, uom, [field]: value };
 
-				if (serial_no) {
+				if (serial_no && serial_no !== "undefined") {
 					await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
 					new_item["serial_no"] = serial_no;
 				}
-
+				
 				if (field === "serial_no") new_item["qty"] = value.split(`\n`).length || 0;
 
 				item_row = this.frm.add_child("items", new_item);
@@ -964,20 +964,20 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	async check_serial_no_availablilty(item_code, warehouse, serial_no) {
-		const method = "erpnext.stock.doctype.serial_no.serial_no.get_pos_reserved_serial_nos";
-		const args = { filters: { item_code, warehouse } };
-		const res = await frappe.call({ method, args });
+        const method = "erpnext.stock.doctype.serial_no.serial_no.get_pos_reserved_serial_nos";
+        const args = { filters: { item_code, warehouse } };
+        const res = await frappe.call({ method, args });
 
-		if (res.message.includes(serial_no)) {
-			frappe.throw({
-				title: __("Not Available"),
-				message: __("Serial No: {0} has already been transacted into another POS Invoice.", [
-					serial_no.bold(),
-				]),
-			});
-		}
-	}
-
+        if (res.message.includes(serial_no)) {
+            frappe.throw({
+                title: ("Not Available"),
+                message: ("Serial No: {0} has already been transacted into another POS Invoice.", [
+                    serial_no.bold(),
+                ]),
+            });
+        }
+    }
+	
 	get_available_stock(item_code, warehouse) {
 		const me = this;
 		return frappe.call({
@@ -1005,22 +1005,6 @@ custom_app.PointOfSale.Controller = class {
 			value != "" && field_control.set_value(value);
 		}
 	}
-
-	// remove_item_from_cart() {
-	// 	frappe.dom.freeze();
-	// 	const { doctype, name, current_item } = this.item_details;
-
-	// 	return frappe.model
-	// 		.set_value(doctype, name, "qty", 0)
-	// 		.then(() => {
-	// 			frappe.model.clear_doc(doctype, name);
-	// 			this.update_cart_html(current_item, true);
-	// 			this.item_details.toggle_item_details_section(null);
-	// 			frappe.dom.unfreeze();
-	// 		})
-	// 		.catch((e) => console.log(e));
-	// }
-
 
 	remove_item_from_cart() {
 

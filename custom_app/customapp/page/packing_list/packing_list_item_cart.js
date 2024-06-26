@@ -31,10 +31,12 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	init_customer_selector() {
-		this.$component.append(`<div class="customer-section"></div>`);
+		this.$component.append(`<div class="customer-section mb-2 mt-4"></div>`);
+
 		this.$customer_section = this.$component.find(".customer-section");
 		this.make_customer_selector();
 	}
+
 
 	init_doctor_selector() {
 		this.$component.append(`<div class="doctor-section" style="display: flex;
@@ -44,6 +46,7 @@ custom_app.PointOfSale.ItemCart = class {
 		box-shadow: var(--shadow-base);
 		border-radius: var(--border-radius-md);
 	  }; margin-top: 1em;"></div>`);
+
 		this.$doctor_section = this.$component.find(".doctor-section");
 		this.make_doctor_selector();
 	}
@@ -69,6 +72,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="cart-label">${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
+				        <div class="qty-header">${__("Vat")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -940,6 +944,9 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	render_cart_item(item_data, $item_to_update) {
+
+		console.log("ITEMS", item_data);
+
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
 
@@ -959,7 +966,12 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			${get_rate_discount_html()}`
+			<div class="item-vat">
+				  <strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
+			</div>
+		
+			${get_rate_discount_html()}
+			`
 		);
 
 		set_dynamic_rate_header_width();
@@ -978,6 +990,11 @@ custom_app.PointOfSale.ItemCart = class {
 
 			me.$cart_header.find(".rate-amount-header").css("width", max_width);
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
+		}
+
+
+		function get_rate_discount_html() {
+			
 		}
 
 		function get_rate_discount_html() {
