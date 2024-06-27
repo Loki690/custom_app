@@ -4576,6 +4576,7 @@
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
 			<div class="vat-container"></div>
+			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
 				<div class="net-total-label">${__("Sub Total")}</div>
@@ -5103,7 +5104,6 @@
       this.render_vatable_sales(frm2.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm2.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm2.doc.custom_zero_rated_sales);
-      this.render_vat(frm2.doc.custom_vat_amount);
       this.render_net_total(frm2.doc.net_total);
       this.render_total_item_qty(frm2.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm2.doc.grand_total : frm2.doc.rounded_total;
@@ -5112,8 +5112,8 @@
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".net-total-container").html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".net-total-container").html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-net-total").html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
     }
     render_vatable_sales(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -5151,6 +5151,15 @@
 				</div>
 			`);
     }
+    render_ex_total(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".ex-total-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Ex Total")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
     render_total_item_qty(items) {
       var total_item_qty = 0;
       items.map((item) => {
@@ -5161,8 +5170,8 @@
     }
     render_grand_total(value) {
       const currency = this.events.get_frm().doc.currency;
-      this.$totals_section.find(".grand-total-container").html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
-      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
+      this.$totals_section.find(".grand-total-container").html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
+      this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
     }
     render_taxes(taxes) {
       if (taxes && taxes.length) {
@@ -5871,14 +5880,17 @@
     }
     get_form_fields(item) {
       const fields = [
+        "custom_free",
         "qty",
-        "uom",
         "price_list_rate",
         "rate",
-        "amount",
-        "conversion_factor",
+        "uom",
         "discount_percentage",
         "discount_amount",
+        "custom_vat_amount",
+        "custom_vatable_amount",
+        "custom_vat_exempt_amount",
+        "custom_zero_rated_amount",
         "custom_remarks"
       ];
       if (item.has_serial_no)
@@ -6251,6 +6263,8 @@
         $(`.check-name`).css("display", "none");
         $(`.check-number`).css("display", "none");
         $(`.check-date`).css("display", "none");
+        $(`.actual-gov-one`).css("display", "none");
+        $(`.actual-gov-two`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
         $(".mode-of-payment").removeClass("border-primary");
@@ -6271,6 +6285,8 @@
           mode_clicked.find(".check-name").css("display", "flex");
           mode_clicked.find(".check-number").css("display", "flex");
           mode_clicked.find(".check-date").css("display", "flex");
+          mode_clicked.find(".actual-gov-one").css("display", "flex");
+          mode_clicked.find(".actual-gov-two").css("display", "flex");
           mode_clicked.find(".cash-shortcuts").css("display", "grid");
           me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
           me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
@@ -6507,13 +6523,15 @@
 							<div class="${mode} check-date"></div>	
 						`;
               break;
-            case "Government":
+            case "2306":
               paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} check-name"></div>	
-							<div class="${mode} check-number"></div>
-							<div class="${mode} check-date"></div>	
+							<div class="${mode} actual-gov-one"></div>
 						`;
+              break;
+            case "2307":
+              paymentModeHtml += `
+								<div class="${mode} actual-gov-two"></div>
+							`;
               break;
           }
           paymentModeHtml += `
@@ -6768,6 +6786,42 @@
           check_date_control.set_value(existing_custom_check_date || frappe.datetime.nowdate());
           check_date_control.refresh();
         }
+        if (p.mode_of_payment === "2306") {
+          let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
+          let check_form_2306 = frappe.ui.form.make_control({
+            df: {
+              label: `Expected 2306 Amount`,
+              fieldtype: "Currency",
+              placeholder: "Actual 2306",
+              read_only: 1,
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
+            render_input: true
+          });
+          check_form_2306.set_value(existing_custom_form_2306 || "");
+          check_form_2306.refresh();
+        }
+        if (p.mode_of_payment === "2307") {
+          let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
+          let check_form_2307 = frappe.ui.form.make_control({
+            df: {
+              label: `Expected 2307 Amount`,
+              fieldtype: "Currency",
+              placeholder: "Actual 2307",
+              read_only: 1,
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
+            render_input: true
+          });
+          check_form_2307.set_value(existing_custom_form_2307 || "");
+          check_form_2307.refresh();
+        }
         this[`${mode}_control`].toggle_label(false);
         this[`${mode}_control`].set_value(p.amount);
       });
@@ -7018,7 +7072,7 @@
       );
       return `<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
 				<div class="invoice-name-date">
-					<div class="invoice-name">${invoice.name}</div>
+					<div class="invoice-name">${invoice.name} - ${invoice.pos_profile} </div>
 					<div class="invoice-date">
 						<svg class="mr-2" width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -8263,4 +8317,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.MIU2HL6P.js.map
+//# sourceMappingURL=packing-list.bundle.VJW6ARMY.js.map

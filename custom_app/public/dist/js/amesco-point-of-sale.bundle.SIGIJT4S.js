@@ -379,20 +379,52 @@
   // ../custom_app/custom_app/customapp/page/amesco_point_of_sale/amesco_pos_item_selector.js
   var import_onscan = __toESM(require_onscan());
   custom_app.PointOfSale.ItemSelector = class {
-    constructor({ frm, wrapper, events, pos_profile, settings }) {
+    constructor({ frm: frm2, wrapper, events, pos_profile, settings }) {
       this.wrapper = wrapper;
       this.events = events;
       this.pos_profile = pos_profile;
       this.hide_images = settings.hide_images;
       this.auto_add_item = settings.auto_add_item_to_cart;
-      this.inti_component();
+      this.init_component();
     }
-    inti_component() {
+    init_component() {
       this.prepare_dom();
       this.make_search_bar();
       this.load_items_data();
       this.bind_events();
       this.attach_shortcuts();
+      this.inject_css();
+    }
+    inject_css() {
+      const css = `
+			.highlight {
+				background-color: #f2f2f2;
+
+			}
+            .text{
+                font-size: 1em;
+                font-weight: semi-bold;
+            }
+            .text-description{
+                font-size: 1em;
+                font-weight: semi-bold;
+            }
+            .quantity-field{
+                width: 1rem;
+                height: 10rem;
+            }
+            .custom-quantity-field {
+                width: 200px; /* Adjust the width as needed */
+            }
+		`;
+      const style = document.createElement("style");
+      style.type = "text/css";
+      if (style.styleSheet) {
+        style.styleSheet.cssText = css;
+      } else {
+        style.appendChild(document.createTextNode(css));
+      }
+      document.head.appendChild(style);
     }
     prepare_dom() {
       const selectedWarehouse = localStorage.getItem("selected_warehouse");
@@ -439,7 +471,7 @@
         this.render_item_list(message.items);
       });
     }
-    get_items({ start = 0, page_length = 100, search_term = "" }) {
+    get_items({ start = 0, page_length = 40, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list;
       let { item_group, pos_profile } = this;
@@ -452,14 +484,17 @@
     }
     render_item_list(items) {
       this.$items_container.html("");
+      this.items = items;
       items.forEach((item) => {
         const item_html = this.get_item_html(item);
         this.$items_container.append(item_html);
       });
+      this.highlighted_row_index = 0;
+      this.highlight_row(this.highlighted_row_index);
     }
     get_item_html(item) {
       const me = this;
-      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
+      const { item_name, item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
@@ -474,11 +509,11 @@
         qty_to_display = "";
       }
       return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
-				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
+				data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
 				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
 				data-rate="${escape(price_list_rate || 0)}">
 				<td class="item-code">${item_code}</td> 
-				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+			    <td class="item-name text-break">${frappe.ellipsis(item_name, 18)}</td>
 				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
 				<td class="item-uom"> ${uom} / count per uom </td>
@@ -533,10 +568,10 @@
     attach_clear_btn() {
       this.search_field.$wrapper.find(".control-input").append(
         `<span class="link-btn" style="top: 2px;">
-				<a class="btn-open no-decoration" title="${__("Clear")}">
-					${frappe.utils.icon("close", "sm")}
-				</a>
-			</span>`
+                <a class="btn-open no-decoration" title="${__("Clear")}">
+                    ${frappe.utils.icon("close", "sm")}
+                </a>
+            </span>`
       );
       this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn");
       this.$clear_search_btn.on("click", "a", () => {
@@ -586,23 +621,129 @@
           }
         }
       });
-      this.$component.on("click", ".item-wrapper", function() {
+      let selectedUOM2;
+      this.$component.on("click", ".item-wrapper", async function() {
         const $item = $(this);
+        me.selectedItem = $item;
         const item_code = unescape($item.attr("data-item-code"));
-        let batch_no = unescape($item.attr("data-batch-no"));
-        let serial_no = unescape($item.attr("data-serial-no"));
-        let uom = unescape($item.attr("data-uom"));
-        let rate = unescape($item.attr("data-rate"));
-        batch_no = batch_no === "undefined" ? void 0 : batch_no;
-        serial_no = serial_no === "undefined" ? void 0 : serial_no;
-        uom = uom === "undefined" ? void 0 : uom;
-        rate = rate === "undefined" ? void 0 : rate;
-        me.events.item_selected({
-          field: "qty",
-          value: "+1",
-          item: { item_code, batch_no, serial_no, uom, rate }
+        const uom = unescape($item.attr("data-uom"));
+        const rate2 = parseFloat(unescape($item.attr("data-rate")));
+        const description = unescape($item.attr("data-description"));
+        frappe.call({
+          method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_item_uoms",
+          args: {
+            item_code
+          },
+          callback: function(response) {
+            if (response.message) {
+              const uomOptions = response.message.uoms.map((uom2) => ({
+                label: uom2.uom,
+                value: uom2.uom
+              }));
+              const dialog2 = new frappe.ui.Dialog({
+                title: __("Item Details"),
+                fields: [
+                  {
+                    fieldtype: "HTML",
+                    label: __("Item Code and Description"),
+                    options: `
+                                        <div class="row mb-4">
+                                            <div class="col-lg-6">
+                                                <div class="card w-80 h-80">
+                                                    <div class="card-body">
+                                                        <p class="text-description">${item_code}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="card w-80 h-80">
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <p class="text-description">${description}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                  },
+                  {
+                    fieldtype: "HTML",
+                    label: __("Quantity"),
+                    options: `
+                                    <div class="row">
+                                        <div class="col-lg">
+                                            <div class="form-group">
+                                                <label class="control-label">${__("Quantity")}</label>
+                                                <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    `
+                  },
+                  {
+                    fieldtype: "Select",
+                    label: __("UOM"),
+                    fieldname: "uom",
+                    options: uomOptions,
+                    default: "PC"
+                  },
+                  {
+                    fieldtype: "HTML",
+                    label: __("Amount"),
+                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Amount</label>
+                                                    <input class="form-control" data-fieldname="total_amount" value="${rate2.toFixed(2)}" readonly />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                  }
+                ],
+                primary_action_label: __("Ok"),
+                primary_action: function() {
+                  const quantity2 = parseFloat(dialog2.wrapper.find('input[data-fieldname="quantity"]').val());
+                  const selectedUOM3 = dialog2.wrapper.find('select[data-fieldname="uom"]').val();
+                  const totalAmount = parseFloat(dialog2.wrapper.find('input[data-fieldname="total_amount"]').val());
+                  if (!quantity2 || quantity2 <= 0) {
+                    frappe.msgprint(__("Please enter a valid quantity."));
+                    return;
+                  }
+                  dialog2.hide();
+                  if (!me.selectedItem) {
+                    frappe.msgprint(__("No item selected."));
+                    return;
+                  }
+                  me.selectedItem.find(".item-uom").text(selectedUOM3);
+                  const itemCode = unescape(me.selectedItem.attr("data-item-code"));
+                  const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
+                  const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+                  me.events.item_selected({
+                    field: "qty",
+                    value: "+" + quantity2,
+                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM3, quantity: quantity2, rate: totalAmount }
+                  });
+                  me.search_field.set_focus();
+                }
+              });
+              dialog2.show();
+              dialog2.wrapper.find('input[data-fieldname="quantity"]').on("input", function() {
+                const quantity2 = parseFloat($(this).val());
+                if (!isNaN(quantity2)) {
+                  const totalAmount = (quantity2 * rate2).toFixed(2);
+                  dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                } else {
+                  dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(rate2.toFixed(2));
+                }
+              });
+            }
+          }
         });
-        me.search_field.set_focus();
       });
       this.search_field.$input.on("input", (e) => {
         clearTimeout(this.last_search);
@@ -614,6 +755,28 @@
       });
       this.search_field.$input.on("focus", () => {
         this.$clear_search_btn.toggle(Boolean(this.search_field.$input.val()));
+      });
+      this.$component.on("keydown", (e) => {
+        const key = e.which || e.keyCode;
+        switch (key) {
+          case 38:
+            e.preventDefault();
+            this.navigate_up();
+            break;
+          case 40:
+            e.preventDefault();
+            this.navigate_down();
+            break;
+          case 9:
+            e.preventDefault();
+            this.navigate_down();
+            this.focus_next_field();
+            break;
+          case 13:
+            e.preventDefault();
+            this.select_highlighted_item();
+            break;
+        }
       });
     }
     attach_shortcuts() {
@@ -638,6 +801,7 @@
       });
       frappe.ui.keys.on("enter", () => {
         const selector_is_visible = this.$component.is(":visible");
+        const dialog_is_open = document.querySelector(".modal.show");
         if (!selector_is_visible || this.search_field.get_value() === "")
           return;
         if (this.items.length == 1) {
@@ -653,7 +817,47 @@
           this.barcode_scanned = false;
           this.set_search_value("");
         }
+        if (dialog_is_open && document.activeElement.tagName === "SELECT") {
+          this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
+          const itemCode = unescape(this.selectedItem.attr("data-item-code"));
+          const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
+          const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
+          this.events.item_selected({
+            field: "qty",
+            value: quantity,
+            item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate }
+          });
+          this.search_field.set_focus();
+        }
       });
+    }
+    focus_next_field() {
+      const customerField = document.querySelector("_init_customer_selector");
+      const doctorField = document.querySelector("init_doctor_selector");
+      if (document.activeElement === this.search_field.$input[0]) {
+        customerField.focus();
+      } else if (document.activeElement === customerField) {
+        doctorField.focus();
+      }
+    }
+    navigate_up() {
+      if (this.highlighted_row_index > 0) {
+        this.highlighted_row_index--;
+        this.highlight_row(this.highlighted_row_index);
+      }
+    }
+    navigate_down() {
+      if (this.highlighted_row_index < this.items.length - 1) {
+        this.highlighted_row_index++;
+        this.highlight_row(this.highlighted_row_index);
+      }
+    }
+    highlight_row(index) {
+      this.$items_container.find(".item-wrapper").removeClass("highlight");
+      this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+    }
+    select_highlighted_item() {
+      this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index).click();
     }
     filter_items({ search_term = "" } = {}) {
       if (search_term) {
@@ -751,14 +955,14 @@
       this.make_doctor_selector();
     }
     reset_customer_selector() {
-      const frm = this.events.get_frm();
-      frm.set_value("customer", "");
+      const frm2 = this.events.get_frm();
+      frm2.set_value("customer", "");
       this.make_customer_selector();
       this.customer_field.set_focus();
     }
     reset_doctor_selector() {
-      const frm = this.events.get_frm();
-      frm.set_value("doctor", "");
+      const frm2 = this.events.get_frm();
+      frm2.set_value("doctor", "");
       this.make_doctor_selector();
       this.doctor_field.set_focus();
     }
@@ -769,6 +973,7 @@
 					<div class="cart-label">${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
+				        <div class="qty-header">${__("Vat")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -803,9 +1008,7 @@
     make_cart_totals_section() {
       this.$totals_section = this.$component.find(".cart-totals-section");
       this.$totals_section.append(
-        `<div class="add-discount-wrapper">
-				${this.get_discount_icon()} ${__("Add Discount")}
-			</div>
+        `
 			<div class="item-qty-total-container">
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
@@ -987,8 +1190,8 @@
         this.is_oic_authenticated = false;
         this.$component.trigger("click", ".add-discount-wrapper");
       });
-      frappe.ui.form.on("POS Invoice", "paid_amount", (frm) => {
-        this.update_totals_section(frm);
+      frappe.ui.form.on("POS Invoice", "paid_amount", (frm2) => {
+        this.update_totals_section(frm2);
       });
     }
     attach_shortcuts() {
@@ -1086,15 +1289,14 @@
           },
           onchange: function() {
             if (this.value) {
-              const frm = me.events.get_frm();
+              const frm2 = me.events.get_frm();
               frappe.dom.freeze();
-              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
-              frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
+              frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "customer", this.value);
+              frm2.script_manager.trigger("customer", frm2.doc.doctype, frm2.doc.name).then(() => {
                 frappe.run_serially([
                   () => me.fetch_customer_details(this.value),
                   () => me.events.customer_details_updated(me.customer_info),
                   () => me.update_customer_section(),
-                  () => me.update_totals_section(),
                   () => frappe.dom.unfreeze()
                 ]);
               });
@@ -1126,10 +1328,10 @@
           placeholder: __("Doctor"),
           onchange: function() {
             if (this.value) {
-              const frm = me.events.get_frm();
+              const frm2 = me.events.get_frm();
               frappe.dom.freeze();
-              frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
-              frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
+              frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "custom_doctors_information", this.value);
+              frm2.script_manager.trigger("custom_doctors_information", frm2.doc.doctype, frm2.doc.name).then(() => {
                 frappe.run_serially([
                   () => frappe.dom.unfreeze()
                 ]);
@@ -1196,8 +1398,8 @@
       this.$add_discount_elem.css({ padding: "0px", border: "none" });
       this.$add_discount_elem.html(`<div class="add-discount-field"></div>`);
       const me = this;
-      const frm = me.events.get_frm();
-      let discount = frm.doc.additional_discount_percentage;
+      const frm2 = me.events.get_frm();
+      let discount = frm2.doc.additional_discount_percentage;
       this.discount_field = frappe.ui.form.make_control({
         df: {
           label: __("Discount"),
@@ -1207,16 +1409,16 @@
           onchange: function() {
             if (flt(this.value) != 0) {
               frappe.model.set_value(
-                frm.doc.doctype,
-                frm.doc.name,
+                frm2.doc.doctype,
+                frm2.doc.name,
                 "additional_discount_percentage",
                 flt(this.value)
               );
               me.hide_discount_control(this.value);
             } else {
               frappe.model.set_value(
-                frm.doc.doctype,
-                frm.doc.name,
+                frm2.doc.doctype,
+                frm2.doc.name,
                 "additional_discount_percentage",
                 0
               );
@@ -1337,17 +1539,17 @@
         return `<div class="doctor-image doctor-abbr">${frappe.get_abbr(doctor)}</div>`;
       }
     }
-    update_totals_section(frm) {
-      if (!frm)
-        frm = this.events.get_frm();
-      this.render_vatable_sales(frm.doc.custom_vatable_sales);
-      this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
-      this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
-      this.render_net_total(frm.doc.net_total);
-      this.render_total_item_qty(frm.doc.items);
-      const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
+    update_totals_section(frm2) {
+      if (!frm2)
+        frm2 = this.events.get_frm();
+      this.render_vatable_sales(frm2.doc.custom_vatable_sales);
+      this.render_vat_exempt_sales(frm2.doc.custom_vat_exempt_sales);
+      this.render_zero_rated_sales(frm2.doc.custom_zero_rated_sales);
+      this.render_net_total(frm2.doc.net_total);
+      this.render_total_item_qty(frm2.doc.items);
+      const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm2.doc.grand_total : frm2.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
+      this.render_taxes(frm2.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -1458,16 +1660,16 @@
       this.update_empty_cart_section(no_of_cart_items);
     }
     remove_customer() {
-      const frm = this.events.get_frm();
-      const currentCustomer = frm.doc.customer;
-      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
-      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "");
+      const frm2 = this.events.get_frm();
+      const currentCustomer = frm2.doc.customer;
+      frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "custom_customer_2", currentCustomer);
+      frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "customer", "");
       this.update_customer_section();
     }
     set_cash_customer() {
-      const frm = this.events.get_frm();
-      const customCustomer2Value = frm.doc.custom_customer_2;
-      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
+      const frm2 = this.events.get_frm();
+      const customCustomer2Value = frm2.doc.custom_customer_2;
+      frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "customer", customCustomer2Value);
       this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
@@ -1488,7 +1690,12 @@
 				</div>
 				${get_description_html()}
 			</div>
-			${get_rate_discount_html()}`
+			<div class="item-vat">
+				  <strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
+			</div>
+		
+			${get_rate_discount_html()}
+			`
       );
       set_dynamic_rate_header_width();
       function set_dynamic_rate_header_width() {
@@ -1856,36 +2063,36 @@
         });
       });
     }
-    attach_refresh_field_event(frm) {
-      $(frm.wrapper).off("refresh-fields");
-      $(frm.wrapper).on("refresh-fields", () => {
-        if (frm.doc.items.length) {
+    attach_refresh_field_event(frm2) {
+      $(frm2.wrapper).off("refresh-fields");
+      $(frm2.wrapper).on("refresh-fields", () => {
+        if (frm2.doc.items.length) {
           this.$cart_items_wrapper.html("");
-          frm.doc.items.forEach((item) => {
+          frm2.doc.items.forEach((item) => {
             this.update_item_html(item);
           });
         }
-        this.update_totals_section(frm);
+        this.update_totals_section(frm2);
       });
     }
     load_invoice() {
-      const frm = this.events.get_frm();
-      this.attach_refresh_field_event(frm);
-      this.fetch_customer_details(frm.doc.customer).then(() => {
+      const frm2 = this.events.get_frm();
+      this.attach_refresh_field_event(frm2);
+      this.fetch_customer_details(frm2.doc.customer).then(() => {
         this.events.customer_details_updated(this.customer_info);
         this.update_customer_section();
       });
       this.$cart_items_wrapper.html("");
-      if (frm.doc.items.length) {
-        frm.doc.items.forEach((item) => {
+      if (frm2.doc.items.length) {
+        frm2.doc.items.forEach((item) => {
           this.update_item_html(item);
         });
       } else {
         this.make_no_items_placeholder();
         this.highlight_checkout_btn(false);
       }
-      this.update_totals_section(frm);
-      if (frm.doc.docstatus === 1) {
+      this.update_totals_section(frm2);
+      if (frm2.doc.docstatus === 1) {
         this.$totals_section.find(".checkout-btn").css("display", "none");
         this.$totals_section.find(".edit-cart-btn").css("display", "none");
       } else {
@@ -2049,6 +2256,9 @@
         this[`${fieldname}_control`] = frappe.ui.form.make_control({
           df: __spreadProps(__spreadValues({}, field_meta), {
             onchange: function() {
+              if (fieldname === "uom") {
+                me.calculate_conversion_factor(this.value, item);
+              }
               me.events.form_updated(me.current_item, fieldname, this.value);
               me.is_oic_authenticated = false;
             }
@@ -2067,6 +2277,12 @@
       });
       this.make_auto_serial_selection_btn(item);
       this.bind_custom_control_change_event();
+    }
+    calculate_conversion_factor(selected_uom, item) {
+      const default_uom = item.stock_uom;
+      const conversion_factor = frappe.convert_uom(1, default_uom, selected_uom);
+      const amount = item.rate * conversion_factor;
+      this.$item_price.html(format_currency(amount, this.currency));
     }
     oic_authentication(fieldname) {
       const me = this;
@@ -2115,11 +2331,13 @@
       const fields = [
         "qty",
         "uom",
+        "price_list_rate",
         "rate",
+        "amount",
         "conversion_factor",
         "discount_percentage",
         "discount_amount",
-        "custom_free"
+        "custom_remarks"
       ];
       if (item.has_serial_no)
         fields.push("serial_no");
@@ -2139,22 +2357,34 @@
     bind_custom_control_change_event() {
       const me = this;
       if (this.rate_control) {
+        this.rate_control.df.onchange = null;
         this.rate_control.df.onchange = function() {
           if (this.value || flt(this.value) === 0) {
-            me.events.form_updated(me.current_item, "rate", this.value).then(() => {
-              const item_row = frappe.get_doc(me.doctype, me.name);
-              const doc = me.events.get_frm().doc;
-              me.$item_price.html(format_currency(item_row.rate, doc.currency));
-              me.render_discount_dom(item_row);
-            });
+            if (this._debounce) {
+              clearTimeout(this._debounce);
+            }
+            this._debounce = setTimeout(() => {
+              me.events.form_updated(me.current_item, "rate", this.value).then(() => {
+                const item_row = frappe.get_doc(me.doctype, me.name);
+                const doc = me.events.get_frm().doc;
+                me.$item_price.html(format_currency(item_row.rate, doc.currency));
+                me.render_discount_dom(item_row);
+              });
+            }, 200);
           }
         };
         this.rate_control.df.read_only = !this.allow_rate_change;
         this.rate_control.refresh();
       }
-      if (this.discount_percentage_control && !this.allow_discount_change) {
-        this.discount_percentage_control.df.read_only = 1;
-        this.discount_percentage_control.refresh();
+      if (frm.doc.customer_group === "Senior Citizen") {
+        if (this.discount_percentage_control && !this.allow_discount_change) {
+          this.discount_percentage_control.df.read_only = 1;
+        }
+      } else {
+        if (this.discount_percentage_control && !this.allow_discount_change) {
+          this.discount_percentage_control.df.read_only = 1;
+          this.discount_percentage_control.refresh();
+        }
       }
       if (this.warehouse_control) {
         this.warehouse_control.df.reqd = 1;
@@ -2290,10 +2520,10 @@
     }
     bind_auto_serial_fetch_event() {
       this.$form_container.on("click", ".auto-fetch-btn", () => {
-        let frm = this.events.get_frm();
+        let frm2 = this.events.get_frm();
         let item_row = this.item_row;
         item_row.type_of_transaction = "Outward";
-        new erpnext.SerialBatchPackageSelector(frm, item_row, (r) => {
+        new erpnext.SerialBatchPackageSelector(frm2, item_row, (r) => {
           if (r) {
             frappe.model.set_value(item_row.doctype, item_row.name, {
               serial_and_batch_bundle: r.name,
@@ -2395,21 +2625,21 @@
           return;
         this.$invoice_fields = this.$invoice_fields_section.find(".invoice-fields");
         this.$invoice_fields.html("");
-        const frm = this.events.get_frm();
+        const frm2 = this.events.get_frm();
         fields.forEach((df) => {
           this.$invoice_fields.append(
             `<div class="invoice_detail_field ${df.fieldname}-field" data-fieldname="${df.fieldname}"></div>`
           );
           let df_events = {
             onchange: function() {
-              frm.set_value(this.df.fieldname, this.get_value());
+              frm2.set_value(this.df.fieldname, this.get_value());
             }
           };
           if (df.fieldtype == "Button") {
             df_events = {
               click: function() {
-                if (frm.script_manager.has_handlers(df.fieldname, frm.doc.doctype)) {
-                  frm.script_manager.trigger(df.fieldname, frm.doc.doctype, frm.doc.docname);
+                if (frm2.script_manager.has_handlers(df.fieldname, frm2.doc.doctype)) {
+                  frm2.script_manager.trigger(df.fieldname, frm2.doc.doctype, frm2.doc.docname);
                 }
               }
             };
@@ -2419,7 +2649,7 @@
             parent: this.$invoice_fields.find(`.${df.fieldname}-field`),
             render_input: true
           });
-          this[`${df.fieldname}_field`].set_value(frm.doc[df.fieldname]);
+          this[`${df.fieldname}_field`].set_value(frm2.doc[df.fieldname]);
         });
       });
     }
@@ -2509,9 +2739,9 @@
           me.auto_set_remaining_amount();
         }
       });
-      frappe.ui.form.on("POS Invoice", "contact_mobile", (frm) => {
+      frappe.ui.form.on("POS Invoice", "contact_mobile", (frm2) => {
         var _a;
-        const contact = frm.doc.contact_mobile;
+        const contact = frm2.doc.contact_mobile;
         const request_button = $((_a = this.request_for_payment_field) == null ? void 0 : _a.$input[0]);
         if (contact) {
           request_button.removeClass("btn-default").addClass("btn-primary");
@@ -2519,20 +2749,20 @@
           request_button.removeClass("btn-primary").addClass("btn-default");
         }
       });
-      frappe.ui.form.on("POS Invoice", "coupon_code", (frm) => {
-        if (frm.doc.coupon_code && !frm.applying_pos_coupon_code) {
-          if (!frm.doc.ignore_pricing_rule) {
-            frm.applying_pos_coupon_code = true;
+      frappe.ui.form.on("POS Invoice", "coupon_code", (frm2) => {
+        if (frm2.doc.coupon_code && !frm2.applying_pos_coupon_code) {
+          if (!frm2.doc.ignore_pricing_rule) {
+            frm2.applying_pos_coupon_code = true;
             frappe.run_serially([
-              () => frm.doc.ignore_pricing_rule = 1,
-              () => frm.trigger("ignore_pricing_rule"),
-              () => frm.doc.ignore_pricing_rule = 0,
-              () => frm.trigger("apply_pricing_rule"),
-              () => frm.save(),
-              () => this.update_totals_section(frm.doc),
-              () => frm.applying_pos_coupon_code = false
+              () => frm2.doc.ignore_pricing_rule = 1,
+              () => frm2.trigger("ignore_pricing_rule"),
+              () => frm2.doc.ignore_pricing_rule = 0,
+              () => frm2.trigger("apply_pricing_rule"),
+              () => frm2.save(),
+              () => this.update_totals_section(frm2.doc),
+              () => frm2.applying_pos_coupon_code = false
             ]);
-          } else if (frm.doc.ignore_pricing_rule) {
+          } else if (frm2.doc.ignore_pricing_rule) {
             frappe.show_alert({
               message: __("Ignore Pricing Rule is enabled. Cannot apply coupon code."),
               indicator: "orange"
@@ -2557,18 +2787,18 @@
         }
         this.events.submit_invoice();
       });
-      frappe.ui.form.on("POS Invoice", "paid_amount", (frm) => {
-        this.update_totals_section(frm.doc);
+      frappe.ui.form.on("POS Invoice", "paid_amount", (frm2) => {
+        this.update_totals_section(frm2.doc);
         const is_cash_shortcuts_invisible = !this.$payment_modes.find(".cash-shortcuts").is(":visible");
-        this.attach_cash_shortcuts(frm.doc);
+        this.attach_cash_shortcuts(frm2.doc);
         !is_cash_shortcuts_invisible && this.$payment_modes.find(".cash-shortcuts").css("display", "grid");
         this.render_payment_mode_dom();
       });
-      frappe.ui.form.on("POS Invoice", "loyalty_amount", (frm) => {
-        const formatted_currency = format_currency(frm.doc.loyalty_amount, frm.doc.currency);
+      frappe.ui.form.on("POS Invoice", "loyalty_amount", (frm2) => {
+        const formatted_currency = format_currency(frm2.doc.loyalty_amount, frm2.doc.currency);
         this.$payment_modes.find(`.loyalty-amount-amount`).html(formatted_currency);
       });
-      frappe.ui.form.on("Sales Invoice Payment", "amount", (frm, cdt, cdn) => {
+      frappe.ui.form.on("Sales Invoice Payment", "amount", (frm2, cdt, cdn) => {
         const default_mop = locals[cdt][cdn];
         const mode = default_mop.mode_of_payment.replace(/ +/g, "_").toLowerCase();
         if (this[`${mode}_control`] && this[`${mode}_control`].get_value() != default_mop.amount) {
@@ -2658,8 +2888,8 @@
       this.focus_on_default_mop();
     }
     after_render() {
-      const frm = this.events.get_frm();
-      frm.script_manager.trigger("after_payment_render", frm.doc.doctype, frm.doc.docname);
+      const frm2 = this.events.get_frm();
+      frm2.script_manager.trigger("after_payment_render", frm2.doc.doctype, frm2.doc.docname);
     }
     edit_cart() {
       this.events.toggle_other_sections(false);
@@ -3509,11 +3739,11 @@
       });
     }
     print_receipt() {
-      const frm = this.events.get_frm();
+      const frm2 = this.events.get_frm();
       frappe.utils.print(
         this.doc.doctype,
         this.doc.name,
-        frm.pos_print_format,
+        frm2.pos_print_format,
         this.doc.letter_head,
         this.doc.language || frappe.boot.lang
       );
@@ -3545,17 +3775,17 @@
       });
     }
     send_email() {
-      const frm = this.events.get_frm();
+      const frm2 = this.events.get_frm();
       const recipients = this.email_dialog.get_values().email_id;
       const content = this.email_dialog.get_values().content;
-      const doc = this.doc || frm.doc;
-      const print_format = frm.pos_print_format;
+      const doc = this.doc || frm2.doc;
+      const print_format = frm2.pos_print_format;
       frappe.call({
         method: "frappe.core.doctype.communication.email.make",
         args: {
           recipients,
-          subject: __(frm.meta.name) + ": " + doc.name,
-          content: content ? content : __(frm.meta.name) + ": " + doc.name,
+          subject: __(frm2.meta.name) + ": " + doc.name,
+          content: content ? content : __(frm2.meta.name) + ": " + doc.name,
           doctype: doc.doctype,
           name: doc.name,
           send_email: 1,
@@ -3740,10 +3970,10 @@
           label: "Opening Amount",
           options: "company:company_currency",
           change: function() {
-            dialog.fields_dict.balance_details.df.data.some((d) => {
+            dialog2.fields_dict.balance_details.df.data.some((d) => {
               if (d.idx == this.doc.idx) {
                 d.opening_amount = this.value;
-                dialog.fields_dict.balance_details.grid.refresh();
+                dialog2.fields_dict.balance_details.grid.refresh();
                 return true;
               }
             });
@@ -3751,23 +3981,23 @@
         }
       ];
       const fetch_pos_payment_methods = () => {
-        const pos_profile = dialog.fields_dict.pos_profile.get_value();
+        const pos_profile = dialog2.fields_dict.pos_profile.get_value();
         if (!pos_profile)
           return;
         frappe.db.get_doc("POS Profile", pos_profile).then(({ payments }) => {
-          dialog.fields_dict.balance_details.df.data = [];
+          dialog2.fields_dict.balance_details.df.data = [];
           payments.forEach((pay) => {
             const { mode_of_payment } = pay;
             let opening_amount = "0";
             if (mode_of_payment === "Cash") {
               opening_amount = "2000";
             }
-            dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
+            dialog2.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
           });
-          dialog.fields_dict.balance_details.grid.refresh();
+          dialog2.fields_dict.balance_details.grid.refresh();
         });
       };
-      const dialog = new frappe.ui.Dialog({
+      const dialog2 = new frappe.ui.Dialog({
         title: __("Create POS Opening Entry"),
         static: true,
         fields: [
@@ -3825,15 +4055,15 @@
             freeze: true
           });
           !res.exc && me.prepare_app_defaults(res.message);
-          dialog.hide();
+          dialog2.hide();
         },
         primary_action_label: __("Submit")
       });
-      dialog.show();
+      dialog2.show();
       const pos_profile_query = () => {
         return {
           query: "erpnext.accounts.doctype.pos_profile.pos_profile.pos_profile_query",
-          filters: { company: dialog.fields_dict.company.get_value() }
+          filters: { company: dialog2.fields_dict.company.get_value() }
         };
       };
     }
@@ -4374,10 +4604,10 @@
     get_new_frm(_frm) {
       const doctype = "POS Invoice";
       const page = $("<div>");
-      const frm = _frm || new frappe.ui.form.Form(doctype, page, false);
+      const frm2 = _frm || new frappe.ui.form.Form(doctype, page, false);
       const name = frappe.model.make_new_doc_and_get_name(doctype, true);
-      frm.refresh(name);
-      return frm;
+      frm2.refresh(name);
+      return frm2;
     }
     async make_return_invoice(doc) {
       frappe.dom.freeze();
@@ -4435,11 +4665,11 @@
         } else {
           if (!this.frm.doc.customer)
             return this.raise_customer_selection_alert();
-          const { item_code, batch_no, serial_no, rate, uom } = item;
+          const { item_code, batch_no, serial_no, rate: rate2, uom } = item;
           if (!item_code)
             return;
-          const new_item = { item_code, batch_no, rate, uom, [field]: value };
-          if (serial_no) {
+          const new_item = { item_code, batch_no, rate: rate2, uom, [field]: value };
+          if (serial_no && serial_no !== "undefined") {
             await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
             new_item["serial_no"] = serial_no;
           }
@@ -4473,14 +4703,14 @@
       });
       frappe.utils.play_sound("error");
     }
-    get_item_from_frm({ name, item_code, batch_no, uom, rate }) {
+    get_item_from_frm({ name, item_code, batch_no, uom, rate: rate2 }) {
       let item_row = null;
       if (name) {
         item_row = this.frm.doc.items.find((i) => i.name == name);
       } else {
         const has_batch_no = batch_no !== "null" && batch_no !== null;
         item_row = this.frm.doc.items.find(
-          (i) => i.item_code === item_code && (!has_batch_no || has_batch_no && i.batch_no === batch_no) && i.uom === uom && i.rate === flt(rate)
+          (i) => i.item_code === item_code && (!has_batch_no || has_batch_no && i.batch_no === batch_no) && i.uom === uom && i.rate === flt(rate2)
         );
       }
       return item_row || {};
@@ -4549,8 +4779,8 @@
       const res = await frappe.call({ method, args });
       if (res.message.includes(serial_no)) {
         frappe.throw({
-          title: __("Not Available"),
-          message: __("Serial No: {0} has already been transacted into another POS Invoice.", [
+          title: "Not Available",
+          message: ("Serial No: {0} has already been transacted into another POS Invoice.", [
             serial_no.bold()
           ])
         });
@@ -4643,4 +4873,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.4ESXS3BG.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.SIGIJT4S.js.map

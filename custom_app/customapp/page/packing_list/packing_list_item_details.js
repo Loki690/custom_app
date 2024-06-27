@@ -287,7 +287,7 @@ custom_app.PointOfSale.ItemDetails = class {
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
-			'custom_zero_rated_amount'
+			'custom_zero_rated_amount',
 			//"custom_free",
 			"custom_remarks",
 		];
