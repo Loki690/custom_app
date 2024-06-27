@@ -174,7 +174,7 @@ custom_app.PointOfSale.ItemSelector = class {
 				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
 				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-				<td class="item-uom"> ${uom} / count per uom </td>
+				<td class="item-uom"> ${uom} </td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
 			</tr>`;
 		//<td class="item-description text-break">${description}</td>
@@ -324,7 +324,7 @@ custom_app.PointOfSale.ItemSelector = class {
             const description = unescape($item.attr("data-description"));
             
             frappe.call({
-                method: 'custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_item_uoms',
+                method: 'custom_app.customapp.page.packing_list.packing_list.get_item_uoms',
                 args: {
                     item_code: item_code
                 },

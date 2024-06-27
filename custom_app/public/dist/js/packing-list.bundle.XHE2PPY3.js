@@ -4075,7 +4075,7 @@
 				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
 				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-				<td class="item-uom"> ${uom} / count per uom </td>
+				<td class="item-uom"> ${uom} </td>
 				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
 			</tr>`;
     }
@@ -4189,7 +4189,7 @@
         const rate2 = parseFloat(unescape($item.attr("data-rate")));
         const description = unescape($item.attr("data-description"));
         frappe.call({
-          method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_item_uoms",
+          method: "custom_app.customapp.page.packing_list.packing_list.get_item_uoms",
           args: {
             item_code
           },
@@ -5104,11 +5104,11 @@
       this.render_vatable_sales(frm2.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm2.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm2.doc.custom_zero_rated_sales);
+      this.render_vat(frm2.doc.custom_vat_amount);
       this.render_net_total(frm2.doc.net_total);
       this.render_total_item_qty(frm2.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm2.doc.grand_total : frm2.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm2.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -5172,23 +5172,6 @@
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".grand-total-container").html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
       this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
-    }
-    render_taxes(taxes) {
-      if (taxes && taxes.length) {
-        const currency = this.events.get_frm().doc.currency;
-        const taxes_html = taxes.map((t) => {
-          if (t.tax_amount_after_discount_amount == 0)
-            return;
-          const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
-          return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-        }).join("");
-        this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-      } else {
-        this.$totals_section.find(".taxes-container").css("display", "none").html("");
-      }
     }
     get_cart_item({ name }) {
       const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -8317,4 +8300,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.VJW6ARMY.js.map
+//# sourceMappingURL=packing-list.bundle.XHE2PPY3.js.map
