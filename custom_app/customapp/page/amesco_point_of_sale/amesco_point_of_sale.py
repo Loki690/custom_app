@@ -205,8 +205,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 					"batch_no": price.batch_no,
 				}
 			)
-			# Add latest_expiry_date to the item
-			item["latest_expiry_date"] = item.latest_expiry_date
+		
 
 	return {"items": result}
 

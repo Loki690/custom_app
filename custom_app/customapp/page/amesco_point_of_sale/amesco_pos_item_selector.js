@@ -139,7 +139,7 @@ custom_app.PointOfSale.ItemSelector = class {
     get_item_html(item) {
         const me = this;
     
-       const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number,custom_is_vatable} = item;
+       const { item_name ,item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number,custom_is_vatable} = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
@@ -161,7 +161,7 @@ custom_app.PointOfSale.ItemSelector = class {
 				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
 				data-rate="${escape(price_list_rate || 0)}">
 				<td class="item-code">${item_code}</td> 
-				<td class="item-name text-break">${frappe.ellipsis(item.description, 18)}</td>
+			    <td class="item-name text-break">${frappe.ellipsis(item_name, 18)}</td>
 				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
 				<td class="item-uom"> ${uom} / count per uom </td>
@@ -399,10 +399,10 @@ custom_app.PointOfSale.ItemSelector = class {
         
                                 me.events.item_selected({
                                     field: "qty",
-                                    value: quantity,
+                                   value: "+" + quantity,
                                     item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
                                 });
-        
+
                                 me.search_field.set_focus();
                             }
                         });

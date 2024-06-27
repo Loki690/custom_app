@@ -64,8 +64,8 @@ custom_app.PointOfSale.ItemSelector = class {
 				<div class="label">
 				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
 			</div>
+                    <div class="search-field"></div>
 					<div class="item-group-field"></div>
-					<div class="search-field"></div>
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">
@@ -171,7 +171,7 @@ custom_app.PointOfSale.ItemSelector = class {
 				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
 				data-rate="${escape(price_list_rate || 0)}">
 				<td class="item-code">${item_code}</td> 
-				<td class="item-name text-break">${frappe.ellipsis(item.description, 18)}</td>
+				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
 				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
 				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
 				<td class="item-uom"> ${uom} / count per uom </td>
@@ -214,7 +214,7 @@ custom_app.PointOfSale.ItemSelector = class {
 				},
 				get_query: function () {
 					return {
-						query: "erpnext.selling.page.order_list.order_list.item_group_query",
+						query: "custom_app.customapp.page.packing_list.packing_list.item_group_query",
 						filters: {
 							pos_profile: doc ? doc.pos_profile : "",
 						},
@@ -426,10 +426,11 @@ custom_app.PointOfSale.ItemSelector = class {
         
                                 me.events.item_selected({
                                     field: "qty",
-                                    value: quantity,
+                                   value: "+" + quantity,
                                     item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
                                 });
-        
+
+                                
                                 me.search_field.set_focus();
                             }
                         });

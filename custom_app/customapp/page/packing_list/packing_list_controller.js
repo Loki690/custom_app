@@ -45,6 +45,10 @@ custom_app.PointOfSale.Controller = class {
 		dialog.show();
 	}
 
+
+	
+
+
 	async prepare_app_defaults(data) {
 		this.company = frappe.defaults.get_default("company");
 		this.pos_profile = data.pos_profile;
@@ -1006,66 +1010,84 @@ custom_app.PointOfSale.Controller = class {
 		}
 	}
 
-	remove_item_from_cart() {
 
-		//Authenticate OIC to Remove
-		const passwordDialog = new frappe.ui.Dialog({
-			title: __('Enter OIC Password'),
-			fields: [
-				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
-				}
-			],
-			primary_action_label: __('Remove'),
-			primary_action: (values) => {
-				let password = values.password;
-				let role = "oic";
-	
-				frappe.call({
-					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
-					args: { password: password, role: role },
-					callback: (r) => {
-						if (r.message) {
-							// Password authenticated, proceed with item removal
-							frappe.dom.freeze();
-							const { doctype, name, current_item } = this.item_details;
-	
-							frappe.model
-								.set_value(doctype, name, "qty", 0)
-								.then(() => {
-									frappe.model.clear_doc(doctype, name);
-									this.update_cart_html(current_item, true);
-									this.item_details.toggle_item_details_section(null);
-									frappe.dom.unfreeze();
-									passwordDialog.hide();
-								})
-								.catch((e) => {
-									console.log(e);
-									frappe.dom.unfreeze();
-									passwordDialog.hide();
-								});
-						} else {
-							frappe.show_alert({
-								message: __('Incorrect password or user is not an OIC'),
-								indicator: 'red'
-							});
-						}
-					}
-				});
-			}
-		});
-	
-		passwordDialog.show();
+
+	remove_item_from_cart() {	
+		frappe.dom.freeze();
+		const { doctype, name, current_item } = this.item_details;
+
+		return frappe.model
+			.set_value(doctype, name, "qty", 0)
+			.then(() => {
+				frappe.model.clear_doc(doctype, name);
+				this.update_cart_html(current_item, true);
+				this.item_details.toggle_item_details_section(null);
+				frappe.dom.unfreeze();
+			})
+		.catch((e) => console.log(e));
 	}
 
-	async save_and_checkout() {
+	
 
+	// remove_item_from_cart() {
+
+	// 	//Authenticate OIC to Remove
+	// 	const passwordDialog = new frappe.ui.Dialog({
+	// 		title: __('Enter OIC Password'),
+	// 		fields: [
+	// 			{
+	// 				fieldname: 'password',
+	// 				fieldtype: 'Password',
+	// 				label: __('Password'),
+	// 				reqd: 1
+	// 			}
+	// 		],
+	// 		primary_action_label: __('Remove'),
+	// 		primary_action: (values) => {
+	// 			let password = values.password;
+	// 			let role = "oic";
+	
+	// 			frappe.call({
+	// 				method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+	// 				args: { password: password, role: role },
+	// 				callback: (r) => {
+	// 					if (r.message) {
+	// 						// Password authenticated, proceed with item removal
+	// 						frappe.dom.freeze();
+	// 						const { doctype, name, current_item } = this.item_details;
+	
+	// 						frappe.model
+	// 							.set_value(doctype, name, "qty", 0)
+	// 							.then(() => {
+	// 								frappe.model.clear_doc(doctype, name);
+	// 								this.update_cart_html(current_item, true);
+	// 								this.item_details.toggle_item_details_section(null);
+	// 								frappe.dom.unfreeze();
+	// 								passwordDialog.hide();
+	// 							})
+	// 							.catch((e) => {
+	// 								console.log(e);
+	// 								frappe.dom.unfreeze();
+	// 								passwordDialog.hide();
+	// 							});
+	// 					} else {
+	// 						frappe.show_alert({
+	// 							message: __('Incorrect password or user is not an OIC'),
+	// 							indicator: 'red'
+	// 						});
+	// 					}
+	// 				}
+	// 			});
+	// 		}
+	// 	});
+	
+	// 	passwordDialog.show();
+	// }
+
+	async save_and_checkout() {
 		if (this.frm.is_dirty()) {
 			let save_error = false;
-			// await this.frm.save(null, null, null, () => (save_error = true));
+			await this.frm.save(null, null, null, () => (save_error = true));
 			// only move to payment section if save is successful
 			!save_error && this.payment.checkout();
 			// show checkout button on error
