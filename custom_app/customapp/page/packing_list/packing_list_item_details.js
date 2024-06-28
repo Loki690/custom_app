@@ -359,7 +359,11 @@ custom_app.PointOfSale.ItemDetails = class {
 				this.discount_percentage_control.refresh();
 			}
 		}
-	
+		
+		if (this.discount_percentage_control && !this.allow_discount_change) {
+			this.discount_percentage_control.df.read_only = 1;
+			this.discount_percentage_control.refresh();
+		}
 
 		if (this.warehouse_control) {
 			this.warehouse_control.df.reqd = 1;

@@ -1543,6 +1543,7 @@
     update_totals_section(frm2) {
       if (!frm2)
         frm2 = this.events.get_frm();
+      console.log(frm2.doc);
       this.render_vatable_sales(frm2.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm2.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm2.doc.custom_zero_rated_sales);
@@ -1691,10 +1692,12 @@
 				</div>
 				${get_description_html()}
 			</div>
-			<div class="item-vat">
-				  <strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
+			<div class="item-vat mx-3">
+				<strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
 			</div>
-		
+			<div class="item-discount mx-3">
+				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+			</div>
 			${get_rate_discount_html()}
 			`
       );
@@ -4173,8 +4176,8 @@
       frappe.run_serially([
         () => frappe.dom.freeze(),
         () => this.frm.call("reset_mode_of_payments"),
-        () => this.make_new_invoice(),
         () => this.cart.load_invoice(),
+        () => this.make_new_invoice(),
         () => this.item_selector.toggle_component(true),
         () => this.item_details.toggle_item_details_section(),
         () => frappe.dom.unfreeze(),
@@ -4882,4 +4885,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.TEJ3ESYZ.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.XMO4A6TS.js.map

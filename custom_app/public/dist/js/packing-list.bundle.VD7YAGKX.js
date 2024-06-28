@@ -4534,6 +4534,7 @@
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
 				        <div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header">${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -5102,6 +5103,7 @@
     update_totals_section(frm2) {
       if (!frm2)
         frm2 = this.events.get_frm();
+      console.log(frm2.doc);
       this.render_vatable_sales(frm2.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm2.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm2.doc.custom_zero_rated_sales);
@@ -5233,10 +5235,12 @@
 				</div>
 				${get_description_html()}
 			</div>
-			<div class="item-vat">
-				  <strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
+			<div class="item-vat mx-3">
+				<strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
 			</div>
-		
+			<div class="item-discount mx-3">
+				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+			</div>
 			${get_rate_discount_html()}
 			`
       );
@@ -5923,6 +5927,10 @@
           this.discount_percentage_control.df.read_only = 1;
           this.discount_percentage_control.refresh();
         }
+      }
+      if (this.discount_percentage_control && !this.allow_discount_change) {
+        this.discount_percentage_control.df.read_only = 1;
+        this.discount_percentage_control.refresh();
       }
       if (this.warehouse_control) {
         this.warehouse_control.df.reqd = 1;
@@ -8305,4 +8313,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.MADT6DLI.js.map
+//# sourceMappingURL=packing-list.bundle.VD7YAGKX.js.map
