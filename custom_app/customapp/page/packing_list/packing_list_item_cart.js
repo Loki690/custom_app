@@ -946,7 +946,8 @@ custom_app.PointOfSale.ItemCart = class {
 
 	render_cart_item(item_data, $item_to_update) {
 
-
+		//console.log("ITEMS", item_data);
+    
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
 

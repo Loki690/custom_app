@@ -80,6 +80,9 @@ custom_app.PointOfSale.PastOrderList = class {
 		const search_term = this.search_field.get_value();
 		const status = this.status_field.get_value();
 		const pos_profile = this.events.pos_profile();
+		const source_warehouse = this.events.source_warehouse();
+
+
 
 		this.$invoices_container.html("");
 

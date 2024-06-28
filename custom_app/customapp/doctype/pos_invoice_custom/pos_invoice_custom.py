@@ -46,7 +46,7 @@ def before_save(doc, method):
     if not doc.name:
         doc.name = make_autoname(doc.naming_series)
     # Set the barcode to the document name
-    # doc.barcode = doc.name
+    doc.barcode = doc.name
     doc.custom_barcode = doc.name
 
 
@@ -125,6 +125,23 @@ def get_sales_invoice_payment_amount(parent):
     try:
         records = frappe.get_all(
             'Sales Invoice Payment', 
+            filters={'parent': parent},
+            fields=['name', 'parent', 'mode_of_payment', 'amount']  # Specify the fields you want to fetch
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_sales_invoice_payment_amount Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
+        
+@frappe.whitelist()
+def get_pos_invoice_items(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'POS Invoice Item', 
             filters={'parent': parent},
             fields=['name', 'parent', 'mode_of_payment', 'amount']  # Specify the fields you want to fetch
         )
