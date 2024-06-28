@@ -555,7 +555,7 @@ custom_app.PointOfSale.Controller = class {
 						insufficientPaymentDialog.show();
 						return; // Exit the function if payment is not sufficient
 					}
-				
+			
 					// Proceed with submitting the invoice if payment is sufficient
 					this.frm.save('Submit').then((r) => {
 						this.toggle_components(false);
@@ -1167,6 +1167,5 @@ custom_app.PointOfSale.Controller = class {
 			this.payment.checkout();
 		}
 	}
-
 	
 };

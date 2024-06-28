@@ -48,6 +48,10 @@ custom_app.PointOfSale.Controller = class {
 		dialog.show();
 	}
 
+
+	
+
+
 	async prepare_app_defaults(data) {
 		this.company = frappe.defaults.get_default("company");
 		this.pos_profile = data.pos_profile;
@@ -1010,6 +1014,23 @@ custom_app.PointOfSale.Controller = class {
 		}
 	}
 
+	remove_item_from_cart() {	
+		frappe.dom.freeze();
+		const { doctype, name, current_item } = this.item_details;
+
+		return frappe.model
+			.set_value(doctype, name, "qty", 0)
+			.then(() => {
+				frappe.model.clear_doc(doctype, name);
+				this.update_cart_html(current_item, true);
+				this.item_details.toggle_item_details_section(null);
+				frappe.dom.unfreeze();
+			})
+		.catch((e) => console.log(e));
+	}
+
+	
+
 	// remove_item_from_cart() {
 
 	// 	//Authenticate OIC to Remove
@@ -1065,26 +1086,11 @@ custom_app.PointOfSale.Controller = class {
 	// 	passwordDialog.show();
 	// }
 
-	remove_item_from_cart() {
-        frappe.dom.freeze();
-        const { doctype, name, current_item } = this.item_details;
-
-        return frappe.model
-            .set_value(doctype, name, "qty", 0)
-            .then(() => {
-                frappe.model.clear_doc(doctype, name);
-                this.update_cart_html(current_item, true);
-                this.item_details.toggle_item_details_section(null);
-                frappe.dom.unfreeze();
-            })
-        .catch((e) => console.log(e));
-    }
 
 	async save_and_checkout() {
-
 		if (this.frm.is_dirty()) {
 			let save_error = false;
-			// await this.frm.save(null, null, null, () => (save_error = true));
+			await this.frm.save(null, null, null, () => (save_error = true));
 			// only move to payment section if save is successful
 			!save_error && this.payment.checkout();
 			// show checkout button on error

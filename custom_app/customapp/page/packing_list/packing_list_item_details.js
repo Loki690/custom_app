@@ -163,7 +163,7 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	render_form(item) {
 		const fields_to_display = this.get_form_fields(item);
-		console.log(item)
+	
 		this.$form_container.html("");
 		
 		// Store the original rate
@@ -308,25 +308,58 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	bind_custom_control_change_event() {
 		const me = this;
+		// if (this.rate_control) {
+		// 	this.rate_control.df.onchange = function () {
+		// 		if (this.value || flt(this.value) === 0) {
+		// 			me.events.form_updated(me.current_item, "rate", this.value).then(() => {
+		// 				const item_row = frappe.get_doc(me.doctype, me.name);
+		// 				const doc = me.events.get_frm().doc;
+		// 				me.$item_price.html(format_currency(item_row.rate, doc.currency));
+		// 				me.render_discount_dom(item_row);
+		// 			});
+		// 		}
+		// 	};
+		// 	this.rate_control.df.read_only = !this.allow_rate_change;
+		// 	this.rate_control.refresh();
+		// }
+
 		if (this.rate_control) {
+			
+			// Remove any existing onchange handler to avoid multiple handlers being attached
+			this.rate_control.df.onchange = null;
+		
 			this.rate_control.df.onchange = function () {
 				if (this.value || flt(this.value) === 0) {
-					me.events.form_updated(me.current_item, "rate", this.value).then(() => {
-						const item_row = frappe.get_doc(me.doctype, me.name);
-						const doc = me.events.get_frm().doc;
-						me.$item_price.html(format_currency(item_row.rate, doc.currency));
-						me.render_discount_dom(item_row);
-					});
+					// Debounce to prevent multiple rapid changes from causing issues
+					if (this._debounce) {
+						clearTimeout(this._debounce);
+					}
+					this._debounce = setTimeout(() => {
+						me.events.form_updated(me.current_item, "rate", this.value).then(() => {
+							const item_row = frappe.get_doc(me.doctype, me.name);
+							const doc = me.events.get_frm().doc;
+							me.$item_price.html(format_currency(item_row.rate, doc.currency));
+							me.render_discount_dom(item_row);
+						});
+					}, 200); // Adjust the debounce time as needed
 				}
 			};
+		
 			this.rate_control.df.read_only = !this.allow_rate_change;
 			this.rate_control.refresh();
 		}
+		if(frm.doc.customer_group === 'Senior Citizen'){
+			if (this.discount_percentage_control && !this.allow_discount_change) {
+				this.discount_percentage_control.df.read_only = 1;
+			}
 
-		if (this.discount_percentage_control && !this.allow_discount_change) {
-			this.discount_percentage_control.df.read_only = 1;
-			this.discount_percentage_control.refresh();
+		}else{
+			if (this.discount_percentage_control && !this.allow_discount_change) {
+				this.discount_percentage_control.df.read_only = 1;
+				this.discount_percentage_control.refresh();
+			}
 		}
+	
 
 		if (this.warehouse_control) {
 			this.warehouse_control.df.reqd = 1;

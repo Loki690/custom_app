@@ -111,9 +111,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section = this.$component.find(".cart-totals-section");
 
 		this.$totals_section.append(
-			`<div class="add-discount-wrapper">
-				${this.get_discount_icon()} ${__("Add Discount")}
-			</div>
+			`
 			<div class="item-qty-total-container">
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
@@ -455,7 +453,6 @@ custom_app.PointOfSale.ItemCart = class {
 								() => me.fetch_customer_details(this.value),
 								() => me.events.customer_details_updated(me.customer_info),
 								() => me.update_customer_section(),
-								() => me.update_totals_section(),
 								() => frappe.dom.unfreeze(),
 							]);
 						});
@@ -910,6 +907,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.highlight_checkout_btn(no_of_cart_items > 0);
 		this.update_empty_cart_section(no_of_cart_items);
 	}
+
 
 	remove_customer() {
 		const frm = this.events.get_frm();
