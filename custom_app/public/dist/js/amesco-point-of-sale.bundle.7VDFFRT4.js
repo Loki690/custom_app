@@ -975,6 +975,7 @@
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
 				        <div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header">${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -4885,4 +4886,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.XMO4A6TS.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.7VDFFRT4.js.map
