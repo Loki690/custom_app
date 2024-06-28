@@ -28,7 +28,7 @@ def search_by_term(search_term, warehouse, price_list):
 		return
 
 	item_doc = frappe.get_doc("Item", item_code)
-
+ 
 	if not item_doc:
 		return
 
@@ -318,7 +318,7 @@ def check_opening_entry(user):
 
 
 @frappe.whitelist()
-def create_opening_voucher(pos_profile, company, balance_details):
+def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 	balance_details = json.loads(balance_details)
 
 	new_pos_opening = frappe.get_doc(
@@ -329,6 +329,7 @@ def create_opening_voucher(pos_profile, company, balance_details):
 			"user": frappe.session.user,
 			"pos_profile": pos_profile,
 			"company": company,
+			"custom_shift": custom_shift,
 		}
 	)
 	new_pos_opening.set("balance_details", balance_details)
@@ -457,4 +458,24 @@ def confirm_user_acc_password(password):
             return False
     except AuthenticationError:
         return False
-         
+
+@frappe.whitelist()
+def get_pos_closing_details(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'POS Closing Entry Detail', 
+            filters={'parent': parent},
+            fields=['parent', 
+                    'mode_of_payment', 
+                    'opening_amount', 
+                    'expected_amount', 
+                    'closing_amount' ]  # Specify the fields you want to fetch
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_pos_closing_details Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag

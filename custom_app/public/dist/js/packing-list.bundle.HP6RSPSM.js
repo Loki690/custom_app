@@ -7525,8 +7525,9 @@
           localStorage.setItem("pos_profile", pos_profile);
           me.prepare_app_defaults({ pos_profile });
           dialog2.hide();
+          location.reload();
         },
-        primary_action_label: __("Submit")
+        primary_action_label: __("Select")
       });
       dialog2.show();
     }
@@ -7592,7 +7593,8 @@
         false,
         "f2"
       );
-      this.page.add_menu_item(__("Branch Item Lookup (F3)"), this.show_branch_selection_dialog.bind(this), false, "f4");
+      this.page.add_menu_item(__("Branch Item Lookup (F4)"), this.show_branch_selection_dialog.bind(this), false, "f4");
+      this.page.add_menu_item(__("Change POS Profile (F5)"), this.select_pos_profile.bind(this), false, "f5");
       this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
     }
     add_buttons_to_toolbar() {
@@ -7600,7 +7602,8 @@
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
         { label: __("Pending Transaction (F2"), action: this.toggle_recent_order.bind(this), shortcut: "f2" },
         { label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
-        { label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4" }
+        { label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4" },
+        { label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5" }
       ];
       $(".page-actions .btn-custom").remove();
       buttons.forEach((btn) => {
@@ -8308,4 +8311,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.EPG5K46C.js.map
+//# sourceMappingURL=packing-list.bundle.HP6RSPSM.js.map

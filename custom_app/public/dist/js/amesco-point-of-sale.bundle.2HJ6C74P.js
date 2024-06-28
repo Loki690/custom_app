@@ -3490,6 +3490,7 @@
       const search_term = this.search_field.get_value();
       const status = this.status_field.get_value();
       const pos_profile = this.events.pos_profile();
+      const source_warehouse = this.events.source_warehouse();
       this.$invoices_container.html("");
       return frappe.call({
         method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_past_order_list",
@@ -4030,7 +4031,7 @@
             fields: table_fields
           }
         ],
-        primary_action: async function({ company, pos_profile, balance_details }) {
+        primary_action: async function({ company, pos_profile, balance_details, custom_shift }) {
           if (!balance_details.length) {
             frappe.show_alert({
               message: __("Please add Mode of payments and opening balance details."),
@@ -4042,7 +4043,7 @@
           const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
           const res = await frappe.call({
             method,
-            args: { pos_profile, company, balance_details },
+            args: { pos_profile, company, balance_details, custom_shift },
             freeze: true
           });
           !res.exc && me.prepare_app_defaults(res.message);
@@ -4065,6 +4066,7 @@
       this.pos_opening_time = data.period_start_date;
       this.item_stock_map = {};
       this.settings = {};
+      console.log("this.setting:", this.settings);
       frappe.db.get_value("Stock Settings", void 0, "allow_negative_stock").then(({ message }) => {
         this.allow_negative_stock = flt(message.allow_negative_stock) || false;
       });
@@ -4410,6 +4412,7 @@
       this.recent_order_list = new custom_app.PointOfSale.PastOrderList({
         wrapper: this.$components_wrapper,
         events: {
+          get_frm: () => this.frm,
           open_invoice_data: (name) => {
             frappe.db.get_doc("POS Invoice", name).then((doc) => {
               this.order_summary.load_summary_of(doc);
@@ -4417,6 +4420,9 @@
           },
           pos_profile: () => {
             return this.pos_profile;
+          },
+          source_warehouse: () => {
+            return this.settings.warehouse;
           },
           reset_summary: () => this.order_summary.toggle_summary_placeholder(true)
         }
@@ -4864,4 +4870,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.H7DBVDQG.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.2HJ6C74P.js.map

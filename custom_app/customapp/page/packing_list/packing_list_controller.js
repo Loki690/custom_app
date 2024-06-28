@@ -36,11 +36,14 @@ custom_app.PointOfSale.Controller = class {
 				},
 			],
 			primary_action: function ({ pos_profile }) {
-				localStorage.setItem('pos_profile', pos_profile); // Save POS Profile to local storage
+				localStorage.setItem('pos_profile', pos_profile);
 				me.prepare_app_defaults({ pos_profile });
 				dialog.hide();
+	
+				// Reload the page after selecting the POS profile
+				location.reload();
 			},
-			primary_action_label: __("Submit"),
+			primary_action_label: __("Select"),
 		});
 		dialog.show();
 	}
@@ -122,9 +125,9 @@ custom_app.PointOfSale.Controller = class {
 			false,
 			"f2"
 		);
-		this.page.add_menu_item(__("Branch Item Lookup (F3)"), this.show_branch_selection_dialog.bind(this), false, "f4");
+		this.page.add_menu_item(__("Branch Item Lookup (F4)"), this.show_branch_selection_dialog.bind(this), false, "f4");
+		this.page.add_menu_item(__("Change POS Profile (F5)"), this.select_pos_profile.bind(this), false, "f5");
 		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
-
 
 	}
 
@@ -135,6 +138,7 @@ custom_app.PointOfSale.Controller = class {
 			{label: __("Pending Transaction (F2"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4"},
+			{label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5"},
 		];
 	
 		// Clear existing buttons to avoid duplication
