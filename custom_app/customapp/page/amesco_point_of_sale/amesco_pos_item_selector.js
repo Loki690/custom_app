@@ -155,18 +155,19 @@ custom_app.PointOfSale.ItemSelector = class {
             qty_to_display = "";
         }
 
-		return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
-				data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
-				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-				data-rate="${escape(price_list_rate || 0)}">
-				<td class="item-code">${item_code}</td> 
-			    <td class="item-name text-break">${frappe.ellipsis(item_name, 18)}</td>
-				<td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
-				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-				<td class="item-uom"> ${uom} / count per uom </td>
-				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
-			</tr>`;
-		//<td class="item-description text-break">${description}</td>
+        const item_description = description ? description : "Description not available";
+
+        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
+            data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
+            data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
+            data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}">
+            <td class="item-code">${item_code}</td> 
+            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
+            <td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-uom">${uom} / count per uom</td>
+            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+        </tr>`;
 	}
 
 
