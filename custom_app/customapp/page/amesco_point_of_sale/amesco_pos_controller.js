@@ -317,7 +317,8 @@ custom_app.PointOfSale.Controller = class {
 	toggle_recent_order() {
 		const show = this.recent_order_list.$component.is(":hidden");
 		this.toggle_recent_order_list(show);
-		this.payment.toggle_component(false); /// Add to fix ui hide payment is Order list toggled in Menu
+		this.payment.toggle_component(false); 
+		this.item_details.toggle_component(false); /// Add to fix ui hide payment is Order list toggled in Menu
 	}
 
 	save_draft_invoice() {

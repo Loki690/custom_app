@@ -434,8 +434,8 @@
 				<div class="label">
 				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
 			</div>
+                    <div class="search-field"></div>
 					<div class="item-group-field"></div>
-					<div class="search-field"></div>
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">
@@ -4189,6 +4189,7 @@
       const show2 = this.recent_order_list.$component.is(":hidden");
       this.toggle_recent_order_list(show2);
       this.payment.toggle_component(false);
+      this.item_details.toggle_component(false);
     }
     save_draft_invoice() {
       if (!this.$components_wrapper.is(":visible"))
@@ -4881,4 +4882,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.BBT6PAKH.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.TEJ3ESYZ.js.map
