@@ -299,9 +299,10 @@ custom_app.PointOfSale.Controller = class {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
 			() => this.frm.call("reset_mode_of_payments"),
-			() => this.make_new_invoice(),
 			() => this.cart.load_invoice(),
+			() => this.make_new_invoice(),
 			() => this.item_selector.toggle_component(true),
+			() => this.item_details.toggle_item_details_section(),
 			() => frappe.dom.unfreeze(),
 			() => this.toggle_recent_order_list(false)
 		]);
@@ -316,7 +317,8 @@ custom_app.PointOfSale.Controller = class {
 	toggle_recent_order() {
 		const show = this.recent_order_list.$component.is(":hidden");
 		this.toggle_recent_order_list(show);
-		this.payment.toggle_component(false); /// Add to fix ui hide payment is Order list toggled in Menu
+		this.payment.toggle_component(false); 
+		this.item_details.toggle_component(false); /// Add to fix ui hide payment is Order list toggled in Menu
 	}
 
 	save_draft_invoice() {

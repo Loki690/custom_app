@@ -65,8 +65,8 @@ custom_app.PointOfSale.ItemSelector = class {
 				<div class="label">
 				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
 			</div>
+                    <div class="search-field"></div>
 					<div class="item-group-field"></div>
-					<div class="search-field"></div>
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">

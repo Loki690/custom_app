@@ -153,6 +153,7 @@ custom_app.PointOfSale.Controller = class {
 		});
 	}
 
+	
 	add_new_order() {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
@@ -160,10 +161,12 @@ custom_app.PointOfSale.Controller = class {
 			() => this.make_new_invoice(),
 			() => this.cart.load_invoice(),
 			() => this.item_selector.toggle_component(true),
+			() => this.item_details.toggle_item_details_section(),
 			() => frappe.dom.unfreeze(),
 			() => this.toggle_recent_order_list(false)
 		]);
 	}
+
 
 	// prepare_buttons() {
 	// 	this.page.clear_actions(); // Clear any existing buttons
