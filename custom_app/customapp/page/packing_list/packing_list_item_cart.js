@@ -73,6 +73,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
 				        <div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header">${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -114,9 +115,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section = this.$component.find(".cart-totals-section");
 
 		this.$totals_section.append(
-			`<div class="add-discount-wrapper">
-				${this.get_discount_icon()} ${__("Add Discount")}
-			</div>
+			`
 			<div class="item-qty-total-container">
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
@@ -741,7 +740,9 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-		//console.log(frm.doc);
+
+
+		console.log(frm.doc);
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
@@ -755,7 +756,8 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		this.render_taxes(frm.doc.taxes);
+		this.render_taxes(frm.doc.taxes);          
+		                                                                                               
 	}
 
 	render_net_total(value) {
@@ -882,6 +884,9 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 
+
+
+
 	get_cart_item({ name }) {
 		const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
 		return this.$cart_items_wrapper.find(item_selector);
@@ -945,7 +950,6 @@ custom_app.PointOfSale.ItemCart = class {
 
 	render_cart_item(item_data, $item_to_update) {
 
-		//console.log("ITEMS", item_data);
 
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
@@ -966,10 +970,12 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			<div class="item-vat">
-				  <strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
+			<div class="item-vat mx-3">
+				<strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
 			</div>
-		
+			<div class="item-discount mx-3">
+				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+			</div>
 			${get_rate_discount_html()}
 			`
 		);

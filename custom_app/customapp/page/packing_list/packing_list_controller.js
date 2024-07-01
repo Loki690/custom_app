@@ -36,14 +36,21 @@ custom_app.PointOfSale.Controller = class {
 				},
 			],
 			primary_action: function ({ pos_profile }) {
-				localStorage.setItem('pos_profile', pos_profile); // Save POS Profile to local storage
+				localStorage.setItem('pos_profile', pos_profile);
 				me.prepare_app_defaults({ pos_profile });
 				dialog.hide();
+	
+				// Reload the page after selecting the POS profile
+				location.reload();
 			},
-			primary_action_label: __("Submit"),
+			primary_action_label: __("Select"),
 		});
 		dialog.show();
 	}
+
+
+	
+
 
 	async prepare_app_defaults(data) {
 		this.company = frappe.defaults.get_default("company");
@@ -122,9 +129,9 @@ custom_app.PointOfSale.Controller = class {
 			false,
 			"f2"
 		);
-		this.page.add_menu_item(__("Branch Item Lookup (F3)"), this.show_branch_selection_dialog.bind(this), false, "f4");
+		this.page.add_menu_item(__("Branch Item Lookup (F4)"), this.show_branch_selection_dialog.bind(this), false, "f4");
+		this.page.add_menu_item(__("Change POS Profile (F5)"), this.select_pos_profile.bind(this), false, "f5");
 		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
-
 
 	}
 
@@ -135,6 +142,7 @@ custom_app.PointOfSale.Controller = class {
 			{label: __("Pending Transaction (F2"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4"},
+			{label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5"},
 		];
 	
 		// Clear existing buttons to avoid duplication
@@ -145,6 +153,7 @@ custom_app.PointOfSale.Controller = class {
 		});
 	}
 
+	
 	add_new_order() {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
@@ -152,10 +161,12 @@ custom_app.PointOfSale.Controller = class {
 			() => this.make_new_invoice(),
 			() => this.cart.load_invoice(),
 			() => this.item_selector.toggle_component(true),
+			() => this.item_details.toggle_item_details_section(),
 			() => frappe.dom.unfreeze(),
 			() => this.toggle_recent_order_list(false)
 		]);
 	}
+
 
 	// prepare_buttons() {
 	// 	this.page.clear_actions(); // Clear any existing buttons
@@ -209,7 +220,7 @@ custom_app.PointOfSale.Controller = class {
 	show_branch_selection_dialog() {
 		const selectedWarehouse = localStorage.getItem('selected_warehouse') || '';
         const dialog = new frappe.ui.Dialog({
-            title: __("Select Branches"),
+            title: __("Select Branch"),
             fields: [
                 {
                     fieldtype: "Link",
@@ -1006,6 +1017,23 @@ custom_app.PointOfSale.Controller = class {
 		}
 	}
 
+	remove_item_from_cart() {	
+		frappe.dom.freeze();
+		const { doctype, name, current_item } = this.item_details;
+
+		return frappe.model
+			.set_value(doctype, name, "qty", 0)
+			.then(() => {
+				frappe.model.clear_doc(doctype, name);
+				this.update_cart_html(current_item, true);
+				this.item_details.toggle_item_details_section(null);
+				frappe.dom.unfreeze();
+			})
+		.catch((e) => console.log(e));
+	}
+
+	
+
 	// remove_item_from_cart() {
 
 	// 	//Authenticate OIC to Remove
@@ -1061,26 +1089,11 @@ custom_app.PointOfSale.Controller = class {
 	// 	passwordDialog.show();
 	// }
 
-	remove_item_from_cart() {
-        frappe.dom.freeze();
-        const { doctype, name, current_item } = this.item_details;
-
-        return frappe.model
-            .set_value(doctype, name, "qty", 0)
-            .then(() => {
-                frappe.model.clear_doc(doctype, name);
-                this.update_cart_html(current_item, true);
-                this.item_details.toggle_item_details_section(null);
-                frappe.dom.unfreeze();
-            })
-        .catch((e) => console.log(e));
-    }
 
 	async save_and_checkout() {
-
 		if (this.frm.is_dirty()) {
 			let save_error = false;
-			// await this.frm.save(null, null, null, () => (save_error = true));
+			await this.frm.save(null, null, null, () => (save_error = true));
 			// only move to payment section if save is successful
 			!save_error && this.payment.checkout();
 			// show checkout button on error

@@ -116,7 +116,7 @@ custom_app.PointOfSale.Controller = class {
 					fields: table_fields,
 				},
 			],
-			primary_action: async function ({ company, pos_profile, balance_details }) {
+			primary_action: async function ({ company, pos_profile, balance_details, custom_shift }) {
 				if (!balance_details.length) {
 					frappe.show_alert({
 						message: __("Please add Mode of payments and opening balance details."),
@@ -131,7 +131,7 @@ custom_app.PointOfSale.Controller = class {
 				const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
 				const res = await frappe.call({
 					method,
-					args: { pos_profile, company, balance_details },
+					args: { pos_profile, company, balance_details, custom_shift },
 					freeze: true,
 				});
 				!res.exc && me.prepare_app_defaults(res.message);
@@ -156,6 +156,8 @@ custom_app.PointOfSale.Controller = class {
 		this.item_stock_map = {};
 		this.settings = {};
 
+		console.log('this.setting:', this.settings)
+		
 		frappe.db.get_value("Stock Settings", undefined, "allow_negative_stock").then(({ message }) => {
 			this.allow_negative_stock = flt(message.allow_negative_stock) || false;
 		});
@@ -165,7 +167,10 @@ custom_app.PointOfSale.Controller = class {
 			args: { pos_profile: this.pos_profile },
 			callback: (res) => {
 				const profile = res.message;
+
+
 				Object.assign(this.settings, profile);
+
 				this.settings.customer_groups = profile.customer_groups.map((group) => group.name);
 				this.make_app();
 			},
@@ -294,9 +299,10 @@ custom_app.PointOfSale.Controller = class {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
 			() => this.frm.call("reset_mode_of_payments"),
-			() => this.make_new_invoice(),
 			() => this.cart.load_invoice(),
+			() => this.make_new_invoice(),
 			() => this.item_selector.toggle_component(true),
+			() => this.item_details.toggle_item_details_section(),
 			() => frappe.dom.unfreeze(),
 			() => this.toggle_recent_order_list(false)
 		]);
@@ -311,7 +317,8 @@ custom_app.PointOfSale.Controller = class {
 	toggle_recent_order() {
 		const show = this.recent_order_list.$component.is(":hidden");
 		this.toggle_recent_order_list(show);
-		this.payment.toggle_component(false); /// Add to fix ui hide payment is Order list toggled in Menu
+		this.payment.toggle_component(false); 
+		this.item_details.toggle_component(false); /// Add to fix ui hide payment is Order list toggled in Menu
 	}
 
 	save_draft_invoice() {
@@ -550,7 +557,7 @@ custom_app.PointOfSale.Controller = class {
 						insufficientPaymentDialog.show();
 						return; // Exit the function if payment is not sufficient
 					}
-				
+			
 					// Proceed with submitting the invoice if payment is sufficient
 					this.frm.save('Submit').then((r) => {
 						this.toggle_components(false);
@@ -593,6 +600,9 @@ custom_app.PointOfSale.Controller = class {
 		this.recent_order_list = new custom_app.PointOfSale.PastOrderList({
 			wrapper: this.$components_wrapper,
 			events: {
+
+				get_frm: () => this.frm,
+
 				open_invoice_data: (name) => {
 					frappe.db.get_doc("POS Invoice", name).then((doc) => {
 						this.order_summary.load_summary_of(doc);
@@ -601,9 +611,13 @@ custom_app.PointOfSale.Controller = class {
 
 				// return pos profile
 				pos_profile: () => {
-					return this.pos_profile
+					return this.pos_profile;
 				},
 
+				source_warehouse: () => {
+					return this.settings.warehouse;
+				},
+				
 				reset_summary: () => this.order_summary.toggle_summary_placeholder(true),
 			},
 		});
@@ -1155,6 +1169,5 @@ custom_app.PointOfSale.Controller = class {
 			this.payment.checkout();
 		}
 	}
-
 	
 };

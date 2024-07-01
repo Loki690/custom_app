@@ -70,6 +70,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
 				        <div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header">${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -111,9 +112,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section = this.$component.find(".cart-totals-section");
 
 		this.$totals_section.append(
-			`<div class="add-discount-wrapper">
-				${this.get_discount_icon()} ${__("Add Discount")}
-			</div>
+			`
 			<div class="item-qty-total-container">
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
@@ -455,7 +454,6 @@ custom_app.PointOfSale.ItemCart = class {
 								() => me.fetch_customer_details(this.value),
 								() => me.events.customer_details_updated(me.customer_info),
 								() => me.update_customer_section(),
-								() => me.update_totals_section(),
 								() => frappe.dom.unfreeze(),
 							]);
 						});
@@ -739,7 +737,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-		//console.log(frm.doc);
+		console.log(frm.doc);
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
@@ -911,6 +909,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.update_empty_cart_section(no_of_cart_items);
 	}
 
+
 	remove_customer() {
 		const frm = this.events.get_frm();
 		// Get the current value of the "customer" field
@@ -958,10 +957,12 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			<div class="item-vat">
-				  <strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
+			<div class="item-vat mx-3">
+				<strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
 			</div>
-		
+			<div class="item-discount mx-3">
+				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+			</div>
 			${get_rate_discount_html()}
 			`
 		);
@@ -1436,6 +1437,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 		this.toggle_component(true);
 	}
+
 
 	toggle_component(show) {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
