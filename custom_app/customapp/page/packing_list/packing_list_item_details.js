@@ -275,6 +275,7 @@ custom_app.PointOfSale.ItemDetails = class {
 			'price_list_rate',
 			"rate",
 			"uom",
+			"custom_expiry_date",
 			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field

@@ -381,6 +381,9 @@ custom_app.PointOfSale.ItemCart = class {
 			description: __("Checkout Order / Submit Order / New Order"),
 			ignore_inputs: true,
 			page: cur_page.page.page,
+			
+			
+
 		});
 		this.$component.find(".edit-cart-btn").attr("title", `${ctrl_label}+E`);
 		frappe.ui.keys.on("ctrl+e", () => {
@@ -390,6 +393,7 @@ custom_app.PointOfSale.ItemCart = class {
 				this.$component.find(".edit-cart-btn").click();
 			}
 		});
+		1
 		this.$component.find(".add-discount-wrapper").attr("title", `${ctrl_label}+D`);
 		frappe.ui.keys.add_shortcut({
 			shortcut: "ctrl+d",
@@ -406,9 +410,9 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 		});
 
-		this.doctor_field.parent.attr("title", `${ctrl_label}+C`);
+		this.doctor_field.parent.attr("title", `${ctrl_label}+R`);
         frappe.ui.keys.add_shortcut({
-            shortcut: "ctrl+c",
+            shortcut: "ctrl+r",
             action: () => this.doctor_field.set_focus(),
             condition: () => this.$component.is(":visible"),
             description: __("Doctor"),
@@ -967,7 +971,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (!$item_to_update.length) {
 			this.$cart_items_wrapper.append(
 				`<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
-				<div class="seperator"></div>`
+				<div class="separator"></div>`
 			);
 			$item_to_update = this.get_cart_item(item_data);
 		}
@@ -986,13 +990,11 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
-			${get_rate_discount_html()}
-			`
+			${get_rate_discount_html()}`
 		);
 	
 		set_dynamic_rate_header_width();
 	
-		// Set dynamic rate header width function
 		function set_dynamic_rate_header_width() {
 			const rate_cols = Array.from(me.$cart_items_wrapper.find(".item-rate-amount"));
 			me.$cart_header.find(".rate-amount-header").css("width", "");
@@ -1003,13 +1005,12 @@ custom_app.PointOfSale.ItemCart = class {
 			}, 0);
 	
 			max_width += 1;
-			if (max_width == 1) max_width = "";
+			if (max_width === 1) max_width = "";
 	
 			me.$cart_header.find(".rate-amount-header").css("width", max_width);
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
 	
-		// Function to get rate and discount HTML
 		function get_rate_discount_html() {
 			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 				return `
@@ -1031,10 +1032,9 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 		}
 	
-		// Function to get item description HTML
 		function get_description_html() {
 			if (item_data.description) {
-				if (item_data.description.indexOf("<div>") != -1) {
+				if (item_data.description.indexOf("<div>") !== -1) {
 					try {
 						item_data.description = $(item_data.description).text();
 					} catch (error) {
@@ -1050,7 +1050,6 @@ custom_app.PointOfSale.ItemCart = class {
 			return ``;
 		}
 	
-		// Function to get item image HTML
 		function get_item_image_html() {
 			const { image, item_name } = item_data;
 			if (!me.hide_images && image) {
@@ -1065,11 +1064,12 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 		}
 	
-		this.$cart_items_wrapper.on('keydown', '.cart-item-wrapper', function(event) {
+		// Event listener for handling keydown events on cart items
+		this.$cart_items_wrapper.off('keydown', '.cart-item-wrapper').on('keydown', '.cart-item-wrapper', function(event) {
 			const $items = me.$cart_items_wrapper.find('.cart-item-wrapper');
 			const currentIndex = $items.index($(this));
 			let nextIndex = currentIndex;
-		
+	
 			switch (event.which) {
 				case 13: // Enter key
 					$(this).click(); // Trigger click event immediately on Enter key press
@@ -1083,10 +1083,24 @@ custom_app.PointOfSale.ItemCart = class {
 				default:
 					return; // Exit if other keys are pressed
 			}
-		
+	
 			$items.eq(nextIndex).focus(); // Move focus to the next item
 		});
-
+	
+		// Add Ctrl+C shortcut to focus on the first cart item
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+c',
+			action: () => {
+				const $items = me.$cart_items_wrapper.find('.cart-item-wrapper');
+				if ($items.length) {
+					$items.first().focus(); // Focus on the first cart item
+				}
+			},
+			condition: () => me.$cart_items_wrapper.is(':visible'),
+			description: __('Activate Cart Item Focus'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
 	}
 
 	handle_broken_image($img) {
