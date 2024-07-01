@@ -220,7 +220,7 @@ custom_app.PointOfSale.Controller = class {
 	show_branch_selection_dialog() {
 		const selectedWarehouse = localStorage.getItem('selected_warehouse') || '';
         const dialog = new frappe.ui.Dialog({
-            title: __("Select Branches"),
+            title: __("Select Branch"),
             fields: [
                 {
                     fieldtype: "Link",
