@@ -18,6 +18,7 @@ custom_app.PointOfSale.Controller = class {
         }
     }
 
+	
 	select_pos_profile() {
 		const me = this;
 		const dialog = new frappe.ui.Dialog({

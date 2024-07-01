@@ -4341,9 +4341,9 @@
     }
     attach_shortcuts() {
       const ctrl_label = frappe.utils.is_mac() ? "\u2318" : "Ctrl";
-      this.search_field.parent.attr("title", `${ctrl_label}+I`);
+      this.search_field.parent.attr("title", `${ctrl_label}+S`);
       frappe.ui.keys.add_shortcut({
-        shortcut: "ctrl+i",
+        shortcut: "ctrl+s",
         action: () => this.search_field.set_focus(),
         condition: () => this.$component.is(":visible"),
         description: __("Focus on search input"),
@@ -4530,11 +4530,11 @@
       this.$component.append(
         `<div class="cart-container">
 				<div class="abs-cart-container">
-					<div class="cart-label">${__("Item Cart")}</div>
+					<div class="cart-label" >${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
-				        <div class="qty-header">${__("Vat")}</div>
-						<div class="qty-header">${__("Disc %")}</div>
+						<div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header" >${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -4557,6 +4557,40 @@
     make_no_items_placeholder() {
       this.$cart_header.css("display", "none");
       this.$cart_items_wrapper.html(`<div class="no-item-wrapper">${__("No items in cart")}</div>`);
+    }
+    add_keyboard_navigation() {
+      this.$component.on("keydown", '[tabindex="0"]', (e) => {
+        if (e.key === "Enter") {
+          $(e.target).trigger("click");
+        }
+        switch (e.key) {
+          case "ArrowUp":
+            e.preventDefault();
+            this.focusPreviousElement(e.target);
+            break;
+          case "ArrowDown":
+            e.preventDefault();
+            this.focusNextElement(e.target);
+            break;
+        }
+      });
+    }
+    focusNextElement(current) {
+      let $next = $(current).nextAll('[tabindex="0"]').first();
+      if (!$next.length) {
+        $next = this.$component.find('[tabindex="0"]').first();
+      }
+      $next.focus();
+    }
+    focusPreviousElement(current) {
+      let $prev = $(current).prevAll('[tabindex="0"]').first();
+      if (!$prev.length) {
+        $prev = this.$component.find('[tabindex="0"]').last();
+      }
+      $prev.focus();
+    }
+    get_cart_item(item_data) {
+      return this.$cart_items_wrapper.find(`[data-row-name="${escape(item_data.name)}"]`);
     }
     get_discount_icon() {
       return `<svg class="discount-icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -4764,7 +4798,7 @@
           if (btn === "Delete")
             shortcut_key = "ctrl+backspace";
           if (btn === "Remove")
-            shortcut_key = "shift+ctrl+backspace";
+            shortcut_key = "ctrl+x";
           if (btn === ".")
             shortcut_key = "ctrl+>";
           const fieldname = this.number_pad.fieldnames[btn] ? this.number_pad.fieldnames[btn] : typeof btn === "string" ? frappe.scrub(btn) : btn;
@@ -4811,6 +4845,24 @@
         if (item_cart_visible && this.discount_field && this.discount_field.parent.is(":visible")) {
           this.discount_field.set_value(0);
         }
+      });
+      this.doctor_field.parent.attr("title", `${ctrl_label}+C`);
+      frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+c",
+        action: () => this.doctor_field.set_focus(),
+        condition: () => this.$component.is(":visible"),
+        description: __("Doctor"),
+        ignore_inputs: true,
+        page: cur_page.page.page
+      });
+      this.customer_field.parent.attr("title", `${ctrl_label}+M`);
+      frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+m",
+        action: () => this.customer_field.set_focus(),
+        condition: () => this.$component.is(":visible"),
+        description: __("Customer"),
+        ignore_inputs: true,
+        page: cur_page.page.page
       });
     }
     toggle_item_highlight(item) {
@@ -4871,8 +4923,8 @@
     }
     make_doctor_selector() {
       this.$doctor_section.html(`
-			<div class="doctor-field"></div>
-		`);
+        <div class="doctor-field" tabindex="0"></div>
+    `);
       const me = this;
       const allowed_doctor_group = this.allowed_doctor_groups || [];
       let filters = {};
@@ -4904,6 +4956,11 @@
         render_input: true
       });
       this.doctor_field.toggle_label(false);
+      $(document).on("keydown", function(event2) {
+        if (event2.altKey && event2.key === "d") {
+          me.doctor_field.$input.focus();
+        }
+      });
     }
     fetch_customer_details(customer) {
       if (customer) {
@@ -5240,7 +5297,7 @@
       const me = this;
       if (!$item_to_update.length) {
         this.$cart_items_wrapper.append(
-          `<div class="cart-item-wrapper" data-row-name="${escape(item_data.name)}"></div>
+          `<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
 				<div class="seperator"></div>`
         );
         $item_to_update = this.get_cart_item(item_data);
@@ -5277,8 +5334,6 @@
           max_width = "";
         me.$cart_header.find(".rate-amount-header").css("width", max_width);
         me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
-      }
-      function get_rate_discount_html() {
       }
       function get_rate_discount_html() {
         if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
@@ -5321,12 +5376,31 @@
 					<div class="item-image">
 						<img
 							onerror="cur_pos.cart.handle_broken_image(this)"
-							src="${image}" alt="${frappe.get_abbr(item_name)}"">
+							src="${image}" alt="${frappe.get_abbr(item_name)}">
 					</div>`;
         } else {
           return `<div class="item-image item-abbr">${frappe.get_abbr(item_name)}</div>`;
         }
       }
+      this.$cart_items_wrapper.on("keydown", ".cart-item-wrapper", function(event2) {
+        const $items = me.$cart_items_wrapper.find(".cart-item-wrapper");
+        const currentIndex = $items.index($(this));
+        let nextIndex = currentIndex;
+        switch (event2.which) {
+          case 13:
+            $(this).click();
+            break;
+          case 38:
+            nextIndex = currentIndex > 0 ? currentIndex - 1 : $items.length - 1;
+            break;
+          case 40:
+            nextIndex = currentIndex < $items.length - 1 ? currentIndex + 1 : 0;
+            break;
+          default:
+            return;
+        }
+        $items.eq(nextIndex).focus();
+      });
     }
     handle_broken_image($img) {
       const item_abbr = $($img).attr("alt");
@@ -8350,4 +8424,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.BR4MBUGO.js.map
+//# sourceMappingURL=packing-list.bundle.OU5EBWPP.js.map

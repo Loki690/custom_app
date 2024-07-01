@@ -347,7 +347,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 				let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
 				if (btn === "Delete") shortcut_key = "ctrl+backspace";
-				if (btn === "Remove") shortcut_key = "shift+ctrl+backspace";
+				if (btn === "Remove") shortcut_key = "ctrl+x";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map
@@ -405,6 +405,29 @@ custom_app.PointOfSale.ItemCart = class {
 				this.discount_field.set_value(0);
 			}
 		});
+
+		this.doctor_field.parent.attr("title", `${ctrl_label}+C`);
+        frappe.ui.keys.add_shortcut({
+            shortcut: "ctrl+c",
+            action: () => this.doctor_field.set_focus(),
+            condition: () => this.$component.is(":visible"),
+            description: __("Doctor"),
+            ignore_inputs: true,
+            page: cur_page.page.page,
+        });
+
+		this.customer_field.parent.attr("title", `${ctrl_label}+M`);
+        frappe.ui.keys.add_shortcut({
+            shortcut: "ctrl+m",
+            action: () => this.customer_field.set_focus(),
+            condition: () => this.$component.is(":visible"),
+            description: __("Customer"),
+            ignore_inputs: true,
+            page: cur_page.page.page,
+        });
+
+
+
 	}
 
 	toggle_item_highlight(item) {
@@ -471,7 +494,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	make_doctor_selector() {
 		this.$doctor_section.html(`
-			<div class="doctor-field"></div>
+			<div class="doctor-field" tabindex="0"></div>
 		`);
 		const me = this;
 		const allowed_doctor_group = this.allowed_doctor_groups || [];
@@ -940,15 +963,15 @@ custom_app.PointOfSale.ItemCart = class {
 	render_cart_item(item_data, $item_to_update) {
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
-
+	
 		if (!$item_to_update.length) {
 			this.$cart_items_wrapper.append(
-				`<div class="cart-item-wrapper" data-row-name="${escape(item_data.name)}"></div>
+				`<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
 				<div class="seperator"></div>`
 			);
 			$item_to_update = this.get_cart_item(item_data);
 		}
-
+	
 		$item_to_update.html(
 			`${get_item_image_html()}
 			<div class="item-name-desc">
@@ -966,9 +989,10 @@ custom_app.PointOfSale.ItemCart = class {
 			${get_rate_discount_html()}
 			`
 		);
-
+	
 		set_dynamic_rate_header_width();
-
+	
+		// Set dynamic rate header width function
 		function set_dynamic_rate_header_width() {
 			const rate_cols = Array.from(me.$cart_items_wrapper.find(".item-rate-amount"));
 			me.$cart_header.find(".rate-amount-header").css("width", "");
@@ -977,14 +1001,15 @@ custom_app.PointOfSale.ItemCart = class {
 				if ($(elm).width() > max_width) max_width = $(elm).width();
 				return max_width;
 			}, 0);
-
+	
 			max_width += 1;
 			if (max_width == 1) max_width = "";
-
+	
 			me.$cart_header.find(".rate-amount-header").css("width", max_width);
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
-
+	
+		// Function to get rate and discount HTML
 		function get_rate_discount_html() {
 			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 				return `
@@ -1005,7 +1030,8 @@ custom_app.PointOfSale.ItemCart = class {
 					</div>`;
 			}
 		}
-
+	
+		// Function to get item description HTML
 		function get_description_html() {
 			if (item_data.description) {
 				if (item_data.description.indexOf("<div>") != -1) {
@@ -1023,7 +1049,8 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 			return ``;
 		}
-
+	
+		// Function to get item image HTML
 		function get_item_image_html() {
 			const { image, item_name } = item_data;
 			if (!me.hide_images && image) {
@@ -1031,12 +1058,35 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="item-image">
 						<img
 							onerror="cur_pos.cart.handle_broken_image(this)"
-							src="${image}" alt="${frappe.get_abbr(item_name)}"">
+							src="${image}" alt="${frappe.get_abbr(item_name)}">
 					</div>`;
 			} else {
 				return `<div class="item-image item-abbr">${frappe.get_abbr(item_name)}</div>`;
 			}
 		}
+	
+		this.$cart_items_wrapper.on('keydown', '.cart-item-wrapper', function(event) {
+			const $items = me.$cart_items_wrapper.find('.cart-item-wrapper');
+			const currentIndex = $items.index($(this));
+			let nextIndex = currentIndex;
+		
+			switch (event.which) {
+				case 13: // Enter key
+					$(this).click(); // Trigger click event immediately on Enter key press
+					break;
+				case 38: // Up arrow key
+					nextIndex = currentIndex > 0 ? currentIndex - 1 : $items.length - 1;
+					break;
+				case 40: // Down arrow key
+					nextIndex = currentIndex < $items.length - 1 ? currentIndex + 1 : 0;
+					break;
+				default:
+					return; // Exit if other keys are pressed
+			}
+		
+			$items.eq(nextIndex).focus(); // Move focus to the next item
+		});
+
 	}
 
 	handle_broken_image($img) {
