@@ -166,28 +166,28 @@ custom_app.PointOfSale.PastOrderSummary = class {
 	}
 
 
-	// get_taxes_html(doc) {
-	// 	if (!doc.taxes.length) return "";
+	get_taxes_html(doc) {
+		if (!doc.taxes.length) return "";
 
-	// 	let taxes_html = doc.taxes
-	// 		.map((t) => {
-	// 			// if tax rate is 0, don't print it.
-	// 			const description = /[0-9]+/.test(t.description)
-	// 				? t.description
-	// 				: t.rate != 0
-	// 					? `${t.description} @ ${t.rate}%`
-	// 					: t.description;
-	// 			return `
-	// 			<div class="tax-row">
-	// 				<div class="tax-label">${description}</div>
-	// 				<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
-	// 			</div>
-	// 		`;
-	// 		})
-	// 		.join("");
+		let taxes_html = doc.taxes
+			.map((t) => {
+				// if tax rate is 0, don't print it.
+				const description = /[0-9]+/.test(t.description)
+					? t.description
+					: t.rate != 0
+						? `${t.description} @ ${t.rate}%`
+						: t.description;
+				return `
+				<div class="tax-row">
+					<div class="tax-label">${description}</div>
+					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
+				</div>
+			`;
+			})
+			.join("");
 
-	// 	return `<div class="taxes-wrapper">${taxes_html}</div>`;
-	// }
+		return `<div class="taxes-wrapper">${taxes_html}</div>`;
+	}
 
 	get_grand_total_html(doc) {
 		return `<div class="summary-row-wrapper grand-total">
@@ -239,6 +239,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		this.$summary_container.on("click", ".delete-btn", () => {
 			this.events.delete_order(this.doc.name);
 			this.show_summary_placeholder();
+			
 			// this.toggle_component(false);
 			// this.$component.find('.no-summary-placeholder').removeClass('d-none');
 			// this.$summary_wrapper.addClass('d-none');
@@ -480,7 +481,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		const vat_exempt_dom =this.get_vatable_exempt_html(doc);
 		const zero_rated_dom = this.get_zero_rated_html(doc);
 		const vat_amount_dom = this.get_vat_amount_html(doc);
-		// const taxes_dom = this.get_taxes_html(doc);
+		const taxes_dom = this.get_taxes_html(doc);
 		const discount_dom = this.get_discount_html(doc);
 		const grand_total_dom = this.get_grand_total_html(doc);
 		this.$totals_container.append(net_total_dom);
@@ -488,7 +489,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		this.$totals_container.append(vat_exempt_dom);
 		this.$totals_container.append(zero_rated_dom);
 		this.$totals_container.append(vat_amount_dom);
-		// this.$totals_container.append(taxes_dom);
+		this.$totals_container.append(taxes_dom);
 		this.$totals_container.append(discount_dom);
 		this.$totals_container.append(grand_total_dom);
 	}
