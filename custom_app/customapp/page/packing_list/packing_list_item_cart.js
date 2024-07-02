@@ -198,13 +198,13 @@ custom_app.PointOfSale.ItemCart = class {
 				// [4, 5, 6, "Discount"],
 				// [7, 8, 9, "Rate"],
 				// [".", 0, "Delete", "Remove"],
-				[  "", "", "", "Remove"],
+				[  "", "Quantity", "Rate", "Remove"],
 			],
 			css_classes: [
 				["", "", "", "col-span-2 remove-btn"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
-				["", "", "", "col-span-2 remove-btn"],
+				// ["", "", "", "col-span-2 remove-btn"],
 			],
 			fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" },
 		});
@@ -384,6 +384,44 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	attach_shortcuts() {
+
+		document.addEventListener('keydown', function(event) {
+			// List of key codes to prevent
+			const keysToPrevent = {
+				// Prevent F5 (refresh)
+				116: true, 
+				// Prevent Ctrl+R (refresh)
+				'Ctrl+82': true,
+						// Prevent Ctrl+Shift+R (refresh)
+				'Ctrl+16+82': true,
+				// Prevent Ctrl+S (save)
+				'Ctrl+83': true,
+				// Prevent Ctrl+P (print)
+				'Ctrl+80': true,
+				// Prevent Ctrl+W (close tab)
+				'Ctrl+87': true,
+				// Prevent Ctrl+Shift+I (Developer Tools)
+				'Ctrl+Shift+73': true,
+				  // Prevent Ctrl+J (Downloads)
+				'Ctrl+74': true,
+					  // Prevent Ctrl+E
+				'Ctrl+69': true,
+							  // Prevent Ctrl+Q
+				// 'Ctrl+18+81': true,
+			};
+		
+			// Generate the key identifier
+			const key = (event.ctrlKey ? 'Ctrl+' : '') + 
+						(event.shiftKey ? 'Shift+' : '') + 
+						(event.altKey ? 'Alt+' : '') + 
+						event.keyCode;
+		
+			if (keysToPrevent[key] || keysToPrevent[event.keyCode]) {
+				event.preventDefault();
+			}
+		});
+		
+		
 		for (let row of this.number_pad.keys) {
 			for (let btn of row) {
 				if (typeof btn !== "string") continue; // do not make shortcuts for numbers
@@ -391,6 +429,8 @@ custom_app.PointOfSale.ItemCart = class {
 				let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
 				if (btn === "Delete") shortcut_key = "ctrl+backspace";
 				if (btn === "Remove") shortcut_key = "ctrl+x";
+				if (btn === "Quantity") shortcut_key = "ctrl+q";
+				if (btn === "Rate") shortcut_key = "ctrl+a";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map
@@ -427,6 +467,8 @@ custom_app.PointOfSale.ItemCart = class {
 			ignore_inputs: true,
 			page: cur_page.page.page,
 		});
+
+
 		this.$component.find(".edit-cart-btn").attr("title", `${ctrl_label}+E`);
 		frappe.ui.keys.on("ctrl+e", () => {
 			const item_cart_visible = this.$component.is(":visible");
@@ -471,7 +513,16 @@ custom_app.PointOfSale.ItemCart = class {
             page: cur_page.page.page,
         });
 
-		
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+<', // Choose an appropriate shortcut key
+			action: () => {
+				this.reset_customer_selector();
+			},
+			condition: () => true, // Adjust this condition as needed
+			description: __('Reset Customer Selector'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
 
 	}
 
@@ -491,7 +542,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	make_customer_selector() {
 		this.$customer_section.html(`
-			<div class="customer-field"></div>
+			<div class="customer-field" tabindex="0"></div>
 		`);
 		const me = this;
 		const allowed_customer_group = this.allowed_customer_groups || [];
@@ -539,7 +590,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	make_doctor_selector() {
     this.$doctor_section.html(`
-        <div class="doctor-field" tabindex="0"></div>
+        <div class="doctor-field"></div>
     `);
     const me = this;
     const allowed_doctor_group = this.allowed_doctor_groups || [];
@@ -723,7 +774,7 @@ custom_app.PointOfSale.ItemCart = class {
 							<div class="customer-name">${customer}</div>
 							${get_customer_description()}
 						</div>
-						<div class="reset-customer-btn" data-customer="${escape(customer)}">
+						<div class="reset-customer-btn" tabindex="0" data-customer="${escape(customer)}">
 							<svg width="32" height="32" viewBox="0 0 14 14" fill="none">
 								<path d="M4.93764 4.93759L7.00003 6.99998M9.06243 9.06238L7.00003 6.99998M7.00003 6.99998L4.93764 9.06238L9.06243 4.93759" stroke="#8D99A6"/>
 							</svg>

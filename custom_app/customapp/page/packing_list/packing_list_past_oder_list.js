@@ -42,6 +42,50 @@ custom_app.PointOfSale.PastOrderList = class {
 
 			me.events.open_invoice_data(invoice_name);
 		});
+
+
+
+
+		this.$invoices_container.off('keydown', '.invoice-wrapper').on('keydown', '.invoice-wrapper', function(event) {
+			const $items = me.$invoices_container.find('.invoice-wrapper');
+			const currentIndex = $items.index($(this));
+			let nextIndex = currentIndex;
+	
+			switch (event.which) {
+				case 13: // Enter key
+					$(this).click(); // Trigger click event immediately on Enter key press
+					break;
+				case 38: // Up arrow key
+					nextIndex = currentIndex > 0 ? currentIndex - 1 : $items.length - 1;
+					break;
+				case 40: // Down arrow key
+					nextIndex = currentIndex < $items.length - 1 ? currentIndex + 1 : 0;
+					break;
+				default:
+					return; // Exit if other keys are pressed
+			}
+	
+			$items.eq(nextIndex).focus(); // Move focus to the next item
+		});
+	
+		// Add Ctrl+C shortcut to focus on the first cart item
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+i',
+			action: () => {
+				const $items = me.$invoices_container.find('.invoice-wrapper');
+				if ($items.length) {
+					$items.first().focus(); // Focus on the first cart item
+				}
+			},
+			condition: () => me.$invoices_container.is(':visible'),
+			description: __('Activate Cart Item Focus'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
+
+
+
+
 	}
 
 	make_filter_section() {
@@ -102,7 +146,7 @@ custom_app.PointOfSale.PastOrderList = class {
 		const posting_datetime = moment(invoice.posting_date + " " + invoice.posting_time).format(
 			"Do MMMM, h:mma"
 		);
-		return `<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
+		return `<div class="invoice-wrapper" tabindex="0" data-invoice-name="${escape(invoice.name)}">
 				<div class="invoice-name-date">
 					<div class="invoice-name">${invoice.name} - ${invoice.pos_profile} </div>
 					<div class="invoice-date">
@@ -118,7 +162,14 @@ custom_app.PointOfSale.PastOrderList = class {
 				</div>
 			</div>
 			<div class="seperator"></div>`;
+
+		
+				
 	}
+
+
+	// Function to render the invoice items
+	
 
 	toggle_component(show) {
 		show

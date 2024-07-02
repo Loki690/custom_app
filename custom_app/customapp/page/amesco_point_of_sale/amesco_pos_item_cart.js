@@ -155,16 +155,17 @@ custom_app.PointOfSale.ItemCart = class {
 				// [4, 5, 6, "Discount"],
 				// [7, 8, 9, "Rate"],
 				// [".", 0, "Delete", "Remove"],
-				[  "", "", "", "Remove"],
+				[  "", "Quantity", "Rate", "Remove"],
 			],
 			css_classes: [
 				["", "", "", "col-span-2 remove-btn"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
-				["", "", "", "col-span-2 remove-btn"],
+				// ["", "", "", "col-span-2 remove-btn"],
 			],
 			fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" },
 		});
+
 
 		this.$numpad_section.prepend(
 			`<div class="numpad-totals">
@@ -341,6 +342,44 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	attach_shortcuts() {
+
+		document.addEventListener('keydown', function(event) {
+			// List of key codes to prevent
+			const keysToPrevent = {
+				// Prevent F5 (refresh)
+				116: true, 
+				// Prevent Ctrl+R (refresh)
+				'Ctrl+82': true,
+						// Prevent Ctrl+Shift+R (refresh)
+				'Ctrl+16+82': true,
+				// Prevent Ctrl+S (save)
+				'Ctrl+83': true,
+				// Prevent Ctrl+P (print)
+				'Ctrl+80': true,
+				// Prevent Ctrl+W (close tab)
+				'Ctrl+87': true,
+				// Prevent Ctrl+Shift+I (Developer Tools)
+				'Ctrl+Shift+73': true,
+				  // Prevent Ctrl+J (Downloads)
+				'Ctrl+74': true,
+					  // Prevent Ctrl+E
+				'Ctrl+69': true,
+							  // Prevent Ctrl+Q
+				// 'Ctrl+18+81': true,
+			};
+		
+			// Generate the key identifier
+			const key = (event.ctrlKey ? 'Ctrl+' : '') + 
+						(event.shiftKey ? 'Shift+' : '') + 
+						(event.altKey ? 'Alt+' : '') + 
+						event.keyCode;
+		
+			if (keysToPrevent[key] || keysToPrevent[event.keyCode]) {
+				event.preventDefault();
+			}
+		});
+		
+		
 		for (let row of this.number_pad.keys) {
 			for (let btn of row) {
 				if (typeof btn !== "string") continue; // do not make shortcuts for numbers
@@ -348,6 +387,8 @@ custom_app.PointOfSale.ItemCart = class {
 				let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
 				if (btn === "Delete") shortcut_key = "ctrl+backspace";
 				if (btn === "Remove") shortcut_key = "ctrl+x";
+				if (btn === "Quantity") shortcut_key = "ctrl+q";
+				if (btn === "Rate") shortcut_key = "ctrl+a";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map
@@ -369,6 +410,8 @@ custom_app.PointOfSale.ItemCart = class {
 						this.$numpad_section.find(`.numpad-btn[data-button-value="${fieldname}"]`).click();
 					}
 				});
+
+
 			}
 		}
 		const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
@@ -381,10 +424,9 @@ custom_app.PointOfSale.ItemCart = class {
 			description: __("Checkout Order / Submit Order / New Order"),
 			ignore_inputs: true,
 			page: cur_page.page.page,
-			
-			
-
 		});
+
+
 		this.$component.find(".edit-cart-btn").attr("title", `${ctrl_label}+E`);
 		frappe.ui.keys.on("ctrl+e", () => {
 			const item_cart_visible = this.$component.is(":visible");
@@ -393,7 +435,6 @@ custom_app.PointOfSale.ItemCart = class {
 				this.$component.find(".edit-cart-btn").click();
 			}
 		});
-		1
 		this.$component.find(".add-discount-wrapper").attr("title", `${ctrl_label}+D`);
 		frappe.ui.keys.add_shortcut({
 			shortcut: "ctrl+d",
@@ -430,7 +471,16 @@ custom_app.PointOfSale.ItemCart = class {
             page: cur_page.page.page,
         });
 
-
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+<', // Choose an appropriate shortcut key
+			action: () => {
+				this.reset_customer_selector();
+			},
+			condition: () => true, // Adjust this condition as needed
+			description: __('Reset Customer Selector'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
 
 	}
 

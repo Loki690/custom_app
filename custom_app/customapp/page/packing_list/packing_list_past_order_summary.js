@@ -305,6 +305,17 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			description: __("Edit Receipt"),
 			page: cur_page.page.page,
 		});
+
+		this.$summary_container.find(".edit-btn").attr("title", `${ctrl_label}+E`);
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+e",
+			action: () => this.$summary_container.find(".edit-btn").click(),
+			condition: () =>
+				this.$component.is(":visible") && this.$summary_container.find(".edit-btn").is(":visible"),
+			description: __("Edit Receipt"),
+			page: cur_page.page.page,
+		});
+		
 	}
 
 	send_email() {
