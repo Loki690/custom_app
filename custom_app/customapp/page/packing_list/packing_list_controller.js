@@ -18,6 +18,8 @@ custom_app.PointOfSale.Controller = class {
         }
     }
 
+	
+	
 	select_pos_profile() {
 		const me = this;
 		const dialog = new frappe.ui.Dialog({
@@ -158,12 +160,12 @@ custom_app.PointOfSale.Controller = class {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
 			() => this.frm.call("reset_mode_of_payments"),
-			() => this.make_new_invoice(),
 			() => this.cart.load_invoice(),
+			() => this.make_new_invoice(),
 			() => this.item_selector.toggle_component(true),
 			() => this.item_details.toggle_item_details_section(),
+			() => this.toggle_recent_order_list(false),
 			() => frappe.dom.unfreeze(),
-			() => this.toggle_recent_order_list(false)
 		]);
 	}
 

@@ -494,9 +494,9 @@ custom_app.PointOfSale.ItemSelector = class {
     
     attach_shortcuts() {
         const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
-        this.search_field.parent.attr("title", `${ctrl_label}+I`);
+        this.search_field.parent.attr("title", `${ctrl_label}+S`);
         frappe.ui.keys.add_shortcut({
-            shortcut: "ctrl+i",
+            shortcut: "ctrl+s",
             action: () => this.search_field.set_focus(),
             condition: () => this.$component.is(":visible"),
             description: __("Focus on search input"),
