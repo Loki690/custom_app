@@ -5103,7 +5103,6 @@
     update_totals_section(frm) {
       if (!frm)
         frm = this.events.get_frm();
-      console.log(frm.doc);
       this.render_vatable_sales(frm.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
@@ -8350,4 +8349,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.PCI37JW5.js.map
+//# sourceMappingURL=packing-list.bundle.QHYTFCQ6.js.map

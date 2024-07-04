@@ -1544,7 +1544,6 @@
     update_totals_section(frm) {
       if (!frm)
         frm = this.events.get_frm();
-      console.log(frm.doc);
       this.render_vatable_sales(frm.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
@@ -3179,14 +3178,14 @@
           epayment_reference_number_controller.refresh();
         }
         if (p.mode_of_payment === "Cheque") {
-          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
           let bank_name_control = frappe.ui.form.make_control({
             df: {
               label: "Bank",
               fieldtype: "Data",
               placeholder: "Bank Name",
               onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+                frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
               }
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -3194,14 +3193,14 @@
           });
           bank_name_control.set_value(existing_custom_bank_name || "");
           bank_name_control.refresh();
-          let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_check_name");
+          let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_name_on_check");
           let check_name_control = frappe.ui.form.make_control({
             df: {
               label: "Name On Check",
               fieldtype: "Data",
               placeholder: "Check Name",
               onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_check_name", this.value);
+                frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", this.value);
               }
             },
             parent: this.$payment_modes.find(`.${mode}.check-name`),
@@ -4889,4 +4888,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.DKSEICJI.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.CVMCKF6O.js.map

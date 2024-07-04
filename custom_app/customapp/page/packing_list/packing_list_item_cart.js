@@ -742,7 +742,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (!frm) frm = this.events.get_frm();
 
 
-		console.log(frm.doc);
+		// console.log(frm.doc);
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);

@@ -716,7 +716,7 @@ custom_app.PointOfSale.Payment = class {
 
 			if (p.mode_of_payment === "Cheque") {
 
-				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
 
 				// Create the bank_name_control with the existing value if it exists
 				let bank_name_control = frappe.ui.form.make_control({
@@ -725,7 +725,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data",
 						placeholder: 'Bank Name',
 						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+							frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
 						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -737,14 +737,14 @@ custom_app.PointOfSale.Payment = class {
 				bank_name_control.refresh();
 
 
-				let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_check_name");
+				let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_name_on_check");
 				let check_name_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Name On Check',
 						fieldtype: "Data",
 						placeholder: 'Check Name',
 						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_check_name", this.value);
+							frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", this.value);
 						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.check-name`),
