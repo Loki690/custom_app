@@ -127,6 +127,7 @@ custom_app.PointOfSale.Payment = class {
 
 		
 		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
+
 			const mode_clicked = $(this);
 			// if clicked element doesn't have .mode-of-payment class then return
 			if (!$(e.target).is(mode_clicked)) return;
@@ -189,7 +190,10 @@ custom_app.PointOfSale.Payment = class {
 				me.auto_set_remaining_amount();
 			}
 		});
+
+	
 		
+
 		frappe.ui.form.on("POS Invoice", "contact_mobile", (frm) => {
 			const contact = frm.doc.contact_mobile;
 			const request_button = $(this.request_for_payment_field?.$input[0]);
