@@ -345,9 +345,17 @@ custom_app.PointOfSale.ItemDetails = class {
 					}, 200); // Adjust the debounce time as needed
 				}
 			};
-		
-			this.rate_control.df.read_only = !this.allow_rate_change;
-			this.rate_control.refresh();
+			
+
+			if (frm.doc.customer_group === 'Senior Citizen') {
+				return;
+			} else {
+				this.rate_control.df.read_only = !this.allow_rate_change;
+				this.rate_control.refresh();
+			}
+			
+			// this.rate_control.df.read_only = !this.allow_rate_change;
+			// this.rate_control.refresh();
 		}
 		// Ensure frm.doc is checked for existence before accessing it
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
