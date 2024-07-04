@@ -209,7 +209,6 @@ custom_app.PointOfSale.ItemCart = class {
 
 		this.$doctor_section.on("click", ".doctor-display", function (e) {
 			if ($(e.target).closest(".reset-doctor-btn").length) return;
-
 			const show = me.$cart_container.is(":visible");
 			me.toggle_doctor_info(show);
 		});
@@ -548,7 +547,9 @@ custom_app.PointOfSale.ItemCart = class {
 
 	make_doctor_selector() {
 		this.$doctor_section.html(`
+
 			<div class="doctor-field" tabindex="0"></div>
+
 		`);
 		const me = this;
 		const allowed_doctor_group = this.allowed_doctor_groups || [];
@@ -814,7 +815,8 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-		console.log(frm.doc);
+		// console.log(frm.doc);
+		
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);

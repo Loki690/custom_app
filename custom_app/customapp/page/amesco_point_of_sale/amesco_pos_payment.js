@@ -176,11 +176,14 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".actual-gov-one").css("display", "flex"); 
 				mode_clicked.find(".actual-gov-two").css("display", "flex"); 
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
-				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
+				me.$payment_modes.find(`.${mode}-amount`).css("display", "inline");
+				me.selected_mode.find( `.${mode}_control`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
 
 				me.selected_mode = me[`${mode}_control`];
+
 				me.selected_mode && me.selected_mode.$input.get().focus();
+
 				me.auto_set_remaining_amount();
 			}
 		});
@@ -853,7 +856,7 @@ custom_app.PointOfSale.Payment = class {
 
 			if (p.mode_of_payment === "Cheque") {
 
-				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
 
 				// Create the bank_name_control with the existing value if it exists
 				let bank_name_control = frappe.ui.form.make_control({
@@ -862,7 +865,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data",
 						placeholder: 'Bank Name',
 						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+							frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
 						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -874,14 +877,14 @@ custom_app.PointOfSale.Payment = class {
 				bank_name_control.refresh();
 
 
-				let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_check_name");
+				let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_name_on_check");
 				let check_name_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Name On Check',
 						fieldtype: "Data",
 						placeholder: 'Check Name',
 						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_check_name", this.value);
+							frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", this.value);
 						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.check-name`),

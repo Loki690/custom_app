@@ -39,17 +39,17 @@ custom_app.PointOfSale.ItemCart = class {
 
 
 	init_doctor_selector() {
-		this.$component.append(`<div class="doctor-section" style="display: flex;
-		flex-direction: column;
-		padding: var(--padding-md) var(--padding-lg);
-		overflow: visible; background-color: var(--fg-color);
-		box-shadow: var(--shadow-base);
-		border-radius: var(--border-radius-md);
-	  }; margin-top: 1em;"></div>`);
+        this.$component.append(<div class="doctor-section" style="display: flex;
+        flex-direction: column;
+        padding: var(--padding-md) var(--padding-lg);
+        overflow: visible; background-color: var(--fg-color);
+        box-shadow: var(--shadow-base);
+        border-radius: var(--border-radius-md);
+      }; margin-top: 1em;"></div>);
+        this.$doctor_section = this.$component.find(".doctor-section");
+        this.make_doctor_selector();
+    }
 
-		this.$doctor_section = this.$component.find(".doctor-section");
-		this.make_doctor_selector();
-	}
 
 	reset_customer_selector() {
 		const frm = this.events.get_frm();
@@ -272,6 +272,8 @@ custom_app.PointOfSale.ItemCart = class {
             this.numpad_value = "";
         });
 
+
+
 		this.$component.on("click", ".checkout-btn", async function () {
 			if ($(this).attr("style").indexOf("--blue-500") == -1) return;
 
@@ -282,6 +284,7 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$totals_section.on("click", ".edit-cart-btn", () => {
+
 			// Show password dialog for OIC authentication
 			const passwordDialog = new frappe.ui.Dialog({
 				title: __('Enter OIC Password'),
@@ -320,6 +323,7 @@ custom_app.PointOfSale.ItemCart = class {
 			});
 		
 			passwordDialog.show();
+
 		});
 		
 		this.$component.on("click", ".add-discount-wrapper", () => {
@@ -585,9 +589,6 @@ custom_app.PointOfSale.ItemCart = class {
 		this.customer_field.toggle_label(false);
 	}
 
-
-	//Doctors
-
 	make_doctor_selector() {
     this.$doctor_section.html(`
         <div class="doctor-field"></div>
@@ -637,6 +638,7 @@ custom_app.PointOfSale.ItemCart = class {
         }
     });
 }
+
 
 	fetch_customer_details(customer) {
 		if (customer) {
@@ -866,7 +868,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (!frm) frm = this.events.get_frm();
 
 
-		console.log(frm.doc);
+		// console.log(frm.doc);
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);

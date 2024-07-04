@@ -1,15 +1,16 @@
 import frappe
 from frappe.model.naming import make_autoname
 from frappe.utils import nowdate
+from frappe import get_doc, session
 
 def before_insert(doc, method):
+    set_custom_naming_series(doc)
     # if not doc.custom_pl_series:
     #     doc.custom_pl_series = generate_pl_series(doc)
-    set_custom_naming_series(doc)
-    set_custom_ex_total(doc)
-    
+    # set_custom_ex_total(doc)
     # Set the barcode field to the value of custom_pl_series
     # doc.barcode = doc.custom_pl_series
+    # doc.custom_cashier = frappe.session.user
 
 def generate_pl_series(doc):
     pos_profile = doc.pos_profile
@@ -52,7 +53,14 @@ def before_save(doc, method):
 
 def before_submit(doc, method):
     doc.custom_invoice_series = set_new_custom_naming_series(doc)
+    doc.custom_cashier = frappe.session.user
+    doc.custom_cashier_name = get_user_full_name(frappe.session.user)  # Set the user's full name
     doc.is_printed = '1'
+    
+    
+def get_user_full_name(user):
+    user_doc = frappe.get_doc("User", user)
+    return user_doc.full_name
     
 def set_new_custom_naming_series(doc):
      # Retrieve the custom naming series for the POS Profile

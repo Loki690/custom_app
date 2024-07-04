@@ -217,8 +217,6 @@ custom_app.PointOfSale.Controller = class {
 	// 	page.set_secondary_action('Refresh', () => refresh(), 'octicon octicon-sync')
 	// }
 
-
-
 	show_branch_selection_dialog() {
 		const selectedWarehouse = localStorage.getItem('selected_warehouse') || '';
         const dialog = new frappe.ui.Dialog({
