@@ -244,10 +244,9 @@ custom_app.PointOfSale.Controller = class {
 
 		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
-		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
-		this.page.add_menu_item(__('X Reading'), false, "f9");
-		this.page.add_menu_item(__('Z Reading'), false, "f9");
-		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
+		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
+		this.page.add_menu_item(__('Z Reading'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 
 	}
 
@@ -259,8 +258,7 @@ custom_app.PointOfSale.Controller = class {
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
-			
-			{label: __("Close the POS"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
+			{label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
 		];
 	
 		// Clear existing buttons to avoid duplication
@@ -274,6 +272,13 @@ custom_app.PointOfSale.Controller = class {
 
 
 
+
+	z_reading() {
+		if (!this.$components_wrapper.is(":visible")) return;
+		let voucher = frappe.model.get_new_doc("POS Z Reading");
+		voucher.pos_profile = this.frm.doc.pos_profile;
+		frappe.set_route("Form", "POS Z Reading", voucher.name);
+	}
 
 
 	
