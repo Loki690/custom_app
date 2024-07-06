@@ -127,7 +127,7 @@ custom_app.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),
-			this.toggle_recent_order.bind(this),
+			this.order_list.bind(this),
 			false,
 			"f2"
 		);
@@ -141,7 +141,7 @@ custom_app.PointOfSale.Controller = class {
 	add_buttons_to_toolbar() {
 		const buttons = [
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
-			{label: __("Pending Transaction (F2"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
+			{label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4"},
 			{label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5"},
@@ -168,7 +168,21 @@ custom_app.PointOfSale.Controller = class {
 			() => frappe.dom.unfreeze(),
 		]);
 	}
-
+	
+	order_list() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),
+			// () => this.frm.call("reset_mode_of_payments"),
+			// () => this.cart.load_invoice(),
+			// () => this.make_new_invoice(),
+			// () => this.item_selector.toggle_component(true),
+			// () => this.item_details.toggle_item_details_section(),
+			() => this.toggle_recent_order_list(true),
+			// () => this.cart.load_invoice(),
+			() => frappe.dom.unfreeze(),
+			
+		]);
+	}
 
 	// prepare_buttons() {
 	// 	this.page.clear_actions(); // Clear any existing buttons
