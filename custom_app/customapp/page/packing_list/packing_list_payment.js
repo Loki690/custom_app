@@ -127,6 +127,7 @@ custom_app.PointOfSale.Payment = class {
 
 		
 		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
+
 			const mode_clicked = $(this);
 			// if clicked element doesn't have .mode-of-payment class then return
 			if (!$(e.target).is(mode_clicked)) return;
@@ -189,7 +190,10 @@ custom_app.PointOfSale.Payment = class {
 				me.auto_set_remaining_amount();
 			}
 		});
+
+	
 		
+
 		frappe.ui.form.on("POS Invoice", "contact_mobile", (frm) => {
 			const contact = frm.doc.contact_mobile;
 			const request_button = $(this.request_for_payment_field?.$input[0]);
@@ -455,6 +459,24 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} reference-number"></div>
 						`;
 						break;
+					case "Debit Card":
+						paymentModeHtml += `
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} holder-name"></div>
+							<div class="${mode} card-number"></div>
+							<div class="${mode} expiry-date"></div>
+							<div class="${mode} reference-number"></div>
+							`;
+						break;
+					case "Credit Card":
+						paymentModeHtml += `
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} holder-name"></div>
+							<div class="${mode} card-number"></div>
+							<div class="${mode} expiry-date"></div>
+							<div class="${mode} reference-number"></div>
+							`;
+						break;
 					case "PayMaya":
 						paymentModeHtml += `
 							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
@@ -602,6 +624,127 @@ custom_app.PointOfSale.Payment = class {
 				});
 				card_type_control.set_value(existing_custom_card_type || '');
 				card_type_control.refresh();
+
+
+				let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
+
+				let card_number_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Card Number',
+						fieldtype: "Data",
+						placeholder: 'Last 4 digits',
+						onchange: function () {
+							const value = this.value;
+							if (value === '') {
+								frappe.model.set_value(p.doctype, p.name, "custom_card_number", '');
+							} else if (validateLastFourDigits(value)) {
+								frappe.model.set_value(p.doctype, p.name, "custom_card_number", value);
+							} else {
+								frappe.msgprint(__('Card number must be exactly 4 digits.'));
+								this.set_value('');
+							}
+						},
+						maxlength: 4
+					},
+					parent: this.$payment_modes.find(`.${mode}.card-number`),
+					render_input: true,
+					default: existing_custom_card_number || ''
+				});
+
+				card_number_control.set_value(existing_custom_card_number || '');
+				card_number_control.refresh();
+
+				function validateLastFourDigits(value) {
+					const regex = /^\d{4}$/;
+					return regex.test(value);
+				}
+
+
+				let existing_custom_card_expiration_date= frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
+
+				let expiry_date_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Card Expiration Date',
+						fieldtype: "Data",
+						placeholder: 'MM/YY',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.expiry-date`),
+					render_input: true,
+					default: p.custom_card_expiration_date || ''
+				});
+				expiry_date_control.set_value(existing_custom_card_expiration_date || '');
+				expiry_date_control.refresh();
+
+
+
+
+				let existing_reference_no= frappe.model.get_value(p.doctype, p.name, "reference_no");
+
+
+				let reference_no_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Reference No',
+						fieldtype: "Data",
+						placeholder: 'Reference No.',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.reference-number`),
+					render_input: true,
+				});
+				reference_no_control.set_value(existing_reference_no || '');
+				reference_no_control.refresh();
+
+			}
+
+
+			if (p.mode_of_payment === "Debit Card" || p.mode_of_payment === "Credit Card") {
+				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+
+				// Create the bank_name_control with the existing value if it exists
+				let bank_name_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Bank',
+						fieldtype: "Data",
+						placeholder: 'Bank Name',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.bank-name`),
+					render_input: true,
+				});
+
+				// Set the existing value and refresh the control
+				bank_name_control.set_value(existing_custom_bank_name || '');
+				bank_name_control.refresh();
+
+
+
+				let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
+
+
+				let name_on_card_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Name on Card',
+						fieldtype: "Data",
+						placeholder: 'Card name holder',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_card_name", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.holder-name`),
+					render_input: true,
+				});
+
+				// Set the existing value and refresh the control
+				name_on_card_control.set_value(existing_custom_card_name || '');
+				name_on_card_control.refresh();
+
 
 
 				let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
