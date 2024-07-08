@@ -23,7 +23,7 @@ def get_card_transactions(parent):
                 'mode_of_payment': ['in', ['Cards','Debit Card', 'Credit Card']],  # Filter for both Debit Card and Credit Card
                 'amount': ['!=', 0]  # Filter for amount not equal to 0
             },
-            fields=['name', 'parent', 'custom_bank_name', 'mode_of_payment', 'amount', 'custom_card_name', 'reference_no']  # Specify the fields you want to fetch
+            fields=['name', 'parent', 'custom_bank_name', 'mode_of_payment', 'amount', 'custom_card_name', 'custom_approval_code','reference_no']  # Specify the fields you want to fetch
         )
         return records
     except Exception as e:

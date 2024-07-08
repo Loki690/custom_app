@@ -135,6 +135,7 @@ custom_app.PointOfSale.Payment = class {
 			$(`.mode-of-payment-control`).css("display", "none");
 			$(`.mobile-number`).css("display", "none");
 			$(`.reference-number`).css("display", "none");
+			$(`.approval-code`).css("display", "none");
 			$(`.bank-name`).css("display", "none");
 			$(`.holder-name`).css("display", "none");
 			$(`.card_type_control`).css("display", "none");
@@ -164,6 +165,7 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".mode-of-payment-control").css("display", "flex");
 				mode_clicked.find(".mobile-number").css("display", "flex");
 				mode_clicked.find(".reference-number").css("display", "flex");
+				mode_clicked.find(".approval-code").css("display", "flex");
 				mode_clicked.find(".bank-name").css("display", "flex");
 				mode_clicked.find(".holder-name").css("display", "flex");
 				mode_clicked.find(".card_type_control").css("display", "flex");
@@ -445,6 +447,7 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} card_type_control"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 						`;
 						break;
@@ -454,6 +457,7 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 							`;
 						break;
@@ -463,6 +467,7 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 							`;
 						break;
@@ -669,6 +674,25 @@ custom_app.PointOfSale.Payment = class {
 				expiry_date_control.refresh();
 
 
+				let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
+
+
+				let custom_approval_code_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Approval Code',
+						fieldtype: "Data",
+						placeholder: 'Approval Code',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.approval-code`),
+					render_input: true,
+				});
+
+				// Set the existing value and refresh the control
+				custom_approval_code_control.set_value(existing_custom_approval_code || '');
+				custom_approval_code_control.refresh();
 
 
 				let existing_reference_no= frappe.model.get_value(p.doctype, p.name, "reference_no");
@@ -832,6 +856,25 @@ custom_app.PointOfSale.Payment = class {
 				expiry_date_control.refresh();
 
 
+				let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
+				let custom_approval_code_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Approval Code',
+						fieldtype: "Data",
+						placeholder: 'Approval Code',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.approval-code`),
+					render_input: true,
+				});
+
+				// Set the existing value and refresh the control
+				custom_approval_code_control.set_value(existing_custom_approval_code || '');
+				custom_approval_code_control.refresh();
+
+
 
 
 				let existing_reference_no= frappe.model.get_value(p.doctype, p.name, "reference_no");
@@ -854,16 +897,16 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
-			if (p.mode_of_payment === "Cheque") {
+			if (p.mode_of_payment === "Cheque" || p.mode_of_payment  === 'Government') {
 
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
 
 				// Create the bank_name_control with the existing value if it exists
 				let bank_name_control = frappe.ui.form.make_control({
 					df: {
-						label: 'Bank',
+						label: 'Check Bank Name',
 						fieldtype: "Data",
-						placeholder: 'Bank Name',
+						placeholder: 'Check Bank Name',
 						onchange: function () {
 							frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
 						},
@@ -893,6 +936,7 @@ custom_app.PointOfSale.Payment = class {
 				// Set the existing value and refresh the control
 				check_name_control.set_value(existing_custom_check_name || '');
 				check_name_control.refresh();
+				
 
 				let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
 				let check_number_control = frappe.ui.form.make_control({
@@ -930,7 +974,8 @@ custom_app.PointOfSale.Payment = class {
 				check_date_control.refresh();
 
 
-			}
+			} 
+
 			if (p.mode_of_payment === "2306") {
 
 				// console.log(frm)
