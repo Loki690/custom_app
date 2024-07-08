@@ -358,6 +358,7 @@ custom_app.PointOfSale.Controller = class {
 	check_encashment() {
 		if (!this.$components_wrapper.is(":visible")) return;
 		let voucher = frappe.model.get_new_doc("Check Encashment Entry")
+		voucher.custom_pos_profile = this.frm.doc.pos_profile;
 		frappe.set_route("Form", "Check Encashment Entry", voucher.name)
 	}
 
