@@ -4055,6 +4055,21 @@
             });
             return frappe.utils.play_sound("error");
           }
+          try {
+            const pos_profile_doc = await frappe.db.get_doc("POS Profile", pos_profile);
+            const computer_serial_number = 123;
+            const pos_serial_number = pos_profile_doc.custom_sn;
+            if (pos_serial_number !== computer_serial_number) {
+              frappe.show_alert({
+                message: __(`Serial number not match ${pos_serial_number}`),
+                indicator: "red"
+              });
+              return frappe.utils.play_sound("error");
+            }
+          } catch (error) {
+            console.error("Failed to get POS Profile:", error);
+            return;
+          }
           balance_details = balance_details.filter((d) => d.mode_of_payment);
           const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
           const res = await frappe.call({
@@ -4062,7 +4077,9 @@
             args: { pos_profile, company, balance_details, custom_shift },
             freeze: true
           });
-          !res.exc && me.prepare_app_defaults(res.message);
+          if (!res.exc) {
+            me.prepare_app_defaults(res.message);
+          }
           dialog2.hide();
         },
         primary_action_label: __("Submit")
@@ -4074,6 +4091,9 @@
           filters: { company: dialog2.fields_dict.company.get_value() }
         };
       };
+    }
+    get_pos_profile_doc(pos_profile) {
+      return;
     }
     async prepare_app_defaults(data) {
       this.pos_opening = data.name;
@@ -4888,4 +4908,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.CVMCKF6O.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.CSELHD2W.js.map

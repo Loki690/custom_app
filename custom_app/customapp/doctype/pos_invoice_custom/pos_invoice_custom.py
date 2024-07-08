@@ -171,3 +171,22 @@ def get_pos_invoice_data(pos_invoice):
     except Exception as e:
         frappe.log_error(f"Error fetching POS Invoice {pos_invoice}: {e}")
         return None
+    
+
+import requests
+@frappe.whitelist()
+def get_serial_number():
+    try:
+        response = requests.get('http://localhost:3000/serial-number')
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+        serial_number = response.json().get('serialNumber', 'Unknown')
+        return {'serialNumber': serial_number}
+    except requests.exceptions.RequestException as e:
+        # Log the error using Frappe's logger
+        error_message = frappe.get_traceback()
+        frappe.log_error(error_message, 'Error fetching serial number')
+        # Print detailed error message for debugging
+        print(f"Error fetching serial number: {error_message}")
+        # Raise a Frappe exception to inform the user
+        frappe.throw(_('Error fetching serial number: {0}').format(str(e)))
+

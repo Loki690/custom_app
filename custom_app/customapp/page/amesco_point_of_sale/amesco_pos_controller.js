@@ -117,26 +117,80 @@ custom_app.PointOfSale.Controller = class {
 				},
 			],
 			primary_action: async function ({ company, pos_profile, balance_details, custom_shift }) {
+				// Validate balance details
 				if (!balance_details.length) {
-					frappe.show_alert({
-						message: __("Please add Mode of payments and opening balance details."),
-						indicator: "red",
-					});
-					return frappe.utils.play_sound("error");
+				  frappe.show_alert({
+					message: __("Please add Mode of payments and opening balance details."),
+					indicator: "red",
+				  });
+				  return frappe.utils.play_sound("error");
 				}
+			  
+				// Fetch POS Profile serial number (asynchronous)
+				// try {
+				//   const pos_profile_doc = await frappe.db.get_doc("POS Profile", pos_profile);
 
-				// filter balance details for empty rows
+				//   const computer_serial_number = 123;
+				//   const pos_serial_number =  pos_profile_doc.custom_sn;
+
+
+				// 	//frappe.make_get_request('http://localhost:3000/serial-number')
+				// 	//   const computer_serial_number =  frappe.call({
+				// 	//     method: 'custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.get_serial_number',
+				// 	//     callback: function(response) {
+				// 	//         const data = response.message;
+				// 	//         if (data) {
+				// 	// 			console.log(response)
+				// 	//         } else {
+				// 	//             frappe.msgprint(`No data found for serial number `);
+				// 	//         }
+				// 	//         resolve();
+				// 	//     }
+				// 	// });
+				 
+				//     //console.log('POS Profile: ', pos_serial_number);
+
+				//   if (pos_serial_number !== computer_serial_number) {
+
+
+				// 	// console.log('POS Serial:', pos_serial_number);
+				// 	// console.log('POS Serial:', computer_serial_number);
+					
+				// 	frappe.show_alert({
+				// 	  message: __(`Serial number not match ${pos_serial_number}`),
+				// 	  indicator: "red",
+				// 	});
+				// 	return frappe.utils.play_sound("error");
+				//   }
+
+
+				 
+				// } catch (error) {
+				//   console.error("Failed to get POS Profile:", error);
+				//   // Optionally handle the error here (e.g., display an alert)
+				//   return; // Exit the function if error
+				// }
+			  
+				// Filter balance details
 				balance_details = balance_details.filter((d) => d.mode_of_payment);
-
+			  
+				
+			  
+				// Compare serial numbers
+				// Call the custom method
 				const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
 				const res = await frappe.call({
-					method,
-					args: { pos_profile, company, balance_details, custom_shift },
-					freeze: true,
+				  method,
+				  args: { pos_profile, company, balance_details, custom_shift },
+				  freeze: true,
 				});
-				!res.exc && me.prepare_app_defaults(res.message);
+			  
+				if (!res.exc) {
+				  me.prepare_app_defaults(res.message);
+				}
+			  
 				dialog.hide();
-			},
+			  },
 			primary_action_label: __("Submit"),
 		});
 		dialog.show();
@@ -147,6 +201,13 @@ custom_app.PointOfSale.Controller = class {
 			};
 		};
 	}
+
+
+
+	get_pos_profile_doc(pos_profile) {
+		return 
+	}
+
 
 	async prepare_app_defaults(data) {
 		this.pos_opening = data.name;
