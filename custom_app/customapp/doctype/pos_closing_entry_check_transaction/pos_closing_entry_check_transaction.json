@@ -7,7 +7,9 @@
  "engine": "InnoDB",
  "field_order": [
   "invoice",
+  "bank_name",
   "customer",
+  "check_number",
   "amount"
  ],
  "fields": [
@@ -29,12 +31,24 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Amount"
+  },
+  {
+   "fieldname": "check_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Check Number"
+  },
+  {
+   "fieldname": "bank_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Bank Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-07-03 14:22:46.859615",
+ "modified": "2024-07-05 13:38:50.780038",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Closing Entry Check Transaction",

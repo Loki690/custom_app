@@ -296,7 +296,7 @@ custom_app.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),
-			this.toggle_recent_order.bind(this),
+			this.order_list.bind(this),
 			false,
 			"f2"
 		);
@@ -305,10 +305,9 @@ custom_app.PointOfSale.Controller = class {
 
 		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
-		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
-		this.page.add_menu_item(__('X Reading'), false, "f9");
-		this.page.add_menu_item(__('Z Reading'), false, "f9");
-		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
+		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
+		this.page.add_menu_item(__('Z Reading'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 
 	}
 
@@ -316,12 +315,11 @@ custom_app.PointOfSale.Controller = class {
 	add_buttons_to_toolbar() {
 		const buttons = [
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
-			{label: __("Pending Transaction (F2)"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
+			{label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
-			
-			{label: __("Close the POS"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
+			{label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
 		];
 	
 		// Clear existing buttons to avoid duplication
@@ -335,6 +333,13 @@ custom_app.PointOfSale.Controller = class {
 
 
 
+
+	z_reading() {
+		if (!this.$components_wrapper.is(":visible")) return;
+		let voucher = frappe.model.get_new_doc("POS Z Reading");
+		voucher.pos_profile = this.frm.doc.pos_profile;
+		frappe.set_route("Form", "POS Z Reading", voucher.name);
+	}
 
 
 	
@@ -364,8 +369,26 @@ custom_app.PointOfSale.Controller = class {
 			() => this.make_new_invoice(),
 			() => this.item_selector.toggle_component(true),
 			() => this.item_details.toggle_item_details_section(),
+			() => this.toggle_recent_order_list(false),
+			() => this.cart.load_invoice(),
 			() => frappe.dom.unfreeze(),
-			() => this.toggle_recent_order_list(false)
+			
+		]);
+	}
+
+	order_list() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),
+			// () => this.frm.call("reset_mode_of_payments"),
+			// () => this.cart.load_invoice(),
+			// () => this.make_new_invoice(),
+			// () => this.item_selector.toggle_component(true),
+			// () => this.item_details.toggle_item_details_section(),
+			() => this.toggle_recent_order_list(true),
+			// () => this.cart.load_invoice(),
+			() => window.location.reload(), 
+			() => frappe.dom.unfreeze(),
+			
 		]);
 	}
 
