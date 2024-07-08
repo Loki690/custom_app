@@ -4322,7 +4322,9 @@
             args: { pos_profile, company, balance_details, custom_shift },
             freeze: true
           });
-          !res.exc && me.prepare_app_defaults(res.message);
+          if (!res.exc) {
+            me.prepare_app_defaults(res.message);
+          }
           dialog2.hide();
         },
         primary_action_label: __("Submit")
@@ -4334,6 +4336,9 @@
           filters: { company: dialog2.fields_dict.company.get_value() }
         };
       };
+    }
+    get_pos_profile_doc(pos_profile) {
+      return;
     }
     async prepare_app_defaults(data) {
       this.pos_opening = data.name;
@@ -4439,6 +4444,7 @@
       if (!this.$components_wrapper.is(":visible"))
         return;
       let voucher = frappe.model.get_new_doc("Check Encashment Entry");
+      voucher.custom_pos_profile = this.frm.doc.pos_profile;
       frappe.set_route("Form", "Check Encashment Entry", voucher.name);
     }
     add_new_order() {
@@ -5163,4 +5169,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.5X2UB7UR.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.CAD35FBH.js.map

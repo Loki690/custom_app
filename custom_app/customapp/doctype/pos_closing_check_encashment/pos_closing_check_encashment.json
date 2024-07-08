@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-07-08 11:55:47.116135",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "check_encashment",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "check_encashment",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Check Encashment ",
+   "options": "Check Encashment Entry"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-07-08 11:56:55.725907",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "POS Closing Check Encashment",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
