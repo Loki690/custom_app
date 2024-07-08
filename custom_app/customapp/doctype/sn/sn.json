@@ -11,6 +11,7 @@
   "sn",
   "column_break_xgtk",
   "pos_profile",
+  "section_break_eclh",
   "amended_from"
  ],
  "fields": [
@@ -35,11 +36,15 @@
    "options": "POS Profile"
   },
   {
+   "fieldname": "section_break_eclh",
+   "fieldtype": "Section Break"
+  },
+  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
    "no_copy": 1,
-   "options": "Serial Number",
+   "options": "SN",
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
@@ -48,7 +53,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-06-14 17:49:30.588764",
+ "modified": "2024-07-05 10:30:50.649926",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "SN",
