@@ -118,26 +118,11 @@ custom_app.PointOfSale.Payment = class {
 		}
 	}
 
-	hide_controls() {
-
-	}
-
+	
 	bind_events() {
 		const me = this;
-
-		
-		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
-
-			const mode_clicked = $(this);
-			// if clicked element doesn't have .mode-of-payment class then return
-			if (!$(e.target).is(mode_clicked)) return;
-
-			const scrollLeft =
-				mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
-			me.$payment_modes.animate({ scrollLeft });
-
-			const mode = mode_clicked.attr("data-mode");
-			// hide all control fields and shortcuts
+	
+		function hideAllFields() {
 			$(`.mode-of-payment-control`).css("display", "none");
 			$(`.mobile-number`).css("display", "none");
 			$(`.approval-code`).css("display", "none");
@@ -156,11 +141,23 @@ custom_app.PointOfSale.Payment = class {
 			$(`.actual-gov-two`).css("display", "none");
 			me.$payment_modes.find(`.pay-amount`).css("display", "inline");
 			me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
-
-
+		}
+		
+		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
+			const mode_clicked = $(this);
+		
+			const scrollLeft =
+				mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
+			me.$payment_modes.animate({ scrollLeft });
+		
+			const mode = mode_clicked.attr("data-mode");
+		
+			// Hide all fields first
+			hideAllFields();
+		
 			// remove highlight from all mode-of-payments
 			$(".mode-of-payment").removeClass("border-primary");
-
+		
 			if (mode_clicked.hasClass("border-primary")) {
 				// clicked one is selected then unselect it
 				mode_clicked.removeClass("border-primary");
@@ -180,20 +177,27 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".confirmation-code").css("display", "flex");
 				mode_clicked.find(".check-name").css("display", "flex");
 				mode_clicked.find(".check-number").css("display", "flex");
-				mode_clicked.find(".check-date").css("display", "flex"); 
-				mode_clicked.find(".actual-gov-one").css("display", "flex"); 
-				mode_clicked.find(".actual-gov-two").css("display", "flex"); 
+				mode_clicked.find(".check-date").css("display", "flex");
+				mode_clicked.find(".actual-gov-one").css("display", "flex");
+				mode_clicked.find(".actual-gov-two").css("display", "flex");
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
 				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
-				
 				me.selected_mode = me[`${mode}_control`];
 				me.selected_mode && me.selected_mode.$input.get().focus();
 				me.auto_set_remaining_amount();
 			}
 		});
+		
+		// Hide all fields if clicking outside mode-of-payment
+		$(document).on("click", function (e) {
+			const target = $(e.target);
+			if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+				hideAllFields();
+				$(".mode-of-payment").removeClass("border-primary");
+			}
+		});
 
-	
 		
 
 		frappe.ui.form.on("POS Invoice", "contact_mobile", (frm) => {
@@ -1081,19 +1085,34 @@ custom_app.PointOfSale.Payment = class {
 	get_cash_shortcuts(grand_total) {
 		let steps = [1, 5, 10];
 		const digits = String(Math.round(grand_total)).length;
-
+	
 		steps = steps.map((x) => x * 10 ** (digits - 2));
-
+	
 		const get_nearest = (amount, x) => {
 			let nearest_x = Math.ceil(amount / x) * x;
 			return nearest_x === amount ? nearest_x + x : nearest_x;
 		};
-
-		return steps.reduce((finalArr, x) => {
+	
+		let shortcuts = steps.reduce((finalArr, x) => {
 			let nearest_x = get_nearest(grand_total, x);
 			nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
 			return [...finalArr, nearest_x];
 		}, []);
+	
+		// Add 500 and 1000 if grand total is above 100
+		if (grand_total > 100) {
+			if (!shortcuts.includes(500)) {
+				shortcuts.push(500);
+			}
+			if (!shortcuts.includes(1000)) {
+				shortcuts.push(1000);
+			}
+		}
+	
+		// Sort shortcuts in ascending order
+		shortcuts.sort((a, b) => a - b);
+	
+		return shortcuts;
 	}
 
 	render_loyalty_points_payment_mode() {

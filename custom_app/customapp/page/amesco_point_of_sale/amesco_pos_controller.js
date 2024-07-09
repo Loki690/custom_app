@@ -335,10 +335,56 @@ custom_app.PointOfSale.Controller = class {
 
 
 	z_reading() {
-		if (!this.$components_wrapper.is(":visible")) return;
-		let voucher = frappe.model.get_new_doc("POS Z Reading");
-		voucher.pos_profile = this.frm.doc.pos_profile;
-		frappe.set_route("Form", "POS Z Reading", voucher.name);
+
+		const me = this;
+			// Show password dialog for OIC authentication
+			const passwordDialog = new frappe.ui.Dialog({
+				title: __('Authorization Required OIC'),
+				fields: [
+					{
+						fieldname: 'password',
+						fieldtype: 'Password',
+						label: __('Password'),
+						reqd: 1
+					}
+				],
+				primary_action_label: __('Authorize'),
+				primary_action: (values) => {
+					let password = values.password;
+					let role = "oic";
+		
+					frappe.call({
+						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+						args: { password: password, role: role },
+						callback: (r) => {
+							if (r.message) {
+								// OIC authentication successful, proceed with discount edit
+								frappe.show_alert({
+									message: __('Verified'),
+									indicator: 'green'
+								});
+								passwordDialog.hide();
+								
+
+								if (!this.$components_wrapper.is(":visible")) return;
+								let voucher = frappe.model.get_new_doc("POS Z Reading");
+								voucher.pos_profile = this.frm.doc.pos_profile;
+								frappe.set_route("Form", "POS Z Reading", voucher.name);
+								
+							} else {
+								// Show alert for incorrect password or unauthorized user
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
+						}
+					});
+				}
+			});
+		
+			passwordDialog.show();
+
 	}
 
 
@@ -359,6 +405,7 @@ custom_app.PointOfSale.Controller = class {
 		if (!this.$components_wrapper.is(":visible")) return;
 		let voucher = frappe.model.get_new_doc("Check Encashment Entry")
 		voucher.custom_pos_profile = this.frm.doc.pos_profile;
+	    voucher.custom_opening_entry = this.pos_opening;
 		frappe.set_route("Form", "Check Encashment Entry", voucher.name)
 	}
 
@@ -368,12 +415,10 @@ custom_app.PointOfSale.Controller = class {
 			() => this.frm.call("reset_mode_of_payments"),
 			() => this.cart.load_invoice(),
 			() => this.make_new_invoice(),
-			() => this.item_selector.toggle_component(true),
+			() => this.item_selector.toggle_component(),
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(false),
-			() => this.cart.load_invoice(),
 			() => frappe.dom.unfreeze(),
-			
 		]);
 	}
 
@@ -434,17 +479,63 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	close_pos() {
-		if (!this.$components_wrapper.is(":visible")) return;
 
-		let voucher = frappe.model.get_new_doc("POS Closing Entry");
-		voucher.pos_profile = this.frm.doc.pos_profile;
-		voucher.user = frappe.session.user;
-		voucher.company = this.frm.doc.company;
-		voucher.pos_opening_entry = this.pos_opening;
-		voucher.period_end_date = frappe.datetime.now_datetime();
-		voucher.posting_date = frappe.datetime.now_date();
-		voucher.posting_time = frappe.datetime.now_time();
-		frappe.set_route("Form", "POS Closing Entry", voucher.name);
+		const me = this;
+			// Show password dialog for OIC authentication
+			const passwordDialog = new frappe.ui.Dialog({
+				title: __('Authorization Required OIC'),
+				fields: [
+					{
+						fieldname: 'password',
+						fieldtype: 'Password',
+						label: __('Password'),
+						reqd: 1
+					}
+				],
+				primary_action_label: __('Authorize'),
+				primary_action: (values) => {
+					let password = values.password;
+					let role = "oic";
+		
+					frappe.call({
+						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+						args: { password: password, role: role },
+						callback: (r) => {
+							if (r.message) {
+								// OIC authentication successful, proceed with discount edit
+								frappe.show_alert({
+									message: __('Verified'),
+									indicator: 'green'
+								});
+								passwordDialog.hide();
+		
+								if (!this.$components_wrapper.is(":visible")) return;
+
+								let voucher = frappe.model.get_new_doc("POS Closing Entry");
+								voucher.pos_profile = this.frm.doc.pos_profile;
+								voucher.user = frappe.session.user;
+								voucher.company = this.frm.doc.company;
+								voucher.pos_opening_entry = this.pos_opening;
+								voucher.period_end_date = frappe.datetime.now_datetime();
+								voucher.posting_date = frappe.datetime.now_date();
+								voucher.posting_time = frappe.datetime.now_time();
+								frappe.set_route("Form", "POS Closing Entry", voucher.name);
+
+							} else {
+								// Show alert for incorrect password or unauthorized user
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
+						}
+					});
+				}
+			});
+		
+			passwordDialog.show();
+
+
 	}
 
 	cash_count() {

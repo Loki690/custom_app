@@ -1724,8 +1724,19 @@
     set_cash_customer() {
       const frm2 = this.events.get_frm();
       const customCustomer2Value = frm2.doc.custom_customer_2;
-      frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "customer", customCustomer2Value);
-      this.update_customer_section();
+      frappe.db.get_value("Customer", customCustomer2Value, "customer_group", (r) => {
+        if (r && r.customer_group) {
+          if (r.customer_group === "Zero Rated") {
+            frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "customer", "Cash");
+            frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "customer", customCustomer2Value);
+          } else {
+            frappe.model.set_value(frm2.doc.doctype, frm2.doc.name, "customer", customCustomer2Value);
+          }
+          this.update_customer_section();
+        } else {
+          frappe.msgprint(__("Could not fetch customer group information"));
+        }
+      });
     }
     render_cart_item(item_data, $item_to_update) {
       const currency = this.events.get_frm().doc.currency;
@@ -2355,8 +2366,8 @@
           render_input: true
         });
         this[`${fieldname}_control`].set_value(item[fieldname]);
-        if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-          this.$form_container.find(`.${fieldname}-control input`).on("click", function() {
+        if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+          this.$form_container.find(`.${fieldname}-control input`).on("focus", function() {
             if (!me.is_oic_authenticated) {
               me.oic_authentication(fieldname);
             }
@@ -2786,17 +2797,11 @@
     }
     bind_events() {
       const me = this;
-      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
-        const mode_clicked = $(this);
-        if (!$(e.target).is(mode_clicked))
-          return;
-        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
-        me.$payment_modes.animate({ scrollLeft });
-        const mode = mode_clicked.attr("data-mode");
+      function hideAllFields() {
         $(`.mode-of-payment-control`).css("display", "none");
         $(`.mobile-number`).css("display", "none");
-        $(`.reference-number`).css("display", "none");
         $(`.approval-code`).css("display", "none");
+        $(`.reference-number`).css("display", "none");
         $(`.bank-name`).css("display", "none");
         $(`.holder-name`).css("display", "none");
         $(`.card_type_control`).css("display", "none");
@@ -2811,6 +2816,13 @@
         $(`.actual-gov-two`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
+      }
+      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
+        const mode_clicked = $(this);
+        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
+        me.$payment_modes.animate({ scrollLeft });
+        const mode = mode_clicked.attr("data-mode");
+        hideAllFields();
         $(".mode-of-payment").removeClass("border-primary");
         if (mode_clicked.hasClass("border-primary")) {
           mode_clicked.removeClass("border-primary");
@@ -2833,12 +2845,51 @@
           mode_clicked.find(".actual-gov-one").css("display", "flex");
           mode_clicked.find(".actual-gov-two").css("display", "flex");
           mode_clicked.find(".cash-shortcuts").css("display", "grid");
-          me.$payment_modes.find(`.${mode}-amount`).css("display", "inline");
-          me.selected_mode.find(`.${mode}_control`).css("display", "none");
+          me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
           me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
           me.selected_mode = me[`${mode}_control`];
           me.selected_mode && me.selected_mode.$input.get().focus();
           me.auto_set_remaining_amount();
+          localStorage.setItem("last_used_payment_mode", mode);
+        }
+      });
+      $(document).ready(function() {
+        const last_used_payment_mode = localStorage.getItem("last_used_payment_mode");
+        if (last_used_payment_mode) {
+          const mode_clicked = me.$payment_modes.find(`[data-mode="${last_used_payment_mode}"]`);
+          if (mode_clicked.length) {
+            const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
+            me.$payment_modes.animate({ scrollLeft });
+            mode_clicked.addClass("border-primary");
+            mode_clicked.find(".mode-of-payment-control").css("display", "flex");
+            mode_clicked.find(".mobile-number").css("display", "flex");
+            mode_clicked.find(".reference-number").css("display", "flex");
+            mode_clicked.find(".approval-code").css("display", "flex");
+            mode_clicked.find(".bank-name").css("display", "flex");
+            mode_clicked.find(".holder-name").css("display", "flex");
+            mode_clicked.find(".card_type_control").css("display", "flex");
+            mode_clicked.find(".card-number").css("display", "flex");
+            mode_clicked.find(".expiry-date").css("display", "flex");
+            mode_clicked.find(".confirmation-code").css("display", "flex");
+            mode_clicked.find(".check-name").css("display", "flex");
+            mode_clicked.find(".check-number").css("display", "flex");
+            mode_clicked.find(".check-date").css("display", "flex");
+            mode_clicked.find(".actual-gov-one").css("display", "flex");
+            mode_clicked.find(".actual-gov-two").css("display", "flex");
+            mode_clicked.find(".cash-shortcuts").css("display", "grid");
+            me.$payment_modes.find(`.${last_used_payment_mode}-amount`).css("display", "none");
+            me.$payment_modes.find(`.${last_used_payment_mode}-name`).css("display", "inline");
+            me.selected_mode = me[`${last_used_payment_mode}_control`];
+            me.selected_mode && me.selected_mode.$input.get().focus();
+            me.auto_set_remaining_amount();
+          }
+        }
+      });
+      $(document).on("click", function(e) {
+        const target = $(e.target);
+        if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+          hideAllFields();
+          $(".mode-of-payment").removeClass("border-primary");
         }
       });
       frappe.ui.form.on("POS Invoice", "contact_mobile", (frm2) => {
@@ -3144,7 +3195,7 @@
               fieldtype: "Data",
               placeholder: "Bank Name",
               onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", flt(this.value));
               }
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -3551,11 +3602,21 @@
         let nearest_x = Math.ceil(amount / x) * x;
         return nearest_x === amount ? nearest_x + x : nearest_x;
       };
-      return steps.reduce((finalArr, x) => {
+      let shortcuts = steps.reduce((finalArr, x) => {
         let nearest_x = get_nearest(grand_total, x);
         nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
         return [...finalArr, nearest_x];
       }, []);
+      if (grand_total > 100) {
+        if (!shortcuts.includes(500)) {
+          shortcuts.push(500);
+        }
+        if (!shortcuts.includes(1e3)) {
+          shortcuts.push(1e3);
+        }
+      }
+      shortcuts.sort((a, b) => a - b);
+      return shortcuts;
     }
     render_loyalty_points_payment_mode() {
       const me = this;
@@ -4463,11 +4524,47 @@
       });
     }
     z_reading() {
-      if (!this.$components_wrapper.is(":visible"))
-        return;
-      let voucher = frappe.model.get_new_doc("POS Z Reading");
-      voucher.pos_profile = this.frm.doc.pos_profile;
-      frappe.set_route("Form", "POS Z Reading", voucher.name);
+      const me = this;
+      const passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
+        fields: [
+          {
+            fieldname: "password",
+            fieldtype: "Password",
+            label: __("Password"),
+            reqd: 1
+          }
+        ],
+        primary_action_label: __("Authorize"),
+        primary_action: (values) => {
+          let password = values.password;
+          let role = "oic";
+          frappe.call({
+            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+            args: { password, role },
+            callback: (r) => {
+              if (r.message) {
+                frappe.show_alert({
+                  message: __("Verified"),
+                  indicator: "green"
+                });
+                passwordDialog.hide();
+                if (!this.$components_wrapper.is(":visible"))
+                  return;
+                let voucher = frappe.model.get_new_doc("POS Z Reading");
+                voucher.pos_profile = this.frm.doc.pos_profile;
+                frappe.set_route("Form", "POS Z Reading", voucher.name);
+              } else {
+                frappe.show_alert({
+                  message: __("Incorrect password or user is not an OIC"),
+                  indicator: "red"
+                });
+              }
+            }
+          });
+        }
+      });
+      passwordDialog.show();
     }
     cash_voucher() {
       if (!this.$components_wrapper.is(":visible"))
@@ -4480,6 +4577,7 @@
         return;
       let voucher = frappe.model.get_new_doc("Check Encashment Entry");
       voucher.custom_pos_profile = this.frm.doc.pos_profile;
+      voucher.custom_opening_entry = this.pos_opening;
       frappe.set_route("Form", "Check Encashment Entry", voucher.name);
     }
     add_new_order() {
@@ -4488,10 +4586,9 @@
         () => this.frm.call("reset_mode_of_payments"),
         () => this.cart.load_invoice(),
         () => this.make_new_invoice(),
-        () => this.item_selector.toggle_component(true),
+        () => this.item_selector.toggle_component(),
         () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(false),
-        () => this.cart.load_invoice(),
         () => frappe.dom.unfreeze()
       ]);
     }
@@ -4537,17 +4634,53 @@
       });
     }
     close_pos() {
-      if (!this.$components_wrapper.is(":visible"))
-        return;
-      let voucher = frappe.model.get_new_doc("POS Closing Entry");
-      voucher.pos_profile = this.frm.doc.pos_profile;
-      voucher.user = frappe.session.user;
-      voucher.company = this.frm.doc.company;
-      voucher.pos_opening_entry = this.pos_opening;
-      voucher.period_end_date = frappe.datetime.now_datetime();
-      voucher.posting_date = frappe.datetime.now_date();
-      voucher.posting_time = frappe.datetime.now_time();
-      frappe.set_route("Form", "POS Closing Entry", voucher.name);
+      const me = this;
+      const passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
+        fields: [
+          {
+            fieldname: "password",
+            fieldtype: "Password",
+            label: __("Password"),
+            reqd: 1
+          }
+        ],
+        primary_action_label: __("Authorize"),
+        primary_action: (values) => {
+          let password = values.password;
+          let role = "oic";
+          frappe.call({
+            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+            args: { password, role },
+            callback: (r) => {
+              if (r.message) {
+                frappe.show_alert({
+                  message: __("Verified"),
+                  indicator: "green"
+                });
+                passwordDialog.hide();
+                if (!this.$components_wrapper.is(":visible"))
+                  return;
+                let voucher = frappe.model.get_new_doc("POS Closing Entry");
+                voucher.pos_profile = this.frm.doc.pos_profile;
+                voucher.user = frappe.session.user;
+                voucher.company = this.frm.doc.company;
+                voucher.pos_opening_entry = this.pos_opening;
+                voucher.period_end_date = frappe.datetime.now_datetime();
+                voucher.posting_date = frappe.datetime.now_date();
+                voucher.posting_time = frappe.datetime.now_time();
+                frappe.set_route("Form", "POS Closing Entry", voucher.name);
+              } else {
+                frappe.show_alert({
+                  message: __("Incorrect password or user is not an OIC"),
+                  indicator: "red"
+                });
+              }
+            }
+          });
+        }
+      });
+      passwordDialog.show();
     }
     cash_count() {
       if (!this.$components_wrapper.is(":visible"))
@@ -5204,4 +5337,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.4AYWVGXZ.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.ONC3A2N6.js.map

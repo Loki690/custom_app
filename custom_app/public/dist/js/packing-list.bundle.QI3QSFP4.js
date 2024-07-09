@@ -5945,8 +5945,8 @@
           render_input: true
         });
         this[`${fieldname}_control`].set_value(item[fieldname]);
-        if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-          this.$form_container.find(`.${fieldname}-control input`).on("click", function() {
+        if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+          this.$form_container.find(`.${fieldname}-control input`).on("focus", function() {
             if (!me.is_oic_authenticated) {
               me.oic_authentication(fieldname);
             }
@@ -6372,17 +6372,9 @@
         }, 100);
       }
     }
-    hide_controls() {
-    }
     bind_events() {
       const me = this;
-      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
-        const mode_clicked = $(this);
-        if (!$(e.target).is(mode_clicked))
-          return;
-        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
-        me.$payment_modes.animate({ scrollLeft });
-        const mode = mode_clicked.attr("data-mode");
+      function hideAllFields() {
         $(`.mode-of-payment-control`).css("display", "none");
         $(`.mobile-number`).css("display", "none");
         $(`.approval-code`).css("display", "none");
@@ -6401,6 +6393,13 @@
         $(`.actual-gov-two`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
+      }
+      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
+        const mode_clicked = $(this);
+        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
+        me.$payment_modes.animate({ scrollLeft });
+        const mode = mode_clicked.attr("data-mode");
+        hideAllFields();
         $(".mode-of-payment").removeClass("border-primary");
         if (mode_clicked.hasClass("border-primary")) {
           mode_clicked.removeClass("border-primary");
@@ -6428,6 +6427,13 @@
           me.selected_mode = me[`${mode}_control`];
           me.selected_mode && me.selected_mode.$input.get().focus();
           me.auto_set_remaining_amount();
+        }
+      });
+      $(document).on("click", function(e) {
+        const target = $(e.target);
+        if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+          hideAllFields();
+          $(".mode-of-payment").removeClass("border-primary");
         }
       });
       frappe.ui.form.on("POS Invoice", "contact_mobile", (frm2) => {
@@ -7137,11 +7143,21 @@
         let nearest_x = Math.ceil(amount / x) * x;
         return nearest_x === amount ? nearest_x + x : nearest_x;
       };
-      return steps.reduce((finalArr, x) => {
+      let shortcuts = steps.reduce((finalArr, x) => {
         let nearest_x = get_nearest(grand_total, x);
         nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
         return [...finalArr, nearest_x];
       }, []);
+      if (grand_total > 100) {
+        if (!shortcuts.includes(500)) {
+          shortcuts.push(500);
+        }
+        if (!shortcuts.includes(1e3)) {
+          shortcuts.push(1e3);
+        }
+      }
+      shortcuts.sort((a, b) => a - b);
+      return shortcuts;
     }
     render_loyalty_points_payment_mode() {
       const me = this;
@@ -7962,6 +7978,7 @@
         () => this.item_selector.toggle_component(true),
         () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(false),
+        () => window.location.reload(),
         () => frappe.dom.unfreeze()
       ]);
     }
@@ -8663,4 +8680,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.KMVSVX7R.js.map
+//# sourceMappingURL=packing-list.bundle.QI3QSFP4.js.map
