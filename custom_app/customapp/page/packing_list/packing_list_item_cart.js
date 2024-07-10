@@ -198,7 +198,7 @@ custom_app.PointOfSale.ItemCart = class {
 				// [4, 5, 6, "Discount"],
 				// [7, 8, 9, "Rate"],
 				// [".", 0, "Delete", "Remove"],
-				[  "", "Quantity", "Rate", "Remove"],
+				[  "Discount", "Quantity", "Rate", "Remove"],
 			],
 			css_classes: [
 				["", "", "", "col-span-2 remove-btn"],
