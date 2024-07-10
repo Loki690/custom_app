@@ -71,7 +71,7 @@ def remove_encrypted_password(doctype, name, fieldname="password"):
 
 
 def check_password(user, pwd, doctype="User", fieldname="password", delete_tracker_cache=True):
-	##"""Checks if user and password are correct, else raises frappe.AuthenticationError"""
+	"""Checks if user and password are correct, else raises frappe.AuthenticationError"""
 
 	result = (
 		frappe.qb.from_(Auth)
@@ -101,6 +101,45 @@ def check_password(user, pwd, doctype="User", fieldname="password", delete_track
 		update_password(user, pwd, doctype, fieldname)
 
 	return user
+	
+def check_oic_password(pwd, role, doctype="User", fieldname="password", delete_tracker_cache=True):
+    """Checks if user and password are correct and the user has the specified role, else raises frappe.AuthenticationError"""
+
+    results = frappe.db.sql(
+        """SELECT auth.password, usr.role_profile_name 
+           FROM __Auth auth 
+           LEFT JOIN tabUser usr ON usr.name = auth.name 
+           WHERE usr.role_profile_name = %s""",
+        (role,),
+        as_dict=True
+    )
+
+    if not results:
+        raise frappe.AuthenticationError(_("Incorrect User or Password"))
+
+    authenticated = False
+
+    for result in results:
+        if passlibctx.verify(pwd, result.password):
+            authenticated = True
+            # Check if the user has the specified role
+            if result.role_profile_name == role:
+                pwd = result.password
+
+                # TODO: This needs to be deleted after checking side effects of it.
+                # We have a LoginAttemptTracker that can take care of tracking related cache.
+                if delete_tracker_cache:
+                    delete_login_failed_cache(pwd)
+
+                if passlibctx.needs_update(result.password):
+                    update_password(pwd, doctype, fieldname)
+
+                break
+
+    if not authenticated:
+        raise frappe.AuthenticationError(_("Unauthorized access"))
+
+    return pwd
 
 
 def delete_login_failed_cache(user):
@@ -220,37 +259,3 @@ def get_encryption_key():
 
 def get_password_reset_limit():
 	return frappe.get_system_settings("password_reset_limit") or 3
-
-
-
-def check_oic_password(pwd, role, doctype="User", fieldname="password", delete_tracker_cache=True):
-    """Checks if user and password are correct and the user has the specified role, else raises frappe.AuthenticationError"""
-
-    result = frappe.db.sql(
-        """SELECT  auth.password, usr.role_profile_name 
-           FROM `__Auth` auth 
-           LEFT JOIN `tabUser` usr ON usr.name = auth.name 
-           WHERE usr.role_profile_name  = %s""",
-        (role,),
-        as_dict=True
-    )
-
-    if not result or not passlibctx.verify(pwd, result[0].password):
-        raise frappe.AuthenticationError(_("Incorrect User or Password"))
-
-    # Check if the user has the specified role
-    if result[0].role_profile_name != role:
-        raise frappe.AuthenticationError(_("Unauthorized access"))
-
-    # Get the user ID
-    pwd = result[0].password
-
-    # TODO: This needs to be deleted after checking side effects of it.
-    # We have a `LoginAttemptTracker` that can take care of tracking related cache.
-    if delete_tracker_cache:
-        delete_login_failed_cache(pwd)
-
-    if passlibctx.needs_update(result[0].password):
-        update_password( pwd, doctype, fieldname)
-
-    return pwd
