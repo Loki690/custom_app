@@ -133,19 +133,19 @@
   },
   {
    "fieldname": "date_from",
-   "fieldtype": "Date",
+   "fieldtype": "Datetime",
    "label": "Date From"
   },
   {
    "fieldname": "date_to",
-   "fieldtype": "Date",
+   "fieldtype": "Datetime",
    "label": "Date To"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-06-14 15:51:55.130196",
+ "modified": "2024-07-09 10:24:58.527140",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Z Reading",
