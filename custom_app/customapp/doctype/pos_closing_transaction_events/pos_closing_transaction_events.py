@@ -20,14 +20,10 @@ def get_card_transactions(parent):
             'Sales Invoice Payment',
             filters={
                 'parent': parent,
-                'mode_of_payment': 'Cards',  # Add filter for mode_of_payment
-                'amount': ['!=', 0]  
-                
-                
-                # Add filter for amount not equal to 0
-                     
+                'mode_of_payment': ['in', ['Cards','Debit Card', 'Credit Card']],  # Filter for both Debit Card and Credit Card
+                'amount': ['!=', 0]  # Filter for amount not equal to 0
             },
-            fields=['name', 'parent', 'mode_of_payment', 'amount', 'custom_card_name', 'reference_no']  # Specify the fields you want to fetch
+            fields=['name', 'parent', 'custom_bank_name', 'mode_of_payment', 'amount', 'custom_card_name', 'reference_no']  # Specify the fields you want to fetch
         )
         return records
     except Exception as e:
@@ -35,7 +31,30 @@ def get_card_transactions(parent):
         frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
-        
+
+@frappe.whitelist()
+def get_epayment_transactions(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'Sales Invoice Payment',
+            filters={
+                'parent': parent,
+                'mode_of_payment': ['in', ['GCash','PayMaya']],  # Filter for both Debit Card and Credit Card
+                'amount': ['!=', 0]  # Filter for amount not equal to 0
+            },
+            fields=['name', 'parent', 'mode_of_payment','custom_phone_number', 'amount', 'reference_no']  # Specify the fields you want to fetch
+        )
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_card_transactions Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
+
+
+
+
 @frappe.whitelist()
 def get_check_transactions(parent):
     frappe.flags.ignore_permissions = True  # Ignore permissions
@@ -49,7 +68,7 @@ def get_check_transactions(parent):
                 # Add filter for amount not equal to 0
                      
             },
-            fields=['name', 'parent', 'mode_of_payment', 'amount', 'custom_name_on_check', 'reference_no']  # Specify the fields you want to fetch
+            fields=['name', 'parent', 'mode_of_payment', 'amount', 'custom_name_on_check', 'custom_check_bank_name','custom_check_number']  # Specify the fields you want to fetch
         )
         return records
     except Exception as e:

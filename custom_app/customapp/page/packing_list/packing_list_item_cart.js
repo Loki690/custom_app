@@ -39,16 +39,16 @@ custom_app.PointOfSale.ItemCart = class {
 
 
 	init_doctor_selector() {
-        this.$component.append(<div class="doctor-section" style="display: flex;
-        flex-direction: column;
-        padding: var(--padding-md) var(--padding-lg);
-        overflow: visible; background-color: var(--fg-color);
-        box-shadow: var(--shadow-base);
-        border-radius: var(--border-radius-md);
-      }; margin-top: 1em;"></div>);
-        this.$doctor_section = this.$component.find(".doctor-section");
-        this.make_doctor_selector();
-    }
+		this.$component.append(`<div class="doctor-section" style="display: flex;
+		flex-direction: column;
+		padding: var(--padding-md) var(--padding-lg);
+		overflow: visible; background-color: var(--fg-color);
+		box-shadow: var(--shadow-base);
+		border-radius: var(--border-radius-md);
+	  }; margin-top: 1em;"></div>`);
+		this.$doctor_section = this.$component.find(".doctor-section");
+		this.make_doctor_selector();
+	}
 
 
 	reset_customer_selector() {

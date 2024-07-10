@@ -2,6 +2,7 @@ import frappe
 from frappe.model.naming import make_autoname
 from frappe.utils import nowdate
 from frappe import get_doc, session
+from frappe.utils import now_datetime
 
 def before_insert(doc, method):
     set_custom_naming_series(doc)
@@ -55,6 +56,7 @@ def before_submit(doc, method):
     doc.custom_invoice_series = set_new_custom_naming_series(doc)
     doc.custom_cashier = frappe.session.user
     doc.custom_cashier_name = get_user_full_name(frappe.session.user)  # Set the user's full name
+    doc.custom_date_time_posted = now_datetime()  # Set the current date and time
     doc.is_printed = '1'
     
     

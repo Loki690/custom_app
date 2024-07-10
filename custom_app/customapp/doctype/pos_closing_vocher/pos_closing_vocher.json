@@ -1,57 +1,43 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2024-07-02 11:33:23.710902",
+ "creation": "2024-07-09 15:19:46.290948",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "invoice",
-  "bank_name",
-  "customer",
-  "check_number",
+  "pos_voucher",
+  "voucher_number",
   "amount"
  ],
  "fields": [
   {
-   "fieldname": "invoice",
+   "fieldname": "voucher_number",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Invoice"
+   "label": "Voucher Number"
   },
   {
-   "fieldname": "customer",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Customer "
-  },
-  {
-   "bold": 1,
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Amount"
   },
   {
-   "fieldname": "check_number",
-   "fieldtype": "Data",
+   "fieldname": "pos_voucher",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Check Number"
-  },
-  {
-   "fieldname": "bank_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Bank Name"
+   "label": "POS Voucher",
+   "options": "Cash Voucher Entry"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-07-05 13:38:50.780038",
+ "modified": "2024-07-09 15:21:39.450184",
  "modified_by": "Administrator",
  "module": "customapp",
- "name": "POS Closing Entry Check Transaction",
+ "name": "POS Closing Vocher",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",
