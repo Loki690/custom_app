@@ -1011,7 +1011,6 @@ custom_app.PointOfSale.ItemCart = class {
 	
 		// Set the value of "customer" to the value of "custom_customer_2"
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
-	
 		// Update the customer section
 		this.update_customer_section();
 	}
