@@ -331,9 +331,7 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 
-
-
-
+	
 	z_reading() {
 		if (!this.$components_wrapper.is(":visible")) return;
 		let voucher = frappe.model.get_new_doc("POS Z Reading");
@@ -347,9 +345,9 @@ custom_app.PointOfSale.Controller = class {
 	cash_voucher() {
 		if (!this.$components_wrapper.is(":visible")) return;
 		let voucher = frappe.model.get_new_doc("Cash Voucher Entry");
-		// voucher.custom_pos_profile = this.frm.doc.pos_profile;
-		// voucher.user = frappe.session.user;
-		// voucher.custom_pos_opening_entry_id = this.pos_opening;
+		voucher.custom_pos_profile = this.frm.doc.pos_profile;
+		voucher.custom_cashier = frappe.session.user;
+		voucher.custom_opening_entry = this.pos_opening;
 		frappe.set_route("Form", "Cash Voucher Entry", voucher.name);
 	}
 	
@@ -359,6 +357,8 @@ custom_app.PointOfSale.Controller = class {
 		if (!this.$components_wrapper.is(":visible")) return;
 		let voucher = frappe.model.get_new_doc("Check Encashment Entry")
 		voucher.custom_pos_profile = this.frm.doc.pos_profile;
+		voucher.custom_received_by = frappe.session.user;
+		voucher.custom_opening_entry = this.pos_opening;
 		frappe.set_route("Form", "Check Encashment Entry", voucher.name)
 	}
 
