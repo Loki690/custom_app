@@ -199,16 +199,20 @@ custom_app.PointOfSale.ItemDetails = class {
 				parent: this.$form_container.find(`.${fieldname}-control`),
 				render_input: true,
 			});
+			
 			this[`${fieldname}_control`].set_value(item[fieldname]);
 	
 			// Add event listener for discount_percentage and discount_amount field click
-			if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-				this.$form_container.find(`.${fieldname}-control input`).on("click", function () {
+			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
 						me.oic_authentication(fieldname);
 					}
 				});
 			}
+
+
+
 		});
 	
 		this.make_auto_serial_selection_btn(item);
@@ -284,21 +288,27 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	get_form_fields(item) {
 		const fields = [
+			"custom_free",
 			"qty",
-			"uom",
 			'price_list_rate',
 			"rate",
-			"amount",
-			"conversion_factor",
+			"uom",
+			"custom_expiry_date",
+			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field
+			//"custom_item_discount_amount",
 			//"warehouse",
 			//"actual_qty",
 			//"price_list_rate",
 			// "is_free_item",
-			// "custom_free",
-			"custom_remarks",
 
+			'custom_vat_amount',
+			'custom_vatable_amount',
+			'custom_vat_exempt_amount',
+			'custom_zero_rated_amount',
+			//"custom_free",
+			"custom_remarks",
 		];
 		if (item.has_serial_no) fields.push("serial_no");
 		if (item.has_batch_no) fields.push("batch_no");
@@ -361,8 +371,18 @@ custom_app.PointOfSale.ItemDetails = class {
 				}
 			};
 		
-			this.rate_control.df.read_only = !this.allow_rate_change;
-			this.rate_control.refresh();
+			
+
+			
+				if (frm.doc.customer_group === 'Senior Citizen') {
+					return;
+				} else {
+					this.rate_control.df.read_only = !this.allow_rate_change;
+					this.rate_control.refresh();
+				}
+			
+			// this.rate_control.df.read_only = !this.allow_rate_change;
+			// this.rate_control.refresh();
 		}
 		// Ensure frm.doc is checked for existence before accessing it
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {

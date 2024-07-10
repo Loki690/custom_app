@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-07-05 14:55:28.633799",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "deposit_acknowledgement_id",
+  "date"
+ ],
+ "fields": [
+  {
+   "fieldname": "deposit_acknowledgement_id",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Deposit Acknowledgement Id",
+   "options": "POS Deposit Acknowledgement"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-07-05 15:07:21.270657",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "Deposit Acknowledgement Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

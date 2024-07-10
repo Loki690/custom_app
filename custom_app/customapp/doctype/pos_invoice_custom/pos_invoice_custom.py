@@ -1,15 +1,17 @@
 import frappe
 from frappe.model.naming import make_autoname
 from frappe.utils import nowdate
+from frappe import get_doc, session
+from frappe.utils import now_datetime
 
 def before_insert(doc, method):
+    set_custom_naming_series(doc)
     # if not doc.custom_pl_series:
     #     doc.custom_pl_series = generate_pl_series(doc)
-    set_custom_naming_series(doc)
-    set_custom_ex_total(doc)
-    
+    # set_custom_ex_total(doc)
     # Set the barcode field to the value of custom_pl_series
     # doc.barcode = doc.custom_pl_series
+    # doc.custom_cashier = frappe.session.user
 
 def generate_pl_series(doc):
     pos_profile = doc.pos_profile
@@ -52,7 +54,15 @@ def before_save(doc, method):
 
 def before_submit(doc, method):
     doc.custom_invoice_series = set_new_custom_naming_series(doc)
+    doc.custom_cashier = frappe.session.user
+    doc.custom_cashier_name = get_user_full_name(frappe.session.user)  # Set the user's full name
+    doc.custom_date_time_posted = now_datetime()  # Set the current date and time
     doc.is_printed = '1'
+    
+    
+def get_user_full_name(user):
+    user_doc = frappe.get_doc("User", user)
+    return user_doc.full_name
     
 def set_new_custom_naming_series(doc):
      # Retrieve the custom naming series for the POS Profile
@@ -163,3 +173,22 @@ def get_pos_invoice_data(pos_invoice):
     except Exception as e:
         frappe.log_error(f"Error fetching POS Invoice {pos_invoice}: {e}")
         return None
+    
+
+import requests
+@frappe.whitelist()
+def get_serial_number():
+    try:
+        response = requests.get('http://localhost:3000/serial-number')
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+        serial_number = response.json().get('serialNumber', 'Unknown')
+        return {'serialNumber': serial_number}
+    except requests.exceptions.RequestException as e:
+        # Log the error using Frappe's logger
+        error_message = frappe.get_traceback()
+        frappe.log_error(error_message, 'Error fetching serial number')
+        # Print detailed error message for debugging
+        print(f"Error fetching serial number: {error_message}")
+        # Raise a Frappe exception to inform the user
+        frappe.throw(_('Error fetching serial number: {0}').format(str(e)))
+

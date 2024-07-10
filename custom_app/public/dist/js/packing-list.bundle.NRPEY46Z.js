@@ -4341,9 +4341,9 @@
     }
     attach_shortcuts() {
       const ctrl_label = frappe.utils.is_mac() ? "\u2318" : "Ctrl";
-      this.search_field.parent.attr("title", `${ctrl_label}+I`);
+      this.search_field.parent.attr("title", `${ctrl_label}+S`);
       frappe.ui.keys.add_shortcut({
-        shortcut: "ctrl+i",
+        shortcut: "ctrl+s",
         action: () => this.search_field.set_focus(),
         condition: () => this.$component.is(":visible"),
         description: __("Focus on search input"),
@@ -4530,10 +4530,11 @@
       this.$component.append(
         `<div class="cart-container">
 				<div class="abs-cart-container">
-					<div class="cart-label">${__("Item Cart")}</div>
+					<div class="cart-label" >${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
-				        <div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header" >${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -4556,6 +4557,40 @@
     make_no_items_placeholder() {
       this.$cart_header.css("display", "none");
       this.$cart_items_wrapper.html(`<div class="no-item-wrapper">${__("No items in cart")}</div>`);
+    }
+    add_keyboard_navigation() {
+      this.$component.on("keydown", '[tabindex="0"]', (e) => {
+        if (e.key === "Enter") {
+          $(e.target).trigger("click");
+        }
+        switch (e.key) {
+          case "ArrowUp":
+            e.preventDefault();
+            this.focusPreviousElement(e.target);
+            break;
+          case "ArrowDown":
+            e.preventDefault();
+            this.focusNextElement(e.target);
+            break;
+        }
+      });
+    }
+    focusNextElement(current) {
+      let $next = $(current).nextAll('[tabindex="0"]').first();
+      if (!$next.length) {
+        $next = this.$component.find('[tabindex="0"]').first();
+      }
+      $next.focus();
+    }
+    focusPreviousElement(current) {
+      let $prev = $(current).prevAll('[tabindex="0"]').first();
+      if (!$prev.length) {
+        $prev = this.$component.find('[tabindex="0"]').last();
+      }
+      $prev.focus();
+    }
+    get_cart_item(item_data) {
+      return this.$cart_items_wrapper.find(`[data-row-name="${escape(item_data.name)}"]`);
     }
     get_discount_icon() {
       return `<svg class="discount-icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -4604,13 +4639,12 @@
         },
         cols: 5,
         keys: [
-          ["", "", "", "Remove"]
+          ["", "Quantity", "Rate", "Remove"]
         ],
         css_classes: [
           ["", "", "", "col-span-2 remove-btn"],
           ["", "", "", "col-span-2"],
-          ["", "", "", "col-span-2"],
-          ["", "", "", "col-span-2 remove-btn"]
+          ["", "", "", "col-span-2"]
         ],
         fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" }
       });
@@ -4755,6 +4789,23 @@
       });
     }
     attach_shortcuts() {
+      document.addEventListener("keydown", function(event2) {
+        const keysToPrevent = {
+          116: true,
+          "Ctrl+82": true,
+          "Ctrl+16+82": true,
+          "Ctrl+83": true,
+          "Ctrl+80": true,
+          "Ctrl+87": true,
+          "Ctrl+Shift+73": true,
+          "Ctrl+74": true,
+          "Ctrl+69": true
+        };
+        const key = (event2.ctrlKey ? "Ctrl+" : "") + (event2.shiftKey ? "Shift+" : "") + (event2.altKey ? "Alt+" : "") + event2.keyCode;
+        if (keysToPrevent[key] || keysToPrevent[event2.keyCode]) {
+          event2.preventDefault();
+        }
+      });
       for (let row of this.number_pad.keys) {
         for (let btn of row) {
           if (typeof btn !== "string")
@@ -4763,7 +4814,11 @@
           if (btn === "Delete")
             shortcut_key = "ctrl+backspace";
           if (btn === "Remove")
-            shortcut_key = "shift+ctrl+backspace";
+            shortcut_key = "ctrl+x";
+          if (btn === "Quantity")
+            shortcut_key = "ctrl+q";
+          if (btn === "Rate")
+            shortcut_key = "ctrl+a";
           if (btn === ".")
             shortcut_key = "ctrl+>";
           const fieldname = this.number_pad.fieldnames[btn] ? this.number_pad.fieldnames[btn] : typeof btn === "string" ? frappe.scrub(btn) : btn;
@@ -4811,6 +4866,34 @@
           this.discount_field.set_value(0);
         }
       });
+      this.doctor_field.parent.attr("title", `${ctrl_label}+R`);
+      frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+r",
+        action: () => this.doctor_field.set_focus(),
+        condition: () => this.$component.is(":visible"),
+        description: __("Doctor"),
+        ignore_inputs: true,
+        page: cur_page.page.page
+      });
+      this.customer_field.parent.attr("title", `${ctrl_label}+M`);
+      frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+m",
+        action: () => this.customer_field.set_focus(),
+        condition: () => this.$component.is(":visible"),
+        description: __("Customer"),
+        ignore_inputs: true,
+        page: cur_page.page.page
+      });
+      frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+<",
+        action: () => {
+          this.reset_customer_selector();
+        },
+        condition: () => true,
+        description: __("Reset Customer Selector"),
+        ignore_inputs: true,
+        page: cur_page.page.page
+      });
     }
     toggle_item_highlight(item) {
       const $cart_item = $(item);
@@ -4826,7 +4909,7 @@
     }
     make_customer_selector() {
       this.$customer_section.html(`
-			<div class="customer-field"></div>
+			<div class="customer-field" tabindex="0"></div>
 		`);
       const me = this;
       const allowed_customer_group = this.allowed_customer_groups || [];
@@ -4870,8 +4953,8 @@
     }
     make_doctor_selector() {
       this.$doctor_section.html(`
-			<div class="doctor-field"></div>
-		`);
+        <div class="doctor-field"></div>
+    `);
       const me = this;
       const allowed_doctor_group = this.allowed_doctor_groups || [];
       let filters = {};
@@ -4903,6 +4986,11 @@
         render_input: true
       });
       this.doctor_field.toggle_label(false);
+      $(document).on("keydown", function(event2) {
+        if (event2.altKey && event2.key === "d") {
+          me.doctor_field.$input.focus();
+        }
+      });
     }
     fetch_customer_details(customer) {
       if (customer) {
@@ -5025,7 +5113,7 @@
 							<div class="customer-name">${customer}</div>
 							${get_customer_description()}
 						</div>
-						<div class="reset-customer-btn" data-customer="${escape(customer)}">
+						<div class="reset-customer-btn" tabindex="0" data-customer="${escape(customer)}">
 							<svg width="32" height="32" viewBox="0 0 14 14" fill="none">
 								<path d="M4.93764 4.93759L7.00003 6.99998M9.06243 9.06238L7.00003 6.99998M7.00003 6.99998L4.93764 9.06238L9.06243 4.93759" stroke="#8D99A6"/>
 							</svg>
@@ -5238,8 +5326,8 @@
       const me = this;
       if (!$item_to_update.length) {
         this.$cart_items_wrapper.append(
-          `<div class="cart-item-wrapper" data-row-name="${escape(item_data.name)}"></div>
-				<div class="seperator"></div>`
+          `<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
+				<div class="separator"></div>`
         );
         $item_to_update = this.get_cart_item(item_data);
       }
@@ -5251,12 +5339,13 @@
 				</div>
 				${get_description_html()}
 			</div>
-			<div class="item-vat">
-				  <strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
+			<div class="item-vat mx-3">
+				<strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
 			</div>
-		
-			${get_rate_discount_html()}
-			`
+			<div class="item-discount mx-3">
+				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+			</div>
+			${get_rate_discount_html()}`
       );
       set_dynamic_rate_header_width();
       function set_dynamic_rate_header_width() {
@@ -5269,12 +5358,10 @@
           return max_width2;
         }, 0);
         max_width += 1;
-        if (max_width == 1)
+        if (max_width === 1)
           max_width = "";
         me.$cart_header.find(".rate-amount-header").css("width", max_width);
         me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
-      }
-      function get_rate_discount_html() {
       }
       function get_rate_discount_html() {
         if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
@@ -5298,7 +5385,7 @@
       }
       function get_description_html() {
         if (item_data.description) {
-          if (item_data.description.indexOf("<div>") != -1) {
+          if (item_data.description.indexOf("<div>") !== -1) {
             try {
               item_data.description = $(item_data.description).text();
             } catch (error) {
@@ -5317,12 +5404,44 @@
 					<div class="item-image">
 						<img
 							onerror="cur_pos.cart.handle_broken_image(this)"
-							src="${image}" alt="${frappe.get_abbr(item_name)}"">
+							src="${image}" alt="${frappe.get_abbr(item_name)}">
 					</div>`;
         } else {
           return `<div class="item-image item-abbr">${frappe.get_abbr(item_name)}</div>`;
         }
       }
+      this.$cart_items_wrapper.off("keydown", ".cart-item-wrapper").on("keydown", ".cart-item-wrapper", function(event2) {
+        const $items = me.$cart_items_wrapper.find(".cart-item-wrapper");
+        const currentIndex = $items.index($(this));
+        let nextIndex = currentIndex;
+        switch (event2.which) {
+          case 13:
+            $(this).click();
+            break;
+          case 38:
+            nextIndex = currentIndex > 0 ? currentIndex - 1 : $items.length - 1;
+            break;
+          case 40:
+            nextIndex = currentIndex < $items.length - 1 ? currentIndex + 1 : 0;
+            break;
+          default:
+            return;
+        }
+        $items.eq(nextIndex).focus();
+      });
+      frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+c",
+        action: () => {
+          const $items = me.$cart_items_wrapper.find(".cart-item-wrapper");
+          if ($items.length) {
+            $items.first().focus();
+          }
+        },
+        condition: () => me.$cart_items_wrapper.is(":visible"),
+        description: __("Activate Cart Item Focus"),
+        ignore_inputs: true,
+        page: cur_page.page.page
+      });
     }
     handle_broken_image($img) {
       const item_abbr = $($img).attr("alt");
@@ -5826,8 +5945,8 @@
           render_input: true
         });
         this[`${fieldname}_control`].set_value(item[fieldname]);
-        if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-          this.$form_container.find(`.${fieldname}-control input`).on("click", function() {
+        if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+          this.$form_container.find(`.${fieldname}-control input`).on("focus", function() {
             if (!me.is_oic_authenticated) {
               me.oic_authentication(fieldname);
             }
@@ -5887,6 +6006,7 @@
         "price_list_rate",
         "rate",
         "uom",
+        "custom_expiry_date",
         "discount_percentage",
         "discount_amount",
         "custom_vat_amount",
@@ -5929,18 +6049,29 @@
             }, 200);
           }
         };
-        this.rate_control.df.read_only = !this.allow_rate_change;
-        this.rate_control.refresh();
+        if (frm.doc.customer_group === "Senior Citizen") {
+          return;
+        } else {
+          this.rate_control.df.read_only = !this.allow_rate_change;
+          this.rate_control.refresh();
+        }
       }
-      if (frm.doc.customer_group === "Senior Citizen") {
-        if (this.discount_percentage_control && !this.allow_discount_change) {
-          this.discount_percentage_control.df.read_only = 1;
+      if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
+        const frm2 = me.events.get_frm();
+        if (frm2.doc.customer_group === "Senior Citizen") {
+          if (me.discount_percentage_control && !me.allow_discount_change) {
+            me.discount_percentage_control.df.read_only = 1;
+          }
+        } else {
+          if (me.discount_percentage_control && !me.allow_discount_change) {
+            me.discount_percentage_control.df.read_only = 1;
+            me.discount_percentage_control.refresh();
+          }
         }
-      } else {
-        if (this.discount_percentage_control && !this.allow_discount_change) {
-          this.discount_percentage_control.df.read_only = 1;
-          this.discount_percentage_control.refresh();
-        }
+      }
+      if (this.discount_percentage_control && !this.allow_discount_change) {
+        this.discount_percentage_control.df.read_only = 1;
+        this.discount_percentage_control.refresh();
       }
       if (this.warehouse_control) {
         this.warehouse_control.df.reqd = 1;
@@ -6241,19 +6372,12 @@
         }, 100);
       }
     }
-    hide_controls() {
-    }
     bind_events() {
       const me = this;
-      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
-        const mode_clicked = $(this);
-        if (!$(e.target).is(mode_clicked))
-          return;
-        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
-        me.$payment_modes.animate({ scrollLeft });
-        const mode = mode_clicked.attr("data-mode");
+      function hideAllFields() {
         $(`.mode-of-payment-control`).css("display", "none");
         $(`.mobile-number`).css("display", "none");
+        $(`.approval-code`).css("display", "none");
         $(`.reference-number`).css("display", "none");
         $(`.bank-name`).css("display", "none");
         $(`.holder-name`).css("display", "none");
@@ -6269,6 +6393,13 @@
         $(`.actual-gov-two`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
+      }
+      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
+        const mode_clicked = $(this);
+        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
+        me.$payment_modes.animate({ scrollLeft });
+        const mode = mode_clicked.attr("data-mode");
+        hideAllFields();
         $(".mode-of-payment").removeClass("border-primary");
         if (mode_clicked.hasClass("border-primary")) {
           mode_clicked.removeClass("border-primary");
@@ -6278,6 +6409,7 @@
           mode_clicked.find(".mode-of-payment-control").css("display", "flex");
           mode_clicked.find(".mobile-number").css("display", "flex");
           mode_clicked.find(".reference-number").css("display", "flex");
+          mode_clicked.find(".approval-code").css("display", "flex");
           mode_clicked.find(".bank-name").css("display", "flex");
           mode_clicked.find(".holder-name").css("display", "flex");
           mode_clicked.find(".card_type_control").css("display", "flex");
@@ -6295,6 +6427,13 @@
           me.selected_mode = me[`${mode}_control`];
           me.selected_mode && me.selected_mode.$input.get().focus();
           me.auto_set_remaining_amount();
+        }
+      });
+      $(document).on("click", function(e) {
+        const target = $(e.target);
+        if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+          hideAllFields();
+          $(".mode-of-payment").removeClass("border-primary");
         }
       });
       frappe.ui.form.on("POS Invoice", "contact_mobile", (frm2) => {
@@ -6508,8 +6647,29 @@
 							<div class="${mode} card_type_control"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 						`;
+              break;
+            case "Debit Card":
+              paymentModeHtml += `
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} holder-name"></div>
+							<div class="${mode} card-number"></div>
+							<div class="${mode} expiry-date"></div>
+						    <div class="${mode} approval-code"></div>
+							<div class="${mode} reference-number"></div>
+							`;
+              break;
+            case "Credit Card":
+              paymentModeHtml += `
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} holder-name"></div>
+							<div class="${mode} card-number"></div>
+							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
+							<div class="${mode} reference-number"></div>
+							`;
               break;
             case "PayMaya":
               paymentModeHtml += `
@@ -6676,6 +6836,129 @@
           });
           expiry_date_control.set_value(existing_custom_card_expiration_date || "");
           expiry_date_control.refresh();
+          let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
+          let custom_approval_code_control = frappe.ui.form.make_control({
+            df: {
+              label: "Approval Code",
+              fieldtype: "Data",
+              placeholder: "Approval Code",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.approval-code`),
+            render_input: true
+          });
+          custom_approval_code_control.set_value(existing_custom_approval_code || "");
+          custom_approval_code_control.refresh();
+          let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
+          let reference_no_control = frappe.ui.form.make_control({
+            df: {
+              label: "Reference No",
+              fieldtype: "Data",
+              placeholder: "Reference No.",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.reference-number`),
+            render_input: true
+          });
+          reference_no_control.set_value(existing_reference_no || "");
+          reference_no_control.refresh();
+        }
+        if (p.mode_of_payment === "Debit Card" || p.mode_of_payment === "Credit Card") {
+          let validateLastFourDigits2 = function(value) {
+            const regex = /^\d{4}$/;
+            return regex.test(value);
+          };
+          var validateLastFourDigits = validateLastFourDigits2;
+          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+          let bank_name_control = frappe.ui.form.make_control({
+            df: {
+              label: "Bank",
+              fieldtype: "Data",
+              placeholder: "Bank Name",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.bank-name`),
+            render_input: true
+          });
+          bank_name_control.set_value(existing_custom_bank_name || "");
+          bank_name_control.refresh();
+          let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
+          let name_on_card_control = frappe.ui.form.make_control({
+            df: {
+              label: "Name on Card",
+              fieldtype: "Data",
+              placeholder: "Card name holder",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_card_name", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.holder-name`),
+            render_input: true
+          });
+          name_on_card_control.set_value(existing_custom_card_name || "");
+          name_on_card_control.refresh();
+          let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
+          let card_number_control = frappe.ui.form.make_control({
+            df: {
+              label: "Card Number",
+              fieldtype: "Data",
+              placeholder: "Last 4 digits",
+              onchange: function() {
+                const value = this.value;
+                if (value === "") {
+                  frappe.model.set_value(p.doctype, p.name, "custom_card_number", "");
+                } else if (validateLastFourDigits2(value)) {
+                  frappe.model.set_value(p.doctype, p.name, "custom_card_number", value);
+                } else {
+                  frappe.msgprint(__("Card number must be exactly 4 digits."));
+                  this.set_value("");
+                }
+              },
+              maxlength: 4
+            },
+            parent: this.$payment_modes.find(`.${mode}.card-number`),
+            render_input: true,
+            default: existing_custom_card_number || ""
+          });
+          card_number_control.set_value(existing_custom_card_number || "");
+          card_number_control.refresh();
+          let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
+          let expiry_date_control = frappe.ui.form.make_control({
+            df: {
+              label: "Card Expiration Date",
+              fieldtype: "Data",
+              placeholder: "MM/YY",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.expiry-date`),
+            render_input: true,
+            default: p.custom_card_expiration_date || ""
+          });
+          expiry_date_control.set_value(existing_custom_card_expiration_date || "");
+          expiry_date_control.refresh();
+          let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
+          let custom_approval_code_control = frappe.ui.form.make_control({
+            df: {
+              label: "Approval Code",
+              fieldtype: "Data",
+              placeholder: "Approval Code",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.approval-code`),
+            render_input: true
+          });
+          custom_approval_code_control.set_value(existing_custom_approval_code || "");
+          custom_approval_code_control.refresh();
           let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
           let reference_no_control = frappe.ui.form.make_control({
             df: {
@@ -6726,14 +7009,14 @@
           epayment_reference_number_controller.refresh();
         }
         if (p.mode_of_payment === "Cheque" || p.mode_of_payment === "Government") {
-          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
           let bank_name_control = frappe.ui.form.make_control({
             df: {
-              label: "Bank",
+              label: "Check Bank Name",
               fieldtype: "Data",
-              placeholder: "Bank Name",
+              placeholder: "Check Bank Name",
               onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+                frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
               }
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -6741,14 +7024,14 @@
           });
           bank_name_control.set_value(existing_custom_bank_name || "");
           bank_name_control.refresh();
-          let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_check_name");
+          let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_name_on_check");
           let check_name_control = frappe.ui.form.make_control({
             df: {
               label: "Name On Check",
               fieldtype: "Data",
               placeholder: "Check Name",
               onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_check_name", this.value);
+                frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", this.value);
               }
             },
             parent: this.$payment_modes.find(`.${mode}.check-name`),
@@ -6860,11 +7143,21 @@
         let nearest_x = Math.ceil(amount / x) * x;
         return nearest_x === amount ? nearest_x + x : nearest_x;
       };
-      return steps.reduce((finalArr, x) => {
+      let shortcuts = steps.reduce((finalArr, x) => {
         let nearest_x = get_nearest(grand_total, x);
         nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
         return [...finalArr, nearest_x];
       }, []);
+      if (grand_total > 100) {
+        if (!shortcuts.includes(500)) {
+          shortcuts.push(500);
+        }
+        if (!shortcuts.includes(1e3)) {
+          shortcuts.push(1e3);
+        }
+      }
+      shortcuts.sort((a, b) => a - b);
+      return shortcuts;
     }
     render_loyalty_points_payment_mode() {
       const me = this;
@@ -7018,6 +7311,38 @@
         const invoice_name = unescape($(this).attr("data-invoice-name"));
         me.events.open_invoice_data(invoice_name);
       });
+      this.$invoices_container.off("keydown", ".invoice-wrapper").on("keydown", ".invoice-wrapper", function(event2) {
+        const $items = me.$invoices_container.find(".invoice-wrapper");
+        const currentIndex = $items.index($(this));
+        let nextIndex = currentIndex;
+        switch (event2.which) {
+          case 13:
+            $(this).click();
+            break;
+          case 38:
+            nextIndex = currentIndex > 0 ? currentIndex - 1 : $items.length - 1;
+            break;
+          case 40:
+            nextIndex = currentIndex < $items.length - 1 ? currentIndex + 1 : 0;
+            break;
+          default:
+            return;
+        }
+        $items.eq(nextIndex).focus();
+      });
+      frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+i",
+        action: () => {
+          const $items = me.$invoices_container.find(".invoice-wrapper");
+          if ($items.length) {
+            $items.first().focus();
+          }
+        },
+        condition: () => me.$invoices_container.is(":visible"),
+        description: __("Activate Cart Item Focus"),
+        ignore_inputs: true,
+        page: cur_page.page.page
+      });
     }
     make_filter_section() {
       const me = this;
@@ -7072,7 +7397,7 @@
       const posting_datetime = moment(invoice.posting_date + " " + invoice.posting_time).format(
         "Do MMMM, h:mma"
       );
-      return `<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
+      return `<div class="invoice-wrapper" tabindex="0" data-invoice-name="${escape(invoice.name)}">
 				<div class="invoice-name-date">
 					<div class="invoice-name">${invoice.name} - ${invoice.pos_profile} </div>
 					<div class="invoice-date">
@@ -7335,6 +7660,14 @@
         if (summary_is_visible && this.$summary_container.find(".new-btn").is(":visible")) {
           this.$summary_container.find(".new-btn").click();
         }
+      });
+      this.$summary_container.find(".edit-btn").attr("title", `${ctrl_label}+E`);
+      frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+e",
+        action: () => this.$summary_container.find(".edit-btn").click(),
+        condition: () => this.$component.is(":visible") && this.$summary_container.find(".edit-btn").is(":visible"),
+        description: __("Edit Receipt"),
+        page: cur_page.page.page
       });
       this.$summary_container.find(".edit-btn").attr("title", `${ctrl_label}+E`);
       frappe.ui.keys.add_shortcut({
@@ -7615,7 +7948,7 @@
       this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
       this.page.add_menu_item(
         __("Pending Transaction (F2)"),
-        this.toggle_recent_order.bind(this),
+        this.order_list.bind(this),
         false,
         "f2"
       );
@@ -7626,7 +7959,7 @@
     add_buttons_to_toolbar() {
       const buttons = [
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
-        { label: __("Pending Transaction (F2"), action: this.toggle_recent_order.bind(this), shortcut: "f2" },
+        { label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2" },
         { label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
         { label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4" },
         { label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5" }
@@ -7640,11 +7973,20 @@
       frappe.run_serially([
         () => frappe.dom.freeze(),
         () => this.frm.call("reset_mode_of_payments"),
-        () => this.make_new_invoice(),
         () => this.cart.load_invoice(),
+        () => this.make_new_invoice(),
         () => this.item_selector.toggle_component(true),
-        () => frappe.dom.unfreeze(),
-        () => this.toggle_recent_order_list(false)
+        () => this.item_details.toggle_item_details_section(),
+        () => this.toggle_recent_order_list(false),
+        () => window.location.reload(),
+        () => frappe.dom.unfreeze()
+      ]);
+    }
+    order_list() {
+      frappe.run_serially([
+        () => frappe.dom.freeze(),
+        () => this.toggle_recent_order_list(true),
+        () => frappe.dom.unfreeze()
       ]);
     }
     show_branch_selection_dialog() {
@@ -8338,4 +8680,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.KGL2MRET.js.map
+//# sourceMappingURL=packing-list.bundle.NRPEY46Z.js.map

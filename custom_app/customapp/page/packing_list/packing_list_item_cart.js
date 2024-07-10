@@ -46,10 +46,10 @@ custom_app.PointOfSale.ItemCart = class {
 		box-shadow: var(--shadow-base);
 		border-radius: var(--border-radius-md);
 	  }; margin-top: 1em;"></div>`);
-
 		this.$doctor_section = this.$component.find(".doctor-section");
 		this.make_doctor_selector();
 	}
+
 
 	reset_customer_selector() {
 		const frm = this.events.get_frm();
@@ -69,11 +69,11 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$component.append(
 			`<div class="cart-container">
 				<div class="abs-cart-container">
-					<div class="cart-label">${__("Item Cart")}</div>
+					<div class="cart-label" >${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
-				        <div class="qty-header">${__("Vat")}</div>
-						<div class="qty-header">${__("Disc %")}</div>
+						<div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header" >${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
@@ -84,23 +84,63 @@ custom_app.PointOfSale.ItemCart = class {
 			</div>`
 		);
 		this.$cart_container = this.$component.find(".cart-container");
-
+	
 		this.make_cart_totals_section();
 		this.make_cart_items_section();
 		this.make_cart_numpad();
 	}
-
+	
 	make_cart_items_section() {
 		this.$cart_header = this.$component.find(".cart-header");
 		this.$cart_items_wrapper = this.$component.find(".cart-items-section");
-
+	
 		this.make_no_items_placeholder();
 	}
-
+	
 	make_no_items_placeholder() {
 		this.$cart_header.css("display", "none");
 		this.$cart_items_wrapper.html(`<div class="no-item-wrapper">${__("No items in cart")}</div>`);
 	}
+
+	
+	add_keyboard_navigation() {
+        this.$component.on('keydown', '[tabindex="0"]', (e) => {
+            if (e.key === 'Enter') {
+                $(e.target).trigger('click');
+            }
+            switch (e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.focusPreviousElement(e.target);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.focusNextElement(e.target);
+                    break;
+            }
+        });
+    }
+
+	focusNextElement(current) {
+        let $next = $(current).nextAll('[tabindex="0"]').first();
+        if (!$next.length) {
+            $next = this.$component.find('[tabindex="0"]').first();
+        }
+        $next.focus();
+    }
+
+    focusPreviousElement(current) {
+        let $prev = $(current).prevAll('[tabindex="0"]').first();
+        if (!$prev.length) {
+            $prev = this.$component.find('[tabindex="0"]').last();
+        }
+        $prev.focus();
+    }
+
+    get_cart_item(item_data) {
+        return this.$cart_items_wrapper.find(`[data-row-name="${escape(item_data.name)}"]`);
+    }
+
 
 	get_discount_icon() {
 		return `<svg class="discount-icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -158,13 +198,13 @@ custom_app.PointOfSale.ItemCart = class {
 				// [4, 5, 6, "Discount"],
 				// [7, 8, 9, "Rate"],
 				// [".", 0, "Delete", "Remove"],
-				[  "", "", "", "Remove"],
+				[  "", "Quantity", "Rate", "Remove"],
 			],
 			css_classes: [
 				["", "", "", "col-span-2 remove-btn"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
-				["", "", "", "col-span-2 remove-btn"],
+				// ["", "", "", "col-span-2 remove-btn"],
 			],
 			fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" },
 		});
@@ -232,6 +272,8 @@ custom_app.PointOfSale.ItemCart = class {
             this.numpad_value = "";
         });
 
+
+
 		this.$component.on("click", ".checkout-btn", async function () {
 			if ($(this).attr("style").indexOf("--blue-500") == -1) return;
 
@@ -242,6 +284,7 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$totals_section.on("click", ".edit-cart-btn", () => {
+
 			// Show password dialog for OIC authentication
 			const passwordDialog = new frappe.ui.Dialog({
 				title: __('Enter OIC Password'),
@@ -280,6 +323,7 @@ custom_app.PointOfSale.ItemCart = class {
 			});
 		
 			passwordDialog.show();
+
 		});
 		
 		this.$component.on("click", ".add-discount-wrapper", () => {
@@ -344,13 +388,53 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	attach_shortcuts() {
+
+		document.addEventListener('keydown', function(event) {
+			// List of key codes to prevent
+			const keysToPrevent = {
+				// Prevent F5 (refresh)
+				116: true, 
+				// Prevent Ctrl+R (refresh)
+				'Ctrl+82': true,
+						// Prevent Ctrl+Shift+R (refresh)
+				'Ctrl+16+82': true,
+				// Prevent Ctrl+S (save)
+				'Ctrl+83': true,
+				// Prevent Ctrl+P (print)
+				'Ctrl+80': true,
+				// Prevent Ctrl+W (close tab)
+				'Ctrl+87': true,
+				// Prevent Ctrl+Shift+I (Developer Tools)
+				'Ctrl+Shift+73': true,
+				  // Prevent Ctrl+J (Downloads)
+				'Ctrl+74': true,
+					  // Prevent Ctrl+E
+				'Ctrl+69': true,
+							  // Prevent Ctrl+Q
+				// 'Ctrl+18+81': true,
+			};
+		
+			// Generate the key identifier
+			const key = (event.ctrlKey ? 'Ctrl+' : '') + 
+						(event.shiftKey ? 'Shift+' : '') + 
+						(event.altKey ? 'Alt+' : '') + 
+						event.keyCode;
+		
+			if (keysToPrevent[key] || keysToPrevent[event.keyCode]) {
+				event.preventDefault();
+			}
+		});
+		
+		
 		for (let row of this.number_pad.keys) {
 			for (let btn of row) {
 				if (typeof btn !== "string") continue; // do not make shortcuts for numbers
 
 				let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
 				if (btn === "Delete") shortcut_key = "ctrl+backspace";
-				if (btn === "Remove") shortcut_key = "shift+ctrl+backspace";
+				if (btn === "Remove") shortcut_key = "ctrl+x";
+				if (btn === "Quantity") shortcut_key = "ctrl+q";
+				if (btn === "Rate") shortcut_key = "ctrl+a";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map
@@ -372,6 +456,8 @@ custom_app.PointOfSale.ItemCart = class {
 						this.$numpad_section.find(`.numpad-btn[data-button-value="${fieldname}"]`).click();
 					}
 				});
+
+
 			}
 		}
 		const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
@@ -385,6 +471,8 @@ custom_app.PointOfSale.ItemCart = class {
 			ignore_inputs: true,
 			page: cur_page.page.page,
 		});
+
+
 		this.$component.find(".edit-cart-btn").attr("title", `${ctrl_label}+E`);
 		frappe.ui.keys.on("ctrl+e", () => {
 			const item_cart_visible = this.$component.is(":visible");
@@ -408,6 +496,38 @@ custom_app.PointOfSale.ItemCart = class {
 				this.discount_field.set_value(0);
 			}
 		});
+
+		this.doctor_field.parent.attr("title", `${ctrl_label}+R`);
+        frappe.ui.keys.add_shortcut({
+            shortcut: "ctrl+r",
+            action: () => this.doctor_field.set_focus(),
+            condition: () => this.$component.is(":visible"),
+            description: __("Doctor"),
+            ignore_inputs: true,
+            page: cur_page.page.page,
+        });
+
+		this.customer_field.parent.attr("title", `${ctrl_label}+M`);
+        frappe.ui.keys.add_shortcut({
+            shortcut: "ctrl+m",
+            action: () => this.customer_field.set_focus(),
+            condition: () => this.$component.is(":visible"),
+            description: __("Customer"),
+            ignore_inputs: true,
+            page: cur_page.page.page,
+        });
+
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+<', // Choose an appropriate shortcut key
+			action: () => {
+				this.reset_customer_selector();
+			},
+			condition: () => true, // Adjust this condition as needed
+			description: __('Reset Customer Selector'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
+
 	}
 
 	toggle_item_highlight(item) {
@@ -426,7 +546,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	make_customer_selector() {
 		this.$customer_section.html(`
-			<div class="customer-field"></div>
+			<div class="customer-field" tabindex="0"></div>
 		`);
 		const me = this;
 		const allowed_customer_group = this.allowed_customer_groups || [];
@@ -469,49 +589,55 @@ custom_app.PointOfSale.ItemCart = class {
 		this.customer_field.toggle_label(false);
 	}
 
-
-	//Doctors
-
 	make_doctor_selector() {
-		this.$doctor_section.html(`
-			<div class="doctor-field"></div>
-		`);
-		const me = this;
-		const allowed_doctor_group = this.allowed_doctor_groups || [];
-		let filters = {};
-		if (allowed_doctor_group.length) {
-			filters = {
-				doctor_group: ["in", allowed_doctor_group],
-			};
+    this.$doctor_section.html(`
+        <div class="doctor-field"></div>
+    `);
+    const me = this;
+    const allowed_doctor_group = this.allowed_doctor_groups || [];
+    let filters = {};
+    if (allowed_doctor_group.length) {
+        filters = {
+            doctor_group: ["in", allowed_doctor_group],
+        };
+    }
+
+    this.doctor_field = frappe.ui.form.make_control({
+        df: {
+            label: __("Doctor"),
+            fieldtype: "Link",
+            options: "Doctor",
+            placeholder: __("Doctor"),
+            onchange: function () {
+                if (this.value) {
+                    const frm = me.events.get_frm();
+                    frappe.dom.freeze();
+                    frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
+                    frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
+                        frappe.run_serially([
+                            // () => me.fetch_customer_details(this.value),
+                            // () => me.events.customer_details_updated(me.customer_info),
+                            // () => me.update_customer_section(),
+                            // () => me.update_totals_section(),
+                            () => frappe.dom.unfreeze(),
+                        ]);
+                    });
+                }
+            },
+        },
+        parent: this.$doctor_section.find(".doctor-field"),
+        render_input: true,
+    });
+    this.doctor_field.toggle_label(false);
+
+    // Add shortcut key to focus on doctor field
+    $(document).on('keydown', function(event) {
+        // Use Alt + D as shortcut (you can change this key combination as needed)
+        if (event.altKey && event.key === 'd') {
+            me.doctor_field.$input.focus();
+        }
+    });
 }
-		this.doctor_field = frappe.ui.form.make_control({
-			df: {
-				label: __("Doctor"),
-				fieldtype: "Link",
-				options: "Doctor",
-				placeholder: __("Doctor"),
-				onchange: function () {
-					if (this.value) {
-						const frm = me.events.get_frm();
-						frappe.dom.freeze();
-						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
-						frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
-							frappe.run_serially([
-								// () => me.fetch_customer_details(this.value),
-								// () => me.events.customer_details_updated(me.customer_info),
-								// () => me.update_customer_section(),
-								// () => me.update_totals_section(),
-								() => frappe.dom.unfreeze(),
-							]);
-						});
-					}
-				},
-			},
-			parent: this.$doctor_section.find(".doctor-field"),
-			render_input: true,
-		});
-		this.doctor_field.toggle_label(false);
-	}
 
 
 	fetch_customer_details(customer) {
@@ -650,7 +776,7 @@ custom_app.PointOfSale.ItemCart = class {
 							<div class="customer-name">${customer}</div>
 							${get_customer_description()}
 						</div>
-						<div class="reset-customer-btn" data-customer="${escape(customer)}">
+						<div class="reset-customer-btn" tabindex="0" data-customer="${escape(customer)}">
 							<svg width="32" height="32" viewBox="0 0 14 14" fill="none">
 								<path d="M4.93764 4.93759L7.00003 6.99998M9.06243 9.06238L7.00003 6.99998M7.00003 6.99998L4.93764 9.06238L9.06243 4.93759" stroke="#8D99A6"/>
 							</svg>
@@ -742,7 +868,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (!frm) frm = this.events.get_frm();
 
 
-		console.log(frm.doc);
+		// console.log(frm.doc);
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
@@ -949,19 +1075,17 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	render_cart_item(item_data, $item_to_update) {
-
-
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
-
+	
 		if (!$item_to_update.length) {
 			this.$cart_items_wrapper.append(
-				`<div class="cart-item-wrapper" data-row-name="${escape(item_data.name)}"></div>
-				<div class="seperator"></div>`
+				`<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
+				<div class="separator"></div>`
 			);
 			$item_to_update = this.get_cart_item(item_data);
 		}
-
+	
 		$item_to_update.html(
 			`${get_item_image_html()}
 			<div class="item-name-desc">
@@ -976,12 +1100,11 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
-			${get_rate_discount_html()}
-			`
+			${get_rate_discount_html()}`
 		);
-
+	
 		set_dynamic_rate_header_width();
-
+	
 		function set_dynamic_rate_header_width() {
 			const rate_cols = Array.from(me.$cart_items_wrapper.find(".item-rate-amount"));
 			me.$cart_header.find(".rate-amount-header").css("width", "");
@@ -990,19 +1113,14 @@ custom_app.PointOfSale.ItemCart = class {
 				if ($(elm).width() > max_width) max_width = $(elm).width();
 				return max_width;
 			}, 0);
-
+	
 			max_width += 1;
-			if (max_width == 1) max_width = "";
-
+			if (max_width === 1) max_width = "";
+	
 			me.$cart_header.find(".rate-amount-header").css("width", max_width);
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
-
-
-		function get_rate_discount_html() {
-			
-		}
-
+	
 		function get_rate_discount_html() {
 			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 				return `
@@ -1023,10 +1141,10 @@ custom_app.PointOfSale.ItemCart = class {
 					</div>`;
 			}
 		}
-
+	
 		function get_description_html() {
 			if (item_data.description) {
-				if (item_data.description.indexOf("<div>") != -1) {
+				if (item_data.description.indexOf("<div>") !== -1) {
 					try {
 						item_data.description = $(item_data.description).text();
 					} catch (error) {
@@ -1041,7 +1159,7 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 			return ``;
 		}
-
+	
 		function get_item_image_html() {
 			const { image, item_name } = item_data;
 			if (!me.hide_images && image) {
@@ -1049,13 +1167,53 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="item-image">
 						<img
 							onerror="cur_pos.cart.handle_broken_image(this)"
-							src="${image}" alt="${frappe.get_abbr(item_name)}"">
+							src="${image}" alt="${frappe.get_abbr(item_name)}">
 					</div>`;
 			} else {
 				return `<div class="item-image item-abbr">${frappe.get_abbr(item_name)}</div>`;
 			}
 		}
+	
+		// Event listener for handling keydown events on cart items
+		this.$cart_items_wrapper.off('keydown', '.cart-item-wrapper').on('keydown', '.cart-item-wrapper', function(event) {
+			const $items = me.$cart_items_wrapper.find('.cart-item-wrapper');
+			const currentIndex = $items.index($(this));
+			let nextIndex = currentIndex;
+	
+			switch (event.which) {
+				case 13: // Enter key
+					$(this).click(); // Trigger click event immediately on Enter key press
+					break;
+				case 38: // Up arrow key
+					nextIndex = currentIndex > 0 ? currentIndex - 1 : $items.length - 1;
+					break;
+				case 40: // Down arrow key
+					nextIndex = currentIndex < $items.length - 1 ? currentIndex + 1 : 0;
+					break;
+				default:
+					return; // Exit if other keys are pressed
+			}
+	
+			$items.eq(nextIndex).focus(); // Move focus to the next item
+		});
+	
+		// Add Ctrl+C shortcut to focus on the first cart item
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+c',
+			action: () => {
+				const $items = me.$cart_items_wrapper.find('.cart-item-wrapper');
+				if ($items.length) {
+					$items.first().focus(); // Focus on the first cart item
+				}
+			},
+			condition: () => me.$cart_items_wrapper.is(':visible'),
+			description: __('Activate Cart Item Focus'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
 	}
+	
+	
 
 	handle_broken_image($img) {
 		const item_abbr = $($img).attr("alt");

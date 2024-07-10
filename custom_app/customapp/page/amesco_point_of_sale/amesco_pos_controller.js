@@ -117,26 +117,80 @@ custom_app.PointOfSale.Controller = class {
 				},
 			],
 			primary_action: async function ({ company, pos_profile, balance_details, custom_shift }) {
+				// Validate balance details
 				if (!balance_details.length) {
-					frappe.show_alert({
-						message: __("Please add Mode of payments and opening balance details."),
-						indicator: "red",
-					});
-					return frappe.utils.play_sound("error");
+				  frappe.show_alert({
+					message: __("Please add Mode of payments and opening balance details."),
+					indicator: "red",
+				  });
+				  return frappe.utils.play_sound("error");
 				}
+			  
+				// Fetch POS Profile serial number (asynchronous)
+				// try {
+				//   const pos_profile_doc = await frappe.db.get_doc("POS Profile", pos_profile);
 
-				// filter balance details for empty rows
+				//   const computer_serial_number = 123;
+				//   const pos_serial_number =  pos_profile_doc.custom_sn;
+
+
+				// 	//frappe.make_get_request('http://localhost:3000/serial-number')
+				// 	//   const computer_serial_number =  frappe.call({
+				// 	//     method: 'custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.get_serial_number',
+				// 	//     callback: function(response) {
+				// 	//         const data = response.message;
+				// 	//         if (data) {
+				// 	// 			console.log(response)
+				// 	//         } else {
+				// 	//             frappe.msgprint(`No data found for serial number `);
+				// 	//         }
+				// 	//         resolve();
+				// 	//     }
+				// 	// });
+				 
+				//     //console.log('POS Profile: ', pos_serial_number);
+
+				//   if (pos_serial_number !== computer_serial_number) {
+
+
+				// 	// console.log('POS Serial:', pos_serial_number);
+				// 	// console.log('POS Serial:', computer_serial_number);
+					
+				// 	frappe.show_alert({
+				// 	  message: __(`Serial number not match ${pos_serial_number}`),
+				// 	  indicator: "red",
+				// 	});
+				// 	return frappe.utils.play_sound("error");
+				//   }
+
+
+				 
+				// } catch (error) {
+				//   console.error("Failed to get POS Profile:", error);
+				//   // Optionally handle the error here (e.g., display an alert)
+				//   return; // Exit the function if error
+				// }
+			  
+				// Filter balance details
 				balance_details = balance_details.filter((d) => d.mode_of_payment);
-
+			  
+				
+			  
+				// Compare serial numbers
+				// Call the custom method
 				const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
 				const res = await frappe.call({
-					method,
-					args: { pos_profile, company, balance_details, custom_shift },
-					freeze: true,
+				  method,
+				  args: { pos_profile, company, balance_details, custom_shift },
+				  freeze: true,
 				});
-				!res.exc && me.prepare_app_defaults(res.message);
+			  
+				if (!res.exc) {
+				  me.prepare_app_defaults(res.message);
+				}
+			  
 				dialog.hide();
-			},
+			  },
 			primary_action_label: __("Submit"),
 		});
 		dialog.show();
@@ -147,6 +201,13 @@ custom_app.PointOfSale.Controller = class {
 			};
 		};
 	}
+
+
+
+	get_pos_profile_doc(pos_profile) {
+		return 
+	}
+
 
 	async prepare_app_defaults(data) {
 		this.pos_opening = data.name;
@@ -235,7 +296,7 @@ custom_app.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),
-			this.toggle_recent_order.bind(this),
+			this.order_list.bind(this),
 			false,
 			"f2"
 		);
@@ -244,10 +305,9 @@ custom_app.PointOfSale.Controller = class {
 
 		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
-		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f5");
-		this.page.add_menu_item(__('X Reading'), false, "f9");
-		this.page.add_menu_item(__('Z Reading'), false, "f9");
-		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
+		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
+		this.page.add_menu_item(__('Z Reading'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 
 	}
 
@@ -255,12 +315,11 @@ custom_app.PointOfSale.Controller = class {
 	add_buttons_to_toolbar() {
 		const buttons = [
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
-			{label: __("Pending Transaction (F2)"), action: this.toggle_recent_order.bind(this), shortcut: "f2"},
+			{label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
-			
-			{label: __("Close the POS"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
+			{label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
 		];
 	
 		// Clear existing buttons to avoid duplication
@@ -272,8 +331,59 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 
+	
+	z_reading() {
 
+		const me = this;
+			// Show password dialog for OIC authentication
+			const passwordDialog = new frappe.ui.Dialog({
+				title: __('Authorization Required OIC'),
+				fields: [
+					{
+						fieldname: 'password',
+						fieldtype: 'Password',
+						label: __('Password'),
+						reqd: 1
+					}
+				],
+				primary_action_label: __('Authorize'),
+				primary_action: (values) => {
+					let password = values.password;
+					let role = "oic";
+		
+					frappe.call({
+						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+						args: { password: password, role: role },
+						callback: (r) => {
+							if (r.message) {
+								// OIC authentication successful, proceed with discount edit
+								frappe.show_alert({
+									message: __('Verified'),
+									indicator: 'green'
+								});
+								passwordDialog.hide();
+								
 
+								if (!this.$components_wrapper.is(":visible")) return;
+								let voucher = frappe.model.get_new_doc("POS Z Reading");
+								voucher.pos_profile = this.frm.doc.pos_profile;
+								frappe.set_route("Form", "POS Z Reading", voucher.name);
+								
+							} else {
+								// Show alert for incorrect password or unauthorized user
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
+						}
+					});
+				}
+			});
+		
+			passwordDialog.show();
+
+	}
 
 
 	
@@ -281,9 +391,9 @@ custom_app.PointOfSale.Controller = class {
 	cash_voucher() {
 		if (!this.$components_wrapper.is(":visible")) return;
 		let voucher = frappe.model.get_new_doc("Cash Voucher Entry");
-		// voucher.custom_pos_profile = this.frm.doc.pos_profile;
-		// voucher.user = frappe.session.user;
-		// voucher.custom_pos_opening_entry_id = this.pos_opening;
+		voucher.custom_pos_profile = this.frm.doc.pos_profile;
+		voucher.custom_cashier = frappe.session.user;
+		voucher.custom_opening_entry = this.pos_opening;
 		frappe.set_route("Form", "Cash Voucher Entry", voucher.name);
 	}
 	
@@ -292,6 +402,9 @@ custom_app.PointOfSale.Controller = class {
 	check_encashment() {
 		if (!this.$components_wrapper.is(":visible")) return;
 		let voucher = frappe.model.get_new_doc("Check Encashment Entry")
+		voucher.custom_pos_profile = this.frm.doc.pos_profile;
+		voucher.custom_received_by = frappe.session.user;
+		voucher.custom_opening_entry = this.pos_opening;
 		frappe.set_route("Form", "Check Encashment Entry", voucher.name)
 	}
 
@@ -301,10 +414,26 @@ custom_app.PointOfSale.Controller = class {
 			() => this.frm.call("reset_mode_of_payments"),
 			() => this.cart.load_invoice(),
 			() => this.make_new_invoice(),
-			() => this.item_selector.toggle_component(true),
+			() => this.item_selector.toggle_component(),
 			() => this.item_details.toggle_item_details_section(),
+			() => this.toggle_recent_order_list(false),
 			() => frappe.dom.unfreeze(),
-			() => this.toggle_recent_order_list(false)
+		]);
+	}
+
+	order_list() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),
+			// () => this.frm.call("reset_mode_of_payments"),
+			// () => this.cart.load_invoice(),
+			// () => this.make_new_invoice(),
+			// () => this.item_selector.toggle_component(true),
+			// () => this.item_details.toggle_item_details_section(),
+			() => this.toggle_recent_order_list(true),
+			// () => this.cart.load_invoice(),
+			() => window.location.reload(), 
+			() => frappe.dom.unfreeze(),
+			
 		]);
 	}
 
@@ -349,17 +478,63 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	close_pos() {
-		if (!this.$components_wrapper.is(":visible")) return;
 
-		let voucher = frappe.model.get_new_doc("POS Closing Entry");
-		voucher.pos_profile = this.frm.doc.pos_profile;
-		voucher.user = frappe.session.user;
-		voucher.company = this.frm.doc.company;
-		voucher.pos_opening_entry = this.pos_opening;
-		voucher.period_end_date = frappe.datetime.now_datetime();
-		voucher.posting_date = frappe.datetime.now_date();
-		voucher.posting_time = frappe.datetime.now_time();
-		frappe.set_route("Form", "POS Closing Entry", voucher.name);
+		const me = this;
+			// Show password dialog for OIC authentication
+			const passwordDialog = new frappe.ui.Dialog({
+				title: __('Authorization Required OIC'),
+				fields: [
+					{
+						fieldname: 'password',
+						fieldtype: 'Password',
+						label: __('Password'),
+						reqd: 1
+					}
+				],
+				primary_action_label: __('Authorize'),
+				primary_action: (values) => {
+					let password = values.password;
+					let role = "oic";
+		
+					frappe.call({
+						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+						args: { password: password, role: role },
+						callback: (r) => {
+							if (r.message) {
+								// OIC authentication successful, proceed with discount edit
+								frappe.show_alert({
+									message: __('Verified'),
+									indicator: 'green'
+								});
+								passwordDialog.hide();
+		
+								if (!this.$components_wrapper.is(":visible")) return;
+
+								let voucher = frappe.model.get_new_doc("POS Closing Entry");
+								voucher.pos_profile = this.frm.doc.pos_profile;
+								voucher.user = frappe.session.user;
+								voucher.company = this.frm.doc.company;
+								voucher.pos_opening_entry = this.pos_opening;
+								voucher.period_end_date = frappe.datetime.now_datetime();
+								voucher.posting_date = frappe.datetime.now_date();
+								voucher.posting_time = frappe.datetime.now_time();
+								frappe.set_route("Form", "POS Closing Entry", voucher.name);
+
+							} else {
+								// Show alert for incorrect password or unauthorized user
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
+						}
+					});
+				}
+			});
+		
+			passwordDialog.show();
+
+
 	}
 
 	cash_count() {
@@ -737,9 +912,7 @@ custom_app.PointOfSale.Controller = class {
 		this.toggle_component(true); //Toggle True so order summary stays while authentication modal is activated
 	}
 	
-	
-
-
+  
 	oic_delete_confirm(name) {
 	    const passwordDialog = new frappe.ui.Dialog({
 			title: __('Enter OIC Password'),

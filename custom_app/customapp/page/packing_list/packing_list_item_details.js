@@ -196,13 +196,18 @@ custom_app.PointOfSale.ItemDetails = class {
 			this[`${fieldname}_control`].set_value(item[fieldname]);
 		
 			// Add event listener for discount_percentage and discount_amount field click
-			if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-				this.$form_container.find(`.${fieldname}-control input`).on("click", function () {
+			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
 						me.oic_authentication(fieldname);
 					}
 				});
+
 			}
+
+		
+			
+			
 		});
 		
 		this.make_auto_serial_selection_btn(item);
@@ -275,6 +280,7 @@ custom_app.PointOfSale.ItemDetails = class {
 			'price_list_rate',
 			"rate",
 			"uom",
+			"custom_expiry_date",
 			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field
@@ -344,9 +350,17 @@ custom_app.PointOfSale.ItemDetails = class {
 					}, 200); // Adjust the debounce time as needed
 				}
 			};
-		
-			this.rate_control.df.read_only = !this.allow_rate_change;
-			this.rate_control.refresh();
+			
+
+			if (frm.doc.customer_group === 'Senior Citizen') {
+				return;
+			} else {
+				this.rate_control.df.read_only = !this.allow_rate_change;
+				this.rate_control.refresh();
+			}
+			
+			// this.rate_control.df.read_only = !this.allow_rate_change;
+			// this.rate_control.refresh();
 		}
 		// Ensure frm.doc is checked for existence before accessing it
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
