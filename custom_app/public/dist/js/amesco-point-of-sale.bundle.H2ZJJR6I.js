@@ -4317,6 +4317,19 @@
           dialog2.fields_dict.balance_details.grid.refresh();
         });
       };
+      const get_next_shift = async (pos_profile) => {
+        const res = await frappe.call({
+          method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_shift_count",
+          args: { pos_profile }
+        });
+        const max_shift = 4;
+        if (res.message >= max_shift) {
+          frappe.msgprint(__("You have already reached the maximum of shifts for todays opening"));
+          frappe.utils.play_sound("error");
+          throw new Error("Max shifts reached");
+        }
+        return `Shift ${res.message + 1}`;
+      };
       const dialog2 = new frappe.ui.Dialog({
         title: __("Create POS Opening Entry"),
         static: true,
@@ -4339,16 +4352,6 @@
             onchange: () => fetch_pos_payment_methods()
           },
           {
-            fieldtype: "Select",
-            label: __("Shift"),
-            options: [
-              { "label": __("Shift 1"), "value": "Shift 1" },
-              { "label": __("Shift 2"), "value": "Shift 2" }
-            ],
-            fieldname: "custom_shift",
-            reqd: 1
-          },
-          {
             fieldname: "balance_details",
             fieldtype: "Table",
             label: "Opening Balance Details",
@@ -4359,25 +4362,30 @@
             fields: table_fields
           }
         ],
-        primary_action: async function({ company, pos_profile, balance_details, custom_shift }) {
-          if (!balance_details.length) {
-            frappe.show_alert({
-              message: __("Please add Mode of payments and opening balance details."),
-              indicator: "red"
+        primary_action: async function({ company, pos_profile, balance_details }) {
+          try {
+            const custom_shift = await get_next_shift(pos_profile);
+            if (!balance_details.length) {
+              frappe.show_alert({
+                message: __("Please add Mode of payments and opening balance details."),
+                indicator: "red"
+              });
+              return frappe.utils.play_sound("error");
+            }
+            balance_details = balance_details.filter((d) => d.mode_of_payment);
+            const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
+            const res = await frappe.call({
+              method,
+              args: { pos_profile, company, balance_details, custom_shift },
+              freeze: true
             });
-            return frappe.utils.play_sound("error");
+            if (!res.exc) {
+              me.prepare_app_defaults(res.message);
+            }
+            dialog2.hide();
+          } catch (error) {
+            console.error("Error creating POS Opening Entry:", error);
           }
-          balance_details = balance_details.filter((d) => d.mode_of_payment);
-          const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
-          const res = await frappe.call({
-            method,
-            args: { pos_profile, company, balance_details, custom_shift },
-            freeze: true
-          });
-          if (!res.exc) {
-            me.prepare_app_defaults(res.message);
-          }
-          dialog2.hide();
         },
         primary_action_label: __("Submit")
       });
@@ -5297,4 +5305,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.OHUJJSNQ.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.H2ZJJR6I.js.map
