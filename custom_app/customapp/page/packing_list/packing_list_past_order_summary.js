@@ -129,12 +129,42 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		}
 	}
 
+	get_vatable_sales_html(doc) {
+		return `<div class="summary-row-wrapper">
+					<div>${__("VATable Sales")}</div>
+					<div>${format_currency(doc.custom_vatable_sales, doc.currency)}</div>
+				</div>`;
+	}
+
+	get_vatable_exempt_html(doc) {
+		return `<div class="summary-row-wrapper">
+					<div>${__("VAT-Exempt Sales")}</div>
+					<div>${format_currency(doc.custom_vat_exempt_sales, doc.currency)}</div>
+				</div>`;
+	}
+
+	get_zero_rated_html(doc) {
+		return `<div class="summary-row-wrapper">
+					<div>${__("Zero-Rated")}</div>
+					<div>${format_currency(doc.custom_zero_rated_sales, doc.currency)}</div>
+				</div>`;
+	}
+
+	get_vat_amount_html(doc) {
+		return `<div class="summary-row-wrapper">
+					<div>${__("VAT 12%")}</div>
+					<div>${format_currency(doc.custom_vat_amount, doc.currency)}</div>
+				</div>`;
+	}
+
+
 	get_net_total_html(doc) {
 		return `<div class="summary-row-wrapper">
 					<div>${__("Net Total")}</div>
 					<div>${format_currency(doc.net_total, doc.currency)}</div>
 				</div>`;
 	}
+
 
 	get_taxes_html(doc) {
 		if (!doc.taxes.length) return "";
@@ -209,6 +239,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		this.$summary_container.on("click", ".delete-btn", () => {
 			this.events.delete_order(this.doc.name);
 			this.show_summary_placeholder();
+			
 			// this.toggle_component(false);
 			// this.$component.find('.no-summary-placeholder').removeClass('d-none');
 			// this.$summary_wrapper.addClass('d-none');
@@ -274,6 +305,17 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			description: __("Edit Receipt"),
 			page: cur_page.page.page,
 		});
+
+		this.$summary_container.find(".edit-btn").attr("title", `${ctrl_label}+E`);
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+e",
+			action: () => this.$summary_container.find(".edit-btn").click(),
+			condition: () =>
+				this.$component.is(":visible") && this.$summary_container.find(".edit-btn").is(":visible"),
+			description: __("Edit Receipt"),
+			page: cur_page.page.page,
+		});
+		
 	}
 
 	send_email() {
@@ -446,10 +488,18 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		this.$totals_container.html("");
 
 		const net_total_dom = this.get_net_total_html(doc);
+		const vatable_sale_dom =this.get_vatable_sales_html(doc);
+		const vat_exempt_dom =this.get_vatable_exempt_html(doc);
+		const zero_rated_dom = this.get_zero_rated_html(doc);
+		const vat_amount_dom = this.get_vat_amount_html(doc);
 		const taxes_dom = this.get_taxes_html(doc);
 		const discount_dom = this.get_discount_html(doc);
 		const grand_total_dom = this.get_grand_total_html(doc);
 		this.$totals_container.append(net_total_dom);
+		this.$totals_container.append(vatable_sale_dom);
+		this.$totals_container.append(vat_exempt_dom);
+		this.$totals_container.append(zero_rated_dom);
+		this.$totals_container.append(vat_amount_dom);
 		this.$totals_container.append(taxes_dom);
 		this.$totals_container.append(discount_dom);
 		this.$totals_container.append(grand_total_dom);

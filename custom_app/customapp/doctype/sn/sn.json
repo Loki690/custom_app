@@ -1,0 +1,80 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "field:sn",
+ "creation": "2024-05-22 14:33:59.810604",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_3i3v",
+  "sn",
+  "column_break_xgtk",
+  "pos_profile",
+  "section_break_eclh",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_3i3v",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sn",
+   "fieldtype": "Data",
+   "label": "SN",
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_xgtk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pos_profile",
+   "fieldtype": "Link",
+   "label": "POS Profile",
+   "options": "POS Profile"
+  },
+  {
+   "fieldname": "section_break_eclh",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "SN",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-07-05 10:30:50.649926",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "SN",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

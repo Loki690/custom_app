@@ -81,7 +81,8 @@ erpnext.PointOfSale.Controller = class {
 	make_app() {
 		this.prepare_dom();
 		this.prepare_components();
-		this.prepare_buttons(); // Change from prepare_menu to prepare_buttons
+		this.prepare_menu();
+		// this.prepare_buttons(); // Change from prepare_menu to prepare_buttons
 		this.make_new_invoice();
 		this.setup_shortcuts();
 	}
@@ -99,6 +100,24 @@ erpnext.PointOfSale.Controller = class {
 		this.init_recent_order_list();
 		this.init_order_summary();
 	}
+
+	prepare_menu() {
+		this.page.clear_menu();
+
+		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
+		this.page.add_menu_item(
+			__("Pendeng Transaction (F2)"),
+			this.toggle_recent_order.bind(this),
+			false,
+			"f2"
+		);
+		this.page.add_menu_item(__("Branch Item Lookup'"), this.show_branch_selection_dialog.bind(this), false, "Ctrl+S");
+		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "Ctrl+S");
+		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
+
+	}
+
+
 
 	prepare_buttons() {
 		this.page.clear_actions(); // Clear any existing buttons
@@ -505,7 +524,7 @@ erpnext.PointOfSale.Controller = class {
 			wrapper: this.$components_wrapper,
 			events: {
 				get_frm: () => this.frm || {},
-
+				
 				get_customer_details: () => this.customer_details || {},
 
 				toggle_other_sections: (show) => {
