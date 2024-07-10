@@ -2355,8 +2355,8 @@
           render_input: true
         });
         this[`${fieldname}_control`].set_value(item[fieldname]);
-        if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-          this.$form_container.find(`.${fieldname}-control input`).on("click", function() {
+        if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+          this.$form_container.find(`.${fieldname}-control input`).on("focus", function() {
             if (!me.is_oic_authenticated) {
               me.oic_authentication(fieldname);
             }
@@ -2786,15 +2786,10 @@
     }
     bind_events() {
       const me = this;
-      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
-        const mode_clicked = $(this);
-        if (!$(e.target).is(mode_clicked))
-          return;
-        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
-        me.$payment_modes.animate({ scrollLeft });
-        const mode = mode_clicked.attr("data-mode");
+      function hideAllFields() {
         $(`.mode-of-payment-control`).css("display", "none");
         $(`.mobile-number`).css("display", "none");
+        $(`.approval-code`).css("display", "none");
         $(`.reference-number`).css("display", "none");
         $(`.bank-name`).css("display", "none");
         $(`.holder-name`).css("display", "none");
@@ -2810,6 +2805,13 @@
         $(`.actual-gov-two`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
+      }
+      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
+        const mode_clicked = $(this);
+        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
+        me.$payment_modes.animate({ scrollLeft });
+        const mode = mode_clicked.attr("data-mode");
+        hideAllFields();
         $(".mode-of-payment").removeClass("border-primary");
         if (mode_clicked.hasClass("border-primary")) {
           mode_clicked.removeClass("border-primary");
@@ -2819,6 +2821,7 @@
           mode_clicked.find(".mode-of-payment-control").css("display", "flex");
           mode_clicked.find(".mobile-number").css("display", "flex");
           mode_clicked.find(".reference-number").css("display", "flex");
+          mode_clicked.find(".approval-code").css("display", "flex");
           mode_clicked.find(".bank-name").css("display", "flex");
           mode_clicked.find(".holder-name").css("display", "flex");
           mode_clicked.find(".card_type_control").css("display", "flex");
@@ -2831,12 +2834,18 @@
           mode_clicked.find(".actual-gov-one").css("display", "flex");
           mode_clicked.find(".actual-gov-two").css("display", "flex");
           mode_clicked.find(".cash-shortcuts").css("display", "grid");
-          me.$payment_modes.find(`.${mode}-amount`).css("display", "inline");
-          me.selected_mode.find(`.${mode}_control`).css("display", "none");
+          me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
           me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
           me.selected_mode = me[`${mode}_control`];
           me.selected_mode && me.selected_mode.$input.get().focus();
           me.auto_set_remaining_amount();
+        }
+      });
+      $(document).on("click", function(e) {
+        const target = $(e.target);
+        if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+          hideAllFields();
+          $(".mode-of-payment").removeClass("border-primary");
         }
       });
       frappe.ui.form.on("POS Invoice", "contact_mobile", (frm2) => {
@@ -3052,6 +3061,7 @@
 							<div class="${mode} card_type_control"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 						`;
               break;
@@ -3061,6 +3071,7 @@
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 							`;
               break;
@@ -3070,6 +3081,7 @@
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 							`;
               break;
@@ -3139,7 +3151,7 @@
               fieldtype: "Data",
               placeholder: "Bank Name",
               onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", flt(this.value));
               }
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -3239,6 +3251,21 @@
           });
           expiry_date_control.set_value(existing_custom_card_expiration_date || "");
           expiry_date_control.refresh();
+          let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
+          let custom_approval_code_control = frappe.ui.form.make_control({
+            df: {
+              label: "Approval Code",
+              fieldtype: "Data",
+              placeholder: "Approval Code",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.approval-code`),
+            render_input: true
+          });
+          custom_approval_code_control.set_value(existing_custom_approval_code || "");
+          custom_approval_code_control.refresh();
           let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
           let reference_no_control = frappe.ui.form.make_control({
             df: {
@@ -3365,6 +3392,21 @@
           });
           expiry_date_control.set_value(existing_custom_card_expiration_date || "");
           expiry_date_control.refresh();
+          let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
+          let custom_approval_code_control = frappe.ui.form.make_control({
+            df: {
+              label: "Approval Code",
+              fieldtype: "Data",
+              placeholder: "Approval Code",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.approval-code`),
+            render_input: true
+          });
+          custom_approval_code_control.set_value(existing_custom_approval_code || "");
+          custom_approval_code_control.refresh();
           let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
           let reference_no_control = frappe.ui.form.make_control({
             df: {
@@ -3381,13 +3423,13 @@
           reference_no_control.set_value(existing_reference_no || "");
           reference_no_control.refresh();
         }
-        if (p.mode_of_payment === "Cheque") {
+        if (p.mode_of_payment === "Cheque" || p.mode_of_payment === "Government") {
           let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
           let bank_name_control = frappe.ui.form.make_control({
             df: {
-              label: "Bank",
+              label: "Check Bank Name",
               fieldtype: "Data",
-              placeholder: "Bank Name",
+              placeholder: "Check Bank Name",
               onchange: function() {
                 frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
               }
@@ -3516,11 +3558,21 @@
         let nearest_x = Math.ceil(amount / x) * x;
         return nearest_x === amount ? nearest_x + x : nearest_x;
       };
-      return steps.reduce((finalArr, x) => {
+      let shortcuts = steps.reduce((finalArr, x) => {
         let nearest_x = get_nearest(grand_total, x);
         nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
         return [...finalArr, nearest_x];
       }, []);
+      if (grand_total > 100) {
+        if (!shortcuts.includes(500)) {
+          shortcuts.push(500);
+        }
+        if (!shortcuts.includes(1e3)) {
+          shortcuts.push(1e3);
+        }
+      }
+      shortcuts.sort((a, b) => a - b);
+      return shortcuts;
     }
     render_loyalty_points_payment_mode() {
       const me = this;
@@ -4428,11 +4480,47 @@
       });
     }
     z_reading() {
-      if (!this.$components_wrapper.is(":visible"))
-        return;
-      let voucher = frappe.model.get_new_doc("POS Z Reading");
-      voucher.pos_profile = this.frm.doc.pos_profile;
-      frappe.set_route("Form", "POS Z Reading", voucher.name);
+      const me = this;
+      const passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
+        fields: [
+          {
+            fieldname: "password",
+            fieldtype: "Password",
+            label: __("Password"),
+            reqd: 1
+          }
+        ],
+        primary_action_label: __("Authorize"),
+        primary_action: (values) => {
+          let password = values.password;
+          let role = "oic";
+          frappe.call({
+            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+            args: { password, role },
+            callback: (r) => {
+              if (r.message) {
+                frappe.show_alert({
+                  message: __("Verified"),
+                  indicator: "green"
+                });
+                passwordDialog.hide();
+                if (!this.$components_wrapper.is(":visible"))
+                  return;
+                let voucher = frappe.model.get_new_doc("POS Z Reading");
+                voucher.pos_profile = this.frm.doc.pos_profile;
+                frappe.set_route("Form", "POS Z Reading", voucher.name);
+              } else {
+                frappe.show_alert({
+                  message: __("Incorrect password or user is not an OIC"),
+                  indicator: "red"
+                });
+              }
+            }
+          });
+        }
+      });
+      passwordDialog.show();
     }
     cash_voucher() {
       if (!this.$components_wrapper.is(":visible"))
@@ -4458,10 +4546,9 @@
         () => this.frm.call("reset_mode_of_payments"),
         () => this.cart.load_invoice(),
         () => this.make_new_invoice(),
-        () => this.item_selector.toggle_component(true),
+        () => this.item_selector.toggle_component(),
         () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(false),
-        () => this.cart.load_invoice(),
         () => frappe.dom.unfreeze()
       ]);
     }
@@ -4507,17 +4594,53 @@
       });
     }
     close_pos() {
-      if (!this.$components_wrapper.is(":visible"))
-        return;
-      let voucher = frappe.model.get_new_doc("POS Closing Entry");
-      voucher.pos_profile = this.frm.doc.pos_profile;
-      voucher.user = frappe.session.user;
-      voucher.company = this.frm.doc.company;
-      voucher.pos_opening_entry = this.pos_opening;
-      voucher.period_end_date = frappe.datetime.now_datetime();
-      voucher.posting_date = frappe.datetime.now_date();
-      voucher.posting_time = frappe.datetime.now_time();
-      frappe.set_route("Form", "POS Closing Entry", voucher.name);
+      const me = this;
+      const passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
+        fields: [
+          {
+            fieldname: "password",
+            fieldtype: "Password",
+            label: __("Password"),
+            reqd: 1
+          }
+        ],
+        primary_action_label: __("Authorize"),
+        primary_action: (values) => {
+          let password = values.password;
+          let role = "oic";
+          frappe.call({
+            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+            args: { password, role },
+            callback: (r) => {
+              if (r.message) {
+                frappe.show_alert({
+                  message: __("Verified"),
+                  indicator: "green"
+                });
+                passwordDialog.hide();
+                if (!this.$components_wrapper.is(":visible"))
+                  return;
+                let voucher = frappe.model.get_new_doc("POS Closing Entry");
+                voucher.pos_profile = this.frm.doc.pos_profile;
+                voucher.user = frappe.session.user;
+                voucher.company = this.frm.doc.company;
+                voucher.pos_opening_entry = this.pos_opening;
+                voucher.period_end_date = frappe.datetime.now_datetime();
+                voucher.posting_date = frappe.datetime.now_date();
+                voucher.posting_time = frappe.datetime.now_time();
+                frappe.set_route("Form", "POS Closing Entry", voucher.name);
+              } else {
+                frappe.show_alert({
+                  message: __("Incorrect password or user is not an OIC"),
+                  indicator: "red"
+                });
+              }
+            }
+          });
+        }
+      });
+      passwordDialog.show();
     }
     cash_count() {
       if (!this.$components_wrapper.is(":visible"))
@@ -5174,4 +5297,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.2Z3V4FI7.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.OHUJJSNQ.js.map
