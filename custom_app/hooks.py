@@ -237,6 +237,9 @@ doc_events = {
         "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
+    },
+   'POS Z Reading': {
+        'on_submit': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.on_submit'
     }
 }
 
