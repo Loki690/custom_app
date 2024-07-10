@@ -12,7 +12,8 @@ from frappe.utils.nestedset import get_root_of
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
-from frappe.utils.password import check_oic_password, check_password
+#from frappe.utils.password import check_oic_password, check_password
+from custom_app.customapp.utils.password import check_oic_password, check_password
 
 
 def search_by_term(search_term, warehouse, price_list):
