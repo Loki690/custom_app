@@ -4438,6 +4438,9 @@
       if (!this.$components_wrapper.is(":visible"))
         return;
       let voucher = frappe.model.get_new_doc("Cash Voucher Entry");
+      voucher.custom_pos_profile = this.frm.doc.pos_profile;
+      voucher.custom_cashier = frappe.session.user;
+      voucher.custom_opening_entry = this.pos_opening;
       frappe.set_route("Form", "Cash Voucher Entry", voucher.name);
     }
     check_encashment() {
@@ -4445,6 +4448,8 @@
         return;
       let voucher = frappe.model.get_new_doc("Check Encashment Entry");
       voucher.custom_pos_profile = this.frm.doc.pos_profile;
+      voucher.custom_received_by = frappe.session.user;
+      voucher.custom_opening_entry = this.pos_opening;
       frappe.set_route("Form", "Check Encashment Entry", voucher.name);
     }
     add_new_order() {
@@ -5169,4 +5174,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.CAD35FBH.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.2Z3V4FI7.js.map
