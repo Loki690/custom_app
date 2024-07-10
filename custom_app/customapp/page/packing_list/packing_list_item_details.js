@@ -196,13 +196,18 @@ custom_app.PointOfSale.ItemDetails = class {
 			this[`${fieldname}_control`].set_value(item[fieldname]);
 		
 			// Add event listener for discount_percentage and discount_amount field click
-			if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-				this.$form_container.find(`.${fieldname}-control input`).on("click", function () {
+			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
 						me.oic_authentication(fieldname);
 					}
 				});
+
 			}
+
+		
+			
+			
 		});
 		
 		this.make_auto_serial_selection_btn(item);

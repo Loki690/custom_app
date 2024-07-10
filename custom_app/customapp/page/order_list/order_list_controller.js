@@ -524,7 +524,7 @@ erpnext.PointOfSale.Controller = class {
 			wrapper: this.$components_wrapper,
 			events: {
 				get_frm: () => this.frm || {},
-
+				
 				get_customer_details: () => this.customer_details || {},
 
 				toggle_other_sections: (show) => {

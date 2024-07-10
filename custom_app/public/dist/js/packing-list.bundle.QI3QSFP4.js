@@ -376,9 +376,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/Barcode.js
+  // node_modules/jsbarcode/bin/barcodes/Barcode.js
   var require_Barcode = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/Barcode.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/Barcode.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -398,9 +398,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE39/index.js
+  // node_modules/jsbarcode/bin/barcodes/CODE39/index.js
   var require_CODE39 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE39/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE39/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -506,9 +506,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/constants.js
+  // node_modules/jsbarcode/bin/barcodes/CODE128/constants.js
   var require_constants = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE128/constants.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE128/constants.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -548,9 +548,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128.js
+  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128.js
   var require_CODE128 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -694,9 +694,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/auto.js
+  // node_modules/jsbarcode/bin/barcodes/CODE128/auto.js
   var require_auto = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE128/auto.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE128/auto.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -752,9 +752,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128_AUTO.js
+  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128_AUTO.js
   var require_CODE128_AUTO = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128_AUTO.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128_AUTO.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -802,9 +802,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128A.js
+  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128A.js
   var require_CODE128A = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128A.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128A.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -871,9 +871,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128B.js
+  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128B.js
   var require_CODE128B = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128B.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128B.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -940,9 +940,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128C.js
+  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128C.js
   var require_CODE128C = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128C.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128C.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1009,9 +1009,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/index.js
+  // node_modules/jsbarcode/bin/barcodes/CODE128/index.js
   var require_CODE1282 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/CODE128/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/CODE128/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1035,9 +1035,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/constants.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/constants.js
   var require_constants2 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/constants.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/constants.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1112,9 +1112,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/encoder.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/encoder.js
   var require_encoder = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/encoder.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/encoder.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1138,9 +1138,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN.js
   var require_EAN = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1248,9 +1248,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN13.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN13.js
   var require_EAN13 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN13.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN13.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1397,9 +1397,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN8.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN8.js
   var require_EAN8 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN8.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN8.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1519,9 +1519,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN5.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN5.js
   var require_EAN5 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN5.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN5.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1607,9 +1607,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN2.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN2.js
   var require_EAN2 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN2.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN2.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1687,9 +1687,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPC.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPC.js
   var require_UPC = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPC.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPC.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1845,9 +1845,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPCE.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPCE.js
   var require_UPCE = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPCE.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPCE.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2021,9 +2021,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/index.js
+  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/index.js
   var require_EAN_UPC = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2053,9 +2053,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/ITF/constants.js
+  // node_modules/jsbarcode/bin/barcodes/ITF/constants.js
   var require_constants3 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/ITF/constants.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/ITF/constants.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2066,9 +2066,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/ITF/ITF.js
+  // node_modules/jsbarcode/bin/barcodes/ITF/ITF.js
   var require_ITF = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/ITF/ITF.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/ITF/ITF.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2155,9 +2155,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/ITF/ITF14.js
+  // node_modules/jsbarcode/bin/barcodes/ITF/ITF14.js
   var require_ITF14 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/ITF/ITF14.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/ITF/ITF14.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2234,9 +2234,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/ITF/index.js
+  // node_modules/jsbarcode/bin/barcodes/ITF/index.js
   var require_ITF2 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/ITF/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/ITF/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2254,9 +2254,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI.js
+  // node_modules/jsbarcode/bin/barcodes/MSI/MSI.js
   var require_MSI = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/MSI/MSI.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2346,9 +2346,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/MSI/checksums.js
+  // node_modules/jsbarcode/bin/barcodes/MSI/checksums.js
   var require_checksums = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/MSI/checksums.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/MSI/checksums.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2379,9 +2379,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI10.js
+  // node_modules/jsbarcode/bin/barcodes/MSI/MSI10.js
   var require_MSI10 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI10.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/MSI/MSI10.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2423,9 +2423,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI11.js
+  // node_modules/jsbarcode/bin/barcodes/MSI/MSI11.js
   var require_MSI11 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI11.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/MSI/MSI11.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2467,9 +2467,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI1010.js
+  // node_modules/jsbarcode/bin/barcodes/MSI/MSI1010.js
   var require_MSI1010 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI1010.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/MSI/MSI1010.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2513,9 +2513,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI1110.js
+  // node_modules/jsbarcode/bin/barcodes/MSI/MSI1110.js
   var require_MSI1110 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI1110.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/MSI/MSI1110.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2559,9 +2559,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/MSI/index.js
+  // node_modules/jsbarcode/bin/barcodes/MSI/index.js
   var require_MSI2 = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/MSI/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/MSI/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2588,9 +2588,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/pharmacode/index.js
+  // node_modules/jsbarcode/bin/barcodes/pharmacode/index.js
   var require_pharmacode = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/pharmacode/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/pharmacode/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2679,9 +2679,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/codabar/index.js
+  // node_modules/jsbarcode/bin/barcodes/codabar/index.js
   var require_codabar = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/codabar/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/codabar/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2795,9 +2795,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/GenericBarcode/index.js
+  // node_modules/jsbarcode/bin/barcodes/GenericBarcode/index.js
   var require_GenericBarcode = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/GenericBarcode/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/GenericBarcode/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2872,9 +2872,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/barcodes/index.js
+  // node_modules/jsbarcode/bin/barcodes/index.js
   var require_barcodes = __commonJS({
-    "../../node_modules/jsbarcode/bin/barcodes/index.js"(exports) {
+    "node_modules/jsbarcode/bin/barcodes/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2913,9 +2913,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/help/merge.js
+  // node_modules/jsbarcode/bin/help/merge.js
   var require_merge = __commonJS({
-    "../../node_modules/jsbarcode/bin/help/merge.js"(exports) {
+    "node_modules/jsbarcode/bin/help/merge.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2937,9 +2937,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/help/linearizeEncodings.js
+  // node_modules/jsbarcode/bin/help/linearizeEncodings.js
   var require_linearizeEncodings = __commonJS({
-    "../../node_modules/jsbarcode/bin/help/linearizeEncodings.js"(exports) {
+    "node_modules/jsbarcode/bin/help/linearizeEncodings.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2964,9 +2964,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/help/fixOptions.js
+  // node_modules/jsbarcode/bin/help/fixOptions.js
   var require_fixOptions = __commonJS({
-    "../../node_modules/jsbarcode/bin/help/fixOptions.js"(exports) {
+    "node_modules/jsbarcode/bin/help/fixOptions.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2982,9 +2982,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/help/optionsFromStrings.js
+  // node_modules/jsbarcode/bin/help/optionsFromStrings.js
   var require_optionsFromStrings = __commonJS({
-    "../../node_modules/jsbarcode/bin/help/optionsFromStrings.js"(exports) {
+    "node_modules/jsbarcode/bin/help/optionsFromStrings.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3008,9 +3008,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/options/defaults.js
+  // node_modules/jsbarcode/bin/options/defaults.js
   var require_defaults = __commonJS({
-    "../../node_modules/jsbarcode/bin/options/defaults.js"(exports) {
+    "node_modules/jsbarcode/bin/options/defaults.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3041,9 +3041,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/help/getOptionsFromElement.js
+  // node_modules/jsbarcode/bin/help/getOptionsFromElement.js
   var require_getOptionsFromElement = __commonJS({
-    "../../node_modules/jsbarcode/bin/help/getOptionsFromElement.js"(exports) {
+    "node_modules/jsbarcode/bin/help/getOptionsFromElement.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3075,9 +3075,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/renderers/shared.js
+  // node_modules/jsbarcode/bin/renderers/shared.js
   var require_shared = __commonJS({
-    "../../node_modules/jsbarcode/bin/renderers/shared.js"(exports) {
+    "node_modules/jsbarcode/bin/renderers/shared.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3160,9 +3160,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/renderers/canvas.js
+  // node_modules/jsbarcode/bin/renderers/canvas.js
   var require_canvas = __commonJS({
-    "../../node_modules/jsbarcode/bin/renderers/canvas.js"(exports) {
+    "node_modules/jsbarcode/bin/renderers/canvas.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3302,9 +3302,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/renderers/svg.js
+  // node_modules/jsbarcode/bin/renderers/svg.js
   var require_svg = __commonJS({
-    "../../node_modules/jsbarcode/bin/renderers/svg.js"(exports) {
+    "node_modules/jsbarcode/bin/renderers/svg.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3475,9 +3475,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/renderers/object.js
+  // node_modules/jsbarcode/bin/renderers/object.js
   var require_object = __commonJS({
-    "../../node_modules/jsbarcode/bin/renderers/object.js"(exports) {
+    "node_modules/jsbarcode/bin/renderers/object.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3525,9 +3525,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/renderers/index.js
+  // node_modules/jsbarcode/bin/renderers/index.js
   var require_renderers = __commonJS({
-    "../../node_modules/jsbarcode/bin/renderers/index.js"(exports) {
+    "node_modules/jsbarcode/bin/renderers/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3545,9 +3545,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/exceptions/exceptions.js
+  // node_modules/jsbarcode/bin/exceptions/exceptions.js
   var require_exceptions = __commonJS({
-    "../../node_modules/jsbarcode/bin/exceptions/exceptions.js"(exports) {
+    "node_modules/jsbarcode/bin/exceptions/exceptions.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3612,9 +3612,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/help/getRenderProperties.js
+  // node_modules/jsbarcode/bin/help/getRenderProperties.js
   var require_getRenderProperties = __commonJS({
-    "../../node_modules/jsbarcode/bin/help/getRenderProperties.js"(exports) {
+    "node_modules/jsbarcode/bin/help/getRenderProperties.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3696,9 +3696,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/exceptions/ErrorHandler.js
+  // node_modules/jsbarcode/bin/exceptions/ErrorHandler.js
   var require_ErrorHandler = __commonJS({
-    "../../node_modules/jsbarcode/bin/exceptions/ErrorHandler.js"(exports) {
+    "node_modules/jsbarcode/bin/exceptions/ErrorHandler.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3766,9 +3766,9 @@
     }
   });
 
-  // ../../node_modules/jsbarcode/bin/JsBarcode.js
+  // node_modules/jsbarcode/bin/JsBarcode.js
   var require_JsBarcode = __commonJS({
-    "../../node_modules/jsbarcode/bin/JsBarcode.js"(exports, module) {
+    "node_modules/jsbarcode/bin/JsBarcode.js"(exports, module) {
       "use strict";
       var _barcodes = require_barcodes();
       var _barcodes2 = _interopRequireDefault(_barcodes);
@@ -5945,8 +5945,8 @@
           render_input: true
         });
         this[`${fieldname}_control`].set_value(item[fieldname]);
-        if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-          this.$form_container.find(`.${fieldname}-control input`).on("click", function() {
+        if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+          this.$form_container.find(`.${fieldname}-control input`).on("focus", function() {
             if (!me.is_oic_authenticated) {
               me.oic_authentication(fieldname);
             }
@@ -6372,19 +6372,12 @@
         }, 100);
       }
     }
-    hide_controls() {
-    }
     bind_events() {
       const me = this;
-      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
-        const mode_clicked = $(this);
-        if (!$(e.target).is(mode_clicked))
-          return;
-        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
-        me.$payment_modes.animate({ scrollLeft });
-        const mode = mode_clicked.attr("data-mode");
+      function hideAllFields() {
         $(`.mode-of-payment-control`).css("display", "none");
         $(`.mobile-number`).css("display", "none");
+        $(`.approval-code`).css("display", "none");
         $(`.reference-number`).css("display", "none");
         $(`.bank-name`).css("display", "none");
         $(`.holder-name`).css("display", "none");
@@ -6400,6 +6393,13 @@
         $(`.actual-gov-two`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
+      }
+      this.$payment_modes.on("click", ".mode-of-payment", function(e) {
+        const mode_clicked = $(this);
+        const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
+        me.$payment_modes.animate({ scrollLeft });
+        const mode = mode_clicked.attr("data-mode");
+        hideAllFields();
         $(".mode-of-payment").removeClass("border-primary");
         if (mode_clicked.hasClass("border-primary")) {
           mode_clicked.removeClass("border-primary");
@@ -6409,6 +6409,7 @@
           mode_clicked.find(".mode-of-payment-control").css("display", "flex");
           mode_clicked.find(".mobile-number").css("display", "flex");
           mode_clicked.find(".reference-number").css("display", "flex");
+          mode_clicked.find(".approval-code").css("display", "flex");
           mode_clicked.find(".bank-name").css("display", "flex");
           mode_clicked.find(".holder-name").css("display", "flex");
           mode_clicked.find(".card_type_control").css("display", "flex");
@@ -6426,6 +6427,13 @@
           me.selected_mode = me[`${mode}_control`];
           me.selected_mode && me.selected_mode.$input.get().focus();
           me.auto_set_remaining_amount();
+        }
+      });
+      $(document).on("click", function(e) {
+        const target = $(e.target);
+        if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+          hideAllFields();
+          $(".mode-of-payment").removeClass("border-primary");
         }
       });
       frappe.ui.form.on("POS Invoice", "contact_mobile", (frm2) => {
@@ -6639,6 +6647,7 @@
 							<div class="${mode} card_type_control"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 						`;
               break;
@@ -6648,6 +6657,7 @@
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+						    <div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 							`;
               break;
@@ -6657,6 +6667,7 @@
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 							`;
               break;
@@ -6825,6 +6836,21 @@
           });
           expiry_date_control.set_value(existing_custom_card_expiration_date || "");
           expiry_date_control.refresh();
+          let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
+          let custom_approval_code_control = frappe.ui.form.make_control({
+            df: {
+              label: "Approval Code",
+              fieldtype: "Data",
+              placeholder: "Approval Code",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.approval-code`),
+            render_input: true
+          });
+          custom_approval_code_control.set_value(existing_custom_approval_code || "");
+          custom_approval_code_control.refresh();
           let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
           let reference_no_control = frappe.ui.form.make_control({
             df: {
@@ -6918,6 +6944,21 @@
           });
           expiry_date_control.set_value(existing_custom_card_expiration_date || "");
           expiry_date_control.refresh();
+          let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
+          let custom_approval_code_control = frappe.ui.form.make_control({
+            df: {
+              label: "Approval Code",
+              fieldtype: "Data",
+              placeholder: "Approval Code",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.approval-code`),
+            render_input: true
+          });
+          custom_approval_code_control.set_value(existing_custom_approval_code || "");
+          custom_approval_code_control.refresh();
           let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
           let reference_no_control = frappe.ui.form.make_control({
             df: {
@@ -6968,14 +7009,14 @@
           epayment_reference_number_controller.refresh();
         }
         if (p.mode_of_payment === "Cheque" || p.mode_of_payment === "Government") {
-          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+          let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
           let bank_name_control = frappe.ui.form.make_control({
             df: {
-              label: "Bank",
+              label: "Check Bank Name",
               fieldtype: "Data",
-              placeholder: "Bank Name",
+              placeholder: "Check Bank Name",
               onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+                frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
               }
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -6983,14 +7024,14 @@
           });
           bank_name_control.set_value(existing_custom_bank_name || "");
           bank_name_control.refresh();
-          let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_check_name");
+          let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_name_on_check");
           let check_name_control = frappe.ui.form.make_control({
             df: {
               label: "Name On Check",
               fieldtype: "Data",
               placeholder: "Check Name",
               onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_check_name", this.value);
+                frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", this.value);
               }
             },
             parent: this.$payment_modes.find(`.${mode}.check-name`),
@@ -7102,11 +7143,21 @@
         let nearest_x = Math.ceil(amount / x) * x;
         return nearest_x === amount ? nearest_x + x : nearest_x;
       };
-      return steps.reduce((finalArr, x) => {
+      let shortcuts = steps.reduce((finalArr, x) => {
         let nearest_x = get_nearest(grand_total, x);
         nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
         return [...finalArr, nearest_x];
       }, []);
+      if (grand_total > 100) {
+        if (!shortcuts.includes(500)) {
+          shortcuts.push(500);
+        }
+        if (!shortcuts.includes(1e3)) {
+          shortcuts.push(1e3);
+        }
+      }
+      shortcuts.sort((a, b) => a - b);
+      return shortcuts;
     }
     render_loyalty_points_payment_mode() {
       const me = this;
@@ -7927,6 +7978,7 @@
         () => this.item_selector.toggle_component(true),
         () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(false),
+        () => window.location.reload(),
         () => frappe.dom.unfreeze()
       ]);
     }
@@ -8628,4 +8680,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.SLVOYDR6.js.map
+//# sourceMappingURL=packing-list.bundle.QI3QSFP4.js.map

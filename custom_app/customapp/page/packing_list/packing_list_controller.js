@@ -165,6 +165,7 @@ custom_app.PointOfSale.Controller = class {
 			() => this.item_selector.toggle_component(true),
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(false),
+			() => window.location.reload(), 
 			() => frappe.dom.unfreeze(),
 		]);
 	}
