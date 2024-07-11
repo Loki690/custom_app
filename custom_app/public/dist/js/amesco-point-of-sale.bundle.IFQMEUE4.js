@@ -2808,6 +2808,8 @@
       }
       this.$payment_modes.on("click", ".mode-of-payment", function(e) {
         const mode_clicked = $(this);
+        if (!$(e.target).is(mode_clicked))
+          return;
         const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
         me.$payment_modes.animate({ scrollLeft });
         const mode = mode_clicked.attr("data-mode");
@@ -2837,13 +2839,13 @@
           me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
           me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
           me.selected_mode = me[`${mode}_control`];
-          me.selected_mode && me.selected_mode.$input.get().focus();
+          me.selected_mode && me.selected_mode.$input.get().focus(0);
           me.auto_set_remaining_amount();
         }
       });
       $(document).on("click", function(e) {
         const target = $(e.target);
-        if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+        if (!target.closest(".mode-of-payment").length) {
           hideAllFields();
           $(".mode-of-payment").removeClass("border-primary");
         }
@@ -4555,6 +4557,11 @@
     order_list() {
       frappe.run_serially([
         () => frappe.dom.freeze(),
+        () => this.frm.call("reset_mode_of_payments"),
+        () => this.cart.load_invoice(),
+        () => this.make_new_invoice(),
+        () => this.item_selector.toggle_component(true),
+        () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(true),
         () => window.location.reload(),
         () => frappe.dom.unfreeze()
@@ -5297,4 +5304,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.NKZ6ZVMH.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.IFQMEUE4.js.map

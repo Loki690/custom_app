@@ -4819,6 +4819,8 @@
             shortcut_key = "ctrl+q";
           if (btn === "Rate")
             shortcut_key = "ctrl+a";
+          if (btn === "Discount")
+            shortcut_key = "ctrl+shift+d";
           if (btn === ".")
             shortcut_key = "ctrl+>";
           const fieldname = this.number_pad.fieldnames[btn] ? this.number_pad.fieldnames[btn] : typeof btn === "string" ? frappe.scrub(btn) : btn;
@@ -8680,4 +8682,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.LNBC5UR4.js.map
+//# sourceMappingURL=packing-list.bundle.UYA3Y45D.js.map

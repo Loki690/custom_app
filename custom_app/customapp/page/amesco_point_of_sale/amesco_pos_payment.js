@@ -144,7 +144,8 @@ custom_app.PointOfSale.Payment = class {
 		
 		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
 			const mode_clicked = $(this);
-		
+			if (!$(e.target).is(mode_clicked)) return;
+
 			const scrollLeft =
 				mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
 			me.$payment_modes.animate({ scrollLeft });
@@ -183,7 +184,7 @@ custom_app.PointOfSale.Payment = class {
 				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
 				me.selected_mode = me[`${mode}_control`];
-				me.selected_mode && me.selected_mode.$input.get().focus();
+				me.selected_mode && me.selected_mode.$input.get().focus(0);
 				me.auto_set_remaining_amount();
 			}
 		});
@@ -191,7 +192,7 @@ custom_app.PointOfSale.Payment = class {
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
 			const target = $(e.target);
-			if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+			if (!target.closest(".mode-of-payment").length) {
 				hideAllFields();
 				$(".mode-of-payment").removeClass("border-primary");
 			}

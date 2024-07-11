@@ -435,6 +435,7 @@ custom_app.PointOfSale.ItemCart = class {
 				if (btn === "Remove") shortcut_key = "ctrl+x";
 				if (btn === "Quantity") shortcut_key = "ctrl+q";
 				if (btn === "Rate") shortcut_key = "ctrl+a";
+				if (btn === "Discount") shortcut_key = "ctrl+shift+d";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map

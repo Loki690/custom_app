@@ -424,13 +424,12 @@ custom_app.PointOfSale.Controller = class {
 	order_list() {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
-			// () => this.frm.call("reset_mode_of_payments"),
-			// () => this.cart.load_invoice(),
-			// () => this.make_new_invoice(),
-			// () => this.item_selector.toggle_component(true),
-			// () => this.item_details.toggle_item_details_section(),
+			() => this.frm.call("reset_mode_of_payments"),
+			() => this.cart.load_invoice(),
+			() => this.make_new_invoice(),
+			() => this.item_selector.toggle_component(true),
+			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(true),
-			// () => this.cart.load_invoice(),
 			() => window.location.reload(), 
 			() => frappe.dom.unfreeze(),
 			
