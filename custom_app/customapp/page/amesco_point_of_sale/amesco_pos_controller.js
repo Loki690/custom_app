@@ -81,7 +81,13 @@ custom_app.PointOfSale.Controller = class {
 				args: { pos_profile }
 			});
 
-			const max_shift = 4;
+			 // Second Frappe call to get the max_shift value from the POS Profile
+			 const max_shift_response = await frappe.call({
+				method: 'custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_pos_profile_shift',
+				args: { pos_profile }
+			});
+		
+			const max_shift = max_shift_response.message; // Adjust 'max_shift' to the actual field name
 
 			if (res.message >= max_shift) {
 				frappe.msgprint(__('You have already reached the maximum of shifts for todays opening'));

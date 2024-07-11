@@ -326,6 +326,18 @@ def get_shift_count(pos_profile):
     return count
 
 @frappe.whitelist()
+def get_pos_profile_shift(pos_profile):
+    try:
+        # Retrieve the POS Profile document
+        pos_profile_doc = frappe.get_doc("POS Profile", pos_profile)
+        return pos_profile_doc.custom_set_max_shift
+    except frappe.DoesNotExistError:
+        frappe.throw(_("POS Profile '{0}' does not exist").format(pos_profile))
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Error fetching POS Profile')
+        frappe.throw(_("An error occurred while fetching the POS Profile: {0}").format(str(e)))
+
+@frappe.whitelist()
 def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 	balance_details = json.loads(balance_details)
 
