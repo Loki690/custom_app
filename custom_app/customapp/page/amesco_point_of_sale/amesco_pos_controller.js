@@ -702,8 +702,10 @@ custom_app.PointOfSale.Controller = class {
 						this.toggle_components(false);
 						// Customized Layout to toggle off Cart
 						this.cart.toggle_component(false);
-						this.order_summary.toggle_component(true);
+						this.order_summary.toggle_component(false);
 						this.order_summary.load_summary_of(this.frm.doc, true);
+						this.order_summary.print_receipt();
+						
 						frappe.show_alert({
 							indicator: "green",
 							message: __("Order successfully completed"),
@@ -717,6 +719,7 @@ custom_app.PointOfSale.Controller = class {
 							title: __('Change Amount'),
 							primary_action_label: __('OK'),
 							primary_action: () => {
+								window.location.reload();
 								changeDialog.hide();
 							}
 						});
