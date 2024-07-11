@@ -57,7 +57,7 @@ def before_submit(doc, method):
     doc.custom_cashier = frappe.session.user
     doc.custom_cashier_name = get_user_full_name(frappe.session.user)  # Set the user's full name
     doc.custom_date_time_posted = now_datetime()  # Set the current date and time
-    doc.is_printed = '1'
+    doc.custom_is_printed = '1'
     
     
 def get_user_full_name(user):
@@ -191,4 +191,34 @@ def get_serial_number():
         print(f"Error fetching serial number: {error_message}")
         # Raise a Frappe exception to inform the user
         frappe.throw(_('Error fetching serial number: {0}').format(str(e)))
+        
+        
+        
+        
+@frappe.whitelist()
+def increment_print_count(pos_invoice):
+    try:
+        invoice = frappe.get_doc('POS Invoice', pos_invoice)
+        current_printed_no = invoice.custom_printed_no or 0
 
+        # Determine the new print count
+        if not invoice.custom_is_printed:
+            new_printed_no = 1
+        else:
+            new_printed_no = current_printed_no + 1
+
+        # Directly update the database
+        frappe.db.sql("""
+            UPDATE `tabPOS Invoice`
+            SET custom_printed_no = %s, custom_is_printed = 1
+            WHERE name = %s
+        """, (new_printed_no, pos_invoice))
+        
+        # Commit the transaction
+        frappe.db.commit()
+        
+        return new_printed_no
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Error incrementing print count')
+        frappe.throw(_('Error incrementing print count: {0}').format(str(e)))
