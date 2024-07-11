@@ -4818,8 +4818,9 @@
             this.frm.save("Submit").then((r) => {
               this.toggle_components(false);
               this.cart.toggle_component(false);
-              this.order_summary.toggle_component(true);
+              this.order_summary.toggle_component(false);
               this.order_summary.load_summary_of(this.frm.doc, true);
+              this.order_summary.print_receipt();
               frappe.show_alert({
                 indicator: "green",
                 message: __("Order successfully completed")
@@ -4829,6 +4830,7 @@
                 title: __("Change Amount"),
                 primary_action_label: __("OK"),
                 primary_action: () => {
+                  window.location.reload();
                   changeDialog.hide();
                 }
               });
@@ -5305,4 +5307,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.H2ZJJR6I.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.QU53QBN6.js.map
