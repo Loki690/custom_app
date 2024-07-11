@@ -48,7 +48,7 @@ def before_save(doc, method):
     if not doc.name:
         doc.name = make_autoname(doc.naming_series)
     # Set the barcode to the document name
-    doc.barcode = doc.name
+    #doc.barcode = doc.name
     doc.custom_barcode = doc.name
 
 
