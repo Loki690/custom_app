@@ -358,7 +358,7 @@ custom_app.PointOfSale.Controller = class {
 					reqd: 1
 				}
 			],
-			primary_action_label: __('Proceed'),
+			primary_action_label: __('Ok'),
 			primary_action: (values) => {
 				let password = values.password;
 				frappe.call({
@@ -366,8 +366,7 @@ custom_app.PointOfSale.Controller = class {
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
-							// sets phracist assistant
-							this.set_pharmacist_assist(this.frm)
+							this.set_pharmacist_assist(this.frm) // sets phracist assistant
 							this.frm
 								.save(undefined, undefined, undefined, () => {
 									frappe.show_alert({
@@ -387,8 +386,8 @@ custom_app.PointOfSale.Controller = class {
 					
 									this.order_summary.load_summary_of(this.frm.doc, true);
 									this.order_summary.print_receipt();
-									window.location.reload();
-									
+									window.location.reload(); // reload after successfull entered password
+									localStorage.removeItem('posCartItems'); // remove stored data from local storage
 									frappe.show_alert({
 										message: __("Invoice Printed"),
 										indicator: "blue",

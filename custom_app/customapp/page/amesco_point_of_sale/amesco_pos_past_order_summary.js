@@ -71,7 +71,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 
 	get_upper_section_html(doc) {
 
-		console.log("Paid Amount",doc)
+		// console.log("Paid Amount",doc)
 		const { status } = doc;
 		let indicator_color = "";
 
