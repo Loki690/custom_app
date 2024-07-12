@@ -198,7 +198,7 @@ custom_app.PointOfSale.ItemCart = class {
 				// [4, 5, 6, "Discount"],
 				// [7, 8, 9, "Rate"],
 				// [".", 0, "Delete", "Remove"],
-				[  "", "Quantity", "Rate", "Remove"],
+				[  "Discount", "Quantity", "Rate", "Remove"],
 			],
 			css_classes: [
 				["", "", "", "col-span-2 remove-btn"],
@@ -435,6 +435,7 @@ custom_app.PointOfSale.ItemCart = class {
 				if (btn === "Remove") shortcut_key = "ctrl+x";
 				if (btn === "Quantity") shortcut_key = "ctrl+q";
 				if (btn === "Rate") shortcut_key = "ctrl+a";
+				if (btn === "Discount") shortcut_key = "ctrl+shift+d";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map
@@ -882,7 +883,7 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		this.render_taxes(frm.doc.taxes);          
+		// this.render_taxes(frm.doc.taxes);          
 		                                                                                               
 	}
 
@@ -985,29 +986,29 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 
-	render_taxes(taxes) {
-		if (taxes && taxes.length) {
-			const currency = this.events.get_frm().doc.currency;
-			const taxes_html = taxes
-				.map((t) => {
-					if (t.tax_amount_after_discount_amount == 0.0) return;
-					// if tax rate is 0, don't print it.
-					const description = /[0-9]+/.test(t.description)
-						? t.description
-						: t.rate != 0
-							? `${t.description} @ ${t.rate}%`
-							: t.description;
-					return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-				})
-				.join("");
-			this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-		} else {
-			this.$totals_section.find(".taxes-container").css("display", "none").html("");
-		}
-	}
+	// render_taxes(taxes) {
+	// 	if (taxes && taxes.length) {
+	// 		const currency = this.events.get_frm().doc.currency;
+	// 		const taxes_html = taxes
+	// 			.map((t) => {
+	// 				if (t.tax_amount_after_discount_amount == 0.0) return;
+	// 				// if tax rate is 0, don't print it.
+	// 				const description = /[0-9]+/.test(t.description)
+	// 					? t.description
+	// 					: t.rate != 0
+	// 						? `${t.description} @ ${t.rate}%`
+	// 						: t.description;
+	// 				return `<div class="tax-row">
+	// 				<div class="tax-label">${description}</div>
+	// 				<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+	// 			</div>`;
+	// 			})
+	// 			.join("");
+	// 		this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+	// 	} else {
+	// 		this.$totals_section.find(".taxes-container").css("display", "none").html("");
+	// 	}
+	// }
 
 
 
