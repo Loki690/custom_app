@@ -7,6 +7,7 @@ import frappe
 from frappe import _
 from frappe.exceptions import AuthenticationError
 from frappe.utils import cint
+from frappe.utils.data import getdate
 from frappe.utils.nestedset import get_root_of
 
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
@@ -315,6 +316,26 @@ def check_opening_entry(user):
 
 	return open_vouchers
 
+@frappe.whitelist()
+def get_shift_count(pos_profile):
+    today = getdate()
+    count = frappe.db.count('POS Opening Entry', {
+        'pos_profile': pos_profile,
+        'posting_date': today,
+    })
+    return count
+
+@frappe.whitelist()
+def get_pos_profile_shift(pos_profile):
+    try:
+        # Retrieve the POS Profile document
+        pos_profile_doc = frappe.get_doc("POS Profile", pos_profile)
+        return pos_profile_doc.custom_set_max_shift
+    except frappe.DoesNotExistError:
+        frappe.throw(_("POS Profile '{0}' does not exist").format(pos_profile))
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Error fetching POS Profile')
+        frappe.throw(_("An error occurred while fetching the POS Profile: {0}").format(str(e)))
 
 @frappe.whitelist()
 def create_opening_voucher(pos_profile, company, balance_details, custom_shift):

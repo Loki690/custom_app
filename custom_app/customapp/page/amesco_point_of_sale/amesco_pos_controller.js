@@ -74,6 +74,29 @@ custom_app.PointOfSale.Controller = class {
 				dialog.fields_dict.balance_details.grid.refresh();
 			});
 		};
+
+		const get_next_shift = async (pos_profile) => {
+			const res = await frappe.call({
+				method: 'custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_shift_count',
+				args: { pos_profile }
+			});
+
+			 // Second Frappe call to get the max_shift value from the POS Profile
+			 const max_shift_response = await frappe.call({
+				method: 'custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_pos_profile_shift',
+				args: { pos_profile }
+			});
+		
+			const max_shift = max_shift_response.message; // Adjust 'max_shift' to the actual field name
+
+			if (res.message >= max_shift) {
+				frappe.msgprint(__('You have already reached the maximum of shifts for todays opening'));
+				frappe.utils.play_sound("error");
+				throw new Error('Max shifts reached');
+			}
+			return `Shift ${res.message + 1}`;
+		};
+
 		const dialog = new frappe.ui.Dialog({
 			title: __("Create POS Opening Entry"),
 			static: true,
@@ -96,16 +119,6 @@ custom_app.PointOfSale.Controller = class {
 					onchange: () => fetch_pos_payment_methods(),
 				},
 				{
-					fieldtype: "Select",
-					label: __("Shift"),
-					options: [
-						{ "label": __("Shift 1"), "value": "Shift 1" },
-						{ "label": __("Shift 2"), "value": "Shift 2" },
-					],
-					fieldname: "custom_shift",
-					reqd: 1,
-				},
-				{
 					fieldname: "balance_details",
 					fieldtype: "Table",
 					label: "Opening Balance Details",
@@ -116,81 +129,39 @@ custom_app.PointOfSale.Controller = class {
 					fields: table_fields,
 				},
 			],
-			primary_action: async function ({ company, pos_profile, balance_details, custom_shift }) {
-				// Validate balance details
-				if (!balance_details.length) {
-				  frappe.show_alert({
-					message: __("Please add Mode of payments and opening balance details."),
-					indicator: "red",
-				  });
-				  return frappe.utils.play_sound("error");
+			primary_action: async function ({ company, pos_profile, balance_details }) {
+				try {
+					const custom_shift = await get_next_shift(pos_profile);
+	
+					// Validate balance details
+					if (!balance_details.length) {
+						frappe.show_alert({
+							message: __("Please add Mode of payments and opening balance details."),
+							indicator: "red",
+						});
+						return frappe.utils.play_sound("error");
+					}
+	
+					// Filter balance details
+					balance_details = balance_details.filter((d) => d.mode_of_payment);
+	
+					// Call the custom method to create the opening voucher
+					const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
+					const res = await frappe.call({
+						method,
+						args: { pos_profile, company, balance_details, custom_shift },
+						freeze: true,
+					});
+	
+					if (!res.exc) {
+						me.prepare_app_defaults(res.message);
+					}
+
+					dialog.hide();
+				} catch (error) {
+					console.error("Error creating POS Opening Entry:", error);
 				}
-			  
-				// Fetch POS Profile serial number (asynchronous)
-				// try {
-				//   const pos_profile_doc = await frappe.db.get_doc("POS Profile", pos_profile);
-
-				//   const computer_serial_number = 123;
-				//   const pos_serial_number =  pos_profile_doc.custom_sn;
-
-
-				// 	//frappe.make_get_request('http://localhost:3000/serial-number')
-				// 	//   const computer_serial_number =  frappe.call({
-				// 	//     method: 'custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.get_serial_number',
-				// 	//     callback: function(response) {
-				// 	//         const data = response.message;
-				// 	//         if (data) {
-				// 	// 			console.log(response)
-				// 	//         } else {
-				// 	//             frappe.msgprint(`No data found for serial number `);
-				// 	//         }
-				// 	//         resolve();
-				// 	//     }
-				// 	// });
-				 
-				//     //console.log('POS Profile: ', pos_serial_number);
-
-				//   if (pos_serial_number !== computer_serial_number) {
-
-
-				// 	// console.log('POS Serial:', pos_serial_number);
-				// 	// console.log('POS Serial:', computer_serial_number);
-					
-				// 	frappe.show_alert({
-				// 	  message: __(`Serial number not match ${pos_serial_number}`),
-				// 	  indicator: "red",
-				// 	});
-				// 	return frappe.utils.play_sound("error");
-				//   }
-
-
-				 
-				// } catch (error) {
-				//   console.error("Failed to get POS Profile:", error);
-				//   // Optionally handle the error here (e.g., display an alert)
-				//   return; // Exit the function if error
-				// }
-			  
-				// Filter balance details
-				balance_details = balance_details.filter((d) => d.mode_of_payment);
-			  
-				
-			  
-				// Compare serial numbers
-				// Call the custom method
-				const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
-				const res = await frappe.call({
-				  method,
-				  args: { pos_profile, company, balance_details, custom_shift },
-				  freeze: true,
-				});
-			  
-				if (!res.exc) {
-				  me.prepare_app_defaults(res.message);
-				}
-			  
-				dialog.hide();
-			  },
+			},
 			primary_action_label: __("Submit"),
 		});
 		dialog.show();
@@ -201,7 +172,6 @@ custom_app.PointOfSale.Controller = class {
 			};
 		};
 	}
-
 
 
 	get_pos_profile_doc(pos_profile) {
@@ -737,8 +707,10 @@ custom_app.PointOfSale.Controller = class {
 						this.toggle_components(false);
 						// Customized Layout to toggle off Cart
 						this.cart.toggle_component(false);
-						this.order_summary.toggle_component(true);
+						this.order_summary.toggle_component(false);
 						this.order_summary.load_summary_of(this.frm.doc, true);
+						this.order_summary.print_receipt();
+						
 						frappe.show_alert({
 							indicator: "green",
 							message: __("Order successfully completed"),
@@ -752,6 +724,7 @@ custom_app.PointOfSale.Controller = class {
 							title: __('Change Amount'),
 							primary_action_label: __('OK'),
 							primary_action: () => {
+								window.location.reload();
 								changeDialog.hide();
 							}
 						});

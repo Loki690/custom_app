@@ -93,7 +93,7 @@ custom_app.PointOfSale.ItemCart = class {
 	make_cart_items_section() {
 		this.$cart_header = this.$component.find(".cart-header");
 		this.$cart_items_wrapper = this.$component.find(".cart-items-section");
-	
+		//this.load_stored_cart_items();
 		this.make_no_items_placeholder();
 	}
 	
@@ -396,7 +396,7 @@ custom_app.PointOfSale.ItemCart = class {
 				116: true, 
 				// Prevent Ctrl+R (refresh)
 				'Ctrl+82': true,
-						// Prevent Ctrl+Shift+R (refresh)
+				// Prevent Ctrl+Shift+R (refresh)
 				'Ctrl+16+82': true,
 				// Prevent Ctrl+S (save)
 				'Ctrl+83': true,
@@ -1026,11 +1026,19 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_item_html(item, remove_item) {
 		const $item = this.get_cart_item(item);
-
+		// Retrieve current cart items from local storage
+		let cartItems = JSON.parse(localStorage.getItem('posCartItems')) || [];
+	
 		if (remove_item) {
 			if ($item) {
 				$item.next().remove();
 				$item.remove();
+	
+				// Remove the item from the local storage cart items
+				cartItems = cartItems.filter(cartItem => cartItem.item_code !== item.item_code);
+				
+				localStorage.setItem('posCartItems', JSON.stringify(cartItems));
+	
 				this.remove_customer(); // Call remove_customer function after removing item
 				this.set_cash_customer(); // Set customer to "Cash" after removing item
 				frappe.run_serially([
@@ -1039,14 +1047,25 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 		} else {
 			const item_row = this.get_item_from_frm(item);
-			this.render_cart_item(item_row, $item);
-		}
 
+			this.render_cart_item(item_row, $item);
+	
+			// Add or update the item in the local storage cart items
+			const existingItemIndex = cartItems.findIndex(cartItem => cartItem.item_code === item.item_code);
+			if (existingItemIndex > -1) {
+				cartItems[existingItemIndex] = item; // Update existing item
+			} else {
+				cartItems.push(item); // Add new item
+			}
+			localStorage.setItem('posCartItems', JSON.stringify(cartItems));
+			// console.log('cartItems', cartItems)
+		}
+	
 		const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
 		this.highlight_checkout_btn(no_of_cart_items > 0);
 		this.update_empty_cart_section(no_of_cart_items);
 	}
-
+	
 
 	remove_customer() {
 		const frm = this.events.get_frm();
@@ -1593,11 +1612,30 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$cart_items_wrapper.html("");
+		
+		const storedItems = JSON.parse(localStorage.getItem('posCartItems')) || [];
+
+		// console.log('storedItems: ', storedItems)
+		// 	storedItems.forEach(item_data => {
+		// 		console.log('storedItem: ', item_data)
+		// 	});
+		// console.log('Items: ', frm.doc.items)
+
+
 		if (frm.doc.items.length) {
 			frm.doc.items.forEach((item) => {
 				this.update_item_html(item);
 			});
-		} else {
+		} 
+		
+		// else if (storedItems) {
+		// 	storedItems.forEach(item_data => {
+		// 		this.update_item_html(item_data);
+		// 	});
+
+		// } 
+		
+		else {
 			this.make_no_items_placeholder();
 			this.highlight_checkout_btn(false);
 		}
