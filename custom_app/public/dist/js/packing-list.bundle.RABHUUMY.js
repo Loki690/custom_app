@@ -5200,7 +5200,6 @@
       this.render_total_item_qty(frm2.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm2.doc.grand_total : frm2.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm2.doc.taxes);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -5264,23 +5263,6 @@
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".grand-total-container").html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
       this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
-    }
-    render_taxes(taxes) {
-      if (taxes && taxes.length) {
-        const currency = this.events.get_frm().doc.currency;
-        const taxes_html = taxes.map((t) => {
-          if (t.tax_amount_after_discount_amount == 0)
-            return;
-          const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} @ ${t.rate}%` : t.description;
-          return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-        }).join("");
-        this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-      } else {
-        this.$totals_section.find(".taxes-container").css("display", "none").html("");
-      }
     }
     get_cart_item({ name }) {
       const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -8682,4 +8664,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.UYA3Y45D.js.map
+//# sourceMappingURL=packing-list.bundle.RABHUUMY.js.map
