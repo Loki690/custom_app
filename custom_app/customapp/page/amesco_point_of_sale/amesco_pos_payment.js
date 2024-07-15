@@ -204,6 +204,8 @@ custom_app.PointOfSale.Payment = class {
 			}
 		});
 
+
+		
 		
 		frappe.ui.form.on("POS Invoice", "contact_mobile", (frm) => {
 			const contact = frm.doc.contact_mobile;

@@ -328,6 +328,10 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	bind_custom_control_change_event() {
 		const me = this;
+		
+
+		// Ensure frm.doc is checked for existence before accessing it
+		
 		// if (this.rate_control) {
 		// 	this.rate_control.df.onchange = function () {
 		// 		if (this.value || flt(this.value) === 0) {
@@ -350,7 +354,7 @@ custom_app.PointOfSale.ItemDetails = class {
 
 
 		if (this.rate_control) {
-			
+			const frm = me.events.get_frm();
 			// Remove any existing onchange handler to avoid multiple handlers being attached
 			this.rate_control.df.onchange = null;
 		
