@@ -138,6 +138,9 @@ custom_app.PointOfSale.Payment = class {
 			$(`.check-date`).css("display", "none");
 			$(`.actual-gov-one`).css("display", "none");
 			$(`.actual-gov-two`).css("display", "none");
+			$(`.payment-type`).css("display", "none");
+			$(`.bank-type`).css("display", "none");
+			$(`.qr-reference-number`).css("display", "none");
 			me.$payment_modes.find(`.pay-amount`).css("display", "inline");
 			me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
 		}
@@ -180,11 +183,14 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".check-date").css("display", "flex");
 				mode_clicked.find(".actual-gov-one").css("display", "flex");
 				mode_clicked.find(".actual-gov-two").css("display", "flex");
+				mode_clicked.find(".payment-type").css("display", "flex");
+				mode_clicked.find(".bank-type").css("display", "flex");
+				mode_clicked.find(".qr-reference-number").css("display", "flex");
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
 				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
 				me.selected_mode = me[`${mode}_control`];
-				me.selected_mode && me.selected_mode.$input.get().focus(0);
+				me.selected_mode && me.selected_mode.$input.get().focus();
 				me.auto_set_remaining_amount();
 			}
 		});
@@ -501,6 +507,15 @@ custom_app.PointOfSale.Payment = class {
 					case "2307":
 						paymentModeHtml += `
 							<div class="${mode} actual-gov-two"></div>
+						`;
+						break;
+
+					case "QR Payment": 
+					 	paymentModeHtml += `
+							<div class="${mode} payment-type"></div>
+							<div class="${mode} bank-type"></div>
+							<div class="${mode} qr-reference-number"></div>
+
 						`;
 						break;
 				}
@@ -1031,15 +1046,88 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
+			if (p.mode_of_payment === "QR Payment") {
+
+				let existing_custom_payment_type = frappe.model.get_value(p.doctype, p.name, "custom_payment_type");
+				let custom_payment_type = frappe.ui.form.make_control({
+					df: {
+						label: 'Payment Type',
+						fieldtype: "Select",
+						options: [
+							{ label: 'Select Payment Type', value: '' },
+							{ label: 'Standee', value: 'Standee' },
+							{ label: 'Terminal', value: 'Terminnal' },
+						],
+						onchange: function () {
+							const value = this.value;
+							frappe.model.set_value(p.doctype, p.name, "custom_payment_type", value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.payment-type`),
+					render_input: true,
+				});
+				// Set the existing value and refresh the control
+				custom_payment_type.set_value(existing_custom_payment_type || '');
+				custom_payment_type.refresh();
+
+
+				let existing_custom_bank_type = frappe.model.get_value(p.doctype, p.name, "custom_bank_type");
+				let custom_bank_type = frappe.ui.form.make_control({
+					df: {
+						label: 'Bank',
+						fieldtype: "Select",
+						options: [
+							{ label: 'Select Bank Type', value: '' },
+							{ label: 'SBC', value: 'SBC' },
+							{ label: 'MBTC', value: 'MBTC' },
+							{ label: 'MAYA', value: 'MAYA' },
+							{ label: 'BDO', value: 'BDO' },
+						],
+						onchange: function () {
+							const value = this.value;
+							frappe.model.set_value(p.doctype, p.name, "custom_bank_type", value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.bank-type`),
+					render_input: true,
+				});
+				// Set the existing value and refresh the control
+				custom_bank_type.set_value(existing_custom_bank_type || '');
+				custom_bank_type.refresh();
+
+
+
+				let existing_custom_qr_reference_number = frappe.model.get_value(p.doctype, p.name, "custom_qr_reference_number");
+				let custom_qr_reference_number = frappe.ui.form.make_control({
+					df: {
+						label: `QR Reference No.`,
+						fieldtype: "Data",
+						placeholder: 'QR Reference No.',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.qr-reference-number`),
+					render_input: true,
+				});
+				custom_qr_reference_number.set_value(existing_custom_qr_reference_number || '');
+				custom_qr_reference_number.refresh();
+
+
+
+			}
+
 			this[`${mode}_control`].toggle_label(false);
 			this[`${mode}_control`].set_value(p.amount);
-		
+
 
 
 		});
-
 		this.render_loyalty_points_payment_mode();
 		this.attach_cash_shortcuts(doc);
+
+
+
 	}
 
 
