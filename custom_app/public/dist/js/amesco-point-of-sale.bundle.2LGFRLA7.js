@@ -2117,7 +2117,7 @@
     fetch_customer_transactions() {
       frappe.db.get_list("POS Invoice", {
         filters: { customer: this.customer_info.customer, docstatus: 1 },
-        fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency"],
+        fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency", "custom_invoice_series"],
         limit: 20
       }).then((res) => {
         const transaction_container = this.$customer_section.find(".customer-transactions");
@@ -2142,7 +2142,7 @@
           transaction_container.append(
             `<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
 						<div class="invoice-name-date">
-							<div class="invoice-name">${invoice.name}</div>
+							<div class="invoice-name">${invoice.custom_invoice_series}</div>
 							<div class="invoice-date">${posting_datetime}</div>
 						</div>
 						<div class="invoice-total-status">
@@ -5327,4 +5327,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.LPSLRAUE.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.2LGFRLA7.js.map
