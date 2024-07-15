@@ -1559,7 +1559,7 @@ custom_app.PointOfSale.ItemCart = class {
 		frappe.db
 			.get_list("POS Invoice", {
 				filters: { customer: this.customer_info.customer, docstatus: 1 },
-				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency"],
+				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency", "custom_invoice_series"],
 				limit: 20,
 			})
 			.then((res) => {
@@ -1589,7 +1589,7 @@ custom_app.PointOfSale.ItemCart = class {
 					transaction_container.append(
 						`<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
 						<div class="invoice-name-date">
-							<div class="invoice-name">${invoice.name}</div>
+							<div class="invoice-name">${invoice.custom_invoice_series}</div>
 							<div class="invoice-date">${posting_datetime}</div>
 						</div>
 						<div class="invoice-total-status">
