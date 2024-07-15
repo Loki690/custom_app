@@ -240,10 +240,7 @@ doc_events = {
     },
    'POS Z Reading': {
         'on_submit': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.on_submit'
-    },
-   'POS Opening Entry' : {
-       "validate":"custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.pos_opening_validation",
-   }
+    }
 }
 
 # your_app/hooks.py
