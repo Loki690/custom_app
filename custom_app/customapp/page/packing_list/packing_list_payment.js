@@ -139,13 +139,17 @@ custom_app.PointOfSale.Payment = class {
 			$(`.check-date`).css("display", "none");
 			$(`.actual-gov-one`).css("display", "none");
 			$(`.actual-gov-two`).css("display", "none");
+			$(`.payment-type`).css("display", "none");
+			$(`.bank-type`).css("display", "none");
+			$(`.qr-reference-number`).css("display", "none");
 			me.$payment_modes.find(`.pay-amount`).css("display", "inline");
 			me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
 		}
 		
 		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
 			const mode_clicked = $(this);
-		
+			if (!$(e.target).is(mode_clicked)) return;
+
 			const scrollLeft =
 				mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
 			me.$payment_modes.animate({ scrollLeft });
@@ -180,6 +184,9 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".check-date").css("display", "flex");
 				mode_clicked.find(".actual-gov-one").css("display", "flex");
 				mode_clicked.find(".actual-gov-two").css("display", "flex");
+				mode_clicked.find(".payment-type").css("display", "flex");
+				mode_clicked.find(".bank-type").css("display", "flex");
+				mode_clicked.find(".qr-reference-number").css("display", "flex");
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
 				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
@@ -192,13 +199,12 @@ custom_app.PointOfSale.Payment = class {
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
 			const target = $(e.target);
-			if (!target.closest(".mode-of-payment").length && e.keyCode !== 13) {
+			if (!target.closest(".mode-of-payment").length) {
 				hideAllFields();
 				$(".mode-of-payment").removeClass("border-primary");
 			}
 		});
 
-		
 
 		frappe.ui.form.on("POS Invoice", "contact_mobile", (frm) => {
 			const contact = frm.doc.contact_mobile;
@@ -423,9 +429,11 @@ custom_app.PointOfSale.Payment = class {
 
 	render_payment_mode_dom() {
 		const doc = this.events.get_frm().doc;
-
 		const payments = doc.payments;
 		const currency = doc.currency;
+
+		const customer_group = doc.customer_group;
+		const allowed_payment_modes = ["2306", "2307"];
 
 		this.$payment_modes.html(
 			`${payments.map((p, i) => {
@@ -433,20 +441,20 @@ custom_app.PointOfSale.Payment = class {
 				const payment_type = p.type;
 				const margin = i % 2 === 0 ? "pr-2" : "pl-2";
 				const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
-
-				// Condition to check if the payment mode is "Government" and customer group is "Government"
-				//   if (p.mode_of_payment === "Government" && doc.customer_group !== "Government") {
-				// 	return ''; // Skip rendering this payment mode if condition is not met
+	
+				// Check if the customer group is 'Government' and if the payment mode is allowed
+				// if (customer_group === "Government" && allowed_payment_modes.includes(p.mode_of_payment)) {
+				// 	return ''; // Skip rendering this payment mode if the conditions are not met
 				// }
-
-
+	
 				let paymentModeHtml = `
-					<div class="payment-mode-wrapper">
+					<div class="payment-mode-wrapper ${margin}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
 							${p.mode_of_payment}
 							<div class="${mode}-amount pay-amount">${amount}</div>
 							<div class="${mode} mode-of-payment-control"></div>
 				`;
+	
 				switch (p.mode_of_payment) {
 					case "GCash":
 						paymentModeHtml += `
@@ -454,7 +462,7 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} reference-number" style="margin-top:10px;"></div>
 						`;
 						break;
-				
+	
 					case "Cards":
 						paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
@@ -467,17 +475,17 @@ custom_app.PointOfSale.Payment = class {
 						`;
 						break;
 					case "Debit Card":
-						paymentModeHtml += `
+							paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
 							<div class="${mode} expiry-date"></div>
-						    <div class="${mode} approval-code"></div>
+							<div class="${mode} approval-code"></div>
 							<div class="${mode} reference-number"></div>
 							`;
 						break;
 					case "Credit Card":
-						paymentModeHtml += `
+							paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
@@ -495,30 +503,37 @@ custom_app.PointOfSale.Payment = class {
 					case "Cheque":
 						paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
-							<div class="${mode} check-name"></div>	
+							<div class="${mode} check-name"></div>
 							<div class="${mode} check-number"></div>
-							<div class="${mode} check-date"></div>	
+							<div class="${mode} check-date"></div>
 						`;
 						break;
-
 					case "2306":
 						paymentModeHtml += `
 							<div class="${mode} actual-gov-one"></div>
 						`;
 						break;
-
 					case "2307":
 						paymentModeHtml += `
-								<div class="${mode} actual-gov-two"></div>
-							`;
+							<div class="${mode} actual-gov-two"></div>
+						`;
+						break;
+
+					case "QR Payment": 
+					 	paymentModeHtml += `
+							<div class="${mode} payment-type"></div>
+							<div class="${mode} bank-type"></div>
+							<div class="${mode} qr-reference-number"></div>
+
+						`;
 						break;
 				}
-
+	
 				paymentModeHtml += `
 						</div>
 					</div>
 				`;
-
+	
 				return paymentModeHtml;
 			}).join("")}`
 		);
@@ -526,9 +541,13 @@ custom_app.PointOfSale.Payment = class {
 		payments.forEach((p) => {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 			const me = this;
-
-			// console.log(p.mode_of_payment);
-
+			// Define the allowed payment modes for the 'Government' customer group
+			const allowed_payment_modes = ["2306", "2307"];
+			// Check if the customer group is 'Government' and if the payment mode is allowed
+			// if (customer_group === "Government" && allowed_payment_modes.includes(p.mode_of_payment)) {
+			// 	return; // Skip this payment mode if the conditions are not met
+			// }
+	
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
 					label: p.mode_of_payment,
@@ -540,7 +559,7 @@ custom_app.PointOfSale.Payment = class {
 							frappe.model
 								.set_value(p.doctype, p.name, "amount", flt(this.value))
 								.then(() => me.update_totals_section());
-
+							
 							const formatted_currency = format_currency(this.value, currency);
 							me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
 						}
@@ -560,7 +579,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data",
 						placeholder: 'Bank Name',
 						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
+							frappe.model.set_value(p.doctype, p.name, "custom_bank_name", flt(this.value));
 						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -688,7 +707,6 @@ custom_app.PointOfSale.Payment = class {
 				expiry_date_control.refresh();
 
 
-
 				let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
 
 
@@ -728,6 +746,48 @@ custom_app.PointOfSale.Payment = class {
 				reference_no_control.set_value(existing_reference_no || '');
 				reference_no_control.refresh();
 
+			}
+
+			if (p.mode_of_payment  === "GCash" || p.mode_of_payment  === 'PayMaya') {
+
+
+				let existing_custom_phone_number = frappe.model.get_value(p.doctype, p.name, "custom_phone_number");
+
+				let phone_number_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Number',
+						fieldtype: "Data",
+						placeholder: '09876543212',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_phone_number", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.mobile-number`),
+					render_input: true,
+				});
+				phone_number_control.set_value(existing_custom_phone_number || '');
+				phone_number_control.refresh();
+
+
+
+				let existing_custom_epayment_reference_number= frappe.model.get_value(p.doctype, p.name, "reference_no");
+
+				let epayment_reference_number_controller= frappe.ui.form.make_control({
+					df: {
+						label: 'Reference No',
+						fieldtype: "Data",
+						placeholder: 'Reference No.',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.reference-number`),
+					render_input: true,
+					default: p.reference_no || ''
+				});
+
+				epayment_reference_number_controller.set_value(existing_custom_epayment_reference_number || '');
+				epayment_reference_number_controller.refresh();
 			}
 
 
@@ -830,8 +890,6 @@ custom_app.PointOfSale.Payment = class {
 
 
 				let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
-
-
 				let custom_approval_code_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Approval Code',
@@ -848,6 +906,9 @@ custom_app.PointOfSale.Payment = class {
 				// Set the existing value and refresh the control
 				custom_approval_code_control.set_value(existing_custom_approval_code || '');
 				custom_approval_code_control.refresh();
+
+
+
 
 				let existing_reference_no= frappe.model.get_value(p.doctype, p.name, "reference_no");
 
@@ -868,50 +929,6 @@ custom_app.PointOfSale.Payment = class {
 				reference_no_control.refresh();
 
 			}
-
-			if (p.mode_of_payment  === "GCash" || p.mode_of_payment  === 'PayMaya') {
-
-
-				let existing_custom_phone_number = frappe.model.get_value(p.doctype, p.name, "custom_phone_number");
-
-				let phone_number_control = frappe.ui.form.make_control({
-					df: {
-						label: 'Number',
-						fieldtype: "Data",
-						placeholder: '09876543212',
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_phone_number", this.value);
-						},
-					},
-					parent: this.$payment_modes.find(`.${mode}.mobile-number`),
-					render_input: true,
-				});
-				phone_number_control.set_value(existing_custom_phone_number || '');
-				phone_number_control.refresh();
-
-
-
-				let existing_custom_epayment_reference_number= frappe.model.get_value(p.doctype, p.name, "reference_no");
-
-				let epayment_reference_number_controller= frappe.ui.form.make_control({
-					df: {
-						label: 'Reference No',
-						fieldtype: "Data",
-						placeholder: 'Reference No.',
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
-						},
-					},
-					parent: this.$payment_modes.find(`.${mode}.reference-number`),
-					render_input: true,
-					default: p.reference_no || ''
-				});
-
-				epayment_reference_number_controller.set_value(existing_custom_epayment_reference_number || '');
-				epayment_reference_number_controller.refresh();
-			}
-
-
 
 			if (p.mode_of_payment === "Cheque" || p.mode_of_payment  === 'Government') {
 
@@ -952,7 +969,6 @@ custom_app.PointOfSale.Payment = class {
 				// Set the existing value and refresh the control
 				check_name_control.set_value(existing_custom_check_name || '');
 				check_name_control.refresh();
-
 				
 
 				let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
@@ -1039,13 +1055,86 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
+			if (p.mode_of_payment === "QR Payment") {
+
+				let existing_custom_payment_type = frappe.model.get_value(p.doctype, p.name, "custom_payment_type");
+				let custom_payment_type = frappe.ui.form.make_control({
+					df: {
+						label: 'Payment Type',
+						fieldtype: "Select",
+						options: [
+							{ label: 'Select Payment Type', value: '' },
+							{ label: 'Standee', value: 'Standee' },
+							{ label: 'Terminal', value: 'Terminnal' },
+						],
+						onchange: function () {
+							const value = this.value;
+							frappe.model.set_value(p.doctype, p.name, "custom_payment_type", value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.payment-type`),
+					render_input: true,
+				});
+				// Set the existing value and refresh the control
+				custom_payment_type.set_value(existing_custom_payment_type || '');
+				custom_payment_type.refresh();
+
+
+				let existing_custom_bank_type = frappe.model.get_value(p.doctype, p.name, "custom_bank_type");
+				let custom_bank_type = frappe.ui.form.make_control({
+					df: {
+						label: 'Bank',
+						fieldtype: "Select",
+						options: [
+							{ label: 'Select Bank Type', value: '' },
+							{ label: 'SBC', value: 'SBC' },
+							{ label: 'MBTC', value: 'MBTC' },
+							{ label: 'MAYA', value: 'MAYA' },
+							{ label: 'BDO', value: 'BDO' },
+						],
+						onchange: function () {
+							const value = this.value;
+							frappe.model.set_value(p.doctype, p.name, "custom_bank_type", value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.bank-type`),
+					render_input: true,
+				});
+				// Set the existing value and refresh the control
+				custom_bank_type.set_value(existing_custom_bank_type || '');
+				custom_bank_type.refresh();
+
+
+
+				let existing_custom_qr_reference_number = frappe.model.get_value(p.doctype, p.name, "custom_qr_reference_number");
+				let custom_qr_reference_number = frappe.ui.form.make_control({
+					df: {
+						label: `QR Reference No.`,
+						fieldtype: "Data",
+						placeholder: 'QR Reference No.',
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
+						},
+					},
+					parent: this.$payment_modes.find(`.${mode}.qr-reference-number`),
+					render_input: true,
+				});
+				custom_qr_reference_number.set_value(existing_custom_qr_reference_number || '');
+				custom_qr_reference_number.refresh();
+
+
+
+			}
+
 			this[`${mode}_control`].toggle_label(false);
 			this[`${mode}_control`].set_value(p.amount);
 
-		});
 
+
+		});
 		this.render_loyalty_points_payment_mode();
 		this.attach_cash_shortcuts(doc);
+
 	}
 
 	focus_on_default_mop() {
