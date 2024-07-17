@@ -243,15 +243,22 @@ doc_events = {
     },
    'POS Opening Entry' : {
        "validate":"custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.pos_opening_validation",
+   },
+   'Amesco Gift Certificate':{
+       "before_insert": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.before_save",
    }
 }
 
-# your_app/hooks.py
 jenv = {
     'methods': [
         'custom_format_datetime=custom_app.customapp.utils.custom_format_datetime'
     ]
 }
+
+app_include_js = [
+    "custom_app/customapp/doctype/amesco_gift_certificate/amesco_gift_certificate.js"
+]
+
 
 
 
