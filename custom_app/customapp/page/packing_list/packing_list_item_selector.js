@@ -27,7 +27,9 @@ custom_app.PointOfSale.ItemSelector = class {
 	inject_css() {
 		const css = `
 			.highlight {
-				background-color: #f2f2f2;
+				background-color: #0289f7;
+                color: white;
+                font-weight: bold;
 			}
             .text{
                 font-size: 1em;
@@ -146,17 +148,18 @@ custom_app.PointOfSale.ItemSelector = class {
         this.highlight_row(this.highlighted_row_index);
     }
 
+
     get_item_html(item) {
         const me = this;
     
-       const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number,custom_is_vatable} = item;
+        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
-
+    
         if (item.is_stock_item) {
             indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
-
+    
             if (Math.round(qty_to_display) > 999) {
                 qty_to_display = Math.round(qty_to_display) / 1000;
                 qty_to_display = qty_to_display.toFixed(1) + "K";
@@ -165,22 +168,23 @@ custom_app.PointOfSale.ItemSelector = class {
             indicator_color = "";
             qty_to_display = "";
         }
-
+    
         const item_description = description ? description : "Description not available";
-
-        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
+    
+        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
+        onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
+        onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}">
-            <td class="item-code">${item_code}</td> 
-            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-            <td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
-            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-            <td class="item-uom">${uom}</td>
-            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+            <td class="item-code" style=" width: 15%;">${item_code}</td> 
+            <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-uom" style=" width: 10%;">${uom}</td>
+            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
         </tr>`;
-}
-
+    }
 
     handle_broken_image($img) {
         const item_abbr = $($img).attr("alt");
@@ -385,7 +389,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                     label: __("UOM"),
                                     fieldname: 'uom',
                                     options: uomOptions,
-                                    default: 'PC'
+                                    default: uom
                                 },
                                 {
                                     fieldtype: "HTML",
@@ -513,12 +517,25 @@ custom_app.PointOfSale.ItemSelector = class {
             page: cur_page.page.page,
         });
     
-        frappe.ui.keys.on("enter", () => {
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && e.ctrlKey) {
+                e.preventDefault();
+                // Add your checkout logic here for Ctrl + Shift + Enter
+                console.log("Ctrl + Enter pressed for checkout");
+                return false;
+            }
+        });
+        
+        
+        frappe.ui.keys.on("enter", (e) => {
+
+            if (e.ctrlKey) return; // Skip handling if Shift + Enter is pressed
+        
             const selector_is_visible = this.$component.is(":visible");
             const dialog_is_open = document.querySelector(".modal.show");
-    
+        
             if (!selector_is_visible || this.search_field.get_value() === "") return;
-    
+        
             if (this.items.length == 1) {
                 this.$items_container.find(".item-wrapper").click();
                 frappe.utils.play_sound("submit");
@@ -532,24 +549,25 @@ custom_app.PointOfSale.ItemSelector = class {
                 this.barcode_scanned = false;
                 this.set_search_value("");
             }
-    
+        
             if (dialog_is_open && document.activeElement.tagName === "SELECT") {
                 // Trigger action to add the selected item to the cart
                 this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
-    
+        
                 const itemCode = unescape(this.selectedItem.attr("data-item-code"));
                 const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
                 const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
-    
+        
                 this.events.item_selected({
                     field: "qty",
                     value: quantity,
-                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity,rate},
+                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate },
                 });
-    
+        
                 this.search_field.set_focus();
             }
         });
+        
     }
     
     // The rest of your class definition...
