@@ -3993,7 +3993,7 @@
 							<tr>
 								<th>Item Code</th>
 								<th>Name</th>
-								<th>Vat</th>
+								<th>Vat Type</th>
 								<th>Price</th>
 								<th>UOM</th>
 								<th>QTY</th>
@@ -4248,7 +4248,7 @@
                     label: __("UOM"),
                     fieldname: "uom",
                     options: uomOptions,
-                    default: "PC"
+                    default: uom
                   },
                   {
                     fieldtype: "HTML",
@@ -4533,7 +4533,7 @@
 					<div class="cart-label" >${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
-						<div class="qty-header">${__("Vat")}</div>
+						<div class="qty-header">${__("Vat Type")}</div>
 						<div class="qty-header" >${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
@@ -6400,6 +6400,13 @@
         $(`.payment-type`).css("display", "none");
         $(`.bank-type`).css("display", "none");
         $(`.qr-reference-number`).css("display", "none");
+        $(`.customer`).css("display", "none");
+        $(`.po-number`).css("display", "none");
+        $(`.representative`).css("display", "none");
+        $(`.id-number`).css("display", "none");
+        $(`.approved-by`).css("display", "none");
+        $(`.gift-code`).css("display", "none");
+        $(`.button-code`).css("display", "none");
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
       }
@@ -6435,11 +6442,18 @@
           mode_clicked.find(".payment-type").css("display", "flex");
           mode_clicked.find(".bank-type").css("display", "flex");
           mode_clicked.find(".qr-reference-number").css("display", "flex");
+          mode_clicked.find(".customer").css("display", "flex");
+          mode_clicked.find(".po-number").css("display", "flex");
+          mode_clicked.find(".representative").css("display", "flex");
+          mode_clicked.find(".id-number").css("display", "flex");
+          mode_clicked.find(".approved-by").css("display", "flex");
+          mode_clicked.find(".gift-code").css("display", "flex");
+          mode_clicked.find(".button-code").css("display", "flex");
           mode_clicked.find(".cash-shortcuts").css("display", "grid");
           me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
           me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
           me.selected_mode = me[`${mode}_control`];
-          me.selected_mode && me.selected_mode.$input.get().focus();
+          me.selected_mode && me.selected_mode.$input.get();
           me.auto_set_remaining_amount();
         }
       });
@@ -6719,6 +6733,21 @@
 
 						`;
               break;
+            case "Charge":
+              paymentModeHtml += `
+							<div class="${mode} customer"></div>
+							<div class="${mode} po-number"></div>
+							<div class="${mode} representative"></div>
+							<div class="${mode} id-number"></div>
+							<div class="${mode} approved-by"></div>
+						`;
+              break;
+            case "Gift Certificate":
+              paymentModeHtml += `
+						   <div class="${mode} gift-code"></div>
+						    <div class="${mode} button-code"></div>
+					   `;
+              break;
           }
           paymentModeHtml += `
 						</div>
@@ -6730,7 +6759,6 @@
       payments.forEach((p) => {
         const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
         const me = this;
-        const allowed_payment_modes2 = ["2306", "2307"];
         this[`${mode}_control`] = frappe.ui.form.make_control({
           df: {
             label: p.mode_of_payment,
@@ -7178,9 +7206,9 @@
           let existing_custom_qr_reference_number = frappe.model.get_value(p.doctype, p.name, "custom_qr_reference_number");
           let custom_qr_reference_number = frappe.ui.form.make_control({
             df: {
-              label: `QR Reference No.`,
+              label: `Confirmation Code`,
               fieldtype: "Data",
-              placeholder: "QR Reference No.",
+              placeholder: "Reference # or Confirmation Code",
               onchange: function() {
                 frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
               }
@@ -7190,6 +7218,135 @@
           });
           custom_qr_reference_number.set_value(existing_custom_qr_reference_number || "");
           custom_qr_reference_number.refresh();
+        }
+        if (p.mode_of_payment === "Charge") {
+          console.log("Mode of payment is Charge");
+          let existing_custom_customer = frappe.model.get_value(p.doctype, p.name, "custom_customer");
+          let custom_customer = frappe.ui.form.make_control({
+            df: {
+              label: "Customer",
+              fieldtype: "Data",
+              placeholder: "Customer Name",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_customer", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.customer`),
+            render_input: true
+          });
+          custom_customer.set_value(existing_custom_customer || "");
+          custom_customer.refresh();
+          let existing_custom_po_number = frappe.model.get_value(p.doctype, p.name, "custom_po_number");
+          let custom_po_number = frappe.ui.form.make_control({
+            df: {
+              label: "PO Number",
+              fieldtype: "Data",
+              placeholder: "PO Number",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_po_number", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.po-number`),
+            render_input: true
+          });
+          custom_po_number.set_value(existing_custom_po_number || "");
+          custom_po_number.refresh();
+          let existing_custom_representative = frappe.model.get_value(p.doctype, p.name, "custom_representative");
+          let custom_representative = frappe.ui.form.make_control({
+            df: {
+              label: "Representative",
+              fieldtype: "Data",
+              placeholder: "Representative",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_representative", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.representative`),
+            render_input: true
+          });
+          custom_representative.set_value(existing_custom_representative || "");
+          custom_representative.refresh();
+          let existing_custom_id_number = frappe.model.get_value(p.doctype, p.name, "custom_id_number");
+          let custom_id_number = frappe.ui.form.make_control({
+            df: {
+              label: "ID Number",
+              fieldtype: "Data",
+              placeholder: "ID Number",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_id_number", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.id-number`),
+            render_input: true
+          });
+          custom_id_number.set_value(existing_custom_id_number || "");
+          custom_id_number.refresh();
+          let existing_custom_approved_by = frappe.model.get_value(p.doctype, p.name, "custom_approved_by");
+          let custom_approved_by = frappe.ui.form.make_control({
+            df: {
+              label: "Approved By",
+              fieldtype: "Data",
+              placeholder: "Approver name",
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_approved_by", this.value);
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.approved-by`),
+            render_input: true
+          });
+          custom_approved_by.set_value(existing_custom_approved_by || "");
+          custom_approved_by.refresh();
+        }
+        if (p.mode_of_payment === "Gift Certificate") {
+          let code_field = [];
+          let codes = [];
+          let code_input = frappe.ui.form.make_control({
+            df: {
+              fieldtype: "Data",
+              label: "Gift Code",
+              placeholder: "Enter Gift Code"
+            },
+            parent: this.$payment_modes.find(`.${mode}.gift-code`)[0],
+            render_input: true
+          });
+          code_input.refresh();
+          let button = frappe.ui.form.make_control({
+            df: {
+              label: "Fetch",
+              fieldtype: "Button",
+              btn_size: "xs",
+              click: function() {
+                let code_value = code_input.get_value();
+                if (code_value) {
+                  console.log("Button clicked, Code:", code_value);
+                  if (code_value) {
+                    frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
+                      console.log("Gift Cert: ", gift_cert);
+                      frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
+                    }).catch((error) => {
+                      console.error("Error retrieving gift certificate:", error);
+                      frappe.msgprint({
+                        title: __("Error"),
+                        indicator: "red",
+                        message: __("Invalid Gift Code. Please check the code and try again.")
+                      });
+                    });
+                  }
+                  code_field.push(code_value);
+                  console.log("code_field", code_field);
+                } else {
+                  frappe.msgprint({
+                    title: __("Error"),
+                    indicator: "red",
+                    message: __("Please enter a gift code before clicking Fetch.")
+                  });
+                }
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.button-code`)[0],
+            render_input: true
+          });
+          button.refresh();
         }
         this[`${mode}_control`].toggle_label(false);
         this[`${mode}_control`].set_value(p.amount);
@@ -8765,4 +8922,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.QX4IQUJX.js.map
+//# sourceMappingURL=packing-list.bundle.ICGIHJ2N.js.map

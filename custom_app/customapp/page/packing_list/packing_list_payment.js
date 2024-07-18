@@ -118,10 +118,10 @@ custom_app.PointOfSale.Payment = class {
 		}
 	}
 
-	
+
 	bind_events() {
 		const me = this;
-	
+
 		function hideAllFields() {
 			$(`.mode-of-payment-control`).css("display", "none");
 			$(`.mobile-number`).css("display", "none");
@@ -147,10 +147,12 @@ custom_app.PointOfSale.Payment = class {
 			$(`.representative`).css("display", "none");
 			$(`.id-number`).css("display", "none");
 			$(`.approved-by`).css("display", "none");
+			$(`.gift-code`).css("display", "none");
+			$(`.button-code`).css("display", "none");
 			me.$payment_modes.find(`.pay-amount`).css("display", "inline");
 			me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
 		}
-		
+
 		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
 			const mode_clicked = $(this);
 			if (!$(e.target).is(mode_clicked)) return;
@@ -158,15 +160,15 @@ custom_app.PointOfSale.Payment = class {
 			const scrollLeft =
 				mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
 			me.$payment_modes.animate({ scrollLeft });
-		
+
 			const mode = mode_clicked.attr("data-mode");
-		
+
 			// Hide all fields first
 			hideAllFields();
-		
+
 			// remove highlight from all mode-of-payments
 			$(".mode-of-payment").removeClass("border-primary");
-		
+
 			if (mode_clicked.hasClass("border-primary")) {
 				// clicked one is selected then unselect it
 				mode_clicked.removeClass("border-primary");
@@ -197,15 +199,17 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".representative").css("display", "flex");
 				mode_clicked.find(".id-number").css("display", "flex");
 				mode_clicked.find(".approved-by").css("display", "flex");
+				mode_clicked.find(".gift-code").css("display", "flex");
+				mode_clicked.find(".button-code").css("display", "flex");
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
 				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
 				me.selected_mode = me[`${mode}_control`];
-				me.selected_mode && me.selected_mode.$input.get().focus();
+				me.selected_mode && me.selected_mode.$input.get();
 				me.auto_set_remaining_amount();
 			}
 		});
-		
+
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
 			const target = $(e.target);
@@ -451,12 +455,12 @@ custom_app.PointOfSale.Payment = class {
 				const payment_type = p.type;
 				const margin = i % 2 === 0 ? "pr-2" : "pl-2";
 				const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
-	
+
 				// Check if the customer group is 'Government' and if the payment mode is allowed
 				// if (customer_group === "Government" && allowed_payment_modes.includes(p.mode_of_payment)) {
 				// 	return ''; // Skip rendering this payment mode if the conditions are not met
 				// }
-	
+
 				let paymentModeHtml = `
 					<div class="payment-mode-wrapper ${margin}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
@@ -464,7 +468,7 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode}-amount pay-amount">${amount}</div>
 							<div class="${mode} mode-of-payment-control"></div>
 				`;
-	
+
 				switch (p.mode_of_payment) {
 					case "GCash":
 						paymentModeHtml += `
@@ -472,7 +476,7 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} reference-number" style="margin-top:10px;"></div>
 						`;
 						break;
-	
+
 					case "Cards":
 						paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
@@ -485,7 +489,7 @@ custom_app.PointOfSale.Payment = class {
 						`;
 						break;
 					case "Debit Card":
-							paymentModeHtml += `
+						paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
@@ -495,7 +499,7 @@ custom_app.PointOfSale.Payment = class {
 							`;
 						break;
 					case "Credit Card":
-							paymentModeHtml += `
+						paymentModeHtml += `
 							<div class="${mode} bank-name"></div>
 							<div class="${mode} holder-name"></div>
 							<div class="${mode} card-number"></div>
@@ -529,8 +533,8 @@ custom_app.PointOfSale.Payment = class {
 						`;
 						break;
 
-					case "QR Payment": 
-					 	paymentModeHtml += `
+					case "QR Payment":
+						paymentModeHtml += `
 							<div class="${mode} payment-type"></div>
 							<div class="${mode} bank-type"></div>
 							<div class="${mode} qr-reference-number"></div>
@@ -538,8 +542,8 @@ custom_app.PointOfSale.Payment = class {
 						`;
 						break;
 
-					case "Charge": 
-					 	paymentModeHtml += `
+					case "Charge":
+						paymentModeHtml += `
 							<div class="${mode} customer"></div>
 							<div class="${mode} po-number"></div>
 							<div class="${mode} representative"></div>
@@ -547,13 +551,19 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} approved-by"></div>
 						`;
 						break;
+					case "Gift Certificate":
+						paymentModeHtml += `
+						   <div class="${mode} gift-code"></div>
+						    <div class="${mode} button-code"></div>
+					   `;
+						break;
 				}
-	
+
 				paymentModeHtml += `
 						</div>
 					</div>
 				`;
-	
+
 				return paymentModeHtml;
 			}).join("")}`
 		);
@@ -561,13 +571,7 @@ custom_app.PointOfSale.Payment = class {
 		payments.forEach((p) => {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 			const me = this;
-			// Define the allowed payment modes for the 'Government' customer group
-			const allowed_payment_modes = ["2306", "2307"];
-			// Check if the customer group is 'Government' and if the payment mode is allowed
-			// if (customer_group === "Government" && allowed_payment_modes.includes(p.mode_of_payment)) {
-			// 	return; // Skip this payment mode if the conditions are not met
-			// }
-	
+
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
 					label: p.mode_of_payment,
@@ -579,7 +583,7 @@ custom_app.PointOfSale.Payment = class {
 							frappe.model
 								.set_value(p.doctype, p.name, "amount", flt(this.value))
 								.then(() => me.update_totals_section());
-							
+
 							const formatted_currency = format_currency(this.value, currency);
 							me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
 						}
@@ -634,7 +638,7 @@ custom_app.PointOfSale.Payment = class {
 
 
 
-				let existing_custom_card_type= frappe.model.get_value(p.doctype, p.name, "custom_card_type");
+				let existing_custom_card_type = frappe.model.get_value(p.doctype, p.name, "custom_card_type");
 
 				// Card Type Control
 				let card_type_control = frappe.ui.form.make_control({
@@ -708,7 +712,7 @@ custom_app.PointOfSale.Payment = class {
 				}
 
 
-				let existing_custom_card_expiration_date= frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
+				let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
 
 				let expiry_date_control = frappe.ui.form.make_control({
 					df: {
@@ -748,7 +752,7 @@ custom_app.PointOfSale.Payment = class {
 				custom_approval_code_control.refresh();
 
 
-				let existing_reference_no= frappe.model.get_value(p.doctype, p.name, "reference_no");
+				let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
 
 
 				let reference_no_control = frappe.ui.form.make_control({
@@ -768,7 +772,7 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
-			if (p.mode_of_payment  === "GCash" || p.mode_of_payment  === 'PayMaya') {
+			if (p.mode_of_payment === "GCash" || p.mode_of_payment === 'PayMaya') {
 
 
 				let existing_custom_phone_number = frappe.model.get_value(p.doctype, p.name, "custom_phone_number");
@@ -790,9 +794,9 @@ custom_app.PointOfSale.Payment = class {
 
 
 
-				let existing_custom_epayment_reference_number= frappe.model.get_value(p.doctype, p.name, "reference_no");
+				let existing_custom_epayment_reference_number = frappe.model.get_value(p.doctype, p.name, "reference_no");
 
-				let epayment_reference_number_controller= frappe.ui.form.make_control({
+				let epayment_reference_number_controller = frappe.ui.form.make_control({
 					df: {
 						label: 'Reference No',
 						fieldtype: "Data",
@@ -890,7 +894,7 @@ custom_app.PointOfSale.Payment = class {
 				}
 
 
-				let existing_custom_card_expiration_date= frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
+				let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
 
 				let expiry_date_control = frappe.ui.form.make_control({
 					df: {
@@ -930,7 +934,7 @@ custom_app.PointOfSale.Payment = class {
 
 
 
-				let existing_reference_no= frappe.model.get_value(p.doctype, p.name, "reference_no");
+				let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
 
 
 				let reference_no_control = frappe.ui.form.make_control({
@@ -950,7 +954,7 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
-			if (p.mode_of_payment === "Cheque" || p.mode_of_payment  === 'Government') {
+			if (p.mode_of_payment === "Cheque" || p.mode_of_payment === 'Government') {
 
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
 
@@ -989,7 +993,7 @@ custom_app.PointOfSale.Payment = class {
 				// Set the existing value and refresh the control
 				check_name_control.set_value(existing_custom_check_name || '');
 				check_name_control.refresh();
-				
+
 
 				let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
 				let check_number_control = frappe.ui.form.make_control({
@@ -1027,7 +1031,7 @@ custom_app.PointOfSale.Payment = class {
 				check_date_control.refresh();
 
 
-			} 
+			}
 
 			if (p.mode_of_payment === "2306") {
 
@@ -1041,7 +1045,7 @@ custom_app.PointOfSale.Payment = class {
 						placeholder: 'Actual 2306',
 						read_only: 1, // Set the field to read-only
 						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306 );
+							frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306);
 						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
@@ -1063,7 +1067,7 @@ custom_app.PointOfSale.Payment = class {
 						placeholder: 'Actual 2307',
 						read_only: 1, // Set the field to read-only
 						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307 );
+							frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307);
 						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
@@ -1144,10 +1148,10 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
-	
+
 			if (p.mode_of_payment === "Charge") {
 				console.log('Mode of payment is Charge');
-			
+
 				let existing_custom_customer = frappe.model.get_value(p.doctype, p.name, "custom_customer");
 				let custom_customer = frappe.ui.form.make_control({
 					df: {
@@ -1163,7 +1167,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				custom_customer.set_value(existing_custom_customer || '');
 				custom_customer.refresh();
-			
+
 				let existing_custom_po_number = frappe.model.get_value(p.doctype, p.name, "custom_po_number");
 				let custom_po_number = frappe.ui.form.make_control({
 					df: {
@@ -1179,7 +1183,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				custom_po_number.set_value(existing_custom_po_number || '');
 				custom_po_number.refresh();
-			
+
 				let existing_custom_representative = frappe.model.get_value(p.doctype, p.name, "custom_representative");
 				let custom_representative = frappe.ui.form.make_control({
 					df: {
@@ -1195,7 +1199,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				custom_representative.set_value(existing_custom_representative || '');
 				custom_representative.refresh();
-			
+
 				let existing_custom_id_number = frappe.model.get_value(p.doctype, p.name, "custom_id_number");
 				let custom_id_number = frappe.ui.form.make_control({
 					df: {
@@ -1211,7 +1215,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				custom_id_number.set_value(existing_custom_id_number || '');
 				custom_id_number.refresh();
-			
+
 				let existing_custom_approved_by = frappe.model.get_value(p.doctype, p.name, "custom_approved_by");
 				let custom_approved_by = frappe.ui.form.make_control({
 					df: {
@@ -1229,6 +1233,124 @@ custom_app.PointOfSale.Payment = class {
 				custom_approved_by.refresh();
 			}
 
+
+
+			if (p.mode_of_payment === "Gift Certificate") {
+
+				let code_field = [];
+				let codes = []
+
+				// Create input field
+				let code_input = frappe.ui.form.make_control({
+					df: {
+						fieldtype: 'Data',
+						label: 'Gift Code',
+						placeholder: 'Enter Gift Code'
+					},
+					parent: this.$payment_modes.find(`.${mode}.gift-code`)[0],
+					render_input: true
+				});
+
+				code_input.refresh();
+
+				// Create button
+				let button = frappe.ui.form.make_control({
+					df: {
+						label: 'Fetch',
+						fieldtype: 'Button',
+						btn_size: 'xs', // xs, sm, lg
+						click: function () {
+							let code_value = code_input.get_value();
+							if (code_value) {
+								console.log('Button clicked, Code:', code_value);
+
+
+								if(code_value) {
+									frappe.db.get_doc("Amesco Gift Certificate", code_value)
+									.then(gift_cert => {
+										// Set the amount in the payment document based on the gift certificate amount
+										console.log('Gift Cert: ', gift_cert);
+										frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
+									})
+									.catch(error => {
+										console.error("Error retrieving gift certificate:", error);
+										frappe.msgprint({
+											title: __('Error'),
+											indicator: 'red',
+											message: __('Invalid Gift Code. Please check the code and try again.')
+										});
+									});
+								}
+
+
+								code_field.push(code_value);
+								console.log("code_field", code_field);
+							} else {
+								frappe.msgprint({
+									title: __('Error'),
+									indicator: 'red',
+									message: __('Please enter a gift code before clicking Fetch.')
+								});
+							}
+						}
+					},
+					parent: this.$payment_modes.find(`.${mode}.button-code`)[0], // Ensure correct parent DOM element
+					render_input: true
+				});
+
+				button.refresh();
+
+
+				// Retrieve existing custom_code if it exists
+				// let existing_custom_code = frappe.model.get_value(p.doctype, p.name, "custom_code");
+
+				// // Create a new input control for Gift Code
+				// let custom_code = frappe.ui.form.make_control({
+				// 	df: {
+				// 		label: 'Gift Code',
+				// 		fieldtype: "Data",
+				// 		placeholder: '1234',
+				// 		onchange: function () {
+				// 			let gift_code_value = this.value;
+
+				// 			// Function to set custom_code and then get the gift certificate
+				// 			function setCustomCodeAndGetGiftCert() {
+				// 				// Set custom_code field value in the payment document
+				// 				frappe.model.set_value(p.doctype, p.name, "custom_code", gift_code_value);
+
+				// 				if(gift_code_value) {
+				// 					frappe.db.get_doc("Amesco Gift Certificate", gift_code_value)
+				// 					.then(gift_cert => {
+				// 						// Set the amount in the payment document based on the gift certificate amount
+				// 						console.log('Gift Cert: ', gift_cert);
+				// 						frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
+				// 					})
+				// 					.catch(error => {
+				// 						console.error("Error retrieving gift certificate:", error);
+				// 						frappe.msgprint({
+				// 							title: __('Error'),
+				// 							indicator: 'red',
+				// 							message: __('Invalid Gift Code. Please check the code and try again.')
+				// 						});
+				// 					});
+				// 				}
+
+				// 				// Retrieve the gift certificate document based on the provided gift code
+
+				// 			}
+
+				// 			// Call the function to set custom_code and get the gift certificate
+				// 			setCustomCodeAndGetGiftCert();
+				// 		}
+				// 	},
+				// 	parent: this.$payment_modes.find(`.${mode}.gift-code`)[0], // Ensure correct parent DOM element
+				// 	render_input: true
+				// });
+
+				// // Set the existing custom_code value to the input control if it exists
+				// custom_code.set_value(existing_custom_code || '');
+				// custom_code.refresh();
+			}
 
 
 
@@ -1281,20 +1403,20 @@ custom_app.PointOfSale.Payment = class {
 	get_cash_shortcuts(grand_total) {
 		let steps = [1, 5, 10];
 		const digits = String(Math.round(grand_total)).length;
-	
+
 		steps = steps.map((x) => x * 10 ** (digits - 2));
-	
+
 		const get_nearest = (amount, x) => {
 			let nearest_x = Math.ceil(amount / x) * x;
 			return nearest_x === amount ? nearest_x + x : nearest_x;
 		};
-	
+
 		let shortcuts = steps.reduce((finalArr, x) => {
 			let nearest_x = get_nearest(grand_total, x);
 			nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
 			return [...finalArr, nearest_x];
 		}, []);
-	
+
 		// Add 500 and 1000 if grand total is above 100
 		if (grand_total > 100) {
 			if (!shortcuts.includes(500)) {
@@ -1304,10 +1426,10 @@ custom_app.PointOfSale.Payment = class {
 				shortcuts.push(1000);
 			}
 		}
-	
+
 		// Sort shortcuts in ascending order
 		shortcuts.sort((a, b) => a - b);
-	
+
 		return shortcuts;
 	}
 

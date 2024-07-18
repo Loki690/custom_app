@@ -22,7 +22,7 @@ def generate_pl_series(doc):
     if not warehouse_abbreviation:
         warehouse_abbreviation = "DEFAULT"  # Use a default abbreviation if none is found
 
-    series_pattern = f"{warehouse_abbreviation}-PL-.YYYY.-.MM.-.DD.-.######"
+    series_pattern = f"{warehouse_abbreviation}-PL-.######"
     return series_pattern
 
 def set_custom_naming_series(doc):

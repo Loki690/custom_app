@@ -1688,10 +1688,13 @@
     }
     update_item_html(item, remove_item) {
       const $item = this.get_cart_item(item);
+      let cartItems = JSON.parse(localStorage.getItem("posCartItems")) || [];
       if (remove_item) {
         if ($item) {
           $item.next().remove();
           $item.remove();
+          cartItems = cartItems.filter((cartItem) => cartItem.item_code !== item.item_code);
+          localStorage.setItem("posCartItems", JSON.stringify(cartItems));
           this.remove_customer();
           this.set_cash_customer();
           frappe.run_serially([
@@ -1701,6 +1704,13 @@
       } else {
         const item_row = this.get_item_from_frm(item);
         this.render_cart_item(item_row, $item);
+        const existingItemIndex = cartItems.findIndex((cartItem) => cartItem.item_code === item.item_code);
+        if (existingItemIndex > -1) {
+          cartItems[existingItemIndex] = item;
+        } else {
+          cartItems.push(item);
+        }
+        localStorage.setItem("posCartItems", JSON.stringify(cartItems));
       }
       const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
       this.highlight_checkout_btn(no_of_cart_items > 0);
@@ -4722,12 +4732,16 @@
         () => frappe.dom.freeze(),
         () => this.frm.call("reset_mode_of_payments"),
         () => this.cart.load_invoice(),
+        () => this.remove_pos_cart_items(),
         () => this.make_new_invoice(),
         () => this.item_selector.toggle_component(),
         () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(false),
         () => frappe.dom.unfreeze()
       ]);
+    }
+    remove_pos_cart_items() {
+      localStorage.removeItem("posCartItems");
     }
     order_list() {
       frappe.run_serially([
@@ -4993,6 +5007,7 @@
               this.toggle_components(false);
               this.cart.toggle_component(false);
               this.order_summary.toggle_component(false);
+              this.remove_pos_cart_items();
               this.order_summary.load_summary_of(this.frm.doc, true);
               this.order_summary.print_receipt();
               frappe.show_alert({
@@ -5129,7 +5144,7 @@
         }
       });
       passwordDialog.show();
-      this.toggle_component(true);
+      this.toggle_components(true);
     }
     oic_delete_confirm(name) {
       const passwordDialog = new frappe.ui.Dialog({
@@ -5481,4 +5496,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.SPAPN3Q5.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.2VRJXWBU.js.map
