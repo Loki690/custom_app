@@ -28,8 +28,9 @@ custom_app.PointOfSale.ItemSelector = class {
 	inject_css() {
 		const css = `
 			.highlight {
-				background-color: #f2f2f2;
-
+				background-color: #0289f7;
+                color: white;
+                font-weight: bold;
 			}
             .text{
                 font-size: 1em;
@@ -141,14 +142,14 @@ custom_app.PointOfSale.ItemSelector = class {
     get_item_html(item) {
         const me = this;
     
-       const { item_name ,item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number,custom_is_vatable} = item;
+        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
-
+    
         if (item.is_stock_item) {
             indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
-
+    
             if (Math.round(qty_to_display) > 999) {
                 qty_to_display = Math.round(qty_to_display) / 1000;
                 qty_to_display = qty_to_display.toFixed(1) + "K";
@@ -157,22 +158,24 @@ custom_app.PointOfSale.ItemSelector = class {
             indicator_color = "";
             qty_to_display = "";
         }
-
+    
         const item_description = description ? description : "Description not available";
-
-        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
+    
+        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
+        onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
+        onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}">
-            <td class="item-code">${item_code}</td> 
-            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-            <td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
-            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-            <td class="item-uom">${uom}</td>
-            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+            <td class="item-code" style=" width: 15%;">${item_code}</td> 
+            <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-uom" style=" width: 10%;">${uom}</td>
+            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
         </tr>`;
+    }
 
-	}
 
 
     handle_broken_image($img) {
@@ -360,7 +363,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                     label: __("UOM"),
                                     fieldname: 'uom',
                                     options: uomOptions,
-                                    default: 'PC'
+                                    default: uom
                                 },
                                 {
                                     fieldtype: "HTML",
