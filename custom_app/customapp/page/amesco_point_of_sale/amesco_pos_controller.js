@@ -383,12 +383,19 @@ custom_app.PointOfSale.Controller = class {
 			() => frappe.dom.freeze(),
 			() => this.frm.call("reset_mode_of_payments"),
 			() => this.cart.load_invoice(),
+			() => this.remove_pos_cart_items(),
 			() => this.make_new_invoice(),
 			() => this.item_selector.toggle_component(),
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(false),
 			() => frappe.dom.unfreeze(),
 		]);
+	}
+
+
+	remove_pos_cart_items() {
+		// console.log('Remove cart items')
+		localStorage.removeItem('posCartItems');
 	}
 
 	order_list() {
@@ -708,6 +715,7 @@ custom_app.PointOfSale.Controller = class {
 						// Customized Layout to toggle off Cart
 						this.cart.toggle_component(false);
 						this.order_summary.toggle_component(false);
+						this.remove_pos_cart_items();
 						this.order_summary.load_summary_of(this.frm.doc, true);
 						this.order_summary.print_receipt();
 						
@@ -724,6 +732,7 @@ custom_app.PointOfSale.Controller = class {
 							title: __('Change Amount'),
 							primary_action_label: __('OK'),
 							primary_action: () => {
+								// this.remove_pos_cart_items();
 								window.location.reload();
 								changeDialog.hide();
 							}
@@ -881,7 +890,7 @@ custom_app.PointOfSale.Controller = class {
 		});
 	
 		passwordDialog.show();
-		this.toggle_component(true); //Toggle True so order summary stays while authentication modal is activated
+		this.toggle_components(true); //Toggle True so order summary stays while authentication modal is activated
 	}
 	
   

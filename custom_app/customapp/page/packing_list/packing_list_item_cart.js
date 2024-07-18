@@ -1634,15 +1634,6 @@ custom_app.PointOfSale.ItemCart = class {
 
 		this.$cart_items_wrapper.html("");
 		
-		const storedItems = JSON.parse(localStorage.getItem('posCartItems')) || [];
-
-		// console.log('storedItems: ', storedItems)
-		// 	storedItems.forEach(item_data => {
-		// 		console.log('storedItem: ', item_data)
-		// 	});
-		// console.log('Items: ', frm.doc.items)
-
-
 		if (frm.doc.items.length) {
 			frm.doc.items.forEach((item) => {
 				this.update_item_html(item);
