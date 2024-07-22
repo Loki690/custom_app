@@ -1133,9 +1133,10 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			<!-- <div class="item-vat mx-3">
+			
+			<div class="item-vat mx-3">
 				<strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
-			</div> -->
+			</div> 
 			
 			<div class="item-vat mx-3">
 				<strong>${format_currency(item_data.rate, currency)}</strong>

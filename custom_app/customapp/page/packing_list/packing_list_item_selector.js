@@ -59,43 +59,46 @@ custom_app.PointOfSale.ItemSelector = class {
 	}
 
     
-	prepare_dom() {
-		const selectedWarehouse = localStorage.getItem('selected_warehouse');
-		this.wrapper.append(
-			`<section class="items-selector" style="margin-top:1.3rem;">
-				<div class="filter-section">
-				<div class="label">
-				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
-			</div>
-            
-                    <div class="search-field"></div>
-					<div class="item-group-field"></div>
-                    <div class="item-uoms"></div>
-                   
-				</div>
-				<div class="table-responsive">
-					<table class="table items-table">
-					    <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
-							<tr>
-								<th>Item Code</th>
-								<th>Name</th>
-								<th>Vat Type</th>
-								<th>Price</th>
-								<th>UOM</th>
-								<th>QTY</th>
-							</tr>
-						</thead>
-
-						<tbody class="items-container"></tbody>
-					</table>
-				</div>
-			</section>`
-		);
-
-		this.$component = this.wrapper.find(".items-selector");
-		this.$items_container = this.$component.find(".items-container");
-	}
-
+    prepare_dom() {
+        const selectedWarehouse = localStorage.getItem('selected_warehouse');
+        this.wrapper.append(
+            `<section class="items-selector" style="margin-top:1.3rem;">
+                <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
+                    <div class="label" style="flex: 1;">
+                        ${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
+                    </div>
+                    <div class="search-field" style="flex: 2;">
+                        <input type="text" placeholder="Search by item code, serial number or barcode" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="item-group-field" style="flex: 1;">
+                        <input type="text" placeholder="Select item group" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="item-uoms" style="flex: 1;">
+                        <input type="text"  value="PC" placeholder="Select UOM" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table items-table">
+                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Name</th>
+                                <th>Vat Type</th>
+                                <th>Price</th>
+                                <th>UOM</th>
+                                <th>QTY</th>
+                            </tr>
+                        </thead>
+                        <tbody class="items-container"></tbody>
+                    </table>
+                </div>
+            </section>`
+        );
+    
+        this.$component = this.wrapper.find(".items-selector");
+        this.$items_container = this.$component.find(".items-container");
+    }
+    
 
     async load_items_data() {
         if (!this.item_group) {
@@ -194,7 +197,7 @@ custom_app.PointOfSale.ItemSelector = class {
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
-            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
     }
 
@@ -338,145 +341,178 @@ custom_app.PointOfSale.ItemSelector = class {
             },
         });
 
-        
-        // 
-        // let dialog
         let selectedUOM;
         this.$component.on("click", ".item-wrapper", async function() {
             const $item = $(this);
             me.selectedItem = $item;
-            const item_code = unescape($item.attr("data-item-code"));
             const uom = unescape($item.attr("data-uom"));
-            const rate = parseFloat(unescape($item.attr("data-rate")));
+            const item_code = unescape($item.attr("data-item-code"));
             const description = unescape($item.attr("data-description"));
-            
-            frappe.call({
-                method: 'custom_app.customapp.page.packing_list.packing_list.get_item_uoms',
+        
+            // Fetch prices for different UOMs from the server
+            const response = await frappe.call({
+                method: 'custom_app.customapp.page.packing_list.packing_list.get_item_uom_prices',
                 args: {
                     item_code: item_code
-                },
-                callback: function(response) {
-                    if (response.message) {
-                        const uomOptions = response.message.uoms.map(uom => ({
-                            label: uom.uom,
-                            value: uom.uom
-                        }));
+                }
+            });
         
-                        const dialog = new frappe.ui.Dialog({
-                            title: __("Item Details"),
-                            fields: [
-                                {
-                                    fieldtype: "HTML",
-                                    label: __("Item Code and Description"),
-                                    options: `
-                                        <div class="row mb-4">
-                                            <div class="col-lg-6">
-                                                <div class="card w-80 h-80">
-                                                    <div class="card-body">
-                                                        <p class="text-description">${item_code}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="card w-80 h-80">
-                                                    <div class="card-body">
-                                                        <div class="row">
-                                                            <div class="col">
-                                                                <p class="text-description">${description}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+            let uomPrices = {};
+            if (response.message) {
+                uomPrices = response.message.uom_prices;
+            }
+        
+            // Ensure "PC" is in the options if it exists in the fetched data
+            const uomOptions = Object.keys(uomPrices).filter(uom => uom && uom !== "null").map(uom => ({
+                label: uom,
+                value: uom
+            }));
+        
+            // Set default UOM to "PC" if it exists, otherwise use the first available UOM
+            let defaultUOM = uom;
+            if (!uomPrices.hasOwnProperty(defaultUOM)) {
+                defaultUOM = uomOptions.length > 0 ? uomOptions[0].value : null;
+                if (!defaultUOM) {
+                    frappe.msgprint(__('No valid UOMs found for this item.'));
+                    return;
+                }
+            }
+            
+            const defaultRate = uomPrices[defaultUOM];
+        
+            const dialog = new frappe.ui.Dialog({
+                title: __("Item Details"),
+                fields: [
+                    {
+                        fieldtype: "HTML",
+                        label: __("Item Code and Description"),
+                        options: `
+                            <div class="row mb-4">
+                                <div class="col-lg-6">
+                                    <div class="card w-80 h-80">
+                                        <div class="card-body">
+                                            <p class="text-description">${item_code}</p>
                                         </div>
-                                    `,
-                                },
-                                {
-                                    fieldtype: "HTML",
-                                    label: __("Quantity"),
-                                    options: `
-                                    <div class="row">
-                                        <div class="col-lg">
-                                            <div class="form-group">
-                                                <label class="control-label">${__("Quantity")}</label>
-                                                <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="card w-80 h-80">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <p class="text-description">${description}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    `
-                                }, 
-                                {
-                                    fieldtype: 'Select',
-                                    label: __("UOM"),
-                                    fieldname: 'uom',
-                                    options: uomOptions,
-                                    default: uom
-                                },
-                                {
-                                    fieldtype: "HTML",
-                                    label: __("Amount"),
-                                    options: `
-                                        <div class="row">
-                                            <div class="col-lg">
-                                                <div class="form-group">
-                                                    <label class="control-label">Amount</label>
-                                                    <input class="form-control" data-fieldname="total_amount" value="${rate.toFixed(2)}" readonly />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `
-                                }
-                            ],
-                            primary_action_label: __("Ok"),
-                            primary_action: function() {
-                                const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
-                                const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
-                                const totalAmount = parseFloat(dialog.wrapper.find('input[data-fieldname="total_amount"]').val());
-                                
-                                if (!quantity || quantity <= 0) {
-                                    frappe.msgprint(__("Please enter a valid quantity."));
-                                    return;
-                                }
-        
-                                dialog.hide();
-        
-                                if (!me.selectedItem) {
-                                    frappe.msgprint(__("No item selected."));
-                                    return;
-                                }
-        
-                                me.selectedItem.find(".item-uom").text(selectedUOM);
-        
-                                const itemCode = unescape(me.selectedItem.attr("data-item-code"));
-                                const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
-                                const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
-        
-                                me.events.item_selected({
-                                    field: "qty",
-                                   value: "+" + quantity,
-                                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
-                                });
-
-                                
-                                me.search_field.set_focus();
-                            }
-                        });
-        
-                        dialog.show();
-        
-                        dialog.wrapper.find('input[data-fieldname="quantity"]').on('input', function () {
-                            const quantity = parseFloat($(this).val());
-                            if (!isNaN(quantity)) {
-                                const totalAmount = (quantity * rate).toFixed(2);
-                                dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
-                            } else {
-                                dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
-                            }
-                        });
+                                </div>
+                            </div>
+                        `,
+                    },
+                    {
+                        fieldtype: "HTML",
+                        label: __("Quantity"),
+                        options: `
+                        <div class="row">
+                            <div class="col-lg">
+                                <div class="form-group">
+                                    <label class="control-label">${__("Quantity")}</label>
+                                    <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                </div>
+                            </div>
+                        </div>
+                        `
+                    },
+                    {
+                        fieldtype: 'Select',
+                        label: __("UOM"),
+                        fieldname: 'uom',
+                        options: uomOptions,
+                        default: defaultUOM
+                    },
+                    {
+                        fieldtype: "HTML",
+                        label: __("Amount"),
+                        options: `
+                            <div class="row">
+                                <div class="col-lg">
+                                    <div class="form-group">
+                                        <label class="control-label">Amount</label>
+                                        <input class="form-control" data-fieldname="total_amount" value="${defaultRate.toFixed(2)}" readonly />
+                                    </div>
+                                </div>
+                            </div>
+                        `
                     }
+                ],
+                primary_action_label: __("Ok"),
+                primary_action: function() {
+                    const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
+                    const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
+                    const totalAmount = parseFloat(dialog.wrapper.find('input[data-fieldname="total_amount"]').val());
+        
+                    if (!quantity || quantity <= 0) {
+                        frappe.msgprint(__("Please enter a valid quantity."));
+                        return;
+                    }
+        
+                    dialog.hide();
+        
+                    if (!me.selectedItem) {
+                        frappe.msgprint(__("No item selected."));
+                        return;
+                    }
+        
+                    me.selectedItem.find(".item-uom").text(selectedUOM);
+        
+                    const itemCode = unescape(me.selectedItem.attr("data-item-code"));
+                    const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
+                    const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+        
+                    me.events.item_selected({
+                        field: "qty",
+                        value: "+" + quantity,
+                        item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
+                    });
+        
+                    me.search_field.set_focus();
+                }
+            });
+        
+            dialog.show();
+        
+            // Set the default UOM and amount fields
+            dialog.wrapper.find('select[data-fieldname="uom"]').val(defaultUOM);
+            dialog.wrapper.find('input[data-fieldname="total_amount"]').val(defaultRate.toFixed(2));
+        
+            // Event listener for quantity input
+            dialog.wrapper.find('input[data-fieldname="quantity"]').on('input', function () {
+                const quantity = parseFloat($(this).val());
+                const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
+                const rate = uomPrices[selectedUOM];
+                if (!isNaN(quantity)) {
+                    const totalAmount = (quantity * rate).toFixed(2);
+                    dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                } else {
+                    dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
+                }
+            });
+        
+            // Event listener for UOM change
+            dialog.wrapper.find('select[data-fieldname="uom"]').on('change', function () {
+                const selectedUOM = $(this).val();
+                const rate = uomPrices[selectedUOM];
+                const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
+                if (!isNaN(quantity)) {
+                    const totalAmount = (quantity * rate).toFixed(2);
+                    dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                } else {
+                    dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
                 }
             });
         });
+        
+       
 
 
         // this.$component.on("click", ".item-wrapper", function () {
