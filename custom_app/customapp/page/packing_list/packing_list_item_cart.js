@@ -647,6 +647,7 @@ custom_app.PointOfSale.ItemCart = class {
 				frappe.db
 					.get_value("Customer", customer, ["email_id", "mobile_no" , 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program", 
 						"custom_osca_id", "custom_pwd_id"])
+
 					.then(({ message }) => {
 						const { loyalty_program } = message;
 						// if loyalty program then fetch loyalty points too
@@ -1458,11 +1459,8 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="mobile_no-field"></div>
 					<div class="custom_transaction_type-field"></div>
 					<div class="custom_oscapwdid-field"></div>
-					<div class="custom_osca_id-field"></div>
-					<div class="custom_pwd_id-field"></div>
 					<div class="loyalty_program-field"></div>
 					<div class="loyalty_points-field"></div>
-				
 				</div>
 				<div class="transactions-label">Recent Transactions</div>`
 			);
@@ -1499,19 +1497,19 @@ custom_app.PointOfSale.ItemCart = class {
 				fieldtype: "Data",
 				placeholder: __("Enter customer's phone number"),
 			},
-			// {
-			// 	fieldname: "custom_transaction_type",
-			// 	label: __("Transaction Type"),
-			// 	fieldtype: "Select",
-			// 	options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
-			// 	placeholder: __("Enter customer's transaction type"),
-			// },
-			// {
-			// 	fieldname: "custom_oscapwdid",
-			// 	label: __("Osca or PWD ID"),
-			// 	fieldtype: "Data",
-			// 	placeholder: __("Enter customer's Osca or PWD ID"),
-			// },
+			{
+				fieldname: "custom_transaction_type",
+				label: __("Transaction Type"),
+				fieldtype: "Select",
+				options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
+				placeholder: __("Enter customer's transaction type"),
+			},
+			{
+				fieldname: "custom_oscapwdid",
+				label: __("Osca or PWD ID"),
+				fieldtype: "Data",
+				placeholder: __("Enter customer's Osca or PWD ID"),
+			},
 			{
 				fieldname: "loyalty_program",
 				label: __("Loyalty Program"),
@@ -1526,20 +1524,6 @@ custom_app.PointOfSale.ItemCart = class {
 				fieldtype: "Data",
 				read_only: 1,
 			},
-
-			{
-				fieldname: "custom_osca_id",
-				label: __("OSCA ID"),
-				fieldtype: "Data",
-				read_only: 1,
-			},
-			{
-				fieldname: "custom_pwd_id",
-				label: __("PWD ID"),
-				fieldtype: "Data",
-				read_only: 1,
-			},
-
 		];
 
 		const me = this;
@@ -1551,8 +1535,6 @@ custom_app.PointOfSale.ItemCart = class {
 			});
 			this[`customer_${df.fieldname}_field`].set_value(this.customer_info[df.fieldname]);
 		});
-
-
 
 		function handle_customer_field_change() {
 			const current_value = me.customer_info[this.df.fieldname];
@@ -1585,7 +1567,7 @@ custom_app.PointOfSale.ItemCart = class {
 		frappe.db
 			.get_list("POS Invoice", {
 				filters: { customer: this.customer_info.customer, docstatus: 1 },
-				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency", "custom_invoice_series"],
+				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency"],
 				limit: 20,
 			})
 			.then((res) => {
@@ -1615,7 +1597,7 @@ custom_app.PointOfSale.ItemCart = class {
 					transaction_container.append(
 						`<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
 						<div class="invoice-name-date">
-							<div class="invoice-name">${invoice.custom_invoice_series}</div>
+							<div class="invoice-name">${invoice.name}</div>
 							<div class="invoice-date">${posting_datetime}</div>
 						</div>
 						<div class="invoice-total-status">

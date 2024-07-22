@@ -247,6 +247,7 @@ doc_events = {
    'Amesco Gift Certificate':{
        "before_insert": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.before_save",
    }
+
 }
 
 jenv = {
