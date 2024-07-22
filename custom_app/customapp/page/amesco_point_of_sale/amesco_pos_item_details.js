@@ -9,9 +9,6 @@ custom_app.PointOfSale.ItemDetails = class {
 
 		this.init_component();
 	}
-
-
-
 	init_component() {
 		this.prepare_dom();
 		this.init_child_components();
@@ -191,6 +188,10 @@ custom_app.PointOfSale.ItemDetails = class {
 				df: {
 					...field_meta,
 					onchange: function () {
+						if (fieldname === "uom") {
+							// If the selected field is UOM, calculate and display the conversion factor
+							me.calculate_conversion_factor(this.value, item);
+						}
 						me.events.form_updated(me.current_item, fieldname, this.value);
 						me.is_oic_authenticated = false;
 					},
@@ -198,21 +199,35 @@ custom_app.PointOfSale.ItemDetails = class {
 				parent: this.$form_container.find(`.${fieldname}-control`),
 				render_input: true,
 			});
+			
 			this[`${fieldname}_control`].set_value(item[fieldname]);
 	
 			// Add event listener for discount_percentage and discount_amount field click
-			if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-				this.$form_container.find(`.${fieldname}-control input`).on("click", function () {
+			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
 						me.oic_authentication(fieldname);
 					}
 				});
 			}
+
+
+
 		});
 	
 		this.make_auto_serial_selection_btn(item);
 		this.bind_custom_control_change_event();
 	}
+	
+	calculate_conversion_factor(selected_uom, item) {
+		const default_uom = item.stock_uom;
+		const conversion_factor = frappe.convert_uom(1, default_uom, selected_uom);
+		const amount = item.rate * conversion_factor;
+	
+		// Update the amount field
+		this.$item_price.html(format_currency(amount, this.currency));
+	}
+	
 
 	// Function to trigger OTP authentication
 	oic_authentication(fieldname) {
@@ -273,22 +288,33 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	get_form_fields(item) {
 		const fields = [
+			"custom_free",
 			"qty",
-			"uom",
+			'price_list_rate',
 			"rate",
-			"conversion_factor",
+			"uom",
+			"custom_expiry_date",
+			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field
-			// "warehouse",
-			// "actual_qty",
-			// "price_list_rate",
+			//"custom_item_discount_amount",
+			//"warehouse",
+			//"actual_qty",
+			//"price_list_rate",
 			// "is_free_item",
-			"custom_free"
+
+			'custom_vat_amount',
+			'custom_vatable_amount',
+			'custom_vat_exempt_amount',
+			'custom_zero_rated_amount',
+			//"custom_free",
+			"custom_remarks",
 		];
 		if (item.has_serial_no) fields.push("serial_no");
 		if (item.has_batch_no) fields.push("batch_no");
 		return fields;
 	}
+	
 
 	make_auto_serial_selection_btn(item) {
 		if (item.has_serial_no || item.has_batch_no) {
@@ -302,26 +328,82 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	bind_custom_control_change_event() {
 		const me = this;
+		
+
+		// Ensure frm.doc is checked for existence before accessing it
+		
+		// if (this.rate_control) {
+		// 	this.rate_control.df.onchange = function () {
+		// 		if (this.value || flt(this.value) === 0) {
+		// 			me.events.form_updated(me.current_item, "rate", this.value).then(() => {
+		// 				const item_row = frappe.get_doc(me.doctype, me.name);
+		// 				const doc = me.events.get_frm().doc;
+		// 				me.$item_price.html(format_currency(item_row.rate, doc.currency));
+		// 				me.render_discount_dom(item_row);
+		// 			});
+		// 		}
+		// 	};
+		// 	this.rate_control.df.read_only = !this.allow_rate_change;
+		// 	this.rate_control.refresh();
+		// }
+
+		// if (this.discount_percentage_control && !this.allow_discount_change) {
+		// 	this.discount_percentage_control.df.read_only = 1;
+		// 	this.discount_percentage_control.refresh();
+		// }
+
+
 		if (this.rate_control) {
+			const frm = me.events.get_frm();
+			// Remove any existing onchange handler to avoid multiple handlers being attached
+			this.rate_control.df.onchange = null;
+		
 			this.rate_control.df.onchange = function () {
 				if (this.value || flt(this.value) === 0) {
-					me.events.form_updated(me.current_item, "rate", this.value).then(() => {
-						const item_row = frappe.get_doc(me.doctype, me.name);
-						const doc = me.events.get_frm().doc;
-						me.$item_price.html(format_currency(item_row.rate, doc.currency));
-						me.render_discount_dom(item_row);
-					});
+					// Debounce to prevent multiple rapid changes from causing issues
+					if (this._debounce) {
+						clearTimeout(this._debounce);
+					}
+					this._debounce = setTimeout(() => {
+						me.events.form_updated(me.current_item, "rate", this.value).then(() => {
+							const item_row = frappe.get_doc(me.doctype, me.name);
+							const doc = me.events.get_frm().doc;
+							me.$item_price.html(format_currency(item_row.rate, doc.currency));
+							me.render_discount_dom(item_row);
+						});
+					}, 200); // Adjust the debounce time as needed
 				}
 			};
-			this.rate_control.df.read_only = !this.allow_rate_change;
-			this.rate_control.refresh();
+		
+			
+
+			
+				if (frm.doc.customer_group === 'Senior Citizen') {
+					return;
+				} else {
+					this.rate_control.df.read_only = !this.allow_rate_change;
+					this.rate_control.refresh();
+				}
+			
+			// this.rate_control.df.read_only = !this.allow_rate_change;
+			// this.rate_control.refresh();
+		}
+		// Ensure frm.doc is checked for existence before accessing it
+		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
+			const frm = me.events.get_frm();
+			if (frm.doc.customer_group === 'Senior Citizen') {
+				if (me.discount_percentage_control && !me.allow_discount_change) {
+					me.discount_percentage_control.df.read_only = 1;
+				}
+			} else {
+				if (me.discount_percentage_control && !me.allow_discount_change) {
+					me.discount_percentage_control.df.read_only = 1;
+					me.discount_percentage_control.refresh();
+				}
+			}
 		}
 
-		if (this.discount_percentage_control && !this.allow_discount_change) {
-			this.discount_percentage_control.df.read_only = 1;
-			this.discount_percentage_control.refresh();
-		}
-
+		
 		if (this.warehouse_control) {
 			this.warehouse_control.df.reqd = 1;
 			this.warehouse_control.df.onchange = function () {

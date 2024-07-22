@@ -1,0 +1,171 @@
+{
+ "actions": [],
+ "autoname": "DPST-.YYYY.-.MM.-.DD.-.########",
+ "creation": "2024-06-27 13:50:01.633026",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "pos_profile",
+  "column_break_yykv",
+  "date",
+  "prepared_by",
+  "section_break_prab",
+  "cashier",
+  "shift",
+  "deposit_to",
+  "pos_closing_entry",
+  "column_break_kutn",
+  "shift_from",
+  "shift_to",
+  "section_break_lzmw",
+  "table_szcm",
+  "section_break_ssio",
+  "oic",
+  "column_break_kwsp",
+  "bank_personnel",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "prepared_by",
+   "fieldtype": "Link",
+   "label": "Prepared By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_prab",
+   "fieldtype": "Section Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "cashier",
+   "fieldtype": "Data",
+   "label": "Cashier"
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Shift"
+  },
+  {
+   "bold": 1,
+   "fieldname": "deposit_to",
+   "fieldtype": "Data",
+   "label": "Deposit To"
+  },
+  {
+   "fieldname": "column_break_kutn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "shift_from",
+   "fieldtype": "Datetime",
+   "label": "Shift From",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "shift_to",
+   "fieldtype": "Datetime",
+   "label": "Shift To",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_ssio",
+   "fieldtype": "Section Break"
+  },
+  {
+   "bold": 1,
+   "fetch_from": "prepared_by.full_name",
+   "fieldname": "oic",
+   "fieldtype": "Data",
+   "label": "OIC"
+  },
+  {
+   "fieldname": "column_break_kwsp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "bank_personnel",
+   "fieldtype": "Data",
+   "label": "Bank Personnel"
+  },
+  {
+   "fieldname": "section_break_lzmw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "table_szcm",
+   "fieldtype": "Table",
+   "options": "POS Deposit Acknowledgement Table"
+  },
+  {
+   "bold": 1,
+   "fieldname": "pos_closing_entry",
+   "fieldtype": "Link",
+   "label": "POS Closing Entry",
+   "options": "POS Closing Entry",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "pos_profile",
+   "fieldtype": "Link",
+   "label": "POS Profile",
+   "options": "POS Profile",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_yykv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "POS Deposit Acknowledgement",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-07-18 13:22:41.448000",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "POS Deposit Acknowledgement",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

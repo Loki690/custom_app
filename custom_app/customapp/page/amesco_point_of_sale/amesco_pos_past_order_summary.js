@@ -71,7 +71,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 
 	get_upper_section_html(doc) {
 
-		console.log("Paid Amount",doc)
+		// console.log("Paid Amount",doc)
 		const { status } = doc;
 		let indicator_color = "";
 
@@ -290,13 +290,45 @@ custom_app.PointOfSale.PastOrderSummary = class {
 				this.$summary_container.find(".new-btn").click();
 			}
 		});
+		this.$summary_container.find(".edit-btn").attr("title", `${ctrl_label}+>`);
+
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+>",
+			action: () => this.$summary_container.find(".edit-btn").click(),
+			condition: () =>
+				this.$component.is(":visible") && this.$summary_container.find(".edit-btn").is(":visible"),
+			description: __("Edit Receipt"),
+			page: cur_page.page.page,
+		});
+
+		this.$summary_container.find(".proceed-btn").attr("title", `${ctrl_label}+O`);
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+o",
+			action: () => this.$summary_container.find(".proceed-btn").click(),
+			condition: () =>
+				this.$component.is(":visible") && this.$summary_container.find(".proceed-btn").is(":visible"),
+			description: __("Proceed Order"),
+			page: cur_page.page.page,
+		});
+
 		this.$summary_container.find(".edit-btn").attr("title", `${ctrl_label}+E`);
 		frappe.ui.keys.add_shortcut({
 			shortcut: "ctrl+e",
 			action: () => this.$summary_container.find(".edit-btn").click(),
 			condition: () =>
 				this.$component.is(":visible") && this.$summary_container.find(".edit-btn").is(":visible"),
-			description: __("Edit Receipt"),
+			description: __("Edit Order"),
+			page: cur_page.page.page,
+		});
+
+
+		this.$summary_container.find(".delete-btn").attr("title", `${ctrl_label}+X`);
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+x",
+			action: () => this.$summary_container.find(".delete-btn").click(),
+			condition: () =>
+				this.$component.is(":visible") && this.$summary_container.find(".delete-btn").is(":visible"),
+			description: __("Delete Order"),
 			page: cur_page.page.page,
 		});
 	}

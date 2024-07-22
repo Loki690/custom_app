@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "pos_profile",
+  "range",
   "column_break_yfhm",
   "date_from",
   "date_to",
@@ -19,6 +20,8 @@
   "section_break_ahmo",
   "confirmed_transaction",
   "confirmed_transaction_total",
+  "section_break_wpvr",
+  "pending_transaction",
   "section_break_dzex",
   "clerk_sales",
   "section_break_fczr",
@@ -133,19 +136,36 @@
   },
   {
    "fieldname": "date_from",
-   "fieldtype": "Date",
+   "fieldtype": "Datetime",
    "label": "Date From"
   },
   {
    "fieldname": "date_to",
-   "fieldtype": "Date",
+   "fieldtype": "Datetime",
    "label": "Date To"
+  },
+  {
+   "fieldname": "section_break_wpvr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "pending_transaction",
+   "fieldtype": "Table",
+   "label": "Pending Transaction",
+   "options": "Z Pending Transaction"
+  },
+  {
+   "default": "From Beginning",
+   "fieldname": "range",
+   "fieldtype": "Select",
+   "label": "Range",
+   "options": "\nFrom Beginning\nToday\nWeek\nMonth"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-06-14 15:51:55.130196",
+ "modified": "2024-07-18 11:32:12.737716",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Z Reading",
@@ -166,7 +186,6 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

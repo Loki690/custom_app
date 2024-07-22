@@ -1,18 +1,20 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
-
 import json
 
 import frappe
+from frappe import _
 from frappe.exceptions import AuthenticationError
 from frappe.utils import cint
+from frappe.utils.data import getdate
 from frappe.utils.nestedset import get_root_of
 
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
-from frappe.utils.password import check_oic_password, check_password
+#from frappe.utils.password import check_oic_password, check_password
+from custom_app.customapp.utils.password import check_oic_password, check_password
 
 
 def search_by_term(search_term, warehouse, price_list):
@@ -27,7 +29,7 @@ def search_by_term(search_term, warehouse, price_list):
 		return
 
 	item_doc = frappe.get_doc("Item", item_code)
-
+ 
 	if not item_doc:
 		return
 
@@ -204,15 +206,50 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 					"batch_no": price.batch_no,
 				}
 			)
-			# Add latest_expiry_date to the item
-			item["latest_expiry_date"] = item.latest_expiry_date
+		
 
 	return {"items": result}
 
 
+import frappe
+
+@frappe.whitelist()
+def get_item_uoms(item_code):
+    item = frappe.get_doc('Item', item_code)
+    
+    uom_conversions = frappe.db.sql("""
+        SELECT uom, conversion_factor
+        FROM `tabUOM Conversion Detail`
+        WHERE parent = %s
+    """, (item_code,), as_dict=True)
+    
+    uoms = []
+    for conversion in uom_conversions:
+        uoms.append({
+            'uom': conversion.uom,
+            'conversion_factor': conversion.conversion_factor
+        })
+    
+    response = {
+        'item_code': item.item_code,
+        'description': item.description,
+        'rate': item.standard_rate,
+        'uoms': uoms  # List of UOM conversion details
+    }
+
+    return response
+
+
 @frappe.whitelist()
 def search_for_serial_or_batch_or_barcode_number(search_value: str) -> dict[str, str | None]:
-	return scan_barcode(search_value)
+	# return scan_barcode(search_value)
+	try: 
+
+		result = scan_barcode(search_value)
+		return result
+	except Exception as e: 
+	  frappe.throw(_("An error occurred while searching for serial, batch, or barcode number: {0}").format(str(e)))
+
 
 
 def get_conditions(search_term):
@@ -243,6 +280,8 @@ def get_item_group_condition(pos_profile):
 		cond = "and item.item_group in (%s)" % (", ".join(["%s"] * len(item_groups)))
 
 	return cond % tuple(item_groups)
+
+
 
 
 @frappe.whitelist()
@@ -277,9 +316,29 @@ def check_opening_entry(user):
 
 	return open_vouchers
 
+@frappe.whitelist()
+def get_shift_count(pos_profile):
+    today = getdate()
+    count = frappe.db.count('POS Opening Entry', {
+        'pos_profile': pos_profile,
+        'posting_date': today,
+    })
+    return count
 
 @frappe.whitelist()
-def create_opening_voucher(pos_profile, company, balance_details):
+def get_pos_profile_shift(pos_profile):
+    try:
+        # Retrieve the POS Profile document
+        pos_profile_doc = frappe.get_doc("POS Profile", pos_profile)
+        return pos_profile_doc.custom_set_max_shift
+    except frappe.DoesNotExistError:
+        frappe.throw(_("POS Profile '{0}' does not exist").format(pos_profile))
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Error fetching POS Profile')
+        frappe.throw(_("An error occurred while fetching the POS Profile: {0}").format(str(e)))
+
+@frappe.whitelist()
+def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 	balance_details = json.loads(balance_details)
 
 	new_pos_opening = frappe.get_doc(
@@ -290,6 +349,7 @@ def create_opening_voucher(pos_profile, company, balance_details):
 			"user": frappe.session.user,
 			"pos_profile": pos_profile,
 			"company": company,
+			"custom_shift": custom_shift,
 		}
 	)
 	new_pos_opening.set("balance_details", balance_details)
@@ -418,4 +478,24 @@ def confirm_user_acc_password(password):
             return False
     except AuthenticationError:
         return False
-         
+
+@frappe.whitelist()
+def get_pos_closing_details(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'POS Closing Entry Detail', 
+            filters={'parent': parent},
+            fields=['parent', 
+                    'mode_of_payment', 
+                    'opening_amount', 
+                    'expected_amount', 
+                    'closing_amount' ]  # Specify the fields you want to fetch
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_pos_closing_details Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag

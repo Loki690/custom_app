@@ -80,7 +80,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		const { status } = doc;
 		let indicator_color = "";
 		 // Determine the 'Sold by' value based on the status
-		const sold_by = status === "Draft" ? 'Amesco Drug Corporation' : doc.owner;
+		const sold_by = status === "Draft" ? doc.custom_pa_name : doc.custom_cashier_name;
 
 		["Paid", "Consolidated"].includes(status) && (indicator_color = "green");
 		status === "Draft" && (indicator_color = "red");
@@ -89,7 +89,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		return `<div class="left-section">
 					<div class="customer-name">${doc.customer}</div>
 					<div class="customer-email">${this.customer_email}</div>
-					<div class="cashier">${__("Amesco Drug Corporation")}</div>
+					<div class="cashier"> Take by:  ${__(sold_by)}</div>
 				</div>
 				<div class="right-section">
 					<div class="paid-amount">${format_currency(doc.grand_total, doc.currency)}</div>
@@ -166,28 +166,28 @@ custom_app.PointOfSale.PastOrderSummary = class {
 	}
 
 
-	// get_taxes_html(doc) {
-	// 	if (!doc.taxes.length) return "";
+	get_taxes_html(doc) {
+		if (!doc.taxes.length) return "";
 
-	// 	let taxes_html = doc.taxes
-	// 		.map((t) => {
-	// 			// if tax rate is 0, don't print it.
-	// 			const description = /[0-9]+/.test(t.description)
-	// 				? t.description
-	// 				: t.rate != 0
-	// 					? `${t.description} @ ${t.rate}%`
-	// 					: t.description;
-	// 			return `
-	// 			<div class="tax-row">
-	// 				<div class="tax-label">${description}</div>
-	// 				<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
-	// 			</div>
-	// 		`;
-	// 		})
-	// 		.join("");
+		let taxes_html = doc.taxes
+			.map((t) => {
+				// if tax rate is 0, don't print it.
+				const description = /[0-9]+/.test(t.description)
+					? t.description
+					: t.rate != 0
+						? `${t.description} @ ${t.rate}%`
+						: t.description;
+				return `
+				<div class="tax-row">
+					<div class="tax-label">${description}</div>
+					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, doc.currency)}</div>
+				</div>
+			`;
+			})
+			.join("");
 
-	// 	return `<div class="taxes-wrapper">${taxes_html}</div>`;
-	// }
+		return `<div class="taxes-wrapper">${taxes_html}</div>`;
+	}
 
 	get_grand_total_html(doc) {
 		return `<div class="summary-row-wrapper grand-total">
@@ -239,6 +239,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		this.$summary_container.on("click", ".delete-btn", () => {
 			this.events.delete_order(this.doc.name);
 			this.show_summary_placeholder();
+			
 			// this.toggle_component(false);
 			// this.$component.find('.no-summary-placeholder').removeClass('d-none');
 			// this.$summary_wrapper.addClass('d-none');
@@ -275,6 +276,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			this.doc.letter_head,
 			this.doc.language || frappe.boot.lang
 		);
+		
 	}
 
 	attach_shortcuts() {
@@ -304,6 +306,17 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			description: __("Edit Receipt"),
 			page: cur_page.page.page,
 		});
+
+		this.$summary_container.find(".edit-btn").attr("title", `${ctrl_label}+E`);
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+e",
+			action: () => this.$summary_container.find(".edit-btn").click(),
+			condition: () =>
+				this.$component.is(":visible") && this.$summary_container.find(".edit-btn").is(":visible"),
+			description: __("Edit Receipt"),
+			page: cur_page.page.page,
+		});
+		
 	}
 
 	send_email() {
@@ -363,6 +376,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			}
 		});
 		this.$summary_btns.children().last().removeClass("mr-4");
+		
 	}
 
 	toggle_summary_placeholder(show) {
@@ -381,10 +395,10 @@ custom_app.PointOfSale.PastOrderSummary = class {
 
 		// added print reciept button 
 		return [
-			{ condition: this.doc.docstatus === 0, visible_btns: ["Print Receipt", "Edit Order", "Delete Order"] },
+			{ condition: this.doc.docstatus === 0, visible_btns: ["Edit Order"] },
 			{
 				condition: !this.doc.is_return && this.doc.docstatus === 1,
-				visible_btns: ["Print Receipt", "Email Receipt", "Return"],
+				visible_btns: ["Print Receipt", "Email Receipt", "Return"],	
 			},
 			{
 				condition: this.doc.is_return && this.doc.docstatus === 1,
@@ -480,15 +494,15 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		const vat_exempt_dom =this.get_vatable_exempt_html(doc);
 		const zero_rated_dom = this.get_zero_rated_html(doc);
 		const vat_amount_dom = this.get_vat_amount_html(doc);
-		// const taxes_dom = this.get_taxes_html(doc);
+		const taxes_dom = this.get_taxes_html(doc);
 		const discount_dom = this.get_discount_html(doc);
 		const grand_total_dom = this.get_grand_total_html(doc);
 		this.$totals_container.append(net_total_dom);
-		this.$totals_container.append(vatable_sale_dom);
-		this.$totals_container.append(vat_exempt_dom);
-		this.$totals_container.append(zero_rated_dom);
-		this.$totals_container.append(vat_amount_dom);
-		// this.$totals_container.append(taxes_dom);
+		// this.$totals_container.append(vatable_sale_dom);
+		// this.$totals_container.append(vat_exempt_dom);
+		// this.$totals_container.append(zero_rated_dom);
+		// this.$totals_container.append(vat_amount_dom);
+		this.$totals_container.append(taxes_dom);
 		this.$totals_container.append(discount_dom);
 		this.$totals_container.append(grand_total_dom);
 	}

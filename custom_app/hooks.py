@@ -237,15 +237,28 @@ doc_events = {
         "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
-    }
+    },
+   'POS Z Reading': {
+        'on_submit': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.on_submit'
+    },
+   'POS Opening Entry' : {
+       "validate":"custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.pos_opening_validation",
+   },
+   'Amesco Gift Certificate':{
+       "before_insert": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.before_save",
+   }
 }
 
-# your_app/hooks.py
 jenv = {
     'methods': [
         'custom_format_datetime=custom_app.customapp.utils.custom_format_datetime'
     ]
 }
+
+app_include_js = [
+    "custom_app/customapp/doctype/amesco_gift_certificate/amesco_gift_certificate.js"
+]
+
 
 
 

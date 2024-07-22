@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-06-27 13:56:18.838854",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "deposit_type",
+  "bank",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "deposit_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Deposit Type"
+  },
+  {
+   "fieldname": "bank",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Bank"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-06-27 13:57:16.658033",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "POS Deposit Acknowledgement Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

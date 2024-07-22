@@ -5,7 +5,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.customer_info = undefined;
 		this.hide_images = settings.hide_images;
 		this.allowed_customer_groups = settings.customer_groups;
-		this.allowed_doctor_groups = settings.doctor_groups; 
+		this.allowed_doctor_groups = settings.doctor_groups;
 		this.allow_rate_change = settings.allow_rate_change;
 		this.allow_discount_change = settings.allow_discount_change;
 		this.init_component();
@@ -16,7 +16,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.init_child_components();
 		this.bind_events();
 		this.attach_shortcuts();
-	}
+	} 
 
 	prepare_dom() {
 		this.wrapper.append(`<section class="customer-cart-container"></section>`);
@@ -31,10 +31,12 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	init_customer_selector() {
-		this.$component.append(`<div class="customer-section"></div>`);
+		this.$component.append(`<div class="customer-section mb-2 mt-4"></div>`);
+
 		this.$customer_section = this.$component.find(".customer-section");
 		this.make_customer_selector();
 	}
+
 
 	init_doctor_selector() {
 		this.$component.append(`<div class="doctor-section" style="display: flex;
@@ -47,6 +49,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$doctor_section = this.$component.find(".doctor-section");
 		this.make_doctor_selector();
 	}
+
 
 	reset_customer_selector() {
 		const frm = this.events.get_frm();
@@ -66,10 +69,14 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$component.append(
 			`<div class="cart-container">
 				<div class="abs-cart-container">
-					<div class="cart-label">${__("Item Cart")}</div>
+					<div class="cart-label" >${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
+						<div class="qty-header">${__("Vat Type")}</div>
+						<div class="qty-header">${__("Price")}</div>
+						<div class="qty-header" >${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
+						
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
 					<div class="cart-items-section"></div>
@@ -88,7 +95,7 @@ custom_app.PointOfSale.ItemCart = class {
 	make_cart_items_section() {
 		this.$cart_header = this.$component.find(".cart-header");
 		this.$cart_items_wrapper = this.$component.find(".cart-items-section");
-
+		//this.load_stored_cart_items();
 		this.make_no_items_placeholder();
 	}
 
@@ -96,6 +103,46 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$cart_header.css("display", "none");
 		this.$cart_items_wrapper.html(`<div class="no-item-wrapper">${__("No items in cart")}</div>`);
 	}
+
+
+	add_keyboard_navigation() {
+		this.$component.on('keydown', '[tabindex="0"]', (e) => {
+			if (e.key === 'Enter') {
+				$(e.target).trigger('click');
+			}
+			switch (e.key) {
+				case 'ArrowUp':
+					e.preventDefault();
+					this.focusPreviousElement(e.target);
+					break;
+				case 'ArrowDown':
+					e.preventDefault();
+					this.focusNextElement(e.target);
+					break;
+			}
+		});
+	}
+
+	focusNextElement(current) {
+		let $next = $(current).nextAll('[tabindex="0"]').first();
+		if (!$next.length) {
+			$next = this.$component.find('[tabindex="0"]').first();
+		}
+		$next.focus();
+	}
+
+	focusPreviousElement(current) {
+		let $prev = $(current).prevAll('[tabindex="0"]').first();
+		if (!$prev.length) {
+			$prev = this.$component.find('[tabindex="0"]').last();
+		}
+		$prev.focus();
+	}
+
+	get_cart_item(item_data) {
+		return this.$cart_items_wrapper.find(`[data-row-name="${escape(item_data.name)}"]`);
+	}
+
 
 	get_discount_icon() {
 		return `<svg class="discount-icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -110,9 +157,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section = this.$component.find(".cart-totals-section");
 
 		this.$totals_section.append(
-			`<div class="add-discount-wrapper">
-				${this.get_discount_icon()} ${__("Add Discount")}
-			</div>
+			`
 			<div class="item-qty-total-container">
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
@@ -120,17 +165,17 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="vatable-sales-container mt-2"></div>
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
-			<div class="vat-container"></div>
+			
 			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
-				<div class="net-total-label">${__("Sub Totaldddddd")}</div>
+				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			
-
 		 <div class="taxes-container"></div>
+		 <div class="vat-container"></div>
+		<div class="total-vat-container"></div>
 			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
@@ -157,13 +202,13 @@ custom_app.PointOfSale.ItemCart = class {
 				// [4, 5, 6, "Discount"],
 				// [7, 8, 9, "Rate"],
 				// [".", 0, "Delete", "Remove"],
-				[  "", "", "", "Remove"],
+				["Discount", "Quantity", "Rate", "Remove"],
 			],
 			css_classes: [
 				["", "", "", "col-span-2 remove-btn"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
-				["", "", "", "col-span-2 remove-btn"],
+				// ["", "", "", "col-span-2 remove-btn"],
 			],
 			fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" },
 		});
@@ -215,21 +260,23 @@ custom_app.PointOfSale.ItemCart = class {
 			me.toggle_doctor_info(show);
 		});
 
-		
+
 		this.$cart_items_wrapper.on("click", ".cart-item-wrapper", function () {
-            const $cart_item = $(this);
-            me.toggle_item_highlight(this);
-            const payment_section_hidden = !me.$totals_section.find(".edit-cart-btn").is(":visible");
-            if (!payment_section_hidden) {
-                // payment section is visible
-                // edit cart first and then open item details section
-                me.$totals_section.find(".edit-cart-btn").click();
-                return;
-            }
-            const item_row_name = unescape($cart_item.attr("data-row-name"));
-            me.events.cart_item_clicked({ name: item_row_name });
-            this.numpad_value = "";
-        });
+			const $cart_item = $(this);
+			me.toggle_item_highlight(this);
+			const payment_section_hidden = !me.$totals_section.find(".edit-cart-btn").is(":visible");
+			if (!payment_section_hidden) {
+				// payment section is visible
+				// edit cart first and then open item details section
+				me.$totals_section.find(".edit-cart-btn").click();
+				return;
+			}
+			const item_row_name = unescape($cart_item.attr("data-row-name"));
+			me.events.cart_item_clicked({ name: item_row_name });
+			this.numpad_value = "";
+		});
+
+
 
 		this.$component.on("click", ".checkout-btn", async function () {
 			if ($(this).attr("style").indexOf("--blue-500") == -1) return;
@@ -241,6 +288,7 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$totals_section.on("click", ".edit-cart-btn", () => {
+
 			// Show password dialog for OIC authentication
 			const passwordDialog = new frappe.ui.Dialog({
 				title: __('Enter OIC Password'),
@@ -256,7 +304,7 @@ custom_app.PointOfSale.ItemCart = class {
 				primary_action: (values) => {
 					let password = values.password;
 					let role = "oic";
-		
+
 					frappe.call({
 						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
 						args: { password: password, role: role },
@@ -277,10 +325,11 @@ custom_app.PointOfSale.ItemCart = class {
 					});
 				}
 			});
-		
+
 			passwordDialog.show();
+
 		});
-		
+
 		this.$component.on("click", ".add-discount-wrapper", () => {
 			// Check if OIC authentication is required
 			if (!this.is_oic_authenticated) {
@@ -299,7 +348,7 @@ custom_app.PointOfSale.ItemCart = class {
 					primary_action: (values) => {
 						let password = values.password;
 						let role = "oic";
-		
+
 						frappe.call({
 							method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
 							args: { password: password, role: role },
@@ -320,7 +369,7 @@ custom_app.PointOfSale.ItemCart = class {
 						});
 					}
 				});
-		
+
 				passwordDialog.show();
 			} else {
 				// OIC authenticated, proceed with showing the discount control
@@ -328,7 +377,7 @@ custom_app.PointOfSale.ItemCart = class {
 				if (!this.discount_field || can_edit_discount) this.show_discount_control();
 			}
 		});
-		
+
 		// Event handler for editing the discount field
 		this.$add_discount_elem.find(".edit-discount-btn").on("click", () => {
 			// Reset OIC authentication flag and prompt for authentication
@@ -343,21 +392,62 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	attach_shortcuts() {
+
+		document.addEventListener('keydown', function (event) {
+			// List of key codes to prevent
+			const keysToPrevent = {
+				// Prevent F5 (refresh)
+				116: true,
+				// Prevent Ctrl+R (refresh)
+				'Ctrl+82': true,
+				// Prevent Ctrl+Shift+R (refresh)
+				'Ctrl+16+82': true,
+				// Prevent Ctrl+S (save)
+				'Ctrl+83': true,
+				// Prevent Ctrl+P (print)
+				'Ctrl+80': true,
+				// Prevent Ctrl+W (close tab)
+				'Ctrl+87': true,
+				// Prevent Ctrl+Shift+I (Developer Tools)
+				'Ctrl+Shift+73': true,
+				// Prevent Ctrl+J (Downloads)
+				'Ctrl+74': true,
+				// Prevent Ctrl+E
+				'Ctrl+69': true,
+				// Prevent Ctrl+Q
+				// 'Ctrl+18+81': true,
+			};
+
+			// Generate the key identifier
+			const key = (event.ctrlKey ? 'Ctrl+' : '') +
+				(event.shiftKey ? 'Shift+' : '') +
+				(event.altKey ? 'Alt+' : '') +
+				event.keyCode;
+
+			if (keysToPrevent[key] || keysToPrevent[event.keyCode]) {
+				event.preventDefault();
+			}
+		});
+
+
 		for (let row of this.number_pad.keys) {
 			for (let btn of row) {
 				if (typeof btn !== "string") continue; // do not make shortcuts for numbers
 
 				let shortcut_key = `ctrl+${frappe.scrub(String(btn))[0]}`;
 				if (btn === "Delete") shortcut_key = "ctrl+backspace";
-				if (btn === "Remove") shortcut_key = "shift+ctrl+backspace";
+				if (btn === "Remove") shortcut_key = "ctrl+x";
+				if (btn === "Quantity") shortcut_key = "ctrl+q";
+				if (btn === "Rate") shortcut_key = "ctrl+a";
+				if (btn === "Discount") shortcut_key = "ctrl+shift+d";
 				if (btn === ".") shortcut_key = "ctrl+>";
 
 				// to account for fieldname map
 				const fieldname = this.number_pad.fieldnames[btn]
 					? this.number_pad.fieldnames[btn]
 					: typeof btn === "string"
-					? frappe.scrub(btn)
-					: btn;
+						? frappe.scrub(btn)
+						: btn;
 
 				let shortcut_label = shortcut_key.split("+").map(frappe.utils.to_title_case).join("+");
 				shortcut_label = frappe.utils.is_mac() ? shortcut_label.replace("Ctrl", "⌘") : shortcut_label;
@@ -371,6 +461,8 @@ custom_app.PointOfSale.ItemCart = class {
 						this.$numpad_section.find(`.numpad-btn[data-button-value="${fieldname}"]`).click();
 					}
 				});
+
+
 			}
 		}
 		const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
@@ -384,6 +476,8 @@ custom_app.PointOfSale.ItemCart = class {
 			ignore_inputs: true,
 			page: cur_page.page.page,
 		});
+
+
 		this.$component.find(".edit-cart-btn").attr("title", `${ctrl_label}+E`);
 		frappe.ui.keys.on("ctrl+e", () => {
 			const item_cart_visible = this.$component.is(":visible");
@@ -407,6 +501,38 @@ custom_app.PointOfSale.ItemCart = class {
 				this.discount_field.set_value(0);
 			}
 		});
+
+		this.doctor_field.parent.attr("title", `${ctrl_label}+R`);
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+r",
+			action: () => this.doctor_field.set_focus(),
+			condition: () => this.$component.is(":visible"),
+			description: __("Doctor"),
+			ignore_inputs: true,
+			page: cur_page.page.page,
+		});
+
+		this.customer_field.parent.attr("title", `${ctrl_label}+M`);
+		frappe.ui.keys.add_shortcut({
+			shortcut: "ctrl+m",
+			action: () => this.customer_field.set_focus(),
+			condition: () => this.$component.is(":visible"),
+			description: __("Customer"),
+			ignore_inputs: true,
+			page: cur_page.page.page,
+		});
+
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+<', // Choose an appropriate shortcut key
+			action: () => {
+				this.reset_customer_selector();
+			},
+			condition: () => true, // Adjust this condition as needed
+			description: __('Reset Customer Selector'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
+
 	}
 
 	toggle_item_highlight(item) {
@@ -425,7 +551,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	make_customer_selector() {
 		this.$customer_section.html(`
-			<div class="customer-field"></div>
+			<div class="customer-field" tabindex="0"></div>
 		`);
 		const me = this;
 		const allowed_customer_group = this.allowed_customer_groups || [];
@@ -468,13 +594,10 @@ custom_app.PointOfSale.ItemCart = class {
 		this.customer_field.toggle_label(false);
 	}
 
-
-	//Doctors
-
 	make_doctor_selector() {
 		this.$doctor_section.html(`
-			<div class="doctor-field"></div>
-		`);
+        <div class="doctor-field"></div>
+    `);
 		const me = this;
 		const allowed_doctor_group = this.allowed_doctor_groups || [];
 		let filters = {};
@@ -482,7 +605,8 @@ custom_app.PointOfSale.ItemCart = class {
 			filters = {
 				doctor_group: ["in", allowed_doctor_group],
 			};
-}
+		}
+
 		this.doctor_field = frappe.ui.form.make_control({
 			df: {
 				label: __("Doctor"),
@@ -510,6 +634,14 @@ custom_app.PointOfSale.ItemCart = class {
 			render_input: true,
 		});
 		this.doctor_field.toggle_label(false);
+
+		// Add shortcut key to focus on doctor field
+		$(document).on('keydown', function (event) {
+			// Use Alt + D as shortcut (you can change this key combination as needed)
+			if (event.altKey && event.key === 'd') {
+				me.doctor_field.$input.focus();
+			}
+		});
 	}
 
 
@@ -517,7 +649,8 @@ custom_app.PointOfSale.ItemCart = class {
 		if (customer) {
 			return new Promise((resolve) => {
 				frappe.db
-					.get_value("Customer", customer, ["email_id", "mobile_no" , 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program"])
+					.get_value("Customer", customer, ["email_id", "mobile_no", 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program",
+						"custom_osca_id", "custom_pwd_id"])
 					.then(({ message }) => {
 						const { loyalty_program } = message;
 						// if loyalty program then fetch loyalty points too
@@ -649,7 +782,7 @@ custom_app.PointOfSale.ItemCart = class {
 							<div class="customer-name">${customer}</div>
 							${get_customer_description()}
 						</div>
-						<div class="reset-customer-btn" data-customer="${escape(customer)}">
+						<div class="reset-customer-btn" tabindex="0" data-customer="${escape(customer)}">
 							<svg width="32" height="32" viewBox="0 0 14 14" fill="none">
 								<path d="M4.93764 4.93759L7.00003 6.99998M9.06243 9.06238L7.00003 6.99998M7.00003 6.99998L4.93764 9.06238L9.06243 4.93759" stroke="#8D99A6"/>
 							</svg>
@@ -739,11 +872,13 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-		//console.log(frm.doc);
+
+
+		// console.log(frm.doc);
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
-		this.render_vat(frm.doc.custom_vat_amount)
+		// this.render_vat(frm.doc.custom_vat_amount)
 		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
@@ -751,20 +886,22 @@ custom_app.PointOfSale.ItemCart = class {
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.grand_total
 			: frm.doc.rounded_total;
-			
+
 		this.render_grand_total(grand_total);
 		this.render_taxes(frm.doc.taxes);
+		this.render_total_vat(frm.doc.total_taxes_and_charges);
+
 	}
 
 	render_net_total(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".net-total-container")
-			.html(`<div>${__("Net Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-net-total")
-			.html(`<div>${__("Net Total")}: <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Sub Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
 	render_vatable_sales(value) {
@@ -778,7 +915,7 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 			`);
 	}
-	
+
 	render_vat_exempt_sales(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
@@ -810,6 +947,18 @@ custom_app.PointOfSale.ItemCart = class {
 			.html(`
 				<div style="display: flex; justify-content: space-between;">
 					<span style="flex: 1;">${__("VAT 12%")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
+
+	render_total_vat(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".total-vat-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Total VAT")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -847,11 +996,11 @@ custom_app.PointOfSale.ItemCart = class {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".grand-total-container")
-			.html(`<div>${__("Grand Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-grand-total")
-			.html(`<div>${__("Grand Total")}: <span>${format_currency(value, currency)}</span></div>`);
+			.html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
 
@@ -865,7 +1014,7 @@ custom_app.PointOfSale.ItemCart = class {
 					const description = /[0-9]+/.test(t.description)
 						? t.description
 						: t.rate != 0
-							? `${t.description} @ ${t.rate}%`
+							? `${t.description} ${t.rate}%`
 							: t.description;
 					return `<div class="tax-row">
 					<div class="tax-label">${description}</div>
@@ -880,6 +1029,9 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 
+
+
+
 	get_cart_item({ name }) {
 		const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
 		return this.$cart_items_wrapper.find(item_selector);
@@ -892,11 +1044,19 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_item_html(item, remove_item) {
 		const $item = this.get_cart_item(item);
+		// Retrieve current cart items from local storage
+		let cartItems = JSON.parse(localStorage.getItem('posCartItems')) || [];
 
 		if (remove_item) {
 			if ($item) {
 				$item.next().remove();
 				$item.remove();
+
+				// Remove the item from the local storage cart items
+				cartItems = cartItems.filter(cartItem => cartItem.item_code !== item.item_code);
+
+				localStorage.setItem('posCartItems', JSON.stringify(cartItems));
+
 				this.remove_customer(); // Call remove_customer function after removing item
 				this.set_cash_customer(); // Set customer to "Cash" after removing item
 				frappe.run_serially([
@@ -905,7 +1065,18 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 		} else {
 			const item_row = this.get_item_from_frm(item);
+
 			this.render_cart_item(item_row, $item);
+
+			// Add or update the item in the local storage cart items
+			const existingItemIndex = cartItems.findIndex(cartItem => cartItem.item_code === item.item_code);
+			if (existingItemIndex > -1) {
+				cartItems[existingItemIndex] = item; // Update existing item
+			} else {
+				cartItems.push(item); // Add new item
+			}
+			localStorage.setItem('posCartItems', JSON.stringify(cartItems));
+			// console.log('cartItems', cartItems)
 		}
 
 		const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
@@ -918,10 +1089,10 @@ custom_app.PointOfSale.ItemCart = class {
 		const frm = this.events.get_frm();
 		// Get the current value of the "customer" field
 		const currentCustomer = frm.doc.customer;
-	
+
 		// Set the value of "custom_customer_2" to the current customer
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_customer_2", currentCustomer);
-	
+
 		// Clear the "customer" field
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", '');
 		// Update the customer section
@@ -930,13 +1101,13 @@ custom_app.PointOfSale.ItemCart = class {
 
 	set_cash_customer() {
 		const frm = this.events.get_frm();
-	
+
 		// Get the value of "custom_customer_2"
 		const customCustomer2Value = frm.doc.custom_customer_2;
-	
+
 		// Set the value of "customer" to the value of "custom_customer_2"
 		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", customCustomer2Value);
-	
+
 		// Update the customer section
 		this.update_customer_section();
 	}
@@ -944,11 +1115,12 @@ custom_app.PointOfSale.ItemCart = class {
 	render_cart_item(item_data, $item_to_update) {
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
+		const customer_group = me.events.get_frm().doc.customer_group
 
 		if (!$item_to_update.length) {
 			this.$cart_items_wrapper.append(
-				`<div class="cart-item-wrapper" data-row-name="${escape(item_data.name)}"></div>
-				<div class="seperator"></div>`
+				`<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
+				<div class="separator"></div>`
 			);
 			$item_to_update = this.get_cart_item(item_data);
 		}
@@ -961,7 +1133,17 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			${get_rate_discount_html()}`
+			<!-- <div class="item-vat mx-3">
+				<strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
+			</div> -->
+			
+			<div class="item-vat mx-3">
+				<strong>${format_currency(item_data.rate, currency)}</strong>
+			</div>
+			<div class="item-discount mx-3">
+				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+			</div>
+			${get_rate_discount_html(customer_group)}`
 		);
 
 		set_dynamic_rate_header_width();
@@ -976,36 +1158,74 @@ custom_app.PointOfSale.ItemCart = class {
 			}, 0);
 
 			max_width += 1;
-			if (max_width == 1) max_width = "";
+			if (max_width === 1) max_width = "";
 
 			me.$cart_header.find(".rate-amount-header").css("width", max_width);
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
 
-		function get_rate_discount_html() {
-			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+		function get_rate_discount_html(customer_group) {
+
+
+			if (customer_group === "Zero Rated") {
+
 				return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
-							<div class="item-amount">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
+								
+							</div>
+						</div>`;
+
+
+			} else if (customer_group === "Senior Citizen") {
+
+				// if (item_data.pricing_rules === "") {
+				// 	console.log('Pricing rule is empty')
+				// }
+
+				// console.log('Item Data: ', item_data)
+
+				return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency( item_data.pricing_rules === "" ? item_data.amount  : 
+									
+									item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount, currency)}</div>
+								
+							</div>
+						</div>`;
+
 			} else {
-				return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+					return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
+							</div>
+						</div>`;
+				} else {
+					return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
+							</div>
+						</div>`;
+				}
 			}
+
+
+
+
 		}
 
 		function get_description_html() {
 			if (item_data.description) {
-				if (item_data.description.indexOf("<div>") != -1) {
+				if (item_data.description.indexOf("<div>") !== -1) {
 					try {
 						item_data.description = $(item_data.description).text();
 					} catch (error) {
@@ -1028,13 +1248,53 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="item-image">
 						<img
 							onerror="cur_pos.cart.handle_broken_image(this)"
-							src="${image}" alt="${frappe.get_abbr(item_name)}"">
+							src="${image}" alt="${frappe.get_abbr(item_name)}">
 					</div>`;
 			} else {
 				return `<div class="item-image item-abbr">${frappe.get_abbr(item_name)}</div>`;
 			}
 		}
+
+		// Event listener for handling keydown events on cart items
+		this.$cart_items_wrapper.off('keydown', '.cart-item-wrapper').on('keydown', '.cart-item-wrapper', function (event) {
+			const $items = me.$cart_items_wrapper.find('.cart-item-wrapper');
+			const currentIndex = $items.index($(this));
+			let nextIndex = currentIndex;
+
+			switch (event.which) {
+				case 13: // Enter key
+					$(this).click(); // Trigger click event immediately on Enter key press
+					break;
+				case 38: // Up arrow key
+					nextIndex = currentIndex > 0 ? currentIndex - 1 : $items.length - 1;
+					break;
+				case 40: // Down arrow key
+					nextIndex = currentIndex < $items.length - 1 ? currentIndex + 1 : 0;
+					break;
+				default:
+					return; // Exit if other keys are pressed
+			}
+
+			$items.eq(nextIndex).focus(); // Move focus to the next item
+		});
+
+		// Add Ctrl+C shortcut to focus on the first cart item
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+c',
+			action: () => {
+				const $items = me.$cart_items_wrapper.find('.cart-item-wrapper');
+				if ($items.length) {
+					$items.first().focus(); // Focus on the first cart item
+				}
+			},
+			condition: () => me.$cart_items_wrapper.is(':visible'),
+			description: __('Activate Cart Item Focus'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
 	}
+
+
 
 	handle_broken_image($img) {
 		const item_abbr = $($img).attr("alt");
@@ -1087,8 +1347,8 @@ custom_app.PointOfSale.ItemCart = class {
 		const action_is_field_edit = ["qty", "discount_percentage", "rate"].includes(current_action);
 		const action_is_allowed = action_is_field_edit
 			? (current_action == "rate" && this.allow_rate_change) ||
-			  (current_action == "discount_percentage" && this.allow_discount_change) ||
-			  current_action == "qty"
+			(current_action == "discount_percentage" && this.allow_discount_change) ||
+			current_action == "qty"
 			: true;
 
 		const action_is_pressed_twice = this.prev_action === current_action;
@@ -1232,8 +1492,11 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="mobile_no-field"></div>
 					<div class="custom_transaction_type-field"></div>
 					<div class="custom_oscapwdid-field"></div>
+					<div class="custom_osca_id-field"></div>
+					<div class="custom_pwd_id-field"></div>
 					<div class="loyalty_program-field"></div>
 					<div class="loyalty_points-field"></div>
+				
 				</div>
 				<div class="transactions-label">Recent Transactions</div>`
 			);
@@ -1270,19 +1533,19 @@ custom_app.PointOfSale.ItemCart = class {
 				fieldtype: "Data",
 				placeholder: __("Enter customer's phone number"),
 			},
-			{
-				fieldname: "custom_transaction_type",
-				label: __("Transaction Type"),
-				fieldtype: "Select",
-				options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
-				placeholder: __("Enter customer's transaction type"),
-			},
-			{
-				fieldname: "custom_oscapwdid",
-				label: __("Osca or PWD ID"),
-				fieldtype: "Data",
-				placeholder: __("Enter customer's Osca or PWD ID"),
-			},
+			// {
+			// 	fieldname: "custom_transaction_type",
+			// 	label: __("Transaction Type"),
+			// 	fieldtype: "Select",
+			// 	options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
+			// 	placeholder: __("Enter customer's transaction type"),
+			// },
+			// {
+			// 	fieldname: "custom_oscapwdid",
+			// 	label: __("Osca or PWD ID"),
+			// 	fieldtype: "Data",
+			// 	placeholder: __("Enter customer's Osca or PWD ID"),
+			// },
 			{
 				fieldname: "loyalty_program",
 				label: __("Loyalty Program"),
@@ -1290,12 +1553,27 @@ custom_app.PointOfSale.ItemCart = class {
 				options: "Loyalty Program",
 				placeholder: __("Select Loyalty Program"),
 			},
+
 			{
 				fieldname: "loyalty_points",
 				label: __("Loyalty Points"),
 				fieldtype: "Data",
 				read_only: 1,
 			},
+
+			{
+				fieldname: "custom_osca_id",
+				label: __("OSCA ID"),
+				fieldtype: "Data",
+				read_only: 1,
+			},
+			{
+				fieldname: "custom_pwd_id",
+				label: __("PWD ID"),
+				fieldtype: "Data",
+				read_only: 1,
+			},
+
 		];
 
 		const me = this;
@@ -1307,6 +1585,8 @@ custom_app.PointOfSale.ItemCart = class {
 			});
 			this[`customer_${df.fieldname}_field`].set_value(this.customer_info[df.fieldname]);
 		});
+
+
 
 		function handle_customer_field_change() {
 			const current_value = me.customer_info[this.df.fieldname];
@@ -1339,7 +1619,7 @@ custom_app.PointOfSale.ItemCart = class {
 		frappe.db
 			.get_list("POS Invoice", {
 				filters: { customer: this.customer_info.customer, docstatus: 1 },
-				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency"],
+				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency", "custom_invoice_series"],
 				limit: 20,
 			})
 			.then((res) => {
@@ -1369,7 +1649,7 @@ custom_app.PointOfSale.ItemCart = class {
 					transaction_container.append(
 						`<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
 						<div class="invoice-name-date">
-							<div class="invoice-name">${invoice.name}</div>
+							<div class="invoice-name">${invoice.custom_invoice_series}</div>
 							<div class="invoice-date">${posting_datetime}</div>
 						</div>
 						<div class="invoice-total-status">
@@ -1413,11 +1693,21 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$cart_items_wrapper.html("");
+
 		if (frm.doc.items.length) {
 			frm.doc.items.forEach((item) => {
 				this.update_item_html(item);
 			});
-		} else {
+		}
+
+		// else if (storedItems) {
+		// 	storedItems.forEach(item_data => {
+		// 		this.update_item_html(item_data);
+		// 	});
+
+		// } 
+
+		else {
 			this.make_no_items_placeholder();
 			this.highlight_checkout_btn(false);
 		}

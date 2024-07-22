@@ -115,7 +115,7 @@ custom_app.PointOfSale.ItemDetails = class {
 	}
 
 	render_dom(item) {
-		let { item_name, description, image, price_list_rate } = item;
+		let { item_name, description, image, price_list_rate, custom_remarks, custom_vat } = item;
 
 		function get_description_html() {
 			if (description) {
@@ -163,12 +163,14 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	render_form(item) {
 		const fields_to_display = this.get_form_fields(item);
+	
 		this.$form_container.html("");
 		
 		// Store the original rate
 		this.original_rate = item.rate;
 		
 		fields_to_display.forEach((fieldname, idx) => {
+			
 			this.$form_container.append(
 				`<div class="${fieldname}-control" data-fieldname="${fieldname}"></div>`
 			);
@@ -194,13 +196,18 @@ custom_app.PointOfSale.ItemDetails = class {
 			this[`${fieldname}_control`].set_value(item[fieldname]);
 		
 			// Add event listener for discount_percentage and discount_amount field click
-			if (fieldname === "discount_percentage" || fieldname === "discount_amount") {
-				this.$form_container.find(`.${fieldname}-control input`).on("click", function () {
+			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
+				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
 						me.oic_authentication(fieldname);
 					}
 				});
+
 			}
+
+		
+			
+			
 		});
 		
 		this.make_auto_serial_selection_btn(item);
@@ -269,10 +276,11 @@ custom_app.PointOfSale.ItemDetails = class {
 	get_form_fields(item) {
 		const fields = [
 			"custom_free",
-			"qty",
+			// "qty",
 			'price_list_rate',
 			"rate",
 			"uom",
+			"custom_expiry_date",
 			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", // added field
@@ -281,10 +289,13 @@ custom_app.PointOfSale.ItemDetails = class {
 			//"actual_qty",
 			//"price_list_rate",
 			// "is_free_item",
+
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
-			'custom_zero_rated_amount'
+			'custom_zero_rated_amount',
+			//"custom_free",
+			"custom_remarks",
 		];
 		if (item.has_serial_no) fields.push("serial_no");
 		if (item.has_batch_no) fields.push("batch_no");
@@ -303,21 +314,71 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	bind_custom_control_change_event() {
 		const me = this;
+
+		// if (this.rate_control) {
+		// 	this.rate_control.df.onchange = function () {
+		// 		if (this.value || flt(this.value) === 0) {
+		// 			me.events.form_updated(me.current_item, "rate", this.value).then(() => {
+		// 				const item_row = frappe.get_doc(me.doctype, me.name);
+		// 				const doc = me.events.get_frm().doc;
+		// 				me.$item_price.html(format_currency(item_row.rate, doc.currency));
+		// 				me.render_discount_dom(item_row);
+		// 			});
+		// 		}
+		// 	};
+		// 	this.rate_control.df.read_only = !this.allow_rate_change;
+		// 	this.rate_control.refresh();
+		// }
+
 		if (this.rate_control) {
+			
+			const frm = me.events.get_frm();
+			// Remove any existing onchange handler to avoid multiple handlers being attached
+			this.rate_control.df.onchange = null;
+		
 			this.rate_control.df.onchange = function () {
 				if (this.value || flt(this.value) === 0) {
-					me.events.form_updated(me.current_item, "rate", this.value).then(() => {
-						const item_row = frappe.get_doc(me.doctype, me.name);
-						const doc = me.events.get_frm().doc;
-						me.$item_price.html(format_currency(item_row.rate, doc.currency));
-						me.render_discount_dom(item_row);
-					});
+					// Debounce to prevent multiple rapid changes from causing issues
+					if (this._debounce) {
+						clearTimeout(this._debounce);
+					}
+					this._debounce = setTimeout(() => {
+						me.events.form_updated(me.current_item, "rate", this.value).then(() => {
+							const item_row = frappe.get_doc(me.doctype, me.name);
+							const doc = me.events.get_frm().doc;
+							me.$item_price.html(format_currency(item_row.rate, doc.currency));
+							me.render_discount_dom(item_row);
+						});
+					}, 200); // Adjust the debounce time as needed
 				}
 			};
-			this.rate_control.df.read_only = !this.allow_rate_change;
-			this.rate_control.refresh();
-		}
+			
 
+			if (frm.doc.customer_group === 'Senior Citizen') {
+				return;
+			} else {
+				this.rate_control.df.read_only = !this.allow_rate_change;
+				this.rate_control.refresh();
+			}
+			
+			// this.rate_control.df.read_only = !this.allow_rate_change;
+			// this.rate_control.refresh();
+		}
+		// Ensure frm.doc is checked for existence before accessing it
+		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
+			const frm = me.events.get_frm();
+			if (frm.doc.customer_group === 'Senior Citizen') {
+				if (me.discount_percentage_control && !me.allow_discount_change) {
+					me.discount_percentage_control.df.read_only = 1;
+				}
+			} else {
+				if (me.discount_percentage_control && !me.allow_discount_change) {
+					me.discount_percentage_control.df.read_only = 1;
+					me.discount_percentage_control.refresh();
+				}
+			}
+		}
+		
 		if (this.discount_percentage_control && !this.allow_discount_change) {
 			this.discount_percentage_control.df.read_only = 1;
 			this.discount_percentage_control.refresh();

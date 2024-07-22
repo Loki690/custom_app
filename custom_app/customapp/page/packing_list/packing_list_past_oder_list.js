@@ -2,7 +2,7 @@ custom_app.PointOfSale.PastOrderList = class {
 	constructor({ wrapper, events }) {
 		this.wrapper = wrapper;
 		this.events = events;
-
+		this.invoice_count = 0
 		this.init_component();
 	}
 
@@ -16,7 +16,7 @@ custom_app.PointOfSale.PastOrderList = class {
 		this.wrapper.append(
 			`<section class="past-order-list">
 				<div class="filter-section">
-					<div class="label">${__("Recent Orders")}</div>
+					<div class="label">${__("Recent Orders")} <span class="invoice-count ml-3 badge rounded-pill bg-danger text-white"></span> </div>
 					<div class="search-field"></div>
 					<div class="status-field"></div>
 				</div>
@@ -26,6 +26,7 @@ custom_app.PointOfSale.PastOrderList = class {
 
 		this.$component = this.wrapper.find(".past-order-list");
 		this.$invoices_container = this.$component.find(".invoices-container");
+		this.$invoice_count = this.$component.find(".invoice-count");
 	}
 
 	bind_events() {
@@ -42,6 +43,50 @@ custom_app.PointOfSale.PastOrderList = class {
 
 			me.events.open_invoice_data(invoice_name);
 		});
+
+
+
+
+		this.$invoices_container.off('keydown', '.invoice-wrapper').on('keydown', '.invoice-wrapper', function(event) {
+			const $items = me.$invoices_container.find('.invoice-wrapper');
+			const currentIndex = $items.index($(this));
+			let nextIndex = currentIndex;
+	
+			switch (event.which) {
+				case 13: // Enter key
+					$(this).click(); // Trigger click event immediately on Enter key press
+					break;
+				case 38: // Up arrow key
+					nextIndex = currentIndex > 0 ? currentIndex - 1 : $items.length - 1;
+					break;
+				case 40: // Down arrow key
+					nextIndex = currentIndex < $items.length - 1 ? currentIndex + 1 : 0;
+					break;
+				default:
+					return; // Exit if other keys are pressed
+			}
+	
+			$items.eq(nextIndex).focus(); // Move focus to the next item
+		});
+	
+		// Add Ctrl+C shortcut to focus on the first cart item
+		frappe.ui.keys.add_shortcut({
+			shortcut: 'ctrl+i',
+			action: () => {
+				const $items = me.$invoices_container.find('.invoice-wrapper');
+				if ($items.length) {
+					$items.first().focus(); // Focus on the first cart item
+				}
+			},
+			condition: () => me.$invoices_container.is(':visible'),
+			description: __('Activate Cart Item Focus'),
+			ignore_inputs: true,
+			page: cur_page.page.page // Replace with your actual page context
+		});
+
+
+
+
 	}
 
 	make_filter_section() {
@@ -81,19 +126,23 @@ custom_app.PointOfSale.PastOrderList = class {
 		// added pos profile variable for filter
 		const pos_profile = this.events.pos_profile();
 
+		const current_user = frappe.session.user;
+
 		this.$invoices_container.html("");
 
 		return frappe.call({
 			method: "custom_app.customapp.page.packing_list.packing_list.get_past_order_list",
 			freeze: true,
-			args: { search_term, status, pos_profile  }, // added pos_profile for filtering
+			args: { search_term, status, pos_profile, current_user}, // added pos_profile for filtering
 			callback: (response) => {
-				// console.log(response)
+				// console.log(response.message);
 				frappe.dom.unfreeze();
 				response.message.forEach((invoice) => {					
 					const invoice_html = this.get_invoice_html(invoice);
 					this.$invoices_container.append(invoice_html);
 				});
+
+				this.$invoice_count.text(response.message.length);
 			},
 		});
 	}
@@ -102,9 +151,9 @@ custom_app.PointOfSale.PastOrderList = class {
 		const posting_datetime = moment(invoice.posting_date + " " + invoice.posting_time).format(
 			"Do MMMM, h:mma"
 		);
-		return `<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
+		return `<div class="invoice-wrapper" tabindex="0" data-invoice-name="${escape(invoice.name)}">
 				<div class="invoice-name-date">
-					<div class="invoice-name">${invoice.name} - ${invoice.pos_profile} </div>
+					<div class="invoice-name">${invoice.name}</div>
 					<div class="invoice-date">
 						<svg class="mr-2" width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -117,8 +166,12 @@ custom_app.PointOfSale.PastOrderList = class {
 					<div class="invoice-date">${posting_datetime}</div>
 				</div>
 			</div>
-			<div class="seperator"></div>`;
+			<div class="seperator"></div>`
 	}
+
+
+	// Function to render the invoice items
+	
 
 	toggle_component(show) {
 		show
