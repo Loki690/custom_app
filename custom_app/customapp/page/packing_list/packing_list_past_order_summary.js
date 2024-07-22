@@ -276,6 +276,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			this.doc.letter_head,
 			this.doc.language || frappe.boot.lang
 		);
+		
 	}
 
 	attach_shortcuts() {

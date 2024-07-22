@@ -18,6 +18,7 @@ custom_app.PointOfSale.ItemSelector = class {
 		//Highlight
         this.attach_shortcuts();
 		this.inject_css(); 
+        // this.filter_items()
 
         
     }
@@ -27,7 +28,9 @@ custom_app.PointOfSale.ItemSelector = class {
 	inject_css() {
 		const css = `
 			.highlight {
-				background-color: #f2f2f2;
+				background-color: #0289f7;
+                color: white;
+                font-weight: bold;
 			}
             .text{
                 font-size: 1em;
@@ -64,8 +67,11 @@ custom_app.PointOfSale.ItemSelector = class {
 				<div class="label">
 				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
 			</div>
+            
                     <div class="search-field"></div>
 					<div class="item-group-field"></div>
+                    <div class="item-uoms"></div>
+                   
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">
@@ -73,7 +79,7 @@ custom_app.PointOfSale.ItemSelector = class {
 							<tr>
 								<th>Item Code</th>
 								<th>Name</th>
-								<th>Vat</th>
+								<th>Vat Type</th>
 								<th>Price</th>
 								<th>UOM</th>
 								<th>QTY</th>
@@ -133,9 +139,17 @@ custom_app.PointOfSale.ItemSelector = class {
 
 	//Camille
     render_item_list(items) {
+        // Clear the current items in the container
         this.$items_container.html("");
+    
+        // Filter items where the unit of measurement (UOM) is "PC"
+        // const filtered_items_pc_uom = items.filter(item => item.uom === "PC");
+        // console.log("Filtered Items (UOM = PC): ", filtered_items_pc_uom);
+    
+        // Set the class property `items` to the filtered items
         this.items = items;
-
+        // Log all filtered items to the console
+       
         items.forEach((item) => {
             const item_html = this.get_item_html(item);
             this.$items_container.append(item_html);
@@ -146,17 +160,18 @@ custom_app.PointOfSale.ItemSelector = class {
         this.highlight_row(this.highlighted_row_index);
     }
 
+
     get_item_html(item) {
         const me = this;
-    
-       const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number,custom_is_vatable} = item;
+        console.log("item", item);
+        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable , custom_unit_of_measure_2, custom_unit_of_measure_3} = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
-
+    
         if (item.is_stock_item) {
             indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
-
+    
             if (Math.round(qty_to_display) > 999) {
                 qty_to_display = Math.round(qty_to_display) / 1000;
                 qty_to_display = qty_to_display.toFixed(1) + "K";
@@ -165,22 +180,23 @@ custom_app.PointOfSale.ItemSelector = class {
             indicator_color = "";
             qty_to_display = "";
         }
-
+    
         const item_description = description ? description : "Description not available";
-
-        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
+    
+           return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
+            onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
+            onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}">
-            <td class="item-code">${item_code}</td> 
-            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-            <td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
-            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-            <td class="item-uom">${uom}</td>
-            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+            <td class="item-code" style=" width: 15%;">${item_code}</td> 
+            <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-uom" style=" width: 10%;">${uom}</td>
+            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
-}
-
+    }
 
     handle_broken_image($img) {
         const item_abbr = $($img).attr("alt");
@@ -191,6 +207,7 @@ custom_app.PointOfSale.ItemSelector = class {
 		const doc = me.events.get_frm().doc;
 		this.$component.find(".search-field").html("");
 		this.$component.find(".item-group-field").html("");
+        this.$component.find(".item-uoms").html("");
 		//branch field
 		// this.$component.find(".branch-field").html("");
 
@@ -203,6 +220,7 @@ custom_app.PointOfSale.ItemSelector = class {
 			parent: this.$component.find(".search-field"),
 			render_input: true,
 		});
+
 		this.item_group_field = frappe.ui.form.make_control({
 			df: {
 				label: __("Item Group"),
@@ -227,21 +245,28 @@ custom_app.PointOfSale.ItemSelector = class {
 			render_input: true,
 		});
 
-		// this.brach_field = frappe.ui.form.make_control({
-		// 	df: {
-		// 		label: _("Branch"),
-		// 		fieldtype: "Link",
-		// 		options: "Warehouse",
-		// 		placeholder: _("Select warehouse"),
-		// 		onchange: function () {
-		// 			me.branch = this.value;
-		// 		},
 
-		// 	},
-		// 	parent: this.$component.find(".branch-field"),
-		// 	render_input: true,
-		// })
+        this.item_uom = frappe.ui.form.make_control({
+            df: {
+                label: __("UOM"),
+                fieldtype: "Link",
+                options: "UOM",
+                placeholder: __("Select UOM"),
+                default: "PC", // Set the default value here
+                onchange: function () {
+                    me.selected_uom = this.value;
+                    me.filter_items({ uom: me.selected_uom });
+                },
+            },
+            parent: this.$component.find(".item-uoms"),
+            render_input: true,
+        });
 
+        // this.item_uom.set_value("PC");
+        this.item_uom.refresh();
+       
+
+        this.item_uom.toggle_label(false);
 		this.search_field.toggle_label(false);
 		this.item_group_field.toggle_label(false);
 
@@ -385,7 +410,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                     label: __("UOM"),
                                     fieldname: 'uom',
                                     options: uomOptions,
-                                    default: 'PC'
+                                    default: uom
                                 },
                                 {
                                     fieldtype: "HTML",
@@ -492,65 +517,69 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     
-    attach_shortcuts() {
-        const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
-        this.search_field.parent.attr("title", `${ctrl_label}+S`);
-        frappe.ui.keys.add_shortcut({
-            shortcut: "ctrl+s",
-            action: () => this.search_field.set_focus(),
-            condition: () => this.$component.is(":visible"),
-            description: __("Focus on search input"),
-            ignore_inputs: true,
-            page: cur_page.page.page,
-        });
-        this.item_group_field.parent.attr("title", `${ctrl_label}+G`);
-        frappe.ui.keys.add_shortcut({
-            shortcut: "ctrl+g",
-            action: () => this.item_group_field.set_focus(),
-            condition: () => this.$component.is(":visible"),
-            description: __("Focus on Item Group filter"),
-            ignore_inputs: true,
-            page: cur_page.page.page,
-        });
-    
-        frappe.ui.keys.on("enter", () => {
-            const selector_is_visible = this.$component.is(":visible");
-            const dialog_is_open = document.querySelector(".modal.show");
-    
-            if (!selector_is_visible || this.search_field.get_value() === "") return;
-    
-            if (this.items.length == 1) {
-                this.$items_container.find(".item-wrapper").click();
-                frappe.utils.play_sound("submit");
-                this.set_search_value("");
-            } else if (this.items.length == 0 && this.barcode_scanned) {
-                frappe.show_alert({
-                    message: __("No items found. Scan barcode again."),
-                    indicator: "orange",
-                });
-                frappe.utils.play_sound("error");
-                this.barcode_scanned = false;
-                this.set_search_value("");
-            }
-    
-            if (dialog_is_open && document.activeElement.tagName === "SELECT") {
-                // Trigger action to add the selected item to the cart
-                this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
-    
-                const itemCode = unescape(this.selectedItem.attr("data-item-code"));
-                const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
-                const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
-    
-                this.events.item_selected({
-                    field: "qty",
-                    value: quantity,
-                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity,rate},
-                });
-    
-                this.search_field.set_focus();
-            }
-        });
-    }
+   attach_shortcuts() {
+    const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
+    this.search_field.parent.attr("title", `${ctrl_label}+S`);
+    frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+s",
+        action: () => this.search_field.set_focus(),
+        condition: () => this.$component.is(":visible"),
+        description: __("Focus on search input"),
+        ignore_inputs: true,
+        page: cur_page.page.page,
+    });
+    this.item_group_field.parent.attr("title", `${ctrl_label}+G`);
+    frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+g",
+        action: () => this.item_group_field.set_focus(),
+        condition: () => this.$component.is(":visible"),
+        description: __("Focus on Item Group filter"),
+        ignore_inputs: true,
+        page: cur_page.page.page,
+    });
+
+    let modal_shown = false;
+
+    frappe.ui.keys.on("enter", () => {
+        const selector_is_visible = this.$component.is(":visible");
+        const dialog_is_open = document.querySelector(".modal.show");
+
+        if (!selector_is_visible || this.search_field.get_value() === "") return;
+
+        if (this.items.length == 1 && !modal_shown) {
+            modal_shown = true;
+            this.$items_container.find(".item-wrapper").click();
+            frappe.utils.play_sound("submit");
+            this.set_search_value("");
+            setTimeout(() => { modal_shown = false; }, 1000); // Reset flag after 1 second
+        } else if (this.items.length == 0 && this.barcode_scanned) {
+            frappe.show_alert({
+                message: __("No items found. Scan barcode again."),
+                indicator: "orange",
+            });
+            frappe.utils.play_sound("error");
+            this.barcode_scanned = false;
+            this.set_search_value("");
+        }
+
+        if (dialog_is_open && document.activeElement.tagName === "SELECT") {
+            // Trigger action to add the selected item to the cart
+            this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
+
+            const itemCode = unescape(this.selectedItem.attr("data-item-code"));
+            const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
+            const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
+
+            this.events.item_selected({
+                field: "qty",
+                value: quantity,
+                item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate },
+            });
+
+            this.search_field.set_focus();
+        }
+    });
+}
     
     // The rest of your class definition...
     
@@ -594,31 +623,38 @@ custom_app.PointOfSale.ItemSelector = class {
 
 	//end here
 
-    filter_items({ search_term = "" } = {}) {
+    filter_items({ search_term = "", uom = "" } = {}) {
         if (search_term) {
             search_term = search_term.toLowerCase();
-
+    
             this.search_index = this.search_index || {};
             if (this.search_index[search_term]) {
                 const items = this.search_index[search_term];
                 this.items = items;
-                this.render_item_list(items);
+                if (uom) {
+                    this.items = this.items.filter(item => item.uom === uom);
+                }
+                this.render_item_list(this.items);
                 this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
                 return;
             }
         }
-
+    
         this.get_items({ search_term }).then(({ message }) => {
-            const { items, serial_no, batch_no, barcode } = message;
+            let { items, serial_no, batch_no, barcode } = message;
             if (search_term && !barcode) {
                 this.search_index[search_term] = items;
             }
+    
+            // Filter by UOM if specified
+            if (uom) {
+                items = items.filter(item => item.uom === uom);
+            }
+    
             this.items = items;
             this.render_item_list(items);
             this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
         });
-
-
     }
 
     

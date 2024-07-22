@@ -22,7 +22,7 @@ def generate_pl_series(doc):
     if not warehouse_abbreviation:
         warehouse_abbreviation = "DEFAULT"  # Use a default abbreviation if none is found
 
-    series_pattern = f"{warehouse_abbreviation}-PL-.YYYY.-.MM.-.DD.-.######"
+    series_pattern = f"{warehouse_abbreviation}-PL-.######"
     return series_pattern
 
 def set_custom_naming_series(doc):
@@ -49,6 +49,8 @@ def before_save(doc, method):
         doc.name = make_autoname(doc.naming_series)
     # Set the barcode to the document name
     #doc.barcode = doc.name
+    doc.custom_pharmacist_assistant = frappe.session.user
+    doc.custom_pa_name = get_user_full_name(doc.custom_pharmacist_assistant)
     doc.custom_barcode = doc.name
 
 

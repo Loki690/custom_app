@@ -363,19 +363,19 @@ custom_app.PointOfSale.ItemDetails = class {
 			// this.rate_control.refresh();
 		}
 		// Ensure frm.doc is checked for existence before accessing it
-		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
-			const frm = me.events.get_frm();
-			if (frm.doc.customer_group === 'Senior Citizen') {
-				if (me.discount_percentage_control && !me.allow_discount_change) {
-					me.discount_percentage_control.df.read_only = 1;
-				}
-			} else {
-				if (me.discount_percentage_control && !me.allow_discount_change) {
-					me.discount_percentage_control.df.read_only = 1;
-					me.discount_percentage_control.refresh();
-				}
-			}
-		}
+		// if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
+		// 	const frm = me.events.get_frm();
+		// 	if (frm.doc.customer_group === 'Senior Citizen') {
+		// 		if (me.discount_percentage_control && !me.allow_discount_change) {
+		// 			me.discount_percentage_control.df.read_only = 1;
+		// 		}
+		// 	} else {
+		// 		if (me.discount_percentage_control && !me.allow_discount_change) {
+		// 			me.discount_percentage_control.df.read_only = 1;
+		// 			me.discount_percentage_control.refresh();
+		// 		}
+		// 	}
+		// }
 		
 		if (this.discount_percentage_control && !this.allow_discount_change) {
 			this.discount_percentage_control.df.read_only = 1;

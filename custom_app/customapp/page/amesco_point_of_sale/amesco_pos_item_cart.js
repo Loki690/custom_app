@@ -69,7 +69,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="cart-label">${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
-				        <div class="qty-header">${__("Vat")}</div>
+				        <div class="qty-header">${__("Vat Type")}</div>
 						<div class="qty-header">${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						<div class="rate-amount-header">${__("Amount")}</div>
@@ -120,13 +120,15 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="vatable-sales-container mt-2"></div>
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
-			<div class="vat-container"></div>
+			
 			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
 				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
+
+			<div class="vat-container"></div>
 
 		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
@@ -820,7 +822,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
-		//this.render_vat(frm.doc.custom_vat_amount)
+		// this.render_vat(frm.doc.custom_vat_amount)
 		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
@@ -967,11 +969,19 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_item_html(item, remove_item) {
 		const $item = this.get_cart_item(item);
-
+		// Retrieve current cart items from local storage
+		let cartItems = JSON.parse(localStorage.getItem('posCartItems')) || [];
+	
 		if (remove_item) {
 			if ($item) {
 				$item.next().remove();
 				$item.remove();
+	
+				// Remove the item from the local storage cart items
+				cartItems = cartItems.filter(cartItem => cartItem.item_code !== item.item_code);
+				
+				localStorage.setItem('posCartItems', JSON.stringify(cartItems));
+	
 				this.remove_customer(); // Call remove_customer function after removing item
 				this.set_cash_customer(); // Set customer to "Cash" after removing item
 				frappe.run_serially([
@@ -980,9 +990,20 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 		} else {
 			const item_row = this.get_item_from_frm(item);
-			this.render_cart_item(item_row, $item);
-		}
 
+			this.render_cart_item(item_row, $item);
+	
+			// Add or update the item in the local storage cart items
+			const existingItemIndex = cartItems.findIndex(cartItem => cartItem.item_code === item.item_code);
+			if (existingItemIndex > -1) {
+				cartItems[existingItemIndex] = item; // Update existing item
+			} else {
+				cartItems.push(item); // Add new item
+			}
+			localStorage.setItem('posCartItems', JSON.stringify(cartItems));
+			// console.log('cartItems', cartItems)
+		}
+	
 		const no_of_cart_items = this.$cart_items_wrapper.find(".cart-item-wrapper").length;
 		this.highlight_checkout_btn(no_of_cart_items > 0);
 		this.update_empty_cart_section(no_of_cart_items);

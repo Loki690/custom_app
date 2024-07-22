@@ -5,7 +5,6 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "branch",
   "pos_profile",
   "column_break_yykv",
   "date",
@@ -40,15 +39,6 @@
    "fieldtype": "Link",
    "label": "Prepared By",
    "options": "User",
-   "read_only": 1
-  },
-  {
-   "bold": 1,
-   "fetch_from": "pos_profile.warehouse",
-   "fieldname": "branch",
-   "fieldtype": "Link",
-   "label": "Branch",
-   "options": "Warehouse",
    "read_only": 1
   },
   {
@@ -155,7 +145,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-06-27 17:31:18.755874",
+ "modified": "2024-07-18 13:22:41.448000",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Deposit Acknowledgement",
