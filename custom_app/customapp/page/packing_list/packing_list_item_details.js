@@ -276,7 +276,7 @@ custom_app.PointOfSale.ItemDetails = class {
 	get_form_fields(item) {
 		const fields = [
 			"custom_free",
-			"qty",
+			// "qty",
 			'price_list_rate',
 			"rate",
 			"uom",
