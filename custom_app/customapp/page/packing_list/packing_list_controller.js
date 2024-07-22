@@ -133,7 +133,7 @@ custom_app.PointOfSale.Controller = class {
 		);
 		this.page.add_menu_item(__("Branch Item Lookup (F4)"), this.show_branch_selection_dialog.bind(this), false, "f4");
 		this.page.add_menu_item(__("Change POS Profile (F5)"), this.select_pos_profile.bind(this), false, "f5");
-		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
+		this.page.add_menu_item(__("Save as Draft"), this.save_draft.bind(this), false, "f3");
 
 	}
 
@@ -142,7 +142,7 @@ custom_app.PointOfSale.Controller = class {
 		const buttons = [
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
 			{label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2"},
-			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
+			{label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3"},
 			{label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4"},
 			{label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5"},
 		];
@@ -366,7 +366,7 @@ custom_app.PointOfSale.Controller = class {
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
-							this.set_pharmacist_assist(this.frm) // sets phracist assistant
+							// this.set_pharmacist_assist(this.frm) // sets phracist assistant
 							this.frm
 								.save(undefined, undefined, undefined, () => {
 									frappe.show_alert({
@@ -406,6 +406,71 @@ custom_app.PointOfSale.Controller = class {
 		})
 		passwordDialog.show();
 	}
+
+
+	save_draft() {
+		if (!this.$components_wrapper.is(":visible")) return;
+
+		if (this.frm.doc.items.length == 0) {
+			frappe.show_alert({
+				message: __("You must add atleast one item to complete the order."),
+				indicator: "red",
+			});
+			frappe.utils.play_sound("error");
+			return;
+		}
+
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __('Enter Your Password'),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
+				}
+			],
+			primary_action_label: __('Ok'),
+			primary_action: (values) => {
+				let password = values.password;
+				frappe.call({
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
+					args: { password: password },
+					callback: (r) => {
+						if (r.message) {
+							// this.set_pharmacist_assist(this.frm) // sets phracist assistant
+							this.frm
+								.save(undefined, undefined, undefined, () => {
+									frappe.show_alert({
+										message: __("There was an error saving the document."),
+										indicator: "red",
+									});
+									frappe.utils.play_sound("error");
+								})
+								.then(() => {
+									frappe.run_serially([
+										() => frappe.dom.freeze(),
+										() => this.make_new_invoice(),
+										() => frappe.dom.unfreeze(),
+
+									]);
+									passwordDialog.hide();
+									localStorage.removeItem('posCartItems'); // remove stored data from local storage
+								});
+
+						} else {
+							frappe.show_alert({
+								message: __('Incorrect password'),
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		})
+		passwordDialog.show();
+	}
+
 	set_pharmacist_assist(frm) {
 		// console.log(frm.doc)
 		frappe.call({
@@ -1107,7 +1172,7 @@ custom_app.PointOfSale.Controller = class {
 	async save_and_checkout() {
 		if (this.frm.is_dirty()) {
 			let save_error = false;
-			await this.frm.save(null, null, null, () => (save_error = true));
+			// await this.frm.save(null, null, null, () => (save_error = true));
 			// only move to payment section if save is successful
 			!save_error && this.payment.checkout();
 			// show checkout button on error
