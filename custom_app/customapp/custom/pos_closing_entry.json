@@ -2155,7 +2155,7 @@
    "columns": 0,
    "creation": "2024-07-05 14:16:52.668435",
    "default": null,
-   "depends_on": "",
+   "depends_on": "// doc.docstatus == 1;",
    "description": null,
    "docstatus": 0,
    "dt": "POS Closing Entry",
@@ -2172,7 +2172,7 @@
    "ignore_xss_filter": 0,
    "in_global_search": 0,
    "in_list_view": 0,
-   "in_preview": 1,
+   "in_preview": 0,
    "in_standard_filter": 0,
    "insert_after": "custom_vocher_total",
    "is_system_generated": 0,
@@ -4739,9 +4739,10 @@
    "is_child_table": 0,
    "link_doctype": "POS Invoice Merge Log",
    "link_fieldname": "pos_closing_entry",
-   "modified": "2024-07-15 16:47:17.435397",
+
+   "modified": "2024-06-28 16:37:31.120368",
    "modified_by": "Administrator",
-   "name": "1l6mgcm00h",
+   "name": "17nfh5jlvg",
    "owner": "Administrator",
    "parent": "POS Closing Entry",
    "parent_doctype": null,
@@ -4756,7 +4757,8 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
-   "creation": "2024-07-15 17:49:21.882330",
+
+   "creation": "2024-07-15 11:42:11.546305",
    "default_value": null,
    "doc_type": "POS Closing Entry",
    "docstatus": 0,
@@ -4764,7 +4766,9 @@
    "field_name": null,
    "idx": 0,
    "is_system_generated": 0,
-   "modified": "2024-07-15 17:49:21.882330",
+
+   "modified": "2024-07-15 11:42:11.546305",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "POS Closing Entry-main-actions_order",
@@ -4779,7 +4783,9 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
-   "creation": "2024-07-15 17:49:21.756421",
+
+   "creation": "2024-07-15 11:42:11.441175",
+
    "default_value": null,
    "doc_type": "POS Closing Entry",
    "docstatus": 0,
@@ -4787,7 +4793,9 @@
    "field_name": null,
    "idx": 0,
    "is_system_generated": 0,
-   "modified": "2024-07-15 17:49:21.756421",
+
+   "modified": "2024-07-15 11:42:11.441175",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "POS Closing Entry-main-field_order",
@@ -4796,12 +4804,14 @@
    "property_type": "Data",
    "row_name": null,
    "value": "[\"period_details_section\", \"period_start_date\", \"period_end_date\", \"custom_shift\", \"column_break_3\", \"posting_date\", \"posting_time\", \"pos_opening_entry\", \"custom_pos_cash_count_denomination_entry_id\", \"status\", \"section_break_5\", \"company\", \"column_break_7\", \"pos_profile\", \"user\", \"custom_cashier_name\", \"custom_oic_name\", \"section_break_12\", \"pos_transactions\", \"section_break_9\", \"payment_reconciliation_details\", \"section_break_11\", \"payment_reconciliation\", \"custom_section_break_xy9dl\", \"custom_cash_sales\", \"custom_check_sales\", \"custom_epayment_sales\", \"custom_qr_sales\", \"custom_column_break_dnsdp\", \"custom_card_sales\", \"custom_cash_and_check_voucher\", \"custom_total_cash_and_check_sales\", \"custom_sales_return\", \"custom_section_break_kg09s\", \"taxes\", \"custom_section_break_zd7pa\", \"custom_transaction_events\", \"custom_section_break_9nksy\", \"custom_total_vat_sales\", \"custom_total_vat_collected\", \"custom_column_break_ytbe2\", \"custom_total_nonvat_sales\", \"custom_total_tax_exempt_sales\", \"custom_total_discount\", \"section_break_13\", \"grand_total\", \"net_total\", \"total_quantity\", \"column_break_16\", \"custom_cash_total_sales\", \"custom_cash_count_totals\", \"custom_cash_count_and_closing_amount_difference\", \"custom_closing_amount_status\", \"failure_description_section\", \"error_message\", \"custom_section_break_grfx2\", \"custom_vat_reg_tin\", \"custom_min\", \"custom_accr\", \"custom_column_break_kxbn9\", \"custom_ptu\", \"custom_sn\", \"section_break_14\", \"amended_from\", \"custom_cash_transaction\", \"custom_card\", \"custom_card_transactions\", \"custom_check\", \"custom_check_transactions\", \"custom_epayment\", \"custom_epayment_transactions\", \"custom_qr_payment\", \"custom_qr_transactions\", \"custom_cash\", \"custom_cash_transactions\", \"custom_cash_count_table\", \"custom_cash_count\", \"custom_section_break_4jc9s\", \"custom_column_break_kpat3\", \"custom_column_break_brmih\", \"custom_column_break_nqrbs\", \"custom_column_break_tsb1d\", \"custom_cash_count_totals_copy\", \"custom_check_encashment\", \"custom_check_encashments\", \"custom_section_break_nxedn\", \"custom_column_break_ohbk7\", \"custom_column_break_tlr8a\", \"custom_column_break_lepue\", \"custom_column_break_dchhd\", \"custom_check_encashment_total\", \"custom_voucher\", \"custom_vouchers\", \"custom_section_break_ytwxw\", \"custom_column_break_gpkcp\", \"custom_column_break_qx6dw\", \"custom_column_break_clcig\", \"custom_column_break_j2x8d\", \"custom_vocher_total\", \"custom_deposit_acknowledgement\", \"custom_deposit_acknowledgement_table_\", \"custom_check_trasaction\", \"custom_card_transaction\", \"custom_epayment_transaction\"]"
+
   },
   {
    "_assign": null,
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-07-11 13:57:18.059486",
    "default_value": null,
    "doc_type": "POS Closing Entry",
@@ -4815,8 +4825,10 @@
    "module": null,
    "name": "POS Closing Entry-main-default_print_format",
    "owner": "Administrator",
+
    "property": "default_print_format",
    "property_type": "Data",
+
    "row_name": null,
    "value": "pos closing Format Cash Count Summary2"
   },
@@ -4825,11 +4837,14 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
-   "creation": "2024-07-01 08:33:51.162471",
+
+   "creation": "2024-06-18 10:30:20.821838",
+
    "default_value": null,
    "doc_type": "POS Closing Entry",
    "docstatus": 0,
    "doctype_or_field": "DocField",
+
    "field_name": "pos_cash_count_denomination_entry",
    "idx": 0,
    "is_system_generated": 0,
@@ -4837,6 +4852,7 @@
    "modified_by": "Administrator",
    "module": null,
    "name": "POS Closing Entry-pos_cash_count_denomination_entry-hidden",
+
    "owner": "Administrator",
    "property": "hidden",
    "property_type": "Check",
@@ -4848,18 +4864,22 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-05-27 09:22:17.909591",
+
    "default_value": null,
    "doc_type": "POS Closing Entry",
    "docstatus": 0,
    "doctype_or_field": "DocField",
-   "field_name": "section_break_oxey",
+
+   "field_name": "period_start_date",
    "idx": 0,
-   "is_system_generated": 0,
-   "modified": "2024-07-15 16:47:34.642434",
+   "is_system_generated": 1,
+   "modified": "2024-07-12 15:59:32.067341",
    "modified_by": "Administrator",
    "module": null,
-   "name": "POS Closing Entry-section_break_oxey-hidden",
+   "name": "POS Closing Entry-period_start_date-in_list_view",
+
    "owner": "Administrator",
    "property": "hidden",
    "property_type": "Check",
@@ -4871,7 +4891,7 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
-   "creation": "2024-05-24 09:35:39.351727",
+   "creation": "2024-06-18 10:30:20.827407",
    "default_value": null,
    "doc_type": "POS Closing Entry",
    "docstatus": 0,
@@ -4894,11 +4914,12 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
-   "creation": "2024-05-24 09:35:39.420974",
+   "creation": "2024-06-18 10:30:20.787879",
    "default_value": null,
    "doc_type": "POS Closing Entry",
    "docstatus": 0,
    "doctype_or_field": "DocField",
+
    "field_name": "cash_count_and_grand_total_difference",
    "idx": 0,
    "is_system_generated": 0,
@@ -4906,6 +4927,7 @@
    "modified_by": "Administrator",
    "module": null,
    "name": "POS Closing Entry-cash_count_and_grand_total_difference-read_only",
+
    "owner": "Administrator",
    "property": "read_only",
    "property_type": "Check",
@@ -4945,6 +4967,7 @@
    "doc_type": "POS Closing Entry",
    "docstatus": 0,
    "doctype_or_field": "DocField",
+
    "field_name": "cash_count_status",
    "idx": 0,
    "is_system_generated": 0,
@@ -4952,6 +4975,7 @@
    "modified_by": "Administrator",
    "module": null,
    "name": "POS Closing Entry-cash_count_status-hidden",
+
    "owner": "Administrator",
    "property": "hidden",
    "property_type": "Check",
