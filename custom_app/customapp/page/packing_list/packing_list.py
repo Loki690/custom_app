@@ -169,6 +169,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.description,
 			item.custom_is_vatable,
             item.stock_uom,
+            item.custom_unit_of_measure_2,
+            item.custom_unit_of_measure_3,
             item.image AS item_image,
             item.is_stock_item,
             MAX(batch.name) as batch_number,

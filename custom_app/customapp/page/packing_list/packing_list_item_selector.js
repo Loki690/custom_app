@@ -163,8 +163,8 @@ custom_app.PointOfSale.ItemSelector = class {
 
     get_item_html(item) {
         const me = this;
-    
-        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
+        console.log("item", item);
+        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable , custom_unit_of_measure_2, custom_unit_of_measure_3} = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
@@ -183,9 +183,9 @@ custom_app.PointOfSale.ItemSelector = class {
     
         const item_description = description ? description : "Description not available";
     
-        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
-        onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
-        onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
+           return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
+            onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
+            onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}">
@@ -194,7 +194,7 @@ custom_app.PointOfSale.ItemSelector = class {
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
-            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
     }
 
@@ -477,29 +477,6 @@ custom_app.PointOfSale.ItemSelector = class {
                 }
             });
         });
-
-
-        // this.$component.on("click", ".item-wrapper", function () {
-		// 	const $item = $(this);
-		// 	const item_code = unescape($item.attr("data-item-code"));
-		// 	let batch_no = unescape($item.attr("data-batch-no"));
-		// 	let serial_no = unescape($item.attr("data-serial-no"));
-		// 	let uom = unescape($item.attr("data-uom"));
-		// 	let rate = unescape($item.attr("data-rate"));
-
-		// 	// escape(undefined) returns "undefined" then unescape returns "undefined"
-		// 	batch_no = batch_no === "undefined" ? undefined : batch_no;
-		// 	serial_no = serial_no === "undefined" ? undefined : serial_no;
-		// 	uom = uom === "undefined" ? undefined : uom;
-		// 	rate = rate === "undefined" ? undefined : rate;
-
-		// 	me.events.item_selected({
-		// 		field: "qty",
-		// 		value: "+1",
-		// 		item: { item_code, batch_no, serial_no, uom, rate },
-		// 	});
-		// 	me.search_field.set_focus();
-		// });
       
         this.search_field.$input.on("input", (e) => {
             clearTimeout(this.last_search);
@@ -540,79 +517,69 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     
-    attach_shortcuts() {
-        const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
-        this.search_field.parent.attr("title", `${ctrl_label}+S`);
-        frappe.ui.keys.add_shortcut({
-            shortcut: "ctrl+s",
-            action: () => this.search_field.set_focus(),
-            condition: () => this.$component.is(":visible"),
-            description: __("Focus on search input"),
-            ignore_inputs: true,
-            page: cur_page.page.page,
-        });
-        this.item_group_field.parent.attr("title", `${ctrl_label}+G`);
-        frappe.ui.keys.add_shortcut({
-            shortcut: "ctrl+g",
-            action: () => this.item_group_field.set_focus(),
-            condition: () => this.$component.is(":visible"),
-            description: __("Focus on Item Group filter"),
-            ignore_inputs: true,
-            page: cur_page.page.page,
-        });
-    
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && e.ctrlKey) {
-                e.preventDefault();
-                // Add your checkout logic here for Ctrl + Shift + Enter
-                console.log("Ctrl + Enter pressed for checkout");
-                return false;
-            }
-        });
-        
-        
-        frappe.ui.keys.on("enter", (e) => {
+   attach_shortcuts() {
+    const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
+    this.search_field.parent.attr("title", `${ctrl_label}+S`);
+    frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+s",
+        action: () => this.search_field.set_focus(),
+        condition: () => this.$component.is(":visible"),
+        description: __("Focus on search input"),
+        ignore_inputs: true,
+        page: cur_page.page.page,
+    });
+    this.item_group_field.parent.attr("title", `${ctrl_label}+G`);
+    frappe.ui.keys.add_shortcut({
+        shortcut: "ctrl+g",
+        action: () => this.item_group_field.set_focus(),
+        condition: () => this.$component.is(":visible"),
+        description: __("Focus on Item Group filter"),
+        ignore_inputs: true,
+        page: cur_page.page.page,
+    });
 
-            if (e.ctrlKey) return; // Skip handling if Shift + Enter is pressed
-        
-            const selector_is_visible = this.$component.is(":visible");
-            const dialog_is_open = document.querySelector(".modal.show");
-        
-            if (!selector_is_visible || this.search_field.get_value() === "") return;
-        
-            if (this.items.length == 1) {
-                this.$items_container.find(".item-wrapper").click();
-                frappe.utils.play_sound("submit");
-                this.set_search_value("");
-            } else if (this.items.length == 0 && this.barcode_scanned) {
-                frappe.show_alert({
-                    message: __("No items found. Scan barcode again."),
-                    indicator: "orange",
-                });
-                frappe.utils.play_sound("error");
-                this.barcode_scanned = false;
-                this.set_search_value("");
-            }
-        
-            if (dialog_is_open && document.activeElement.tagName === "SELECT") {
-                // Trigger action to add the selected item to the cart
-                this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
-        
-                const itemCode = unescape(this.selectedItem.attr("data-item-code"));
-                const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
-                const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
-        
-                this.events.item_selected({
-                    field: "qty",
-                    value: quantity,
-                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate },
-                });
-        
-                this.search_field.set_focus();
-            }
-        });
-        
-    }
+    let modal_shown = false;
+
+    frappe.ui.keys.on("enter", () => {
+        const selector_is_visible = this.$component.is(":visible");
+        const dialog_is_open = document.querySelector(".modal.show");
+
+        if (!selector_is_visible || this.search_field.get_value() === "") return;
+
+        if (this.items.length == 1 && !modal_shown) {
+            modal_shown = true;
+            this.$items_container.find(".item-wrapper").click();
+            frappe.utils.play_sound("submit");
+            this.set_search_value("");
+            setTimeout(() => { modal_shown = false; }, 1000); // Reset flag after 1 second
+        } else if (this.items.length == 0 && this.barcode_scanned) {
+            frappe.show_alert({
+                message: __("No items found. Scan barcode again."),
+                indicator: "orange",
+            });
+            frappe.utils.play_sound("error");
+            this.barcode_scanned = false;
+            this.set_search_value("");
+        }
+
+        if (dialog_is_open && document.activeElement.tagName === "SELECT") {
+            // Trigger action to add the selected item to the cart
+            this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
+
+            const itemCode = unescape(this.selectedItem.attr("data-item-code"));
+            const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
+            const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
+
+            this.events.item_selected({
+                field: "qty",
+                value: quantity,
+                item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate },
+            });
+
+            this.search_field.set_focus();
+        }
+    });
+}
     
     // The rest of your class definition...
     

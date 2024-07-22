@@ -1163,17 +1163,19 @@ custom_app.PointOfSale.ItemCart = class {
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
 
+
 		function get_rate_discount_html(customer_group) {
 
 
 			if (customer_group === "Zero Rated") {
 
 				return `
+
 						<div class="item-qty-rate">
 							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 							<div class="item-rate-amount">
 								<div class="item-rate">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
-								
+
 							</div>
 						</div>`;
 
@@ -1197,6 +1199,7 @@ custom_app.PointOfSale.ItemCart = class {
 							</div>
 						</div>`;
 
+
 			} else {
 				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 					return `
@@ -1204,8 +1207,9 @@ custom_app.PointOfSale.ItemCart = class {
 							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 							<div class="item-rate-amount">
 								<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
+
 							</div>
-						</div>`;
+
 				} else {
 					return `
 						<div class="item-qty-rate">
@@ -1217,10 +1221,8 @@ custom_app.PointOfSale.ItemCart = class {
 				}
 			}
 
-
-
-
 		}
+
 
 		function get_description_html() {
 			if (item_data.description) {
