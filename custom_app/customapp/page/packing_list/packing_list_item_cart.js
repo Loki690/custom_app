@@ -1125,7 +1125,9 @@ custom_app.PointOfSale.ItemCart = class {
 		);
 	
 		set_dynamic_rate_header_width();
-	
+
+
+
 		function set_dynamic_rate_header_width() {
 			const rate_cols = Array.from(me.$cart_items_wrapper.find(".item-rate-amount"));
 			me.$cart_header.find(".rate-amount-header").css("width", "");
@@ -1143,25 +1145,49 @@ custom_app.PointOfSale.ItemCart = class {
 		}
 	
 		function get_rate_discount_html() {
-			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
-				return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
-							<div class="item-amount">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+			const frm = me.events.get_frm();
+			if (frm.doc.customer_group === 'Zero Rated') {
+				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+					return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
+								<div class="item-amount">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
+							</div>
+						</div>`;
+				} else {
+					return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
+							</div>
+						</div>`;
+				}
 			} else {
-				return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+					return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
+								<div class="item-amount">${format_currency(item_data.rate, currency)}</div>
+							</div>
+						</div>`; 
+				} else {
+					return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
+							</div>
+						</div>`;
+				}
 			}
+
 		}
+		
 	
 		function get_description_html() {
 			if (item_data.description) {

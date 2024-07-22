@@ -157,15 +157,15 @@ custom_app.PointOfSale.Payment = class {
 			const scrollLeft =
 				mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
 			me.$payment_modes.animate({ scrollLeft });
-		
+
 			const mode = mode_clicked.attr("data-mode");
-		
+
 			// Hide all fields first
 			hideAllFields();
-		
+
 			// remove highlight from all mode-of-payments
 			$(".mode-of-payment").removeClass("border-primary");
-		
+
 			if (mode_clicked.hasClass("border-primary")) {
 				// clicked one is selected then unselect it
 				mode_clicked.removeClass("border-primary");
@@ -196,14 +196,17 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.find(".representative").css("display", "flex");
 				mode_clicked.find(".id-number").css("display", "flex");
 				mode_clicked.find(".approved-by").css("display", "flex");
+				mode_clicked.find(".gift-code").css("display", "flex");
+				mode_clicked.find(".button-code").css("display", "flex");
 				mode_clicked.find(".cash-shortcuts").css("display", "grid");
 				me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
 				me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
 				me.selected_mode = me[`${mode}_control`];
-				me.selected_mode && me.selected_mode.$input.get().focus();
+				me.selected_mode && me.selected_mode.$input.get();
 				me.auto_set_remaining_amount();
 			}
 		});
+
 		
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
