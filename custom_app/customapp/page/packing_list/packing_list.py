@@ -365,27 +365,21 @@ def serial_number():
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, current_user, limit=100):
+def get_past_order_list(search_term, status, pos_profile, limit=100):
 	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
 	if search_term and status:
 		invoices_by_customer = frappe.db.get_all(
 			"POS Invoice",
-			filters={"customer": ["like", f"%{search_term}%"], 
-            'pos_profile': pos_profile, 
-            "status": status, 
-            'custom_pharmacist_assistant': current_user},
+			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
 			fields=fields,
 			order_by="posting_time asc", 
 			page_length=limit,
 		)
 		invoices_by_name = frappe.db.get_all(
 			"POS Invoice",
-			filters={"name": ["like", f"%{search_term}%"], 
-            'pos_profile': pos_profile, 
-            "status": status, 
-            'custom_pharmacist_assistant': current_user},
+			filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
 			fields=fields,
 			page_length=limit,
 		)
@@ -393,10 +387,7 @@ def get_past_order_list(search_term, status, pos_profile, current_user, limit=10
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 
-                           'pos_profile': pos_profile, 
-                           'custom_pharmacist_assistant': current_user 
-                           }, fields=fields, order_by="posting_time asc",   page_length=limit
+			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
 		
 	return invoice_list
