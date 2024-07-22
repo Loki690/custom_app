@@ -18,7 +18,6 @@ custom_app.PointOfSale.ItemSelector = class {
 		//Highlight
         this.attach_shortcuts();
 		this.inject_css(); 
-        // this.filter_items()
 
         
     }
@@ -67,11 +66,8 @@ custom_app.PointOfSale.ItemSelector = class {
 				<div class="label">
 				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
 			</div>
-            
                     <div class="search-field"></div>
 					<div class="item-group-field"></div>
-                    <div class="item-uoms"></div>
-                   
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">
@@ -139,17 +135,9 @@ custom_app.PointOfSale.ItemSelector = class {
 
 	//Camille
     render_item_list(items) {
-        // Clear the current items in the container
         this.$items_container.html("");
-    
-        // Filter items where the unit of measurement (UOM) is "PC"
-        // const filtered_items_pc_uom = items.filter(item => item.uom === "PC");
-        // console.log("Filtered Items (UOM = PC): ", filtered_items_pc_uom);
-    
-        // Set the class property `items` to the filtered items
         this.items = items;
-        // Log all filtered items to the console
-       
+
         items.forEach((item) => {
             const item_html = this.get_item_html(item);
             this.$items_container.append(item_html);
@@ -207,7 +195,6 @@ custom_app.PointOfSale.ItemSelector = class {
 		const doc = me.events.get_frm().doc;
 		this.$component.find(".search-field").html("");
 		this.$component.find(".item-group-field").html("");
-        this.$component.find(".item-uoms").html("");
 		//branch field
 		// this.$component.find(".branch-field").html("");
 
@@ -220,7 +207,6 @@ custom_app.PointOfSale.ItemSelector = class {
 			parent: this.$component.find(".search-field"),
 			render_input: true,
 		});
-
 		this.item_group_field = frappe.ui.form.make_control({
 			df: {
 				label: __("Item Group"),
@@ -245,28 +231,21 @@ custom_app.PointOfSale.ItemSelector = class {
 			render_input: true,
 		});
 
+		// this.brach_field = frappe.ui.form.make_control({
+		// 	df: {
+		// 		label: _("Branch"),
+		// 		fieldtype: "Link",
+		// 		options: "Warehouse",
+		// 		placeholder: _("Select warehouse"),
+		// 		onchange: function () {
+		// 			me.branch = this.value;
+		// 		},
 
-        this.item_uom = frappe.ui.form.make_control({
-            df: {
-                label: __("UOM"),
-                fieldtype: "Link",
-                options: "UOM",
-                placeholder: __("Select UOM"),
-                default: "PC", // Set the default value here
-                onchange: function () {
-                    me.selected_uom = this.value;
-                    me.filter_items({ uom: me.selected_uom });
-                },
-            },
-            parent: this.$component.find(".item-uoms"),
-            render_input: true,
-        });
+		// 	},
+		// 	parent: this.$component.find(".branch-field"),
+		// 	render_input: true,
+		// })
 
-        // this.item_uom.set_value("PC");
-        this.item_uom.refresh();
-       
-
-        this.item_uom.toggle_label(false);
 		this.search_field.toggle_label(false);
 		this.item_group_field.toggle_label(false);
 
@@ -623,38 +602,31 @@ custom_app.PointOfSale.ItemSelector = class {
 
 	//end here
 
-    filter_items({ search_term = "", uom = "" } = {}) {
+    filter_items({ search_term = "" } = {}) {
         if (search_term) {
             search_term = search_term.toLowerCase();
-    
+
             this.search_index = this.search_index || {};
             if (this.search_index[search_term]) {
                 const items = this.search_index[search_term];
                 this.items = items;
-                if (uom) {
-                    this.items = this.items.filter(item => item.uom === uom);
-                }
-                this.render_item_list(this.items);
+                this.render_item_list(items);
                 this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
                 return;
             }
         }
-    
+
         this.get_items({ search_term }).then(({ message }) => {
-            let { items, serial_no, batch_no, barcode } = message;
+            const { items, serial_no, batch_no, barcode } = message;
             if (search_term && !barcode) {
                 this.search_index[search_term] = items;
             }
-    
-            // Filter by UOM if specified
-            if (uom) {
-                items = items.filter(item => item.uom === uom);
-            }
-    
             this.items = items;
             this.render_item_list(items);
             this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
         });
+
+
     }
 
     

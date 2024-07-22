@@ -173,6 +173,12 @@ custom_app.PointOfSale.Controller = class {
 		};
 	}
 
+
+	get_pos_profile_doc(pos_profile) {
+		return 
+	}
+
+
 	async prepare_app_defaults(data) {
 		this.pos_opening = data.name;
 		this.company = data.company;
