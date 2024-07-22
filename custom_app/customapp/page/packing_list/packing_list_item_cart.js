@@ -1133,9 +1133,10 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			<div class="item-vat mx-3">
+			<!-- <div class="item-vat mx-3">
 				<strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
-			</div>
+			</div> -->
+			
 			<div class="item-vat mx-3">
 				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
@@ -1180,11 +1181,11 @@ custom_app.PointOfSale.ItemCart = class {
 
 			} else if (customer_group === "Senior Citizen") {
 
-				if (item_data.pricing_rules === "") {
-					console.log('Pricing rule is empty')
-				}
+				// if (item_data.pricing_rules === "") {
+				// 	console.log('Pricing rule is empty')
+				// }
 
-				console.log('Item Data: ', item_data)
+				// console.log('Item Data: ', item_data)
 
 				return `
 						<div class="item-qty-rate">

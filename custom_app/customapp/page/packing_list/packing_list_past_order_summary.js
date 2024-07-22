@@ -376,6 +376,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			}
 		});
 		this.$summary_btns.children().last().removeClass("mr-4");
+		
 	}
 
 	toggle_summary_placeholder(show) {
@@ -394,10 +395,10 @@ custom_app.PointOfSale.PastOrderSummary = class {
 
 		// added print reciept button 
 		return [
-			{ condition: this.doc.docstatus === 0, visible_btns: ["Print Receipt", "Edit Order", "Delete Order"] },
+			{ condition: this.doc.docstatus === 0, visible_btns: ["Edit Order"] },
 			{
 				condition: !this.doc.is_return && this.doc.docstatus === 1,
-				visible_btns: ["Print Receipt", "Email Receipt", "Return"],
+				visible_btns: ["Print Receipt", "Email Receipt", "Return"],	
 			},
 			{
 				condition: this.doc.is_return && this.doc.docstatus === 1,
@@ -497,10 +498,10 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		const discount_dom = this.get_discount_html(doc);
 		const grand_total_dom = this.get_grand_total_html(doc);
 		this.$totals_container.append(net_total_dom);
-		this.$totals_container.append(vatable_sale_dom);
-		this.$totals_container.append(vat_exempt_dom);
-		this.$totals_container.append(zero_rated_dom);
-		this.$totals_container.append(vat_amount_dom);
+		// this.$totals_container.append(vatable_sale_dom);
+		// this.$totals_container.append(vat_exempt_dom);
+		// this.$totals_container.append(zero_rated_dom);
+		// this.$totals_container.append(vat_amount_dom);
 		this.$totals_container.append(taxes_dom);
 		this.$totals_container.append(discount_dom);
 		this.$totals_container.append(grand_total_dom);

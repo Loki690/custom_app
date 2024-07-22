@@ -12,9 +12,8 @@ from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availabil
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
 from frappe.utils.password import get_decrypted_password
-from frappe.utils.password import check_password
 from frappe.exceptions import AuthenticationError
-from frappe.utils.password import check_oic_password, check_password
+from custom_app.customapp.utils.password import check_oic_password, check_password
 
 import platform
 
@@ -474,8 +473,6 @@ def get_pos_profile_data(pos_profile):
 	pos_profile.customer_groups = _customer_groups_with_children
 	return pos_profile
 
-from frappe.utils.password import get_decrypted_password
-from frappe.utils.password import check_password
 from frappe.exceptions import AuthenticationError
 
 @frappe.whitelist()

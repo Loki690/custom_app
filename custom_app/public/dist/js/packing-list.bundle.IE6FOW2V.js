@@ -5414,9 +5414,10 @@
 				</div>
 				${get_description_html()}
 			</div>
-			<div class="item-vat mx-3">
+			<!-- <div class="item-vat mx-3">
 				<strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
-			</div>
+			</div> -->
+			
 			<div class="item-vat mx-3">
 				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
@@ -5452,10 +5453,6 @@
 							</div>
 						</div>`;
         } else if (customer_group2 === "Senior Citizen") {
-          if (item_data.pricing_rules === "") {
-            console.log("Pricing rule is empty");
-          }
-          console.log("Item Data: ", item_data);
           return `
 						<div class="item-qty-rate">
 							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
@@ -8085,7 +8082,7 @@
       if (after_submission)
         return [{ condition: true, visible_btns: ["Print Receipt", "Email Receipt", "New Order"] }];
       return [
-        { condition: this.doc.docstatus === 0, visible_btns: ["Print Receipt", "Edit Order", "Delete Order"] },
+        { condition: this.doc.docstatus === 0, visible_btns: ["Edit Order"] },
         {
           condition: !this.doc.is_return && this.doc.docstatus === 1,
           visible_btns: ["Print Receipt", "Email Receipt", "Return"]
@@ -8170,10 +8167,6 @@
       const discount_dom = this.get_discount_html(doc);
       const grand_total_dom = this.get_grand_total_html(doc);
       this.$totals_container.append(net_total_dom);
-      this.$totals_container.append(vatable_sale_dom);
-      this.$totals_container.append(vat_exempt_dom);
-      this.$totals_container.append(zero_rated_dom);
-      this.$totals_container.append(vat_amount_dom);
       this.$totals_container.append(taxes_dom);
       this.$totals_container.append(discount_dom);
       this.$totals_container.append(grand_total_dom);
@@ -9073,4 +9066,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.JIC5JYLQ.js.map
+//# sourceMappingURL=packing-list.bundle.IE6FOW2V.js.map

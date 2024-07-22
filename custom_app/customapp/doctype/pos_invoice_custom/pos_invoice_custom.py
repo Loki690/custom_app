@@ -35,7 +35,7 @@ def set_custom_naming_series(doc):
         # Set a default naming series if none is found in POS Profile
         doc.naming_series = 'POS-INV#-.YYYY.-.MM.-.#####'
 
-def set_custom_ex_total(doc): 
+def set_custom_ex_total(doc):
     
     if doc.custom_ex_total:
         doc.grand_total = doc.custom_ex_total
