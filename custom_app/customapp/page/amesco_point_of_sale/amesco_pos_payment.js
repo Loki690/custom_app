@@ -1022,47 +1022,47 @@ custom_app.PointOfSale.Payment = class {
 			} 
 
 			if (p.mode_of_payment === "2306") {
-
-				// console.log(frm)
-
-				let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
+				// console.log('Form 2306 Expected: ', doc.custom_2306);
+			
+				
 				let check_form_2306 = frappe.ui.form.make_control({
 					df: {
 						label: `Expected 2306 Amount`,
 						fieldtype: "Currency",
 						placeholder: 'Actual 2306',
 						read_only: 1, // Set the field to read-only
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306 );
-						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
 					render_input: true,
 				});
+			
+				// Set the latest value of doc.custom_2306 directly
+				let latest_form_2306_value = doc.custom_2306;
+				frappe.model.set_value(p.doctype, p.name, "custom_form_2306", latest_form_2306_value);
+			
 				// Set the existing value and refresh the control
-				check_form_2306.set_value(existing_custom_form_2306 || '');
+				check_form_2306.set_value(latest_form_2306_value || '');
 				check_form_2306.refresh();
-
 			}
 
 			if (p.mode_of_payment === "2307") {
 
-				let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
+				
 				let check_form_2307 = frappe.ui.form.make_control({
 					df: {
 						label: `Expected 2307 Amount`,
 						fieldtype: "Currency",
 						placeholder: 'Actual 2307',
 						read_only: 1, // Set the field to read-only
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307 );
-						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
 					render_input: true,
 				});
 				// Set the existing value and refresh the control
-				check_form_2307.set_value(existing_custom_form_2307 || '');
+				let latest_form_2307_value = doc.custom_2307;
+				frappe.model.set_value(p.doctype, p.name, "custom_form_2307", latest_form_2307_value);
+
+				check_form_2307.set_value(latest_form_2307_value || '');
 				check_form_2307.refresh();
 
 			}

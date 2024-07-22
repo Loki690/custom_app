@@ -49,6 +49,8 @@ def before_save(doc, method):
         doc.name = make_autoname(doc.naming_series)
     # Set the barcode to the document name
     #doc.barcode = doc.name
+    doc.custom_pharmacist_assistant = frappe.session.user
+    doc.custom_pa_name = get_user_full_name(doc.custom_pharmacist_assistant)
     doc.custom_barcode = doc.name
 
 

@@ -3949,7 +3949,9 @@
     inject_css() {
       const css = `
 			.highlight {
-				background-color: #f2f2f2;
+				background-color: #0289f7;
+                color: white;
+                font-weight: bold;
 			}
             .text{
                 font-size: 1em;
@@ -3984,8 +3986,11 @@
 				<div class="label">
 				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
 			</div>
+            
                     <div class="search-field"></div>
 					<div class="item-group-field"></div>
+                    <div class="item-uoms"></div>
+                   
 				</div>
 				<div class="table-responsive">
 					<table class="table items-table">
@@ -4068,16 +4073,18 @@
         qty_to_display = "";
       }
       const item_description = description ? description : "Description not available";
-      return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
+      return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
+        onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
+        onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}">
-            <td class="item-code">${item_code}</td> 
-            <td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-            <td class="item-vat">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
-            <td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-            <td class="item-uom">${uom}</td>
-            <td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+            <td class="item-code" style=" width: 15%;">${item_code}</td> 
+            <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
+            <td class="item-uom" style=" width: 10%;">${uom}</td>
+            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
         </tr>`;
     }
     handle_broken_image($img) {
@@ -4089,6 +4096,7 @@
       const doc = me.events.get_frm().doc;
       this.$component.find(".search-field").html("");
       this.$component.find(".item-group-field").html("");
+      this.$component.find(".item-uoms").html("");
       this.search_field = frappe.ui.form.make_control({
         df: {
           label: __("Search"),
@@ -4121,6 +4129,23 @@
         parent: this.$component.find(".item-group-field"),
         render_input: true
       });
+      this.item_uom = frappe.ui.form.make_control({
+        df: {
+          label: __("UOM"),
+          fieldtype: "Link",
+          options: "UOM",
+          placeholder: __("Select UOM"),
+          default: "PC",
+          onchange: function() {
+            me.selected_uom = this.value;
+            me.filter_items({ uom: me.selected_uom });
+          }
+        },
+        parent: this.$component.find(".item-uoms"),
+        render_input: true
+      });
+      this.item_uom.refresh();
+      this.item_uom.toggle_label(false);
       this.search_field.toggle_label(false);
       this.item_group_field.toggle_label(false);
       this.attach_clear_btn();
@@ -4359,7 +4384,16 @@
         ignore_inputs: true,
         page: cur_page.page.page
       });
-      frappe.ui.keys.on("enter", () => {
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && e.ctrlKey) {
+          e.preventDefault();
+          console.log("Ctrl + Enter pressed for checkout");
+          return false;
+        }
+      });
+      frappe.ui.keys.on("enter", (e) => {
+        if (e.ctrlKey)
+          return;
         const selector_is_visible = this.$component.is(":visible");
         const dialog_is_open = document.querySelector(".modal.show");
         if (!selector_is_visible || this.search_field.get_value() === "")
@@ -4419,22 +4453,28 @@
     select_highlighted_item() {
       this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index).click();
     }
-    filter_items({ search_term = "" } = {}) {
+    filter_items({ search_term = "", uom = "" } = {}) {
       if (search_term) {
         search_term = search_term.toLowerCase();
         this.search_index = this.search_index || {};
         if (this.search_index[search_term]) {
           const items = this.search_index[search_term];
           this.items = items;
-          this.render_item_list(items);
+          if (uom) {
+            this.items = this.items.filter((item) => item.uom === uom);
+          }
+          this.render_item_list(this.items);
           this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
           return;
         }
       }
       this.get_items({ search_term }).then(({ message }) => {
-        const { items, serial_no, batch_no, barcode } = message;
+        let { items, serial_no, batch_no, barcode } = message;
         if (search_term && !barcode) {
           this.search_index[search_term] = items;
+        }
+        if (uom) {
+          items = items.filter((item) => item.uom === uom);
         }
         this.items = items;
         this.render_item_list(items);
@@ -4534,8 +4574,10 @@
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
 						<div class="qty-header">${__("Vat Type")}</div>
+						<div class="qty-header">${__("Price")}</div>
 						<div class="qty-header" >${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
+						
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
 					<div class="cart-items-section"></div>
@@ -4611,7 +4653,7 @@
 			<div class="vatable-sales-container mt-2"></div>
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
-			<div class="vat-container"></div>
+			
 			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
@@ -4620,6 +4662,8 @@
 			</div>
 
 		 <div class="taxes-container"></div>
+		 <div class="vat-container"></div>
+		<div class="total-vat-container"></div>
 			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
@@ -5204,11 +5248,12 @@
       this.render_vatable_sales(frm.doc.custom_vatable_sales);
       this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
       this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
-      this.render_vat(frm.doc.custom_vat_amount);
       this.render_net_total(frm.doc.net_total);
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
+      this.render_taxes(frm.doc.taxes);
+      this.render_total_vat(frm.doc.total_taxes_and_charges);
     }
     render_net_total(value) {
       const currency = this.events.get_frm().doc.currency;
@@ -5251,6 +5296,15 @@
 				</div>
 			`);
     }
+    render_total_vat(value) {
+      const currency = this.events.get_frm().doc.currency;
+      this.$totals_section.find(".total-vat-container").html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Toal VAT")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+    }
     render_ex_total(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".ex-total-container").html(`
@@ -5272,6 +5326,23 @@
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".grand-total-container").html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
       this.$numpad_section.find(".numpad-grand-total").html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
+    }
+    render_taxes(taxes) {
+      if (taxes && taxes.length) {
+        const currency = this.events.get_frm().doc.currency;
+        const taxes_html = taxes.map((t) => {
+          if (t.tax_amount_after_discount_amount == 0)
+            return;
+          const description = /[0-9]+/.test(t.description) ? t.description : t.rate != 0 ? `${t.description} ${t.rate}%` : t.description;
+          return `<div class="tax-row">
+					<div class="tax-label">${description}</div>
+					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+				</div>`;
+        }).join("");
+        this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+      } else {
+        this.$totals_section.find(".taxes-container").css("display", "none").html("");
+      }
     }
     get_cart_item({ name }) {
       const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -5327,6 +5398,7 @@
     render_cart_item(item_data, $item_to_update) {
       const currency = this.events.get_frm().doc.currency;
       const me = this;
+      const customer_group = me.events.get_frm().doc.customer_group;
       if (!$item_to_update.length) {
         this.$cart_items_wrapper.append(
           `<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
@@ -5345,10 +5417,13 @@
 			<div class="item-vat mx-3">
 				<strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
 			</div>
+			<div class="item-vat mx-3">
+				<strong>${format_currency(item_data.rate, currency)}</strong>
+			</div>
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
-			${get_rate_discount_html()}`
+			${get_rate_discount_html(customer_group)}`
       );
       set_dynamic_rate_header_width();
       function set_dynamic_rate_header_width() {
@@ -5366,24 +5441,43 @@
         me.$cart_header.find(".rate-amount-header").css("width", max_width);
         me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
       }
-      function get_rate_discount_html() {
-        if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+      function get_rate_discount_html(customer_group2) {
+        if (customer_group2 === "Zero Rated") {
           return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
-							<div class="item-amount">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
+								
+							</div>
+						</div>`;
+        } else if (customer_group2 === "Senior Citizen") {
+          return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount, currency)}</div>
+								
+							</div>
+						</div>`;
         } else {
-          return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+          if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+            return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
+							</div>
+						</div>`;
+          } else {
+            return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
+							</div>
+						</div>`;
+          }
         }
       }
       function get_description_html() {
@@ -7125,39 +7219,35 @@
           check_date_control.refresh();
         }
         if (p.mode_of_payment === "2306") {
-          let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
           let check_form_2306 = frappe.ui.form.make_control({
             df: {
               label: `Expected 2306 Amount`,
               fieldtype: "Currency",
               placeholder: "Actual 2306",
-              read_only: 1,
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306);
-              }
+              read_only: 1
             },
             parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
             render_input: true
           });
-          check_form_2306.set_value(existing_custom_form_2306 || "");
+          let latest_form_2306_value = doc.custom_2306;
+          frappe.model.set_value(p.doctype, p.name, "custom_form_2306", latest_form_2306_value);
+          check_form_2306.set_value(latest_form_2306_value || "");
           check_form_2306.refresh();
         }
         if (p.mode_of_payment === "2307") {
-          let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
           let check_form_2307 = frappe.ui.form.make_control({
             df: {
               label: `Expected 2307 Amount`,
               fieldtype: "Currency",
               placeholder: "Actual 2307",
-              read_only: 1,
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307);
-              }
+              read_only: 1
             },
             parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
             render_input: true
           });
-          check_form_2307.set_value(existing_custom_form_2307 || "");
+          let latest_form_2307_value = doc.custom_2307;
+          frappe.model.set_value(p.doctype, p.name, "custom_form_2307", latest_form_2307_value);
+          check_form_2307.set_value(latest_form_2307_value || "");
           check_form_2307.refresh();
         }
         if (p.mode_of_payment === "QR Payment") {
@@ -7518,6 +7608,7 @@
     constructor({ wrapper, events }) {
       this.wrapper = wrapper;
       this.events = events;
+      this.invoice_count = 0;
       this.init_component();
     }
     init_component() {
@@ -7529,7 +7620,7 @@
       this.wrapper.append(
         `<section class="past-order-list">
 				<div class="filter-section">
-					<div class="label">${__("Recent Orders")}</div>
+					<div class="label">${__("Recent Orders")} <span class="invoice-count ml-3 badge rounded-pill bg-danger text-white"></span> </div>
 					<div class="search-field"></div>
 					<div class="status-field"></div>
 				</div>
@@ -7538,6 +7629,7 @@
       );
       this.$component = this.wrapper.find(".past-order-list");
       this.$invoices_container = this.$component.find(".invoices-container");
+      this.$invoice_count = this.$component.find(".invoice-count");
     }
     bind_events() {
       this.search_field.$input.on("input", (e) => {
@@ -7620,17 +7712,19 @@
       const search_term = this.search_field.get_value();
       const status = this.status_field.get_value();
       const pos_profile = this.events.pos_profile();
+      const current_user = frappe.session.user;
       this.$invoices_container.html("");
       return frappe.call({
         method: "custom_app.customapp.page.packing_list.packing_list.get_past_order_list",
         freeze: true,
-        args: { search_term, status, pos_profile },
+        args: { search_term, status, pos_profile, current_user },
         callback: (response) => {
           frappe.dom.unfreeze();
           response.message.forEach((invoice) => {
             const invoice_html = this.get_invoice_html(invoice);
             this.$invoices_container.append(invoice_html);
           });
+          this.$invoice_count.text(response.message.length);
         }
       });
     }
@@ -8195,13 +8289,13 @@
       );
       this.page.add_menu_item(__("Branch Item Lookup (F4)"), this.show_branch_selection_dialog.bind(this), false, "f4");
       this.page.add_menu_item(__("Change POS Profile (F5)"), this.select_pos_profile.bind(this), false, "f5");
-      this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
+      this.page.add_menu_item(__("Save as Draft"), this.save_draft.bind(this), false, "f3");
     }
     add_buttons_to_toolbar() {
       const buttons = [
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
         { label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2" },
-        { label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
+        { label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3" },
         { label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4" },
         { label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5" }
       ];
@@ -8341,7 +8435,6 @@
             args: { password },
             callback: (r) => {
               if (r.message) {
-                this.set_pharmacist_assist(this.frm);
                 this.frm.save(void 0, void 0, void 0, () => {
                   frappe.show_alert({
                     message: __("There was an error saving the document."),
@@ -8363,6 +8456,62 @@
                     message: __("Invoice Printed"),
                     indicator: "blue"
                   });
+                });
+              } else {
+                frappe.show_alert({
+                  message: __("Incorrect password"),
+                  indicator: "red"
+                });
+              }
+            }
+          });
+        }
+      });
+      passwordDialog.show();
+    }
+    save_draft() {
+      if (!this.$components_wrapper.is(":visible"))
+        return;
+      if (this.frm.doc.items.length == 0) {
+        frappe.show_alert({
+          message: __("You must add atleast one item to complete the order."),
+          indicator: "red"
+        });
+        frappe.utils.play_sound("error");
+        return;
+      }
+      const passwordDialog = new frappe.ui.Dialog({
+        title: __("Enter Your Password"),
+        fields: [
+          {
+            fieldname: "password",
+            fieldtype: "Password",
+            label: __("Password"),
+            reqd: 1
+          }
+        ],
+        primary_action_label: __("Ok"),
+        primary_action: (values) => {
+          let password = values.password;
+          frappe.call({
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
+            args: { password },
+            callback: (r) => {
+              if (r.message) {
+                this.frm.save(void 0, void 0, void 0, () => {
+                  frappe.show_alert({
+                    message: __("There was an error saving the document."),
+                    indicator: "red"
+                  });
+                  frappe.utils.play_sound("error");
+                }).then(() => {
+                  frappe.run_serially([
+                    () => frappe.dom.freeze(),
+                    () => this.make_new_invoice(),
+                    () => frappe.dom.unfreeze()
+                  ]);
+                  passwordDialog.hide();
+                  localStorage.removeItem("posCartItems");
                 });
               } else {
                 frappe.show_alert({
@@ -8911,7 +9060,6 @@
     async save_and_checkout() {
       if (this.frm.is_dirty()) {
         let save_error = false;
-        await this.frm.save(null, null, null, () => save_error = true);
         !save_error && this.payment.checkout();
         save_error && setTimeout(() => {
           this.cart.toggle_checkout_btn(true);
@@ -8922,4 +9070,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.ICGIHJ2N.js.map
+//# sourceMappingURL=packing-list.bundle.VEYNTQZB.js.map
