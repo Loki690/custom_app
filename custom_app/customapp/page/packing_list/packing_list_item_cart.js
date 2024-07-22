@@ -958,7 +958,7 @@ custom_app.PointOfSale.ItemCart = class {
 			.find(".total-vat-container")
 			.html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Toal VAT")}: </span>
+					<span style="flex: 1;">${__("Total VAT")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -1180,19 +1180,19 @@ custom_app.PointOfSale.ItemCart = class {
 
 			} else if (customer_group === "Senior Citizen") {
 
-				// if (item_data.pricing_rules === "") {
-				// 	console.log('Pricing rule is empty')
-				// }
+				if (item_data.pricing_rules === "") {
+					console.log('Pricing rule is empty')
+				}
 
-				// console.log('Item Pricing Rule: ', item_data.pricing_rules)
+				console.log('Item Data: ', item_data)
 
 				return `
 						<div class="item-qty-rate">
 							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 							<div class="item-rate-amount">
-								<div class="item-rate">${format_currency(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : 
+								<div class="item-rate">${format_currency( item_data.pricing_rules === "" ? item_data.amount  : 
 									
-									item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount, currency)}</div>
+									item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount, currency)}</div>
 								
 							</div>
 						</div>`;

@@ -80,7 +80,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		const { status } = doc;
 		let indicator_color = "";
 		 // Determine the 'Sold by' value based on the status
-		const sold_by = status === "Draft" ? 'Amesco Drug Corporation' : doc.owner;
+		const sold_by = status === "Draft" ? doc.custom_pa_name : doc.custom_cashier_name;
 
 		["Paid", "Consolidated"].includes(status) && (indicator_color = "green");
 		status === "Draft" && (indicator_color = "red");
@@ -89,7 +89,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		return `<div class="left-section">
 					<div class="customer-name">${doc.customer}</div>
 					<div class="customer-email">${this.customer_email}</div>
-					<div class="cashier">${__("Amesco Drug Corporation")}</div>
+					<div class="cashier"> Take by:  ${__(sold_by)}</div>
 				</div>
 				<div class="right-section">
 					<div class="paid-amount">${format_currency(doc.grand_total, doc.currency)}</div>

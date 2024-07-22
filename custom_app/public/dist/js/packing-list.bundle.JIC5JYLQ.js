@@ -5300,7 +5300,7 @@
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".total-vat-container").html(`
 				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Toal VAT")}: </span>
+					<span style="flex: 1;">${__("Total VAT")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -5452,11 +5452,15 @@
 							</div>
 						</div>`;
         } else if (customer_group2 === "Senior Citizen") {
+          if (item_data.pricing_rules === "") {
+            console.log("Pricing rule is empty");
+          }
+          console.log("Item Data: ", item_data);
           return `
 						<div class="item-qty-rate">
 							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 							<div class="item-rate-amount">
-								<div class="item-rate">${format_currency(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount, currency)}</div>
+								<div class="item-rate">${format_currency(item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount, currency)}</div>
 								
 							</div>
 						</div>`;
@@ -6101,7 +6105,6 @@
     get_form_fields(item) {
       const fields = [
         "custom_free",
-        "qty",
         "price_list_rate",
         "rate",
         "uom",
@@ -7827,14 +7830,14 @@
     get_upper_section_html(doc) {
       const { status } = doc;
       let indicator_color = "";
-      const sold_by = status === "Draft" ? "Amesco Drug Corporation" : doc.owner;
+      const sold_by = status === "Draft" ? doc.custom_pa_name : doc.custom_cashier_name;
       ["Paid", "Consolidated"].includes(status) && (indicator_color = "green");
       status === "Draft" && (indicator_color = "red");
       status === "Return" && (indicator_color = "grey");
       return `<div class="left-section">
 					<div class="customer-name">${doc.customer}</div>
 					<div class="customer-email">${this.customer_email}</div>
-					<div class="cashier">${__("Amesco Drug Corporation")}</div>
+					<div class="cashier"> Take by:  ${__(sold_by)}</div>
 				</div>
 				<div class="right-section">
 					<div class="paid-amount">${format_currency(doc.grand_total, doc.currency)}</div>
@@ -9070,4 +9073,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.VEYNTQZB.js.map
+//# sourceMappingURL=packing-list.bundle.JIC5JYLQ.js.map
