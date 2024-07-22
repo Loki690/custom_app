@@ -169,6 +169,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.description,
 			item.custom_is_vatable,
             item.stock_uom,
+            item.custom_unit_of_measure_2,
+            item.custom_unit_of_measure_3,
             item.image AS item_image,
             item.is_stock_item,
             MAX(batch.name) as batch_number,
@@ -363,27 +365,21 @@ def serial_number():
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, current_user, limit=100):
+def get_past_order_list(search_term, status, pos_profile, limit=100):
 	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
 	if search_term and status:
 		invoices_by_customer = frappe.db.get_all(
 			"POS Invoice",
-			filters={"customer": ["like", f"%{search_term}%"], 
-            'pos_profile': pos_profile, 
-            "status": status, 
-            'custom_pharmacist_assistant': current_user},
+			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
 			fields=fields,
 			order_by="posting_time asc", 
 			page_length=limit,
 		)
 		invoices_by_name = frappe.db.get_all(
 			"POS Invoice",
-			filters={"name": ["like", f"%{search_term}%"], 
-            'pos_profile': pos_profile, 
-            "status": status, 
-            'custom_pharmacist_assistant': current_user},
+			filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
 			fields=fields,
 			page_length=limit,
 		)
@@ -391,10 +387,7 @@ def get_past_order_list(search_term, status, pos_profile, current_user, limit=10
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 
-                           'pos_profile': pos_profile, 
-                           'custom_pharmacist_assistant': current_user 
-                           }, fields=fields, order_by="posting_time asc",   page_length=limit
+			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
 		
 	return invoice_list
@@ -402,64 +395,49 @@ def get_past_order_list(search_term, status, pos_profile, current_user, limit=10
 
 @frappe.whitelist()
 def set_customer_info(fieldname, customer, value=""):
-    # Set loyalty program if applicable
-    if fieldname == "loyalty_program":
-        frappe.db.set_value("Customer", customer, "loyalty_program", value)
-    
-    # Fetch or create the primary contact for the customer
-    contact = frappe.get_cached_value("Customer", customer, "customer_primary_contact")
-    if not contact:
-        contact = frappe.db.sql(
-            """
-            SELECT parent FROM `tabDynamic Link`
-            WHERE
-                parenttype = 'Contact' AND
-                parentfield = 'links' AND
-                link_doctype = 'Customer' AND
-                link_name = %s
-            """,
-            (customer),
-            as_dict=1,
-        )
-        contact = contact[0].get("parent") if contact else None
+	if fieldname == "loyalty_program":
+		frappe.db.set_value("Customer", customer, "loyalty_program", value)
 
-    if not contact:
-        new_contact = frappe.new_doc("Contact")
-        new_contact.is_primary_contact = 1
-        new_contact.first_name = customer
-        new_contact.set("links", [{"link_doctype": "Customer", "link_name": customer}])
-        new_contact.save()
-        contact = new_contact.name
-        frappe.db.set_value("Customer", customer, "customer_primary_contact", contact)
+	contact = frappe.get_cached_value("Customer", customer, "customer_primary_contact")
+	if not contact:
+		contact = frappe.db.sql(
+			"""
+			SELECT parent FROM `tabDynamic Link`
+			WHERE
+				parenttype = 'Contact' AND
+				parentfield = 'links' AND
+				link_doctype = 'Customer' AND
+				link_name = %s
+			""",
+			(customer),
+			as_dict=1,
+		)
+		contact = contact[0].get("parent") if contact else None
 
-    contact_doc = frappe.get_doc("Contact", contact)
-    # customer_doc = frappe.get_doc("Customer", customer)
-    
-    # Set fields in the contact based on fieldname
-    if fieldname == "email_id":
-        contact_doc.set("email_ids", [{"email_id": value, "is_primary": 1}])
-        frappe.db.set_value("Customer", customer, "email_id", value)
-    elif fieldname == "mobile_no":
-        contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
-        frappe.db.set_value("Customer", customer, "mobile_no", value)
-    elif fieldname == "custom_oscapwdid":
-        contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
-        frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
-    elif fieldname == "custom_transaction_type":
-        contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
-        frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
-        
-        
-        
-    # elif fieldname == "custom_osca_id":
-    #      customer_doc.set("custom_osca_id", value)
-    #      #frappe.db.set_value("Customer", customer, "custom_osca_id", value)
-    # elif fieldname == "custom_pwd_id":
-    #      customer_doc.set("custom_pwd_id", value)
-    #      #frappe.db.set_value("Customer", customer, "custom_pwd_id", value)
-    
-    # customer_doc.save()
-    contact_doc.save()
+	if not contact:
+		new_contact = frappe.new_doc("Contact")
+		new_contact.is_primary_contact = 1
+		new_contact.first_name = customer
+		new_contact.set("links", [{"link_doctype": "Customer", "link_name": customer}])
+		new_contact.save()
+		contact = new_contact.name
+		frappe.db.set_value("Customer", customer, "customer_primary_contact", contact)
+
+	contact_doc = frappe.get_doc("Contact", contact)
+	if fieldname == "email_id":
+		contact_doc.set("email_ids", [{"email_id": value, "is_primary": 1}])
+		frappe.db.set_value("Customer", customer, "email_id", value)
+	elif fieldname == "mobile_no":
+		contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
+		frappe.db.set_value("Customer", customer, "mobile_no", value)
+	elif fieldname == "custom_oscapwdid":
+		contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
+		frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
+	elif fieldname == "custom_transaction_type":
+		contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
+		frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
+
+	contact_doc.save()
 
 @frappe.whitelist()
 def get_pos_profile_data(pos_profile):

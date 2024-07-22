@@ -120,15 +120,13 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="vatable-sales-container mt-2"></div>
 			<div class="vat-exempt-container"></div>
 			<div class="zero-rated-container"></div>
-			
+			<div class="vat-container"></div>
 			
 			<div class="ex-total-container"></div>
 				<div class="net-total-container">
 				<div class="net-total-label">${__("Sub Total")}</div>
 				<div class="net-total-value">0.00</div>
 			</div>
-
-			<div class="vat-container"></div>
 
 		 <div class="taxes-container"></div>
 			<div class="grand-total-container">
@@ -595,8 +593,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (customer) {
 			return new Promise((resolve) => {
 				frappe.db
-					.get_value("Customer", customer, ["email_id", "mobile_no" , 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program",
-					"custom_osca_id", "custom_pwd_id"])
+					.get_value("Customer", customer, ["email_id", "mobile_no" , 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program"])
 					.then(({ message }) => {
 						const { loyalty_program } = message;
 						// if loyalty program then fetch loyalty points too
@@ -823,7 +820,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
-		// this.render_vat(frm.doc.custom_vat_amount)
+		this.render_vat(frm.doc.custom_vat_amount)
 		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
 		this.render_total_item_qty(frm.doc.items);
@@ -833,7 +830,7 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		this.render_taxes(frm.doc.taxes);
+		// this.render_taxes(frm.doc.taxes);
 	}
 
 	render_net_total(value) {
@@ -934,29 +931,29 @@ custom_app.PointOfSale.ItemCart = class {
 			.html(`<div>${__("Total")}: <span>${format_currency(value, currency)}</span></div>`);
 	}
 
-	render_taxes(taxes) {
-		if (taxes && taxes.length) {
-			const currency = this.events.get_frm().doc.currency;
-			const taxes_html = taxes
-				.map((t) => {
-					if (t.tax_amount_after_discount_amount == 0.0) return;
-					// if tax rate is 0, don't print it.
-					const description = /[0-9]+/.test(t.description)
-						? t.description
-						: t.rate != 0
-						? `${t.description} @ ${t.rate}%`
-						: t.description;
-					return `<div class="tax-row">
-					<div class="tax-label">${description}</div>
-					<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
-				</div>`;
-				})
-				.join("");
-			this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
-		} else {
-			this.$totals_section.find(".taxes-container").css("display", "none").html("");
-		}
-	}
+	// render_taxes(taxes) {
+	// 	if (taxes && taxes.length) {
+	// 		const currency = this.events.get_frm().doc.currency;
+	// 		const taxes_html = taxes
+	// 			.map((t) => {
+	// 				if (t.tax_amount_after_discount_amount == 0.0) return;
+	// 				// if tax rate is 0, don't print it.
+	// 				const description = /[0-9]+/.test(t.description)
+	// 					? t.description
+	// 					: t.rate != 0
+	// 					? `${t.description} @ ${t.rate}%`
+	// 					: t.description;
+	// 				return `<div class="tax-row">
+	// 				<div class="tax-label">${description}</div>
+	// 				<div class="tax-value">${format_currency(t.tax_amount_after_discount_amount, currency)}</div>
+	// 			</div>`;
+	// 			})
+	// 			.join("");
+	// 		this.$totals_section.find(".taxes-container").css("display", "flex").html(taxes_html);
+	// 	} else {
+	// 		this.$totals_section.find(".taxes-container").css("display", "none").html("");
+	// 	}
+	// }
 
 	get_cart_item({ name }) {
 		const item_selector = `.cart-item-wrapper[data-row-name="${escape(name)}"]`;
@@ -1372,8 +1369,6 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="mobile_no-field"></div>
 					<div class="custom_transaction_type-field"></div>
 					<div class="custom_oscapwdid-field"></div>
-					<div class="custom_osca_id-field"></div>
-					<div class="custom_pwd_id-field"></div>
 					<div class="loyalty_program-field"></div>
 					<div class="loyalty_points-field"></div>
 				</div>
@@ -1412,19 +1407,19 @@ custom_app.PointOfSale.ItemCart = class {
 				fieldtype: "Data",
 				placeholder: __("Enter customer's phone number"),
 			},
-			// {
-			// 	fieldname: "custom_transaction_type",
-			// 	label: __("Transaction Type"),
-			// 	fieldtype: "Select",
-			// 	options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
-			// 	placeholder: __("Enter customer's transaction type"),
-			// },
-			// {
-			// 	fieldname: "custom_oscapwdid",
-			// 	label: __("Osca or PWD ID"),
-			// 	fieldtype: "Data",
-			// 	placeholder: __("Enter customer's Osca or PWD ID"),
-			// },
+			{
+				fieldname: "custom_transaction_type",
+				label: __("Transaction Type"),
+				fieldtype: "Select",
+				options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
+				placeholder: __("Enter customer's transaction type"),
+			},
+			{
+				fieldname: "custom_oscapwdid",
+				label: __("Osca or PWD ID"),
+				fieldtype: "Data",
+				placeholder: __("Enter customer's Osca or PWD ID"),
+			},
 			{
 				fieldname: "loyalty_program",
 				label: __("Loyalty Program"),
@@ -1435,18 +1430,6 @@ custom_app.PointOfSale.ItemCart = class {
 			{
 				fieldname: "loyalty_points",
 				label: __("Loyalty Points"),
-				fieldtype: "Data",
-				read_only: 1,
-			},
-			{
-				fieldname: "custom_osca_id",
-				label: __("OSCA ID"),
-				fieldtype: "Data",
-				read_only: 1,
-			},
-			{
-				fieldname: "custom_pwd_id",
-				label: __("PWD ID"),
 				fieldtype: "Data",
 				read_only: 1,
 			},
@@ -1493,7 +1476,7 @@ custom_app.PointOfSale.ItemCart = class {
 		frappe.db
 			.get_list("POS Invoice", {
 				filters: { customer: this.customer_info.customer, docstatus: 1 },
-				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency", "custom_invoice_series"],
+				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency"],
 				limit: 20,
 			})
 			.then((res) => {
@@ -1523,7 +1506,7 @@ custom_app.PointOfSale.ItemCart = class {
 					transaction_container.append(
 						`<div class="invoice-wrapper" data-invoice-name="${escape(invoice.name)}">
 						<div class="invoice-name-date">
-							<div class="invoice-name">${invoice.custom_invoice_series}</div>
+							<div class="invoice-name">${invoice.name}</div>
 							<div class="invoice-date">${posting_datetime}</div>
 						</div>
 						<div class="invoice-total-status">

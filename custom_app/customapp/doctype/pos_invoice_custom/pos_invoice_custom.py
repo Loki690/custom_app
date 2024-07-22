@@ -49,8 +49,6 @@ def before_save(doc, method):
         doc.name = make_autoname(doc.naming_series)
     # Set the barcode to the document name
     #doc.barcode = doc.name
-    doc.custom_pharmacist_assistant = frappe.session.user
-    doc.custom_pa_name = get_user_full_name(doc.custom_pharmacist_assistant)
     doc.custom_barcode = doc.name
 
 
@@ -224,18 +222,3 @@ def increment_print_count(pos_invoice):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), 'Error incrementing print count')
         frappe.throw(_('Error incrementing print count: {0}').format(str(e)))
-        
-        
-@frappe.whitelist()   
-def pos_opening_validation(doc, method):
-    # Check if there is already an open POS Opening Entry for the given pos_profile
-    open_pos_entries = frappe.get_all("POS Opening Entry", 
-                                      filters={
-                                          "pos_profile": doc.pos_profile,
-                                          "status": "Open",
-                                          "docstatus": 1
-                                      },
-                                      fields=["name"])
-
-    if open_pos_entries:
-        frappe.throw(_("There is already an open POS Opening Entry for the POS Profile {0}. Please close it before opening a new one.").format(doc.pos_profile))

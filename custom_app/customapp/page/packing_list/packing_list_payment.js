@@ -16,19 +16,16 @@ custom_app.PointOfSale.Payment = class {
 	prepare_dom() {
 		this.wrapper.append(
 			`<section class="payment-container">
-				<div class="section-label payment-section">${__("Payment Method")}</div>
-				<div class="payment-modes"></div>
 				<div class="fields-numpad-container">
 					<div class="fields-section">
-						<div class="section-label">${__("Additional Information")}</div>
-						<div class="invoice-fields"></div>
+						<div class="section-label payment-section">${__("Payment Method")}</div>
+						<div class="payment-modes"></div>
 					</div>
-					<div class="number-pad"></div>
 				</div>
 				<div class="totals-section">
 					<div class="totals"></div>
 				</div>
-				<div class="submit-order-btn">${__("Print Order List")}</div>
+				<div class="submit-order-btn">${__("Complete Order")}</div>
 			</section>`
 		);
 		this.$component = this.wrapper.find(".payment-container");
@@ -118,6 +115,8 @@ custom_app.PointOfSale.Payment = class {
 		}
 	}
 
+	
+
 
 	bind_events() {
 		const me = this;
@@ -174,8 +173,12 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.removeClass("border-primary");
 				me.selected_mode = "";
 			} else {
+
 				// clicked one is not selected then select it
 				mode_clicked.addClass("border-primary");
+
+
+
 				mode_clicked.find(".mode-of-payment-control").css("display", "flex");
 				mode_clicked.find(".mobile-number").css("display", "flex");
 				mode_clicked.find(".reference-number").css("display", "flex");
@@ -208,8 +211,11 @@ custom_app.PointOfSale.Payment = class {
 				me.selected_mode && me.selected_mode.$input.get();
 				me.auto_set_remaining_amount();
 			}
+			
 		});
 
+
+	
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
 			const target = $(e.target);
@@ -450,123 +456,117 @@ custom_app.PointOfSale.Payment = class {
 		const allowed_payment_modes = ["2306", "2307"];
 
 		this.$payment_modes.html(
-			`${payments.map((p, i) => {
-				const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
-				const payment_type = p.type;
-				const margin = i % 2 === 0 ? "pr-2" : "pl-2";
-				const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
-
-				// Check if the customer group is 'Government' and if the payment mode is allowed
-				// if (customer_group === "Government" && allowed_payment_modes.includes(p.mode_of_payment)) {
-				// 	return ''; // Skip rendering this payment mode if the conditions are not met
-				// }
-
-				let paymentModeHtml = `
-					<div class="payment-mode-wrapper ${margin}">
-						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
-							${p.mode_of_payment}
-							<div class="${mode}-amount pay-amount">${amount}</div>
-							<div class="${mode} mode-of-payment-control"></div>
-				`;
-
-				switch (p.mode_of_payment) {
-					case "GCash":
-						paymentModeHtml += `
-							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
-							<div class="${mode} reference-number" style="margin-top:10px;"></div>
-						`;
-						break;
-
-					case "Cards":
-						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card_type_control"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
-						`;
-						break;
-					case "Debit Card":
-						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
+			`<div style="display: flex; flex-wrap: wrap; gap: 16px;">
+				${payments.map((p, i) => {
+					const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+					const payment_type = p.type;
+					const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
+		
+					let paymentModeHtml = `
+						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px);">
+							<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff; ">
+								<span>${p.mode_of_payment}</span>
+								<div class="${mode}-amount pay-amount" style="font-weight: bold;">${amount}</div>
+								<div class="${mode} mode-of-payment-control"></div>
+					`;
+		
+					switch (p.mode_of_payment) {
+						case "GCash":
+							paymentModeHtml += `
+								<div class="${mode} mobile-number" style="margin-top:10px;"></div>
+								<div class="${mode} reference-number" style="margin-top:10px;"></div>
 							`;
-						break;
-					case "Credit Card":
-						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
+							break;
+						case "Cards":
+							paymentModeHtml += `
+								<div class="${mode} bank-name"></div>
+								<div class="${mode} holder-name"></div>
+								<div class="${mode} card_type_control"></div>
+								<div class="${mode} card-number"></div>
+								<div class="${mode} expiry-date"></div>
+								<div class="${mode} approval-code"></div>
+								<div class="${mode} reference-number"></div>
 							`;
-						break;
-					case "PayMaya":
-						paymentModeHtml += `
-							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
-							<div class="${mode} reference-number" style="margin-top:10px;"></div>
-						`;
-						break;
-					case "Cheque":
-						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} check-name"></div>
-							<div class="${mode} check-number"></div>
-							<div class="${mode} check-date"></div>
-						`;
-						break;
-					case "2306":
-						paymentModeHtml += `
-							<div class="${mode} actual-gov-one"></div>
-						`;
-						break;
-					case "2307":
-						paymentModeHtml += `
-							<div class="${mode} actual-gov-two"></div>
-						`;
-						break;
-
-					case "QR Payment":
-						paymentModeHtml += `
-							<div class="${mode} payment-type"></div>
-							<div class="${mode} bank-type"></div>
-							<div class="${mode} qr-reference-number"></div>
-
-						`;
-						break;
-
-					case "Charge":
-						paymentModeHtml += `
-							<div class="${mode} customer"></div>
-							<div class="${mode} po-number"></div>
-							<div class="${mode} representative"></div>
-							<div class="${mode} id-number"></div>
-							<div class="${mode} approved-by"></div>
-						`;
-						break;
-					case "Gift Certificate":
-						paymentModeHtml += `
-						   <div class="${mode} gift-code"></div>
-						    <div class="${mode} button-code"></div>
-					   `;
-						break;
-				}
-
-				paymentModeHtml += `
+							break;
+						case "Debit Card":
+							paymentModeHtml += `
+								<div class="${mode} bank-name"></div>
+								<div class="${mode} holder-name"></div>
+								<div class="${mode} card-number"></div>
+								<div class="${mode} expiry-date"></div>
+								<div class="${mode} approval-code"></div>
+								<div class="${mode} reference-number"></div>
+							`;
+							break;
+						case "Credit Card":
+							paymentModeHtml += `
+								<div class="${mode} bank-name"></div>
+								<div class="${mode} holder-name"></div>
+								<div class="${mode} card-number"></div>
+								<div class="${mode} expiry-date"></div>
+								<div class="${mode} approval-code"></div>
+								<div class="${mode} reference-number"></div>
+							`;
+							break;
+						case "PayMaya":
+							paymentModeHtml += `
+								<div class="${mode} mobile-number" style="margin-top:10px;"></div>
+								<div class="${mode} reference-number" style="margin-top:10px;"></div>
+							`;
+							break;
+						case "Cheque":
+							paymentModeHtml += `
+								<div class="${mode} bank-name"></div>
+								<div class="${mode} check-name"></div>
+								<div class="${mode} check-number"></div>
+								<div class="${mode} check-date"></div>
+							`;
+							break;
+						case "2306":
+							paymentModeHtml += `
+								<div class="${mode} actual-gov-one"></div>
+							`;
+							break;
+						case "2307":
+							paymentModeHtml += `
+								<div class="${mode} actual-gov-two"></div>
+							`;
+							break;
+						case "QR Payment":
+							paymentModeHtml += `
+								<div class="${mode} payment-type"></div>
+								<div class="${mode} bank-type"></div>
+								<div class="${mode} qr-reference-number"></div>
+							`;
+							break;
+						case "Charge":
+							paymentModeHtml += `
+								<div class="${mode} customer"></div>
+								<div class="${mode} po-number"></div>
+								<div class="${mode} representative"></div>
+								<div class="${mode} id-number"></div>
+								<div class="${mode} approved-by"></div>
+							`;
+							break;
+						case "Gift Certificate":
+							paymentModeHtml += `
+							   <div class="${mode} gift-code"></div>
+								<div class="${mode} button-code"></div>
+						   `;
+							break;
+					}
+		
+					paymentModeHtml += `
+							</div>
 						</div>
-					</div>
-				`;
-
-				return paymentModeHtml;
-			}).join("")}`
+					`;
+		
+					return paymentModeHtml;
+				}).join("")}
+			</div>`
 		);
+		
+		
 
 		payments.forEach((p) => {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
@@ -1034,48 +1034,47 @@ custom_app.PointOfSale.Payment = class {
 			}
 
 			if (p.mode_of_payment === "2306") {
-				// console.log('Form 2306 Expected: ', doc.custom_2306);
-			
-				
+
+				// console.log(frm)
+
+				let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
 				let check_form_2306 = frappe.ui.form.make_control({
 					df: {
 						label: `Expected 2306 Amount`,
 						fieldtype: "Currency",
 						placeholder: 'Actual 2306',
 						read_only: 1, // Set the field to read-only
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306);
+						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
 					render_input: true,
 				});
-			
-				// Set the latest value of doc.custom_2306 directly
-				let latest_form_2306_value = doc.custom_2306;
-				frappe.model.set_value(p.doctype, p.name, "custom_form_2306", latest_form_2306_value);
-			
 				// Set the existing value and refresh the control
-				check_form_2306.set_value(latest_form_2306_value || '');
+				check_form_2306.set_value(existing_custom_form_2306 || '');
 				check_form_2306.refresh();
+
 			}
-			
 
 			if (p.mode_of_payment === "2307") {
 
-				
+				let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
 				let check_form_2307 = frappe.ui.form.make_control({
 					df: {
 						label: `Expected 2307 Amount`,
 						fieldtype: "Currency",
 						placeholder: 'Actual 2307',
 						read_only: 1, // Set the field to read-only
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307);
+						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
 					render_input: true,
 				});
 				// Set the existing value and refresh the control
-				let latest_form_2307_value = doc.custom_2307;
-				frappe.model.set_value(p.doctype, p.name, "custom_form_2307", latest_form_2307_value);
-
-				check_form_2307.set_value(latest_form_2307_value || '');
+				check_form_2307.set_value(existing_custom_form_2307 || '');
 				check_form_2307.refresh();
 
 			}
