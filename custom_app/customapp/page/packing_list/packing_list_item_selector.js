@@ -110,6 +110,9 @@ custom_app.PointOfSale.ItemSelector = class {
             this.price_list = res.message.selling_price_list;
         }
 
+        this.selected_uom = "PC";
+        this.item_uom && this.item_uom.set_value("PC");
+
         this.get_items({}).then(({ message }) => {
             this.render_item_list(message.items);
         });
@@ -158,7 +161,6 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$items_container.append(item_html);
         });
 
-
         this.highlighted_row_index = 0;
         this.highlight_row(this.highlighted_row_index);
     }
@@ -166,7 +168,8 @@ custom_app.PointOfSale.ItemSelector = class {
 
     get_item_html(item) {
         const me = this;
-    
+        const defaulf_uom = "PC"
+
         const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
@@ -255,7 +258,6 @@ custom_app.PointOfSale.ItemSelector = class {
                 fieldtype: "Link",
                 options: "UOM",
                 placeholder: __("Select UOM"),
-                default: "PC", // Set the default value here
                 onchange: function () {
                     me.selected_uom = this.value;
                     me.filter_items({ uom: me.selected_uom });
@@ -385,30 +387,32 @@ custom_app.PointOfSale.ItemSelector = class {
                 fields: [
                     {
                         fieldtype: "HTML",
-                        label: __("Item Code and Description"),
+                        title: __("Item Details"),
                         options: `
-                            <div class="row mb-4">
-                                <div class="col-lg-6">
-                                    <div class="card w-80 h-80">
-                                        <div class="card-body">
-                                            <p class="text-description">${item_code}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <div class="card w-80 h-80">
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col">
-                                                    <p class="text-description">${description}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div class="row">
+                            <div class="col-lg">
+                                <div class="form-group">
+                                    <label class="control-label">Item Code </label>
+                                    <input class="form-control" readonly data-fieldname="description" type="text" value= "${item_code}"/>
                                 </div>
                             </div>
-                        `,
-                    },
+                        </div>
+                        `
+                    }, 
+                    {
+                        fieldtype: "HTML",
+                        title: __("Item Details"),
+                        options: `
+                        <div class="row">
+                            <div class="col-lg">
+                                <div class="form-group">
+                                    <label class="control-label">Item Description</label>
+                                    <input class="form-control" readonly data-fieldname="description" type="text" value= "${description}"/>
+                                </div>
+                            </div>
+                        </div>
+                        `
+                    }, 
                     {
                         fieldtype: "HTML",
                         label: __("Quantity"),
@@ -417,7 +421,7 @@ custom_app.PointOfSale.ItemSelector = class {
                             <div class="col-lg">
                                 <div class="form-group">
                                     <label class="control-label">${__("Quantity")}</label>
-                                    <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                    <input class="form-control" type="number" id="quantity-field" data-fieldname="quantity" required value="1" />
                                 </div>
                             </div>
                         </div>
@@ -445,6 +449,7 @@ custom_app.PointOfSale.ItemSelector = class {
                         `
                     }
                 ],
+
                 primary_action_label: __("Ok"),
                 primary_action: function() {
                     const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
@@ -463,7 +468,7 @@ custom_app.PointOfSale.ItemSelector = class {
                         return;
                     }
         
-                    me.selectedItem.find(".item-uom").text(selectedUOM);
+                    // me.selectedItem.find(".item-uom").text(selectedUOM);
         
                     const itemCode = unescape(me.selectedItem.attr("data-item-code"));
                     const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
@@ -478,7 +483,15 @@ custom_app.PointOfSale.ItemSelector = class {
                     me.search_field.set_focus();
                 }
             });
-        
+
+            // Set focus on the quantity field when the dialog is shown
+           // Set focus on the quantity field when the dialog is shown
+            dialog.on_page_show = function() {
+                setTimeout(() => {
+                    dialog.wrapper.find('input[data-fieldname="quantity"]').focus();
+                }, 300); // Use a small delay to ensure the element is in the DOM
+            };
+
             dialog.show();
         
             // Set the default UOM and amount fields
@@ -510,11 +523,17 @@ custom_app.PointOfSale.ItemSelector = class {
                     dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
                 }
             });
+
+            dialog.wrapper.find('input[data-fieldname="quantity"]').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key pressed
+                    e.preventDefault();
+                    dialog.primary_action();
+                }
+            });
+
         });
         
        
-
-
         // this.$component.on("click", ".item-wrapper", function () {
 		// 	const $item = $(this);
 		// 	const item_code = unescape($item.attr("data-item-code"));

@@ -383,6 +383,7 @@ custom_app.PointOfSale.Controller = class {
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(false),
 			() => frappe.dom.unfreeze(),
+			() => this.item_selector.refresh(),
 		]);
 	}
 
@@ -525,7 +526,7 @@ custom_app.PointOfSale.Controller = class {
 				item_selected: (args) => {
 					// Fetch the warehouse from POS Profile
 					frappe.call({
-						method: 'custom_app.customapp.page.packing_list.packing_list.get_pos_warehouse',
+						method: 'custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_pos_warehouse',
 						args: {
 							pos_profile: this.pos_profile
 						},

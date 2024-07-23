@@ -1180,7 +1180,7 @@ custom_app.PointOfSale.ItemCart = class {
 						</div>`;
 
 
-			} else if (customer_group === "Senior Citizen") {
+			} else if (customer_group === "Senior Citizen" || customer_group === "PWD") {
 
 				// if (item_data.pricing_rules === "") {
 				// 	console.log('Pricing rule is empty')

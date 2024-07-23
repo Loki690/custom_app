@@ -374,7 +374,7 @@ custom_app.PointOfSale.ItemDetails = class {
 
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
 			const frm = me.events.get_frm();
-			if (frm.doc.customer_group === 'Senior Citizen') {
+			if (frm.doc.customer_group === 'Senior Citizen'|| frm.doc.customer_group === 'PWD' ) {
 				return;
 			} else {
 				if (me.discount_percentage_control && !me.allow_discount_change) {

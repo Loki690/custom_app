@@ -22,37 +22,44 @@ erpnext.PointOfSale.ItemSelector = class {
 	}
 
 	prepare_dom() {
-		const selectedWarehouse = localStorage.getItem('selected_warehouse');
-		this.wrapper.append(
-			`<section class="items-selector">
-				<div class="filter-section">
-				<div class="label">
-				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
-			</div>
-					<div class="item-group-field"></div>
-					<div class="search-field"></div>
-				</div>
-				<div class="table-responsive">
-					<table class="table items-table">
-					    <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
-							<tr>
-								<th>Item Code</th>
-								<th>Name</th>
-								<th>Price</th>
-								<th>UOM</th>
-								<th>QTY</th>
-							</tr>
-						</thead>
-
-						<tbody class="items-container"></tbody>
-					</table>
-				</div>
-			</section>`
-		);
-
-		this.$component = this.wrapper.find(".items-selector");
-		this.$items_container = this.$component.find(".items-container");
-	}
+        const selectedWarehouse = localStorage.getItem('selected_warehouse');
+        this.wrapper.append(
+            `<section class="items-selector" style="margin-top:1.3rem;">
+                <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
+                    <div class="label" style="flex: 1;">
+                        ${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
+                    </div>
+                    <div class="search-field" style="flex: 2;">
+                        <input type="text" placeholder="Search by item code, serial number or barcode" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="item-group-field" style="flex: 1;">
+                        <input type="text" placeholder="Select item group" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="item-uoms" style="flex: 1;">
+                        <input type="text"  value="PC" placeholder="Select UOM" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table items-table">
+                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Name</th>
+                                <th>Vat Type</th>
+                                <th>Price</th>
+                                <th>UOM</th>
+                                <th>QTY</th>
+                            </tr>
+                        </thead>
+                        <tbody class="items-container"></tbody>
+                    </table>
+                </div>
+            </section>`
+        );
+    
+        this.$component = this.wrapper.find(".items-selector");
+        this.$items_container = this.$component.find(".items-container");
+    }
 
 	async load_items_data() {
 		if (!this.item_group) {
@@ -123,49 +130,52 @@ erpnext.PointOfSale.ItemSelector = class {
 
 
 	get_item_html(item) {
-		const me = this;
+        const me = this;
+    
+        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
+        const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
+        let indicator_color;
+        let qty_to_display = actual_qty;
+    
+        if (item.is_stock_item) {
+            indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
+    
+            if (Math.round(qty_to_display) > 999) {
+                qty_to_display = Math.round(qty_to_display) / 1000;
+                qty_to_display = qty_to_display.toFixed(1) + "K";
+            }
+        } else {
+            indicator_color = "";
+            qty_to_display = "";
+        }
+    
+        const item_description = description ? description : "Description not available";
+    
+        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
+        onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
+        onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
+            data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
+            data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
+            data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}">
+            <td class="item-code" style=" width: 15%;">${item_code}</td> 
+            <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-uom" style=" width: 10%;">${uom}</td>
+            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
+        </tr>`;
+    }
 
-		// eslint-disable-next-line no-unused-vars
-		const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number } = item;
-		const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
-		let indicator_color;
-		let qty_to_display = actual_qty;
-
-		if (item.is_stock_item) {
-			indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
-
-			if (Math.round(qty_to_display) > 999) {
-				qty_to_display = Math.round(qty_to_display) / 1000;
-				qty_to_display = qty_to_display.toFixed(1) + "K";
-			}
-		} else {
-			indicator_color = "";
-			qty_to_display = "";
-		}
-
-		return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#f2f2f2';" onmouseout="this.style.backgroundColor='';"
-				data-item-code="${escape(item.item_code)}" data-serial-no="${escape(serial_no)}"
-				data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-				data-rate="${escape(price_list_rate || 0)}">
-				<td class="item-code">${item_code}</td> 
-				<td class="item-name text-break">${frappe.ellipsis(item.item_name, 18)}</td>
-				<td class="item-rate text-break">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-				<td class="item-uom"> ${uom} / count per uom </td>
-				<td class="item-qty"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
-			</tr>`;
-		//<td class="item-description text-break">${description}</td>
-	}
-
-	handle_broken_image($img) {
-		const item_abbr = $($img).attr("alt");
-		$($img).parent().replaceWith(`<div class="item-display abbr">${item_abbr}</div>`);
-	}
-
-	make_search_bar() {
+    handle_broken_image($img) {
+        const item_abbr = $($img).attr("alt");
+        $($img).parent().replaceWith(`<div class="item-display abbr">${item_abbr}</div>`);
+    }
+    make_search_bar() {
 		const me = this;
 		const doc = me.events.get_frm().doc;
 		this.$component.find(".search-field").html("");
 		this.$component.find(".item-group-field").html("");
+        this.$component.find(".item-uoms").html("");
 		//branch field
 		// this.$component.find(".branch-field").html("");
 
@@ -178,6 +188,7 @@ erpnext.PointOfSale.ItemSelector = class {
 			parent: this.$component.find(".search-field"),
 			render_input: true,
 		});
+
 		this.item_group_field = frappe.ui.form.make_control({
 			df: {
 				label: __("Item Group"),
@@ -191,7 +202,7 @@ erpnext.PointOfSale.ItemSelector = class {
 				},
 				get_query: function () {
 					return {
-						query: "erpnext.selling.page.order_list.order_list.item_group_query",
+						query: "custom_app.customapp.page.packing_list.packing_list.item_group_query",
 						filters: {
 							pos_profile: doc ? doc.pos_profile : "",
 						},
@@ -202,27 +213,34 @@ erpnext.PointOfSale.ItemSelector = class {
 			render_input: true,
 		});
 
-		// this.brach_field = frappe.ui.form.make_control({
-		// 	df: {
-		// 		label: _("Branch"),
-		// 		fieldtype: "Link",
-		// 		options: "Warehouse",
-		// 		placeholder: _("Select warehouse"),
-		// 		onchange: function () {
-		// 			me.branch = this.value;
-		// 		},
 
-		// 	},
-		// 	parent: this.$component.find(".branch-field"),
-		// 	render_input: true,
-		// })
+        this.item_uom = frappe.ui.form.make_control({
+            df: {
+                label: __("UOM"),
+                fieldtype: "Link",
+                options: "UOM",
+                placeholder: __("Select UOM"),
+                default: "PC", // Set the default value here
+                onchange: function () {
+                    me.selected_uom = this.value;
+                    me.filter_items({ uom: me.selected_uom });
+                },
+            },
+            parent: this.$component.find(".item-uoms"),
+            render_input: true,
+        });
 
+        // this.item_uom.set_value("PC");
+        this.item_uom.refresh();
+       
+
+        this.item_uom.toggle_label(false);
 		this.search_field.toggle_label(false);
 		this.item_group_field.toggle_label(false);
 
 		this.attach_clear_btn();
 	}
-
+	
 	attach_clear_btn() {
 		this.search_field.$wrapper.find(".control-input").append(
 			`<span class="link-btn" style="top: 2px;">
