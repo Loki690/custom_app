@@ -4691,8 +4691,8 @@
 				<div class="item-qty-total-value">0.00</div>
 			</div>
 			<div class="vatable-sales-container mt-2"></div>
-			<div class="vat-exempt-container"></div>
-			<div class="zero-rated-container"></div>
+			<div class="vat-exempt-container mt-2"></div>
+			<div class="zero-rated-container mt-2"></div>
 			
 			
 			<div class="ex-total-container"></div>
@@ -5303,17 +5303,22 @@
     render_vatable_sales(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".vatable-sales-container").html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VATable Sales")}: </span>
-					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("VATable Sales")}: 
+					</span>
+					<span style="flex-shrink: 0;  ">${format_currency(value, currency)}</span>
+					</span>
 				</div>
 			`);
     }
     render_vat_exempt_sales(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".vat-exempt-container").html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("VAT-Exempt Sales")}: 
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -5321,8 +5326,10 @@
     render_zero_rated_sales(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".zero-rated-container").html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("Zero Rated Sales")}: 
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -5330,8 +5337,10 @@
     render_vat(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".vat-container").html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VAT 12%")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("VAT 12%")}:
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -5339,8 +5348,10 @@
     render_total_vat(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".total-vat-container").html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Total VAT")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("Total VAT")}: 
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -5348,8 +5359,10 @@
     render_ex_total(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".ex-total-container").html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Ex Total")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("Ex Total")}: 
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -5436,6 +5449,7 @@
       this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
+      console.log(item_data);
       const currency = this.events.get_frm().doc.currency;
       const me = this;
       const customer_group = me.events.get_frm().doc.customer_group;
@@ -5456,9 +5470,9 @@
 			</div>
 			
 			<div class="item-vat mx-3">
-				<strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
+				<strong>${getVatType(item_data)}</strong>
 			</div> 
-			
+
 			<div class="item-vat mx-3">
 				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
@@ -5483,6 +5497,17 @@
         me.$cart_header.find(".rate-amount-header").css("width", max_width);
         me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
       }
+      function getVatType(item_data2) {
+        if (item_data2.custom_vat_exempt_amount && item_data2.custom_vat_exempt_amount != 0) {
+          return "VAT-Exempt";
+        } else if (item_data2.custom_vatable_amount && item_data2.custom_vatable_amount != 0) {
+          return "VATable";
+        } else if (item_data2.custom_zero_rated_amount && item_data2.custom_zero_rated_amount != 0) {
+          return "Zero Rated";
+        } else {
+          return "Unknown";
+        }
+      }
       function get_rate_discount_html(customer_group2) {
         if (customer_group2 === "Zero Rated") {
           return `
@@ -5495,13 +5520,15 @@
 						</div>`;
         } else if (customer_group2 === "Senior Citizen" || customer_group2 === "PWD") {
           return `
-						<div class="item-qty-rate">
-							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-							<div class="item-rate-amount">
-								<div class="item-rate">${format_currency(item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount, currency)}</div>
-								
-							</div>
-						</div>`;
+					<div class="item-qty-rate">
+						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+						<div class="item-rate-amount">
+							<div class="item-rate">${format_currency(
+            item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.amount : item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount,
+            currency
+          )}</div>
+						</div>
+					</div>`;
         } else {
           if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
             return `
@@ -6200,7 +6227,7 @@
       }
       if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
         const frm = me.events.get_frm();
-        if (frm.doc.customer_group === "Senior Citizen") {
+        if (frm.doc.customer_group === "Senior Citizen" || frm.doc.customer_group === "PWD") {
           return;
         } else {
           if (me.discount_percentage_control && !me.allow_discount_change) {
@@ -7668,6 +7695,11 @@
       this.$invoice_count = this.$component.find(".invoice-count");
     }
     bind_events() {
+      const me = this;
+      this.make_filter_section();
+      setTimeout(() => {
+        this.search_field.set_focus();
+      }, 300);
       this.search_field.$input.on("input", (e) => {
         clearTimeout(this.last_search);
         this.last_search = setTimeout(() => {
@@ -7675,7 +7707,6 @@
           this.refresh_list(search_term, this.status_field.get_value());
         }, 300);
       });
-      const me = this;
       this.$invoices_container.on("click", ".invoice-wrapper", function() {
         const invoice_name = unescape($(this).attr("data-invoice-name"));
         me.events.open_invoice_data(invoice_name);
@@ -7702,45 +7733,49 @@
       frappe.ui.keys.add_shortcut({
         shortcut: "ctrl+i",
         action: () => {
-          const $items = me.$invoices_container.find(".invoice-wrapper");
-          if ($items.length) {
-            $items.first().focus();
-          }
+          this.focus_search_invoice();
         },
-        condition: () => me.$invoices_container.is(":visible"),
-        description: __("Activate Cart Item Focus"),
+        condition: () => true,
+        description: __("Focus on Search Field"),
         ignore_inputs: true,
         page: cur_page.page.page
       });
     }
+    focus_search_invoice() {
+      this.search_field.set_focus();
+    }
     make_filter_section() {
       const me = this;
-      this.search_field = frappe.ui.form.make_control({
-        df: {
-          label: __("Search"),
-          fieldtype: "Data",
-          placeholder: __("Search by invoice id or customer name")
-        },
-        parent: this.$component.find(".search-field"),
-        render_input: true
-      });
-      this.status_field = frappe.ui.form.make_control({
-        df: {
-          label: __("Invoice Status"),
-          fieldtype: "Select",
-          options: `Draft`,
-          placeholder: __("Filter by invoice status"),
-          onchange: function() {
-            if (me.$component.is(":visible"))
-              me.refresh_list();
-          }
-        },
-        parent: this.$component.find(".status-field"),
-        render_input: true
-      });
-      this.search_field.toggle_label(false);
-      this.status_field.toggle_label(false);
-      this.status_field.set_value("Draft");
+      if (!this.search_field) {
+        this.search_field = frappe.ui.form.make_control({
+          df: {
+            label: __("Search"),
+            fieldtype: "Data",
+            placeholder: __("Search by invoice id or customer name")
+          },
+          parent: this.$component.find(".search-field"),
+          render_input: true
+        });
+        this.search_field.toggle_label(false);
+      }
+      if (!this.status_field) {
+        this.status_field = frappe.ui.form.make_control({
+          df: {
+            label: __("Invoice Status"),
+            fieldtype: "Select",
+            options: `Draft`,
+            placeholder: __("Filter by invoice status"),
+            onchange: function() {
+              if (me.$component.is(":visible"))
+                me.refresh_list();
+            }
+          },
+          parent: this.$component.find(".status-field"),
+          render_input: true
+        });
+        this.status_field.toggle_label(false);
+        this.status_field.set_value("Draft");
+      }
     }
     refresh_list() {
       frappe.dom.freeze();
@@ -8311,7 +8346,6 @@
     }
     prepare_menu() {
       this.page.clear_menu();
-      this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
       this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
       this.page.add_menu_item(
         __("Pending Transaction (F2)"),
@@ -9137,4 +9171,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.QARDLLJI.js.map
+//# sourceMappingURL=packing-list.bundle.REFEQCK6.js.map

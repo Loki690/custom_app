@@ -122,8 +122,6 @@ custom_app.PointOfSale.Controller = class {
 
 	prepare_menu() {
 		this.page.clear_menu();
-
-		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),

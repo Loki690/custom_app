@@ -1058,12 +1058,14 @@
       this.$component.append(
         `<div class="cart-container">
 				<div class="abs-cart-container">
-					<div class="cart-label">${__("Item Cart")}</div>
+					<div class="cart-label" >${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
-				        <div class="qty-header">${__("Vat Type")}</div>
-						<div class="qty-header">${__("Disc %")}</div>
+						<div class="qty-header">${__("Vat Type")}</div>
+						<div class="qty-header">${__("Price")}</div>
+						<div class="qty-header" >${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
+						
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
 					<div class="cart-items-section"></div>
@@ -1835,6 +1837,7 @@
     render_cart_item(item_data, $item_to_update) {
       const currency = this.events.get_frm().doc.currency;
       const me = this;
+      const customer_group = me.events.get_frm().doc.customer_group;
       if (!$item_to_update.length) {
         this.$cart_items_wrapper.append(
           `<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
@@ -1850,13 +1853,18 @@
 				</div>
 				${get_description_html()}
 			</div>
+			
 			<div class="item-vat mx-3">
-				<strong>${item_data.custom_is_item_vatable === 0 ? "VAT-Exempt" : "VATable"}</strong>
+				<strong>${getVatType(item_data)}</strong>
+			</div> 
+			
+			<div class="item-vat mx-3">
+				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
-			${get_rate_discount_html()}`
+			${get_rate_discount_html(customer_group)}`
       );
       set_dynamic_rate_header_width();
       function set_dynamic_rate_header_width() {
@@ -1874,24 +1882,56 @@
         me.$cart_header.find(".rate-amount-header").css("width", max_width);
         me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
       }
-      function get_rate_discount_html() {
-        if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+      function getVatType(item_data2) {
+        if (item_data2.custom_vat_exempt_amount && item_data2.custom_vat_exempt_amount != 0) {
+          return "VAT-Exempt";
+        } else if (item_data2.custom_vatable_amount && item_data2.custom_vatable_amount != 0) {
+          return "VATable";
+        } else if (item_data2.custom_zero_rated_amount && item_data2.custom_zero_rated_amount != 0) {
+          return "Zero Rated";
+        } else {
+          return "Unknown";
+        }
+      }
+      function get_rate_discount_html(customer_group2) {
+        if (customer_group2 === "Zero Rated") {
+          return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
+								
+							</div>
+						</div>`;
+        } else if (customer_group2 === "Senior Citizen" || customer_group2 === "PWD") {
           return `
 					<div class="item-qty-rate">
 						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
-							<div class="item-amount">${format_currency(item_data.rate, currency)}</div>
+							<div class="item-rate">${format_currency(
+            item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.amount : item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount,
+            currency
+          )}</div>
 						</div>
 					</div>`;
         } else {
-          return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+          if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+            return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
+							</div>
+						</div>`;
+          } else {
+            return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
+							</div>
+						</div>`;
+          }
         }
       }
       function get_description_html() {
@@ -5592,4 +5632,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.GTC4PJXH.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.4I2G2SZ7.js.map
