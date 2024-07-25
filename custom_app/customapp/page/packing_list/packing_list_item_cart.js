@@ -208,6 +208,7 @@ custom_app.PointOfSale.ItemCart = class {
 				["", "", "", "col-span-2 remove-btn"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
+				["", "", "", "col-span-2"],
 				// ["", "", "", "col-span-2 remove-btn"],
 			],
 			fieldnames_map: { Quantity: "qty", Discount: "discount_percentage" },
@@ -461,8 +462,6 @@ custom_app.PointOfSale.ItemCart = class {
 						this.$numpad_section.find(`.numpad-btn[data-button-value="${fieldname}"]`).click();
 					}
 				});
-
-
 			}
 		}
 		const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
@@ -649,7 +648,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (customer) {
 			return new Promise((resolve) => {
 				frappe.db
-					.get_value("Customer", customer, ["email_id", "mobile_no", 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program",
+					.get_value("Customer", customer, ["email_id", "mobile_no", "image", "loyalty_program",
 						"custom_osca_id", "custom_pwd_id"])
 					.then(({ message }) => {
 						const { loyalty_program } = message;
@@ -1133,10 +1132,10 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			<!-- <div class="item-vat mx-3">
+			<div class="item-vat mx-3">
 				<strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
-			</div> -->
-			
+			</div>
+
 			<div class="item-vat mx-3">
 				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
@@ -1179,7 +1178,7 @@ custom_app.PointOfSale.ItemCart = class {
 						</div>`;
 
 
-			} else if (customer_group === "Senior Citizen") {
+			} else if (customer_group === "Senior Citizen" || customer_group === "PWD Customers") {
 
 				// if (item_data.pricing_rules === "") {
 				// 	console.log('Pricing rule is empty')
@@ -1490,8 +1489,6 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="customer-fields-container">
 					<div class="email_id-field"></div>
 					<div class="mobile_no-field"></div>
-					<div class="custom_transaction_type-field"></div>
-					<div class="custom_oscapwdid-field"></div>
 					<div class="custom_osca_id-field"></div>
 					<div class="custom_pwd_id-field"></div>
 					<div class="loyalty_program-field"></div>
@@ -1533,19 +1530,6 @@ custom_app.PointOfSale.ItemCart = class {
 				fieldtype: "Data",
 				placeholder: __("Enter customer's phone number"),
 			},
-			// {
-			// 	fieldname: "custom_transaction_type",
-			// 	label: __("Transaction Type"),
-			// 	fieldtype: "Select",
-			// 	options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
-			// 	placeholder: __("Enter customer's transaction type"),
-			// },
-			// {
-			// 	fieldname: "custom_oscapwdid",
-			// 	label: __("Osca or PWD ID"),
-			// 	fieldtype: "Data",
-			// 	placeholder: __("Enter customer's Osca or PWD ID"),
-			// },
 			{
 				fieldname: "loyalty_program",
 				label: __("Loyalty Program"),

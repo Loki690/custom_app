@@ -447,6 +447,71 @@ custom_app.PointOfSale.Controller = class {
 			});
 	}
 
+
+	save_draft() {
+		if (!this.$components_wrapper.is(":visible")) return;
+
+		if (this.frm.doc.items.length == 0) {
+			frappe.show_alert({
+				message: __("You must add atleast one item to complete the order."),
+				indicator: "red",
+			});
+			frappe.utils.play_sound("error");
+			return;
+		}
+
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __('Enter Your Password'),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
+				}
+			],
+			primary_action_label: __('Ok'),
+			primary_action: (values) => {
+				let password = values.password;
+				frappe.call({
+					method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
+					args: { password: password },
+					callback: (r) => {
+						if (r.message.name) {
+							this.set_pharmacist_assist(this.frm, r.message.name)
+							this.frm
+								.save(undefined, undefined, undefined, () => {
+									frappe.show_alert({
+										message: __("There was an error saving the document."),
+										indicator: "red",
+									});
+									frappe.utils.play_sound("error");
+								})
+								.then(() => {
+									frappe.run_serially([
+										() => frappe.dom.freeze(),
+										() => this.make_new_invoice(),
+										() => frappe.dom.unfreeze(),
+
+									]);
+									
+									passwordDialog.hide();
+									localStorage.removeItem('posCartItems'); // remove stored data from local storage
+								});
+
+						} else {
+							frappe.show_alert({
+								message: `${r.message.error}`,
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		})
+		passwordDialog.show();
+	}
+
 	close_pos() {
 
 		const me = this;

@@ -13,7 +13,7 @@ from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, ge
 from erpnext.stock.utils import scan_barcode
 from frappe.utils.password import get_decrypted_password
 from frappe.exceptions import AuthenticationError
-from custom_app.customapp.utils.password import check_oic_password, check_password
+from custom_app.customapp.utils.password import check_oic_password, check_password, check_password_without_username
 
 import platform
 
@@ -166,7 +166,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.name AS item_code,
             item.item_name,
             item.description,
-			item.custom_is_vatable,
+            item.custom_is_vatable,
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
@@ -204,7 +204,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         as_dict=1,
     )
 
-    # return (empty) list if there are no results
+    # Return an empty list if there are no results
     if not items_data:
         return result
 
@@ -212,6 +212,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         uoms = frappe.get_doc("Item", item.item_code).get("uoms", [])
 
         item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
+        #item.actual_qty = get_draft_pos_invoice_item_quantity(pos_profile, item.item_code, item.actual_qty)
         item.uom = item.stock_uom
 
         item_price = frappe.get_all(
@@ -362,7 +363,7 @@ def serial_number():
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, current_user, limit=100):
+def get_past_order_list(search_term, status, pos_profile, limit=1000):
 	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
@@ -371,8 +372,7 @@ def get_past_order_list(search_term, status, pos_profile, current_user, limit=10
 			"POS Invoice",
 			filters={"customer": ["like", f"%{search_term}%"], 
             'pos_profile': pos_profile, 
-            "status": status, 
-            'custom_pharmacist_assistant': current_user},
+            "status": status},
 			fields=fields,
 			order_by="posting_time asc", 
 			page_length=limit,
@@ -381,8 +381,7 @@ def get_past_order_list(search_term, status, pos_profile, current_user, limit=10
 			"POS Invoice",
 			filters={"name": ["like", f"%{search_term}%"], 
             'pos_profile': pos_profile, 
-            "status": status, 
-            'custom_pharmacist_assistant': current_user},
+            "status": status},
 			fields=fields,
 			page_length=limit,
 		)
@@ -391,8 +390,7 @@ def get_past_order_list(search_term, status, pos_profile, current_user, limit=10
 	elif status:
 		invoice_list = frappe.db.get_all(
 			"POS Invoice", filters={"status": status, 
-                           'pos_profile': pos_profile, 
-                           'custom_pharmacist_assistant': current_user 
+                           'pos_profile': pos_profile
                            }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
 		
@@ -539,6 +537,13 @@ def confirm_user_acc_password(password):
         return False
     
 @frappe.whitelist()
+def get_user_details_by_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_password_without_username(password)
+    
+@frappe.whitelist()
 def get_pharmacist_user():
     user = frappe.session.user
     return user
@@ -547,4 +552,99 @@ def get_pharmacist_user():
 def get_pos_warehouse(pos_profile):
     warehouse = frappe.db.get_value("POS Profile", pos_profile, "warehouse")
     return warehouse
+
+
+@frappe.whitelist()
+def get_item_qty_per_warehouse(warehouse, item_code):
+    """
+    Get the item quantity of the specified warehouse.
+    """
+   
+    bin_qty = frappe.db.sql(
+		"""select actual_qty from `tabBin`
+		where item_code = %s and warehouse = %s
+		limit 1""",
+		(item_code, warehouse),
+		as_dict=1,
+	)
+    return bin_qty[0].actual_qty or 0 if bin_qty else 0
+       
+@frappe.whitelist()
+def get_draft_pos_invoice_items(pos_profile, item_code):
+    """
+    Retrieves all draft POS invoices for the specified POS profile that contain the specified item code.
     
+    :param pos_profile: The POS profile to filter by.
+    :param item_code: The item code to search for in the draft POS invoices.
+    :return: A list of draft POS invoices that contain the specified item code and the total quantity of the item.
+    """
+    try:
+        # Fetch all draft POS invoices for the specified POS profile
+        draft_invoices = frappe.get_all('POS Invoice', filters={
+            'docstatus': 0,
+            'pos_profile': pos_profile
+        }, fields=['name', 'customer', 'grand_total'])
+
+        # Initialize a list to store invoices containing the item code
+        matching_invoices = []
+
+        # Initialize total quantity
+        total_qty = 0
+
+        # Iterate through the draft invoices to find matching items
+        for invoice in draft_invoices:
+            invoice_items = frappe.get_all('POS Invoice Item', filters={
+                'parent': invoice.name,
+                'item_code': item_code
+            }, fields=['item_code', 'item_name', 'qty', 'rate'])
+
+            if invoice_items:
+                invoice['items'] = invoice_items
+                matching_invoices.append(invoice)
+
+                # Sum the quantity of the item in this invoice
+                for item in invoice_items:
+                    total_qty += item.qty
+
+        return {
+            'invoices': matching_invoices,
+            'total_qty': total_qty
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), _("Error fetching draft POS invoices"))
+        frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
+
+
+def get_draft_pos_invoice_item_quantity(pos_profile, item_code, actual_qty):
+    """
+    Retrieves the total quantity of the specified item code in draft POS invoices for the given POS profile.
+
+    :param pos_profile: The POS profile to filter by.
+    :param item_code: The item code to search for in the draft POS invoices.
+    :return: The adjusted available quantity of the item (integer).
+    """
+    try:
+        total_qty = 0
+
+        # Fetch all draft POS invoices for the specified POS profile
+        draft_invoices = frappe.get_all('POS Invoice', filters={
+            'docstatus': 0,
+            'pos_profile': pos_profile
+        }, fields=['name'])
+
+        # Iterate through the draft invoices and accumulate total quantity
+        for invoice in draft_invoices:
+            invoice_items = frappe.get_all('POS Invoice Item', filters={
+                'parent': invoice.name,
+                'item_code': item_code
+            }, fields=['qty'])
+
+            for item in invoice_items:
+                total_qty += item.qty
+
+        return actual_qty - total_qty
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), _("Error fetching draft POS invoices"))
+        frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
