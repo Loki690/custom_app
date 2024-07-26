@@ -39,7 +39,6 @@ custom_app.PointOfSale.ItemDetails = class {
 					<div class="item-desc"></div>
 					<div class="item-price"></div>
 				</div>
-				<div class="item-image"></div>
 			</div>
 			<div class="discount-section"></div>
 			<div class="form-container"></div>
@@ -131,17 +130,6 @@ custom_app.PointOfSale.ItemDetails = class {
 		this.$item_name.html(item_name);
 		this.$item_description.html(get_description_html());
 		this.$item_price.html(format_currency(price_list_rate, this.currency));
-		if (!this.hide_images && image) {
-			this.$item_image.html(
-				`<img
-					onerror="cur_pos.item_details.handle_broken_image(this)"
-					class="h-full" src="${image}"
-					alt="${frappe.get_abbr(item_name)}"
-					style="object-fit: cover;">`
-			);
-		} else {
-			this.$item_image.html(`<div class="item-abbr">${frappe.get_abbr(item_name)}</div>`);
-		}
 	}
 
 	handle_broken_image($img) {
