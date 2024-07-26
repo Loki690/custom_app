@@ -241,13 +241,20 @@ doc_events = {
    'POS Z Reading': {
         'on_submit': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.on_submit'
     },
-   'POS Opening Entry' : {
-       "validate":"custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.pos_opening_validation",
-   },
+#    'POS Opening Entry' : {
+#        "validate":"custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.pos_opening_validation",
+#    },
    'Amesco Gift Certificate':{
        "before_insert": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.before_save",
    }
 }
+
+# scheduler_events = {
+#     "hourly": [
+#         "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.delete_draft_pos_invoices",
+#     ],
+# }
+
 
 jenv = {
     'methods': [

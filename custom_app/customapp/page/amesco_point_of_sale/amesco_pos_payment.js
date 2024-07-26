@@ -1223,9 +1223,6 @@ custom_app.PointOfSale.Payment = class {
 				custom_approved_by.refresh();
 			}
 
-
-
-
 			this[`${mode}_control`].toggle_label(false);
 			this[`${mode}_control`].set_value(p.amount);
 

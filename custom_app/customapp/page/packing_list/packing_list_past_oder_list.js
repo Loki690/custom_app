@@ -16,7 +16,7 @@ custom_app.PointOfSale.PastOrderList = class {
 		this.wrapper.append(
 			`<section class="past-order-list">
 				<div class="filter-section">
-					<div class="label">${__("Recent Orders")} <span class="invoice-count ml-3 badge rounded-pill bg-danger text-white"></span> </div>
+					<div class="label">${__("Pending Orders")} <span class="invoice-count ml-3 badge rounded-pill bg-danger text-white"></span> </div>
 					<div class="search-field"></div>
 					<div class="status-field"></div>
 				</div>
@@ -133,14 +133,14 @@ custom_app.PointOfSale.PastOrderList = class {
 		// added pos profile variable for filter
 		const pos_profile = this.events.pos_profile();
 
-		const current_user = frappe.session.user;
+		// const current_user = frappe.session.user;
 
 		this.$invoices_container.html("");
 
 		return frappe.call({
 			method: "custom_app.customapp.page.packing_list.packing_list.get_past_order_list",
 			freeze: true,
-			args: { search_term, status, pos_profile, current_user}, // added pos_profile for filtering
+			args: { search_term, status, pos_profile}, // added pos_profile for filtering
 			callback: (response) => {
 				// console.log(response.message);
 				frappe.dom.unfreeze();

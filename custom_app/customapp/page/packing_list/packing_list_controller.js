@@ -9,17 +9,17 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	init_pos_profile() {
-        const savedPosProfile = localStorage.getItem('pos_profile');
-        const selectedWarehouse = localStorage.getItem('selected_warehouse');
-        if (savedPosProfile) {
-            this.prepare_app_defaults({ pos_profile: savedPosProfile, warehouse: selectedWarehouse });
-        } else {
-            this.select_pos_profile();
-        }
-    }
+		const savedPosProfile = localStorage.getItem('pos_profile');
+		const selectedWarehouse = localStorage.getItem('selected_warehouse');
+		if (savedPosProfile) {
+			this.prepare_app_defaults({ pos_profile: savedPosProfile, warehouse: selectedWarehouse });
+		} else {
+			this.select_pos_profile();
+		}
+	}
 
-	
-	
+
+
 	select_pos_profile() {
 		const me = this;
 		const dialog = new frappe.ui.Dialog({
@@ -41,7 +41,7 @@ custom_app.PointOfSale.Controller = class {
 				localStorage.setItem('pos_profile', pos_profile);
 				me.prepare_app_defaults({ pos_profile });
 				dialog.hide();
-	
+
 				// Reload the page after selecting the POS profile
 				location.reload();
 			},
@@ -51,7 +51,7 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 
-	
+
 
 
 	async prepare_app_defaults(data) {
@@ -90,7 +90,7 @@ custom_app.PointOfSale.Controller = class {
 	make_app() {
 		this.prepare_dom();
 		this.prepare_components();
-		this.prepare_menu(); 
+		this.prepare_menu();
 		this.add_buttons_to_toolbar();
 		this.make_new_invoice();
 		// this.setup_shortcuts();
@@ -138,22 +138,22 @@ custom_app.PointOfSale.Controller = class {
 
 	add_buttons_to_toolbar() {
 		const buttons = [
-			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
-			{label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2"},
-			{label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3"},
-			{label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4"},
-			{label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5"},
+			{ label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
+			{ label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2" },
+			{ label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3" },
+			{ label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4" },
+			{ label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5" },
 		];
-	
+
 		// Clear existing buttons to avoid duplication
 		$('.page-actions .btn-custom').remove();
-	
+
 		buttons.forEach(btn => {
-			this.page.add_button(btn.label, btn.action, {shortcut: btn.shortcut}).addClass('btn-custom');
+			this.page.add_button(btn.label, btn.action, { shortcut: btn.shortcut }).addClass('btn-custom');
 		});
 	}
 
-	
+
 	add_new_order() {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
@@ -163,11 +163,11 @@ custom_app.PointOfSale.Controller = class {
 			() => this.item_selector.toggle_component(true),
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(false),
-			() => window.location.reload(), 
+			() => window.location.reload(),
 			() => frappe.dom.unfreeze(),
 		]);
 	}
-	
+
 	order_list() {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
@@ -179,7 +179,7 @@ custom_app.PointOfSale.Controller = class {
 			() => this.toggle_recent_order_list(true),
 			// () => this.cart.load_invoice(),
 			() => frappe.dom.unfreeze(),
-			
+
 		]);
 	}
 
@@ -190,10 +190,10 @@ custom_app.PointOfSale.Controller = class {
 	// 	this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
 	// 	// Add a button for "Toggle Recent Orders"
 	// 	this.page.add_button(__("Toggle Pending Transaction (F6)"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary", "Ctrl+O");
-	
+
 	// 	// Add a button for "Complete Order"
 	// 	//this.page.add_button(__("Complete Order"), this.save_draft_invoice.bind(this), "octicon octicon-check", "btn-primary");
-	
+
 	// 	// Add a button for "Branch Item Lookup"
 	// 	this.page.add_button(__("Branch Item Lookup"), () => {
 	// 		this.show_branch_selection_dialog()
@@ -208,7 +208,7 @@ custom_app.PointOfSale.Controller = class {
 	// 		description: __('Toggle Recent Orders'),
 	// 		page: this.page
 	// 	});
-	
+
 	// 	// Add shortcut for "Complete Order" - F2
 	// 	frappe.ui.keys.add_shortcut({
 	// 		shortcut: 'f2',
@@ -216,7 +216,7 @@ custom_app.PointOfSale.Controller = class {
 	// 		description: __('Complete Order'),
 	// 		page: this.page
 	// 	});
-	
+
 	// 	// Add shortcut for "Branch Item Lookup" - F3
 	// 	frappe.ui.keys.add_shortcut({
 	// 		shortcut: 'f3',
@@ -232,47 +232,47 @@ custom_app.PointOfSale.Controller = class {
 
 	show_branch_selection_dialog() {
 		const selectedWarehouse = localStorage.getItem('selected_warehouse') || '';
-        const dialog = new frappe.ui.Dialog({
-            title: __("Select Branch"),
-            fields: [
-                {
-                    fieldtype: "Link",
-                    label: __("Warehouse"),
-                    options: "Warehouse",
-                    fieldname: "warehouse",
-					default: selectedWarehouse, 
-                    reqd: 1,
-                    get_query: () => ({
-                        query: "custom_app.customapp.page.packing_list.packing_list.warehouse_query",
-                        filters: { company: frappe.defaults.get_default("company") }
-                    })
-                }
-            ],
-            primary_action: function(data) {
-                // console.log("Selected Warehouse:", data.warehouse);
-                // Save the selected warehouse to local storage
-                localStorage.setItem('selected_warehouse', data.warehouse);
-                // Refresh the POS with the selected warehouse
-                location.reload();
-                dialog.hide();
-            },
-            primary_action_label: __("View"),
+		const dialog = new frappe.ui.Dialog({
+			title: __("Select Branch"),
+			fields: [
+				{
+					fieldtype: "Link",
+					label: __("Warehouse"),
+					options: "Warehouse",
+					fieldname: "warehouse",
+					default: selectedWarehouse,
+					reqd: 1,
+					get_query: () => ({
+						query: "custom_app.customapp.page.packing_list.packing_list.warehouse_query",
+						filters: { company: frappe.defaults.get_default("company") }
+					})
+				}
+			],
+			primary_action: function (data) {
+				// console.log("Selected Warehouse:", data.warehouse);
+				// Save the selected warehouse to local storage
+				localStorage.setItem('selected_warehouse', data.warehouse);
+				// Refresh the POS with the selected warehouse
+				location.reload();
+				dialog.hide();
+			},
+			primary_action_label: __("View"),
 			secondary_action_label: __("Clear"), // Adding a clear button
-			secondary_action: function() {
+			secondary_action: function () {
 				// Clear the selected warehouse from local storage
 				localStorage.removeItem('selected_warehouse');
 				// Refresh the POS to reflect the change
 				location.reload();
 				dialog.hide();
 			}
-        });
+		});
 
-        dialog.show();
-    }
+		dialog.show();
+	}
 
 
 
-	prepare_profile_selection() {	
+	prepare_profile_selection() {
 		const me = this;
 
 		// Create a select field for Warehouses
@@ -288,7 +288,7 @@ custom_app.PointOfSale.Controller = class {
 				}
 			}
 		});
-	
+
 		// Fetch Warehouses and populate the select options
 		frappe.call({
 			method: "custom_app.customapp.page.packing_list.packing_list.warehouse_query",
@@ -334,7 +334,7 @@ custom_app.PointOfSale.Controller = class {
 		this.toggle_recent_order_list(show);
 	}
 
-	 save_draft_invoice() {
+	save_draft_invoice() {
 		if (!this.$components_wrapper.is(":visible")) return;
 
 		if (this.frm.doc.items.length == 0) {
@@ -360,11 +360,11 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				frappe.call({
-					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
+					method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
-							// this.set_pharmacist_assist(this.frm) // sets phracist assistant
+							this.set_pharmacist_assist(this.frm, r.message.name)
 							this.frm
 								.save(undefined, undefined, undefined, () => {
 									frappe.show_alert({
@@ -381,7 +381,7 @@ custom_app.PointOfSale.Controller = class {
 
 									]);
 									passwordDialog.hide();
-					
+
 									this.order_summary.load_summary_of(this.frm.doc, true);
 									this.order_summary.print_receipt();
 									window.location.reload(); // reload after successfull entered password
@@ -432,11 +432,11 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				frappe.call({
-					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_acc_password",
+					method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
 					args: { password: password },
 					callback: (r) => {
-						if (r.message) {
-							// this.set_pharmacist_assist(this.frm) // sets phracist assistant
+						if (r.message.name) {
+							this.set_pharmacist_assist(this.frm, r.message.name)
 							this.frm
 								.save(undefined, undefined, undefined, () => {
 									frappe.show_alert({
@@ -452,13 +452,14 @@ custom_app.PointOfSale.Controller = class {
 										() => frappe.dom.unfreeze(),
 
 									]);
+
 									passwordDialog.hide();
 									localStorage.removeItem('posCartItems'); // remove stored data from local storage
 								});
 
 						} else {
 							frappe.show_alert({
-								message: __('Incorrect password'),
+								message: `${r.message.error}`,
 								indicator: 'red'
 							});
 						}
@@ -469,20 +470,9 @@ custom_app.PointOfSale.Controller = class {
 		passwordDialog.show();
 	}
 
-	set_pharmacist_assist(frm) {
-		// console.log(frm.doc)
-		frappe.call({
-			method: "custom_app.customapp.page.packing_list.packing_list.get_pharmacist_user", // Adjust path as needed
-			callback: (response) => {
-				if (response.message) {
-					const pharmacistUser = response.message;
-					// Now you have the pharmacist user's ID in 'pharmacistUser'
-					frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_pharmacist_assistant", pharmacistUser);
-				} else {
-					frappe.throw(__("Error fetching pharmacist user"));
-				}
-			}
-		});
+	set_pharmacist_assist(frm, user) {
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_pharmacist_assistant", user);
+		frm.refresh_field('custom_pharmacist_assistant');
 	}
 
 	close_pos() {
@@ -519,7 +509,7 @@ custom_app.PointOfSale.Controller = class {
 
 								if (posWarehouse === selectedWarehouse || selectedWarehouse === null) {
 									this.on_cart_update(args); // Proceed if warehouses match
-								}else {
+								} else {
 									frappe.show_alert({
 										message: __("You cannot add items from a different branch."),
 										indicator: "red",
@@ -528,7 +518,7 @@ custom_app.PointOfSale.Controller = class {
 									return;
 								}
 							} else {
-								
+
 								frappe.show_alert({
 									message: __("Could not retrieve the warehouse for the POS Profile."),
 									indicator: "red",
@@ -540,10 +530,13 @@ custom_app.PointOfSale.Controller = class {
 					});
 				},
 				get_frm: () => this.frm || {},
+				get_pos_profile: () => {
+					return this.pos_profile
+				}
 			},
 		});
 	}
-	
+
 	init_item_cart() {
 		this.cart = new custom_app.PointOfSale.ItemCart({
 			wrapper: this.$components_wrapper,
@@ -755,7 +748,7 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				let role = "oic";
-	
+
 				frappe.call({
 					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
 					args: { password: password, role: role },
@@ -779,11 +772,11 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
-	
+
 		passwordDialog.show();
-		this.toggle_component(true); //Toggle True so order summary stays while authentication modal is activated
+		this.toggle_components(true); //Toggle True so order summary stays while authentication modal is activated
 	}
-	
+
 
 
 
@@ -879,7 +872,7 @@ custom_app.PointOfSale.Controller = class {
 
 	set_pos_profile_status() {
 		this.page.set_indicator(this.pos_profile, "blue");
-		
+
 	}
 
 	async on_cart_update(args) {
@@ -919,7 +912,7 @@ custom_app.PointOfSale.Controller = class {
 					await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
 					new_item["serial_no"] = serial_no;
 				}
-				
+
 				if (field === "serial_no") new_item["qty"] = value.split(`\n`).length || 0;
 
 				item_row = this.frm.add_child("items", new_item);
@@ -1052,20 +1045,20 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	async check_serial_no_availablilty(item_code, warehouse, serial_no) {
-        const method = "erpnext.stock.doctype.serial_no.serial_no.get_pos_reserved_serial_nos";
-        const args = { filters: { item_code, warehouse } };
-        const res = await frappe.call({ method, args });
+		const method = "erpnext.stock.doctype.serial_no.serial_no.get_pos_reserved_serial_nos";
+		const args = { filters: { item_code, warehouse } };
+		const res = await frappe.call({ method, args });
 
-        if (res.message.includes(serial_no)) {
-            frappe.throw({
-                title: ("Not Available"),
-                message: ("Serial No: {0} has already been transacted into another POS Invoice.", [
-                    serial_no.bold(),
-                ]),
-            });
-        }
-    }
-	
+		if (res.message.includes(serial_no)) {
+			frappe.throw({
+				title: ("Not Available"),
+				message: ("Serial No: {0} has already been transacted into another POS Invoice.", [
+					serial_no.bold(),
+				]),
+			});
+		}
+	}
+
 	get_available_stock(item_code, warehouse) {
 		const me = this;
 		return frappe.call({
@@ -1162,6 +1155,63 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
+		passwordDialog.show();
+	}
+
+
+
+	remove_item_from_cart() {
+
+		//Authenticate OIC to Remove
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __('Enter OIC Password'),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
+				}
+			],
+			primary_action_label: __('Remove'),
+			primary_action: (values) => {
+				let password = values.password;
+				let role = "oic";
+
+				frappe.call({
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					args: { password: password, role: role },
+					callback: (r) => {
+						if (r.message) {
+							// Password authenticated, proceed with item removal
+							frappe.dom.freeze();
+							const { doctype, name, current_item } = this.item_details;
+
+							frappe.model
+								.set_value(doctype, name, "qty", 0)
+								.then(() => {
+									frappe.model.clear_doc(doctype, name);
+									this.update_cart_html(current_item, true);
+									this.item_details.toggle_item_details_section(null);
+									frappe.dom.unfreeze();
+									passwordDialog.hide();
+								})
+								.catch((e) => {
+									console.log(e);
+									frappe.dom.unfreeze();
+									passwordDialog.hide();
+								});
+						} else {
+							frappe.show_alert({
+								message: __('Incorrect password or user is not an OIC'),
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		});
+
 		passwordDialog.show();
 	}
 

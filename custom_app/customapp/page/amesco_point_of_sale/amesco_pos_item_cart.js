@@ -69,9 +69,11 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="cart-label" >${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
+
 						<div class="qty-header">${__("Vat Type")}</div>
 						<div class="qty-header">${__("Price")}</div>
 						<div class="qty-header" >${__("Disc %")}</div>
+
 						<div class="qty-header">${__("Quantity")}</div>
 						
 						<div class="rate-amount-header">${__("Amount")}</div>
@@ -130,9 +132,9 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			<div class="vat-container"></div>
-
 		 <div class="taxes-container"></div>
+		 <div class="vat-container"></div>
+		 <div class="total-vat-container"></div>
 			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
@@ -597,7 +599,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (customer) {
 			return new Promise((resolve) => {
 				frappe.db
-					.get_value("Customer", customer, ["email_id", "mobile_no" , 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program",
+					.get_value("Customer", customer, ["email_id", "mobile_no" , "image", "loyalty_program",
 					"custom_osca_id", "custom_pwd_id"])
 					.then(({ message }) => {
 						const { loyalty_program } = message;
@@ -836,6 +838,7 @@ custom_app.PointOfSale.ItemCart = class {
 			
 		this.render_grand_total(grand_total);
 		this.render_taxes(frm.doc.taxes);
+		this.render_total_vat(frm.doc.total_taxes_and_charges);
 	}
 
 	render_net_total(value) {
@@ -892,6 +895,18 @@ custom_app.PointOfSale.ItemCart = class {
 			.html(`
 				<div style="display: flex; justify-content: space-between;">
 					<span style="flex: 1;">${__("VAT 12%")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
+
+	render_total_vat(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".total-vat-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Total VAT")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -1068,6 +1083,10 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="item-vat mx-3">
 				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
+
+			<div class="item-vat mx-3">
+				<strong>${format_currency(item_data.rate, currency)}</strong>
+			</div>
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
@@ -1105,9 +1124,6 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 		}
 
-
-
-
 		function get_rate_discount_html(customer_group) {
 
 
@@ -1121,6 +1137,7 @@ custom_app.PointOfSale.ItemCart = class {
 								
 							</div>
 						</div>`;
+
 
 
 			} else if (customer_group === "Senior Citizen" || customer_group === "PWD") {
@@ -1137,6 +1154,7 @@ custom_app.PointOfSale.ItemCart = class {
 							)}</div>
 						</div>
 					</div>`;
+
 			} else {
 				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 					return `
@@ -1424,8 +1442,6 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="customer-fields-container">
 					<div class="email_id-field"></div>
 					<div class="mobile_no-field"></div>
-					<div class="custom_transaction_type-field"></div>
-					<div class="custom_oscapwdid-field"></div>
 					<div class="custom_osca_id-field"></div>
 					<div class="custom_pwd_id-field"></div>
 					<div class="loyalty_program-field"></div>
@@ -1466,19 +1482,6 @@ custom_app.PointOfSale.ItemCart = class {
 				fieldtype: "Data",
 				placeholder: __("Enter customer's phone number"),
 			},
-			// {
-			// 	fieldname: "custom_transaction_type",
-			// 	label: __("Transaction Type"),
-			// 	fieldtype: "Select",
-			// 	options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
-			// 	placeholder: __("Enter customer's transaction type"),
-			// },
-			// {
-			// 	fieldname: "custom_oscapwdid",
-			// 	label: __("Osca or PWD ID"),
-			// 	fieldtype: "Data",
-			// 	placeholder: __("Enter customer's Osca or PWD ID"),
-			// },
 			{
 				fieldname: "loyalty_program",
 				label: __("Loyalty Program"),

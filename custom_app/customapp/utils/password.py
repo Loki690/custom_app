@@ -2,6 +2,7 @@
 # License: MIT. See LICENSE
 
 from cryptography.fernet import Fernet, InvalidToken
+from frappe.exceptions import AuthenticationError
 from passlib.context import CryptContext
 from pypika.terms import Values
 
@@ -101,6 +102,38 @@ def check_password(user, pwd, doctype="User", fieldname="password", delete_track
 		update_password(user, pwd, doctype, fieldname)
 
 	return user
+
+
+def check_password_without_username(pwd, doctype="User", fieldname="password"):
+    """
+    Checks if the given password matches any user's password.
+    If it matches, return the user's details.
+    """
+    try:
+        # Fetch all user documents
+        all_users = frappe.get_all("User", fields=["name", "email", "full_name", "enabled"])
+
+        for user in all_users:
+            # Check if the entered password matches the stored hashed password
+            try:
+                # If password matches, retrieve user details
+                if check_password(user["name"], pwd):
+                    user_doc = frappe.get_doc("User", user["name"])
+                    return {
+                        "name": user_doc.name,
+                        "email": user_doc.email,
+                        "full_name": user_doc.full_name,
+                        "roles": [d.role for d in user_doc.get("roles")],
+                        "enabled": user_doc.enabled,
+                    }
+            except AuthenticationError:
+                continue
+
+        return {"error": "Invalid password"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 	
 def check_oic_password(pwd, role, doctype="User", fieldname="password", delete_tracker_cache=True):
     """Checks if user and password are correct and the user has the specified role, else raises frappe.AuthenticationError"""
