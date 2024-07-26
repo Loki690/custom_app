@@ -352,70 +352,90 @@ custom_app.PointOfSale.ItemSelector = class {
             },
         });
 
+    
         let selectedUOM;
         this.$component.on("click", ".item-wrapper", async function () {
             const $item = $(this);
             me.selectedItem = $item;
-            const uom = unescape($item.attr("data-uom"));
             const item_code = unescape($item.attr("data-item-code"));
+            const uom = unescape($item.attr("data-uom"));
+            const rate = parseFloat(unescape($item.attr("data-rate")));
             const description = unescape($item.attr("data-description"));
-          
-            const qty = unescape($item.attr("data-qty"));
+            const qty = parseFloat(unescape($item.attr("data-qty")));
             const pos_profile = me.events.get_pos_profile();
 
+            // Debugging logs
+            console.log("Item Clicked:", item_code, uom, rate, description, qty);
+
             frappe.call({
-                method: 'custom_app.customapp.page.packing_list.packing_list.get_item_uoms',
+                method: 'custom_app.customapp.page.packing_list.packing_list.get_item_uom_prices',
                 args: {
                     item_code: item_code
                 },
                 callback: function (response) {
                     if (response.message) {
-                        const uomOptions = response.message.uoms.map(uom => ({
-                            label: uom.uom,
-                            value: uom.uom
+                        const uomPrices = response.message.uom_prices;
+                        console.log("UOM Prices:", uomPrices);
+
+                        const uomOptions = Object.keys(uomPrices).filter(uom => uom && uom !== "null").map(uom => ({
+                            label: uom,
+                            value: uom
                         }));
+
+                        let defaultUOM = uom;
+                        if (!uomPrices.hasOwnProperty(defaultUOM)) {
+                            defaultUOM = uomOptions.length > 0 ? uomOptions[0].value : null;
+                            if (!defaultUOM) {
+                                frappe.msgprint(__('No valid UOMs found for this item.'));
+                                return;
+                            }
+                        }
+
+                        const defaultRate = uomPrices[defaultUOM];
 
                         const dialog = new frappe.ui.Dialog({
                             title: __("Item Details"),
                             fields: [
                                 {
                                     fieldtype: "HTML",
-                                    label: __("Item Code and Description"),
+                                    title: __("Item Details"),
                                     options: `
-                                        <div class="row mb-4">
-                                            <div class="col-lg-6">
-                                                <div class="card w-80 h-80">
-                                                    <div class="card-body">
-                                                        <p class="text-description">${item_code}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="card w-80 h-80">
-                                                    <div class="card-body">
-                                                        <div class="row">
-                                                            <div class="col">
-                                                                <p class="text-description">${description}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Item Code</label>
+                                                    <input class="form-control" readonly data-fieldname="description" type="text" value="${item_code}"/>
                                                 </div>
                                             </div>
                                         </div>
-                                    `,
+                                    `
+                                },
+                                {
+                                    fieldtype: "HTML",
+                                    title: __("Item Details"),
+                                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Item Description</label>
+                                                    <input class="form-control" readonly data-fieldname="description" type="text" value="${description}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
                                 },
                                 {
                                     fieldtype: "HTML",
                                     label: __("Quantity"),
                                     options: `
-                                    <div class="row">
-                                        <div class="col-lg">
-                                            <div class="form-group">
-                                                <label class="control-label">${__("Quantity")}</label>
-                                                <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">${__("Quantity")}</label>
+                                                    <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
                                     `
                                 },
                                 {
@@ -423,7 +443,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                     label: __("UOM"),
                                     fieldname: 'uom',
                                     options: uomOptions,
-                                    default: uom
+                                    default: defaultUOM
                                 },
                                 {
                                     fieldtype: "HTML",
@@ -433,13 +453,13 @@ custom_app.PointOfSale.ItemSelector = class {
                                             <div class="col-lg">
                                                 <div class="form-group">
                                                     <label class="control-label">Amount</label>
-                                                    <input class="form-control" data-fieldname="total_amount" value="${rate}" readonly />
+                                                    <input class="form-control" data-fieldname="total_amount" value="${defaultRate.toFixed(2)}" readonly />
                                                 </div>
                                             </div>
                                         </div>
                                     `
                                 },
-                                {
+                                        {
                                     label: 'Branch Item INVTY',
                                     fieldtype: 'Button',
                                     btn_size: 'sm', // xs, sm, lg
@@ -666,10 +686,23 @@ custom_app.PointOfSale.ItemSelector = class {
 
                         });
 
+                        dialog.on_page_show = function() {
+                            setTimeout(() => {
+                                dialog.wrapper.find('input[data-fieldname="quantity"]').focus();
+                            }, 300); // Use a small delay to ensure the element is in the DOM
+                        };
+            
                         dialog.show();
+                    
+                        // Set the default UOM and amount fields
+                        dialog.wrapper.find('select[data-fieldname="uom"]').val(defaultUOM);
+                        dialog.wrapper.find('input[data-fieldname="total_amount"]').val(defaultRate.toFixed(2));
+                        
 
                         dialog.wrapper.find('input[data-fieldname="quantity"]').on('input', function () {
                             const quantity = parseFloat($(this).val());
+                            const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
+                            const rate = uomPrices[selectedUOM];
                             if (!isNaN(quantity)) {
                                 const totalAmount = (quantity * rate).toFixed(2);
                                 dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
@@ -677,20 +710,29 @@ custom_app.PointOfSale.ItemSelector = class {
                                 dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
                             }
                         });
+
+                        dialog.wrapper.find('select[data-fieldname="uom"]').on('change', function () {
+                            const selectedUOM = $(this).val();
+                            const rate = uomPrices[selectedUOM];
+                            const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
+                            if (!isNaN(quantity)) {
+                                const totalAmount = (quantity * rate).toFixed(2);
+                                dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                            } else {
+                                dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
+                            }
+                        });
+
+                        dialog.wrapper.find('input[data-fieldname="quantity"]').on('keypress', function(e) {
+                            if (e.which === 13) { // Enter key pressed
+                                e.preventDefault();
+                                dialog.primary_action();
+                            }
+                        });
                     }
-
                 }
             });
-
-            dialog.wrapper.find('input[data-fieldname="quantity"]').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key pressed
-                    e.preventDefault();
-                    dialog.primary_action();
-                }
-            });
-
         });
-        
        
         // this.$component.on("click", ".item-wrapper", function () {
         // 	const $item = $(this);
