@@ -28,8 +28,17 @@ custom_app.PointOfSale.PastOrderList = class {
 		this.$invoices_container = this.$component.find(".invoices-container");
 		this.$invoice_count = this.$component.find(".invoice-count");
 	}
-
 	bind_events() {
+		const me = this;
+	
+		// Initialize filter section once
+		this.make_filter_section();
+	
+		// Automatically focus on the search field when the section is rendered
+		setTimeout(() => {
+			this.search_field.set_focus();
+		}, 300);
+	
 		this.search_field.$input.on("input", (e) => {
 			clearTimeout(this.last_search);
 			this.last_search = setTimeout(() => {
@@ -37,16 +46,12 @@ custom_app.PointOfSale.PastOrderList = class {
 				this.refresh_list(search_term, this.status_field.get_value());
 			}, 300);
 		});
-		const me = this;
+	
 		this.$invoices_container.on("click", ".invoice-wrapper", function () {
 			const invoice_name = unescape($(this).attr("data-invoice-name"));
-
 			me.events.open_invoice_data(invoice_name);
 		});
-
-
-
-
+	
 		this.$invoices_container.off('keydown', '.invoice-wrapper').on('keydown', '.invoice-wrapper', function(event) {
 			const $items = me.$invoices_container.find('.invoice-wrapper');
 			const currentIndex = $items.index($(this));
@@ -69,55 +74,57 @@ custom_app.PointOfSale.PastOrderList = class {
 			$items.eq(nextIndex).focus(); // Move focus to the next item
 		});
 	
-		// Add Ctrl+C shortcut to focus on the first cart item
+		// Add Ctrl+I shortcut to focus on the search field
 		frappe.ui.keys.add_shortcut({
 			shortcut: 'ctrl+i',
 			action: () => {
-				const $items = me.$invoices_container.find('.invoice-wrapper');
-				if ($items.length) {
-					$items.first().focus(); // Focus on the first cart item
-				}
+				this.focus_search_invoice();
 			},
-			condition: () => me.$invoices_container.is(':visible'),
-			description: __('Activate Cart Item Focus'),
+			condition: () => true,
+			description: __('Focus on Search Field'),
 			ignore_inputs: true,
 			page: cur_page.page.page // Replace with your actual page context
 		});
-
-
-
-
 	}
-
+	
+	focus_search_invoice() {
+		this.search_field.set_focus();
+	}
+	
 	make_filter_section() {
 		const me = this;
-		this.search_field = frappe.ui.form.make_control({
-			df: {
-				label: __("Search"),
-				fieldtype: "Data",
-				placeholder: __("Search by invoice id or customer name"),
-			},
-			parent: this.$component.find(".search-field"),
-			render_input: true,
-		});
-		this.status_field = frappe.ui.form.make_control({
-			df: {
-				label: __("Invoice Status"),
-				fieldtype: "Select",
-				options: `Draft`,
-				placeholder: __("Filter by invoice status"),
-				onchange: function () {
-					if (me.$component.is(":visible")) me.refresh_list();
+		if (!this.search_field) {
+			this.search_field = frappe.ui.form.make_control({
+				df: {
+					label: __("Search"),
+					fieldtype: "Data",
+					placeholder: __("Search by invoice id or customer name"),
 				},
-			},
-			parent: this.$component.find(".status-field"),
-			render_input: true,
-		});
-		this.search_field.toggle_label(false);
-		this.status_field.toggle_label(false);
-		this.status_field.set_value("Draft"); // set deafault draft
+				parent: this.$component.find(".search-field"),
+				render_input: true,
+			});
+			this.search_field.toggle_label(false);
+		}
+	
+		if (!this.status_field) {
+			this.status_field = frappe.ui.form.make_control({
+				df: {
+					label: __("Invoice Status"),
+					fieldtype: "Select",
+					options: `Draft`,
+					placeholder: __("Filter by invoice status"),
+					onchange: function () {
+						if (me.$component.is(":visible")) me.refresh_list();
+					},
+				},
+				parent: this.$component.find(".status-field"),
+				render_input: true,
+			});
+			this.status_field.toggle_label(false);
+			this.status_field.set_value("Draft"); // set default draft
+		}
 	}
-
+	
 	refresh_list() {
 		frappe.dom.freeze();
 		this.events.reset_summary();

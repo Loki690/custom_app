@@ -96,6 +96,9 @@ def search_by_term(search_term, warehouse, price_list):
 	return {"items": [item]}
 
 
+
+
+
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term=""):
 	warehouse, hide_unavailable_items = frappe.db.get_value(
@@ -499,3 +502,10 @@ def get_pos_closing_details(parent):
         frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
+
+
+@frappe.whitelist()
+def get_pos_warehouse(pos_profile):
+    warehouse = frappe.db.get_value("POS Profile", pos_profile, "warehouse")
+    return warehouse
+    

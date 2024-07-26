@@ -391,10 +391,8 @@ custom_app.PointOfSale.ItemDetails = class {
 		// Ensure frm.doc is checked for existence before accessing it
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
 			const frm = me.events.get_frm();
-			if (frm.doc.customer_group === 'Senior Citizen') {
-				if (me.discount_percentage_control && !me.allow_discount_change) {
-					me.discount_percentage_control.df.read_only = 1;
-				}
+			if (frm.doc.customer_group === 'Senior Citizen'|| frm.doc.customer_group === 'PWD' ) {
+				return;
 			} else {
 				if (me.discount_percentage_control && !me.allow_discount_change) {
 					me.discount_percentage_control.df.read_only = 1;

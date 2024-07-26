@@ -122,8 +122,6 @@ custom_app.PointOfSale.Controller = class {
 
 	prepare_menu() {
 		this.page.clear_menu();
-
-		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),
@@ -1103,6 +1101,62 @@ custom_app.PointOfSale.Controller = class {
 	// 		})
 	// 	.catch((e) => console.log(e));
 	// }
+
+	
+
+	remove_item_from_cart() {
+
+		//Authenticate OIC to Remove
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __('Enter OIC Password'),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
+				}
+			],
+			primary_action_label: __('Remove'),
+			primary_action: (values) => {
+				let password = values.password;
+				let role = "oic";
+	
+				frappe.call({
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					args: { password: password, role: role },
+					callback: (r) => {
+						if (r.message) {
+							// Password authenticated, proceed with item removal
+							frappe.dom.freeze();
+							const { doctype, name, current_item } = this.item_details;
+	
+							frappe.model
+								.set_value(doctype, name, "qty", 0)
+								.then(() => {
+									frappe.model.clear_doc(doctype, name);
+									this.update_cart_html(current_item, true);
+									this.item_details.toggle_item_details_section(null);
+									frappe.dom.unfreeze();
+									passwordDialog.hide();
+								})
+								.catch((e) => {
+									console.log(e);
+									frappe.dom.unfreeze();
+									passwordDialog.hide();
+								});
+						} else {
+							frappe.show_alert({
+								message: __('Incorrect password or user is not an OIC'),
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		});
+		passwordDialog.show();
+	}
 
 
 

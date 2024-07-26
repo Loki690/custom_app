@@ -264,7 +264,7 @@ custom_app.PointOfSale.ItemDetails = class {
 	get_form_fields(item) {
 		const fields = [
 			"custom_free",
-			// "qty",
+			"qty",
 			'price_list_rate',
 			"rate",
 			"uom",
@@ -353,23 +353,23 @@ custom_app.PointOfSale.ItemDetails = class {
 			// this.rate_control.refresh();
 		}
 		// Ensure frm.doc is checked for existence before accessing it
+		
+		
+		// if (this.discount_percentage_control && !this.allow_discount_change) {
+		// 	this.discount_percentage_control.df.read_only = 1;
+		// 	this.discount_percentage_control.refresh();
+		// }
+
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
 			const frm = me.events.get_frm();
-			if (frm.doc.customer_group === 'Senior Citizen') {
-				if (me.discount_percentage_control && !me.allow_discount_change) {
-					me.discount_percentage_control.df.read_only = 1;
-				}
+			if (frm.doc.customer_group === 'Senior Citizen'|| frm.doc.customer_group === 'PWD' ) {
+				return;
 			} else {
 				if (me.discount_percentage_control && !me.allow_discount_change) {
 					me.discount_percentage_control.df.read_only = 1;
 					me.discount_percentage_control.refresh();
 				}
 			}
-		}
-		
-		if (this.discount_percentage_control && !this.allow_discount_change) {
-			this.discount_percentage_control.df.read_only = 1;
-			this.discount_percentage_control.refresh();
 		}
 
 		if (this.warehouse_control) {

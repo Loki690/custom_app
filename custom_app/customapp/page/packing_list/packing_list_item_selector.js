@@ -48,53 +48,59 @@ custom_app.PointOfSale.ItemSelector = class {
                 width: 200px; /* Adjust the width as needed */
             }
 		`;
-        const style = document.createElement('style');
-        style.type = 'text/css';
-        if (style.styleSheet) {
-            style.styleSheet.cssText = css;
-        } else {
-            style.appendChild(document.createTextNode(css));
-        }
-        document.head.appendChild(style);
-    }
+
+		const style = document.createElement('style');
+		style.type = 'text/css';
+		if (style.styleSheet) {
+			style.styleSheet.cssText = css;
+		} else {
+			style.appendChild(document.createTextNode(css));
+		}
+		document.head.appendChild(style);
+	}
 
 
     prepare_dom() {
         const selectedWarehouse = localStorage.getItem('selected_warehouse');
         this.wrapper.append(
             `<section class="items-selector" style="margin-top:1.3rem;">
-				<div class="filter-section">
-				<div class="label">
-				${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
-			</div>
-            
-                    <div class="search-field"></div>
-					<div class="item-group-field"></div>
-                    <div class="item-uoms"></div>
-                   
-				</div>
-				<div class="table-responsive">
-					<table class="table items-table">
-					    <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
-							<tr>
-								<th>Item Code</th>
-								<th>Name</th>
-								<th>Vat Type</th>
-								<th>Price</th>
-								<th>UOM</th>
-								<th>QTY</th>
-							</tr>
-						</thead>
 
-						<tbody class="items-container"></tbody>
-					</table>
-				</div>
-			</section>`
+                <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
+                    <div class="label" style="flex: 1;">
+                        ${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
+                    </div>
+                    <div class="search-field" style="flex: 2;">
+                        <input type="text" placeholder="Search by item code, serial number or barcode" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="item-group-field" style="flex: 1;">
+                        <input type="text" placeholder="Select item group" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="item-uoms" style="flex: 1;">
+                        <input type="text"  value="PC" placeholder="Select UOM" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table items-table">
+                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Name</th>
+                                <th>Vat Type</th>
+                                <th>Price</th>
+                                <th>UOM</th>
+                                <th>QTY</th>
+                            </tr>
+                        </thead>
+                        <tbody class="items-container"></tbody>
+                    </table>
+                </div>
+            </section>`
         );
-
+    
         this.$component = this.wrapper.find(".items-selector");
         this.$items_container = this.$component.find(".items-container");
     }
+    
 
 
     async load_items_data() {
@@ -107,7 +113,7 @@ custom_app.PointOfSale.ItemSelector = class {
             this.price_list = res.message.selling_price_list;
         }
 
-        // Set the default UOM to "PC"
+
         this.selected_uom = "PC";
         this.item_uom && this.item_uom.set_value("PC");
 
@@ -160,7 +166,6 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$items_container.append(item_html);
         });
 
-
         this.highlighted_row_index = 0;
         this.highlight_row(this.highlighted_row_index);
     }
@@ -168,6 +173,9 @@ custom_app.PointOfSale.ItemSelector = class {
 
     get_item_html(item) {
         const me = this;
+
+        const defaulf_uom = "PC"
+
 
         const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
@@ -202,7 +210,7 @@ custom_app.PointOfSale.ItemSelector = class {
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
-            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${qty_to_display}</span></td>
+            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
     }
 
@@ -344,17 +352,14 @@ custom_app.PointOfSale.ItemSelector = class {
             },
         });
 
-
-        // 
-        // let dialog
         let selectedUOM;
         this.$component.on("click", ".item-wrapper", async function () {
             const $item = $(this);
             me.selectedItem = $item;
-            const item_code = unescape($item.attr("data-item-code"));
             const uom = unescape($item.attr("data-uom"));
-            const rate = parseFloat(unescape($item.attr("data-rate")));
+            const item_code = unescape($item.attr("data-item-code"));
             const description = unescape($item.attr("data-description"));
+          
             const qty = unescape($item.attr("data-qty"));
             const pos_profile = me.events.get_pos_profile();
 
@@ -673,11 +678,20 @@ custom_app.PointOfSale.ItemSelector = class {
                             }
                         });
                     }
+
                 }
             });
+
+            dialog.wrapper.find('input[data-fieldname="quantity"]').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key pressed
+                    e.preventDefault();
+                    dialog.primary_action();
+                }
+            });
+
         });
-
-
+        
+       
         // this.$component.on("click", ".item-wrapper", function () {
         // 	const $item = $(this);
         // 	const item_code = unescape($item.attr("data-item-code"));

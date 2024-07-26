@@ -581,6 +581,8 @@ custom_app.PointOfSale.Payment = class {
 				render_input: true,
 			});
 
+			this[`${mode}_control`].set_value(0);
+
 			if (p.mode_of_payment === "Cards") {
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
 
