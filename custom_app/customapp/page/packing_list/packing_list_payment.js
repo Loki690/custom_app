@@ -502,7 +502,7 @@ this.$payment_modes.on('click', '.payment-mode-button', function(event) {
         case "cash":
             const amount = $(this).find('.pay-amount').text().trim();
             modalContent += `
-                <div class="cash-amount control-label"><label>Amount:</label> <input type="text" class="form-control" value="${amount}" required /></div>
+                <div class="cash-amount control-label"><label>Amount:</label> <input type="number" class="form-control" required /></div>
                 <div class="cash-shortcuts" style="margin-top: 16px;"></div>
             `;
             break;
@@ -516,6 +516,7 @@ this.$payment_modes.on('click', '.payment-mode-button', function(event) {
         case "debit_card":
         case "credit_card":
             modalContent += `
+			  	<div class="cash-amount control-label"><label>Amount:</label> <input type="number" class="form-control" required /></div>
                 <div class="${mode} bank-name control-label"><label>Bank Name:</label> <input class="form-control" type="text" required /></div>
                 <div class="holder-name ${mode} control-label"><label>Holder Name:</label> <input class="form-control" type="text" required /></div>
                 <div class="card-type-control control-label"><label>Card Type:</label>
@@ -540,7 +541,7 @@ this.$payment_modes.on('click', '.payment-mode-button', function(event) {
                     </select>
                 </div>
                 <div class="card-number control-label ${mode}"><label>Card Number:</label> <input type="text" class="form-control" required /></div>
-                <div class="expiry-date"><label>Expiry Date:</label> <input type="text" class="form-control" required /></div>
+                <div class="expiry-date"><label>Expiry Date:</label> <input type="date" class="form-control" required /></div>
                 <div class="approval-code"><label>Approval Code:</label> <input type="text" class="form-control" required /></div>
                 <div class="reference-number"><label>Reference Number:</label> <input type="text" class="form-control" required /></div>
             `;
@@ -556,7 +557,7 @@ this.$payment_modes.on('click', '.payment-mode-button', function(event) {
                 <div class="bank-name control-label"><label>Bank Name:</label> <input type="text" class="form-control" required /></div>
                 <div class="check-name control-label"><label>Check Name:</label> <input type="text" class="form-control" required/></div>
                 <div class="check-number control-label"><label>Check Number:</label> <input type="text" class="form-control" required /></div>
-                <div class="check-date control-label"><label>Check Date:</label> <input type="text" class="form-control" required /></div>
+                <div class="check-date control-label"><label>Check Date:</label> <input type="date" class="form-control" required /></div>
             `;
             break;
         case "2306":
@@ -670,8 +671,6 @@ this.$payment_modes.on('click', '.payment-mode-button', function(event) {
         return isValid;
     }
 });
-
-
 
 
 		payments.forEach((p) => {
