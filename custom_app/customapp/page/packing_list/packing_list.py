@@ -98,6 +98,34 @@ def search_by_term(search_term, warehouse, price_list):
 
 import frappe
 
+# your_app/your_app/doctype/amesco_gift_certificate/amesco_gift_certificate.py
+
+import frappe
+
+@frappe.whitelist()
+def save_payment(data):
+    try:
+        data = frappe.parse_json(data)  # Parse JSON data
+        
+        # Example: Insert the data into a new document
+        doc = frappe.get_doc({
+            'doctype': 'Payment',
+            'mode': data.get('mode'),
+            'details': data.get('details'),
+            'amount': data.get('amount'),
+            # Add other fields as necessary
+        })
+        doc.insert()
+        
+        # Commit the transaction
+        frappe.db.commit()
+        
+        return {'success': True, 'message': 'Payment information saved successfully.'}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Payment Submission Error')
+        return {'success': False, 'error': str(e)}
+
+
 @frappe.whitelist()
 def get_item_uoms(item_code):
     item = frappe.get_doc('Item', item_code)

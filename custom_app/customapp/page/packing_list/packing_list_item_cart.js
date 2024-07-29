@@ -73,7 +73,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
 						<div class="qty-header">${__("Vat Type")}</div>
-						<div class="qty-header">${__("Price")}</div>
+						<div class="qty-header">${__("Unit Price")}</div>
 						<div class="qty-header" >${__("Disc %")}</div>
 						<div class="qty-header">${__("Quantity")}</div>
 						

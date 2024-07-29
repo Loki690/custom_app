@@ -320,30 +320,32 @@ custom_app.PointOfSale.ItemSelector = class {
                             fields: [
                                 {
                                     fieldtype: "HTML",
-                                    label: __("Item Code and Description"),
+                                    title: __("Item Details"),
                                     options: `
-                                        <div class="row mb-4">
-                                            <div class="col-lg-6">
-                                                <div class="card w-80 h-80">
-                                                    <div class="card-body">
-                                                        <p class="text-description">${item_code}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="card w-80 h-80">
-                                                    <div class="card-body">
-                                                        <div class="row">
-                                                            <div class="col">
-                                                                <p class="text-description">${description}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                    <div class="row">
+                                        <div class="col-lg">
+                                            <div class="form-group">
+                                                <label class="control-label">Description</label>
+                                                <input class="form-control" data-fieldname="description" type="text" value= "${description}" readonly/>
                                             </div>
                                         </div>
-                                    `,
-                                },
+                                    </div>
+                                    `
+                                }, 
+                                {
+                                    fieldtype: "HTML",
+                                    title: __("Item Details"),
+                                    options: `
+                                    <div class="row">
+                                        <div class="col-lg">
+                                            <div class="form-group">
+                                                <label class="control-label">Item Code</label>
+                                                <input class="form-control" data-fieldname="description" type="text" value= "${item_code}" readonly/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    `
+                                }, 
                                 {
                                     fieldtype: "HTML",
                                     label: __("Quantity"),
@@ -398,7 +400,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                     return;
                                 }
         
-                                me.selectedItem.find(".item-uom").text(selectedUOM);
+                                // me.selectedItem.find(".item-uom").text(selectedUOM);
         
                                 const itemCode = unescape(me.selectedItem.attr("data-item-code"));
                                 const batchNo = unescape(me.selectedItem.attr("data-batch-no"));

@@ -10,25 +10,23 @@ custom_app.PointOfSale.Payment = class {
 		this.prepare_dom();
 		// this.initialize_numpad();
 		this.bind_events();
-		this.attach_shortcuts();
+		// this.attach_shortcuts();
 	}
+
 
 	prepare_dom() {
 		this.wrapper.append(
 			`<section class="payment-container">
-				<div class="section-label payment-section">${__("Payment Method")}</div>
-				<div class="payment-modes"></div>
 				<div class="fields-numpad-container">
 					<div class="fields-section">
-						<div class="section-label">${__("Additional Information")}</div>
-						<div class="invoice-fields"></div>
+						<div class="section-label payment-section">${__("Payment Method")}</div>
+						<div class="payment-modes"></div>
 					</div>
-					<div class="number-pad"></div>
 				</div>
 				<div class="totals-section">
 					<div class="totals"></div>
 				</div>
-				<div class="submit-order-btn">${__("Print Order List")}</div>
+				<div class="submit-order-btn">${__("Complete Order")}</div>
 			</section>`
 		);
 		this.$component = this.wrapper.find(".payment-container");
@@ -118,6 +116,8 @@ custom_app.PointOfSale.Payment = class {
 		}
 	}
 
+	
+
 
 	bind_events() {
 		const me = this;
@@ -174,8 +174,12 @@ custom_app.PointOfSale.Payment = class {
 				mode_clicked.removeClass("border-primary");
 				me.selected_mode = "";
 			} else {
+
 				// clicked one is not selected then select it
 				mode_clicked.addClass("border-primary");
+
+
+
 				mode_clicked.find(".mode-of-payment-control").css("display", "flex");
 				mode_clicked.find(".mobile-number").css("display", "flex");
 				mode_clicked.find(".reference-number").css("display", "flex");
@@ -208,8 +212,11 @@ custom_app.PointOfSale.Payment = class {
 				me.selected_mode && me.selected_mode.$input.get();
 				me.auto_set_remaining_amount();
 			}
+			
 		});
 
+
+	
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
 			const target = $(e.target);
@@ -449,124 +456,223 @@ custom_app.PointOfSale.Payment = class {
 		const customer_group = doc.customer_group;
 		const allowed_payment_modes = ["2306", "2307"];
 
-		this.$payment_modes.html(
-			`${payments.map((p, i) => {
-				const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
-				const payment_type = p.type;
-				const margin = i % 2 === 0 ? "pr-2" : "pl-2";
-				const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
 
-				// Check if the customer group is 'Government' and if the payment mode is allowed
-				// if (customer_group === "Government" && allowed_payment_modes.includes(p.mode_of_payment)) {
-				// 	return ''; // Skip rendering this payment mode if the conditions are not met
-				// }
+let activeDialog = null;
 
-				let paymentModeHtml = `
-					<div class="payment-mode-wrapper ${margin}">
-						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
-							${p.mode_of_payment}
-							<div class="${mode}-amount pay-amount">${amount}</div>
-							<div class="${mode} mode-of-payment-control"></div>
-				`;
+this.$payment_modes.html(
+    `<div style="display: flex; flex-wrap: wrap; gap: 16px;">
+        ${payments.map((p) => {
+            const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+            const payment_type = p.type;
+            const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
 
-				switch (p.mode_of_payment) {
-					case "GCash":
-						paymentModeHtml += `
-							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
-							<div class="${mode} reference-number" style="margin-top:10px;"></div>
-						`;
-						break;
+            return `
+                <button class="payment-mode-button" data-mode="${mode}" data-payment-type="${payment_type}" 
+                        style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); 
+                            border: 1px solid #ccc; border-radius: 8px; padding: 16px; 
+                            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff; 
+                            display: flex; flex-direction: column; gap: 8px; cursor: pointer;">
+                    <div class="${mode}-amount pay-amount">${amount}</div>
+                    <span>${p.mode_of_payment}</span>
+                </button>
+            `;
+        }).join("")}
+    </div>`
+);
 
-					case "Cards":
-						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card_type_control"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
-						`;
-						break;
-					case "Debit Card":
-						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
-							`;
-						break;
-					case "Credit Card":
-						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
-							`;
-						break;
-					case "PayMaya":
-						paymentModeHtml += `
-							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
-							<div class="${mode} reference-number" style="margin-top:10px;"></div>
-						`;
-						break;
-					case "Cheque":
-						paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} check-name"></div>
-							<div class="${mode} check-number"></div>
-							<div class="${mode} check-date"></div>
-						`;
-						break;
-					case "2306":
-						paymentModeHtml += `
-							<div class="${mode} actual-gov-one"></div>
-						`;
-						break;
-					case "2307":
-						paymentModeHtml += `
-							<div class="${mode} actual-gov-two"></div>
-						`;
-						break;
+// Unbind existing click handlers to avoid duplicate bindings
+this.$payment_modes.off('click', '.payment-mode-button');
 
-					case "QR Payment":
-						paymentModeHtml += `
-							<div class="${mode} payment-type"></div>
-							<div class="${mode} bank-type"></div>
-							<div class="${mode} qr-reference-number"></div>
+// Bind click handler to payment mode buttons
+this.$payment_modes.on('click', '.payment-mode-button', function(event) {
+    event.stopPropagation(); // Stop propagation to avoid triggering multiple dialogs
 
-						`;
-						break;
+    if (activeDialog) {
+        activeDialog.hide();
+        activeDialog = null;
+    }
 
-					case "Charge":
-						paymentModeHtml += `
-							<div class="${mode} customer"></div>
-							<div class="${mode} po-number"></div>
-							<div class="${mode} representative"></div>
-							<div class="${mode} id-number"></div>
-							<div class="${mode} approved-by"></div>
-						`;
-						break;
-					case "Gift Certificate":
-						paymentModeHtml += `
-						   <div class="${mode} gift-code"></div>
-						    <div class="${mode} button-code"></div>
-					   `;
-						break;
-				}
+    const mode = $(this).data('mode');
+    const paymentType = $(this).data('payment-type');
+    
+    let modalContent = `<div class="payment-modal-content" style="display:flex; flex-direction:column; gap:1rem;">`;
 
-				paymentModeHtml += `
-						</div>
-					</div>
-				`;
+    switch (mode) {
+        // Generate form fields based on payment mode
+        case "cash":
+            const amount = $(this).find('.pay-amount').text().trim();
+            modalContent += `
+                <div class="cash-amount control-label"><label>Amount:</label> <input type="text" class="form-control" value="${amount}" required /></div>
+                <div class="cash-shortcuts" style="margin-top: 16px;"></div>
+            `;
+            break;
+        case "gcash":
+            modalContent += `
+                <div class="mobile-number control-label"><label>Mobile Number:</label> <input type="text" class="form-control" required /></div>
+                <div class="reference-number control-label"><label>Reference Number:</label> <input type="text" class="form-control" required /></div>
+            `;
+            break;
+        case "cards":
+        case "debit_card":
+        case "credit_card":
+            modalContent += `
+                <div class="${mode} bank-name control-label"><label>Bank Name:</label> <input class="form-control" type="text" required /></div>
+                <div class="holder-name ${mode} control-label"><label>Holder Name:</label> <input class="form-control" type="text" required /></div>
+                <div class="card-type-control control-label"><label>Card Type:</label>
+                    <select class="form-control">
+                        <option value="">Select Card Type</option>
+                        <option value="visa">Visa</option>
+                        <option value="Visa Debit">Visa Debit</option>
+                        <option value="Visa Electron">Visa Electron</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Mastercard">Mastercard Debit</option>
+                        <option value="Maestro">Maestro</option>
+                        <option value="American Express (Amex)">American Express (Amex)</option>
+                        <option value="Discover">Discover</option>
+                        <option value="JCB">JCB</option>
+                        <option value="UnionPay">UnionPay</option>
+                        <option value="RuPay">RuPay</option>
+                        <option value="Interac">Interac</option>
+                        <option value="Carte Bancaire (CB)">Carte Bancaire</option>
+                        <option value="Elo">Elo</option>
+                        <option value="Mir">Mir</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="card-number control-label ${mode}"><label>Card Number:</label> <input type="text" class="form-control" required /></div>
+                <div class="expiry-date"><label>Expiry Date:</label> <input type="text" class="form-control" required /></div>
+                <div class="approval-code"><label>Approval Code:</label> <input type="text" class="form-control" required /></div>
+                <div class="reference-number"><label>Reference Number:</label> <input type="text" class="form-control" required /></div>
+            `;
+            break;
+        case "paymaya":
+            modalContent += `
+                <div class="mobile-number control-label"><label>Mobile Number:</label> <input type="text" class="form-control" required /></div>
+                <div class="reference-number control-label"><label>Reference Number:</label> <input type="text" class="form-control" required /></div>
+            `;
+            break;
+        case "cheque":
+            modalContent += `
+                <div class="bank-name control-label"><label>Bank Name:</label> <input type="text" class="form-control" required /></div>
+                <div class="check-name control-label"><label>Check Name:</label> <input type="text" class="form-control" required/></div>
+                <div class="check-number control-label"><label>Check Number:</label> <input type="text" class="form-control" required /></div>
+                <div class="check-date control-label"><label>Check Date:</label> <input type="text" class="form-control" required /></div>
+            `;
+            break;
+        case "2306":
+            modalContent += `
+                <div class="actual-gov-one control-label"><label>Actual Government One:</label> <input type="text" class="form-control" required/></div>
+            `;
+            break;
+        case "2307":
+            modalContent += ` 
+                <div class="actual-gov-two control-label"><label>Actual Government Two:</label> <input type="text" class="form-control" required/></div>
+            `;
+            break;
+        case "qr_payment":
+            modalContent += `
+                <div class="payment-type control-label"><label>Payment Type:</label> <input type="text" class="form-control" required /></div>
+                <div class="bank-type control-label"><label>Bank Type:</label> <input type="text" class="form-control" required /></div>
+                <div class="qr-reference-number control-label"><label>QR Reference Number:</label> <input type="text" class="form-control" required /></div>
+            `;
+            break;
+    }
+    modalContent += `
+        <div class="row text-right">
+            <div class="col-xs-12 mt-4 mb-2">
+                <button type="button" class="btn submit-button" style="background-color:black; color:white; font-weight:bold;">Submit</button>
+            </div>
+        </div>
+    </div>`;
 
-				return paymentModeHtml;
-			}).join("")}`
-		);
+    // Create the Frappe Dialog
+    activeDialog = new frappe.ui.Dialog({
+        title: `${$(this).text()} Payment Mode`,
+        fields: [
+            {
+                fieldtype: 'HTML',
+                label: '',
+                fieldname: 'payment_mode_details',
+                options: modalContent
+            }
+        ]
+    });
+
+    // Prevent click events from propagating outside the dialog
+    activeDialog.$wrapper.on('click', function(event) {
+        event.stopPropagation();
+    });
+
+    // Bind click handler to the submit button inside the dialog
+    activeDialog.$wrapper.on('click', '.submit-button', function() {
+        const formData = {};
+        activeDialog.$wrapper.find('input, select').each(function() {
+            const name = $(this).attr('name') || $(this).attr('class');
+            const value = $(this).val();
+            formData[name] = value;
+        });
+
+        const isValid = validateForm(activeDialog.$wrapper);
+        if (!isValid) {
+            alert('Please fill out all required fields.');
+            return;
+        }
+
+        // Use frappe.call to handle the form submission
+        // frappe.call({
+        //     method: "your_app.your_app.doctype.amesco_gift_certificate.amesco_gift_certificate.save_payment",
+        //     args: {
+        //         data: JSON.stringify(formData)  // Ensure data is JSON string
+        //     },
+        //     callback: function(response) {
+        //         if (response.message.success) {
+        //             alert('Payment information submitted successfully.');
+        //             console.log('Data saved:', formData); // Log saved data
+        //         } else {
+        //             alert(`Failed to submit payment information. Error: ${response.message.error}`);
+        //         }
+        //     },
+        //     error: function(response) {
+        //         alert('Error occurred while submitting payment information. Please try again.');
+        //     }
+        // });
+
+        activeDialog.hide();
+        activeDialog = null;
+    });
+
+    activeDialog.show();
+
+    activeDialog.$wrapper.find('.modal-footer').css({
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '10px'
+    });
+
+    activeDialog.$wrapper.find('.modal-footer .btn').css({
+        margin: '0'
+    });
+
+    if (mode === "cash") {
+        attach_cash_shortcuts(doc); 
+    }
+
+    function validateForm($dialog) {
+        let isValid = true;
+        $dialog.find('input[required]').each(function() {
+            if (!$(this).val().trim()) {
+                isValid = false;
+                $(this).addClass('error');
+            } else {
+                $(this).removeClass('error');
+            }
+        });
+        return isValid;
+    }
+});
+
+
+
 
 		payments.forEach((p) => {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
@@ -1034,48 +1140,47 @@ custom_app.PointOfSale.Payment = class {
 			}
 
 			if (p.mode_of_payment === "2306") {
-				// console.log('Form 2306 Expected: ', doc.custom_2306);
-			
-				
+
+				// console.log(frm)
+
+				let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
 				let check_form_2306 = frappe.ui.form.make_control({
 					df: {
 						label: `Expected 2306 Amount`,
 						fieldtype: "Currency",
 						placeholder: 'Actual 2306',
 						read_only: 1, // Set the field to read-only
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306);
+						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
 					render_input: true,
 				});
-			
-				// Set the latest value of doc.custom_2306 directly
-				let latest_form_2306_value = doc.custom_2306;
-				frappe.model.set_value(p.doctype, p.name, "custom_form_2306", latest_form_2306_value);
-			
 				// Set the existing value and refresh the control
-				check_form_2306.set_value(latest_form_2306_value || '');
+				check_form_2306.set_value(existing_custom_form_2306 || '');
 				check_form_2306.refresh();
+
 			}
-			
 
 			if (p.mode_of_payment === "2307") {
 
-				
+				let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
 				let check_form_2307 = frappe.ui.form.make_control({
 					df: {
 						label: `Expected 2307 Amount`,
 						fieldtype: "Currency",
 						placeholder: 'Actual 2307',
 						read_only: 1, // Set the field to read-only
+						onchange: function () {
+							frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307);
+						},
 					},
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
 					render_input: true,
 				});
 				// Set the existing value and refresh the control
-				let latest_form_2307_value = doc.custom_2307;
-				frappe.model.set_value(p.doctype, p.name, "custom_form_2307", latest_form_2307_value);
-
-				check_form_2307.set_value(latest_form_2307_value || '');
+				check_form_2307.set_value(existing_custom_form_2307 || '');
 				check_form_2307.refresh();
 
 			}
@@ -1380,59 +1485,66 @@ custom_app.PointOfSale.Payment = class {
 		});
 	}
 
-	attach_cash_shortcuts(doc) {
-		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
-			? doc.grand_total
-			: doc.rounded_total;
-		const currency = doc.currency;
+// Function to attach cash shortcuts
+attach_cash_shortcuts(doc) {
+    const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
+        ? doc.grand_total
+        : doc.rounded_total;
+    const currency = doc.currency;
 
-		const shortcuts = this.get_cash_shortcuts(flt(grand_total));
+    const shortcuts = get_cash_shortcuts(flt(grand_total));
 
-		this.$payment_modes.find(".cash-shortcuts").remove();
-		let shortcuts_html = shortcuts
-			.map((s) => {
-				return `<div class="shortcut" data-value="${s}">${format_currency(s, currency, 0)}</div>`;
-			})
-			.join("");
+    // Update the shortcuts inside the dialog
+    const $cashShortcuts = activeDialog.$wrapper.find(".cash-shortcuts");
+    $cashShortcuts.empty(); // Clear previous shortcuts
 
-		this.$payment_modes
-			.find('[data-payment-type="Cash"]')
-			.find(".mode-of-payment-control")
-			.after(`<div class="cash-shortcuts">${shortcuts_html}</div>`);
-	}
+    let shortcuts_html = shortcuts
+        .map((s) => {
+            return `<div class="shortcut" data-value="${s}" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; text-align: center;">${format_currency(s, currency, 0)}</div>`;
+        })
+        .join("");
 
-	get_cash_shortcuts(grand_total) {
-		let steps = [1, 5, 10];
-		const digits = String(Math.round(grand_total)).length;
+    $cashShortcuts.html(shortcuts_html);
 
-		steps = steps.map((x) => x * 10 ** (digits - 2));
+    // Bind click handlers to shortcut buttons
+    $cashShortcuts.on('click', '.shortcut', function() {
+        const amount = $(this).data('value');
+        activeDialog.$wrapper.find('.cash-amount input').val(format_currency(amount, currency, 0));
+    });
+}
 
-		const get_nearest = (amount, x) => {
-			let nearest_x = Math.ceil(amount / x) * x;
-			return nearest_x === amount ? nearest_x + x : nearest_x;
-		};
+ get_cash_shortcuts(grand_total) {
+    let steps = [1, 5, 10];
+    const digits = String(Math.round(grand_total)).length;
 
-		let shortcuts = steps.reduce((finalArr, x) => {
-			let nearest_x = get_nearest(grand_total, x);
-			nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
-			return [...finalArr, nearest_x];
-		}, []);
+    steps = steps.map((x) => x * 10 ** (digits - 2));
 
-		// Add 500 and 1000 if grand total is above 100
-		if (grand_total > 100) {
-			if (!shortcuts.includes(500)) {
-				shortcuts.push(500);
-			}
-			if (!shortcuts.includes(1000)) {
-				shortcuts.push(1000);
-			}
-		}
+    const get_nearest = (amount, x) => {
+        let nearest_x = Math.ceil(amount / x) * x;
+        return nearest_x === amount ? nearest_x + x : nearest_x;
+    };
 
-		// Sort shortcuts in ascending order
-		shortcuts.sort((a, b) => a - b);
+    let shortcuts = steps.reduce((finalArr, x) => {
+        let nearest_x = get_nearest(grand_total, x);
+        nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
+        return [...finalArr, nearest_x];
+    }, []);
 
-		return shortcuts;
-	}
+    // Add 500 and 1000 if grand total is above 100
+    if (grand_total > 100) {
+        if (!shortcuts.includes(500)) {
+            shortcuts.push(500);
+        }
+        if (!shortcuts.includes(1000)) {
+            shortcuts.push(1000);
+        }
+    }
+
+    // Sort shortcuts in ascending order
+    shortcuts.sort((a, b) => a - b);
+
+    return shortcuts;
+}
 
 	render_loyalty_points_payment_mode() {
 		const me = this;

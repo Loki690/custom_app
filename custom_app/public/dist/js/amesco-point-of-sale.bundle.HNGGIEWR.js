@@ -652,28 +652,30 @@
                 fields: [
                   {
                     fieldtype: "HTML",
-                    label: __("Item Code and Description"),
+                    title: __("Item Details"),
                     options: `
-                                        <div class="row mb-4">
-                                            <div class="col-lg-6">
-                                                <div class="card w-80 h-80">
-                                                    <div class="card-body">
-                                                        <p class="text-description">${item_code}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="card w-80 h-80">
-                                                    <div class="card-body">
-                                                        <div class="row">
-                                                            <div class="col">
-                                                                <p class="text-description">${description}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                    <div class="row">
+                                        <div class="col-lg">
+                                            <div class="form-group">
+                                                <label class="control-label">Description</label>
+                                                <input class="form-control" data-fieldname="description" type="text" value= "${description}" readonly/>
                                             </div>
                                         </div>
+                                    </div>
+                                    `
+                  },
+                  {
+                    fieldtype: "HTML",
+                    title: __("Item Details"),
+                    options: `
+                                    <div class="row">
+                                        <div class="col-lg">
+                                            <div class="form-group">
+                                                <label class="control-label">Item Code</label>
+                                                <input class="form-control" data-fieldname="description" type="text" value= "${item_code}" readonly/>
+                                            </div>
+                                        </div>
+                                    </div>
                                     `
                   },
                   {
@@ -726,7 +728,6 @@
                     frappe.msgprint(__("No item selected."));
                     return;
                   }
-                  me.selectedItem.find(".item-uom").text(selectedUOM3);
                   const itemCode = unescape(me.selectedItem.attr("data-item-code"));
                   const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
                   const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
@@ -3548,35 +3549,39 @@
           check_date_control.refresh();
         }
         if (p.mode_of_payment === "2306") {
+          let existing_custom_form_2306 = frappe.model.get_value(p.doctype, p.name, "custom_form_2306");
           let check_form_2306 = frappe.ui.form.make_control({
             df: {
               label: `Expected 2306 Amount`,
               fieldtype: "Currency",
               placeholder: "Actual 2306",
-              read_only: 1
+              read_only: 1,
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_form_2306", doc.custom_2306);
+              }
             },
             parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
             render_input: true
           });
-          let latest_form_2306_value = doc.custom_2306;
-          frappe.model.set_value(p.doctype, p.name, "custom_form_2306", latest_form_2306_value);
-          check_form_2306.set_value(latest_form_2306_value || "");
+          check_form_2306.set_value(existing_custom_form_2306 || "");
           check_form_2306.refresh();
         }
         if (p.mode_of_payment === "2307") {
+          let existing_custom_form_2307 = frappe.model.get_value(p.doctype, p.name, "custom_form_2307");
           let check_form_2307 = frappe.ui.form.make_control({
             df: {
               label: `Expected 2307 Amount`,
               fieldtype: "Currency",
               placeholder: "Actual 2307",
-              read_only: 1
+              read_only: 1,
+              onchange: function() {
+                frappe.model.set_value(p.doctype, p.name, "custom_form_2307", doc.custom_2307);
+              }
             },
             parent: this.$payment_modes.find(`.${mode}.actual-gov-two`),
             render_input: true
           });
-          let latest_form_2307_value = doc.custom_2307;
-          frappe.model.set_value(p.doctype, p.name, "custom_form_2307", latest_form_2307_value);
-          check_form_2307.set_value(latest_form_2307_value || "");
+          check_form_2307.set_value(existing_custom_form_2307 || "");
           check_form_2307.refresh();
         }
         if (p.mode_of_payment === "QR Payment") {
@@ -5511,4 +5516,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.XNRT2OZK.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.HNGGIEWR.js.map
