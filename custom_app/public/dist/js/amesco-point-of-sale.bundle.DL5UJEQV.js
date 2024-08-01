@@ -1871,10 +1871,6 @@
 			<div class="item-vat mx-3">
 				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
-
-			<div class="item-vat mx-3">
-				<strong>${format_currency(item_data.rate, currency)}</strong>
-			</div>
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
@@ -2852,14 +2848,11 @@
     prepare_dom() {
       this.wrapper.append(
         `<section class="payment-container">
-				<div class="section-label payment-section">${__("Payment Method")}</div>
-				<div class="payment-modes"></div>
 				<div class="fields-numpad-container">
 					<div class="fields-section">
-						<div class="section-label">${__("Additional Information")}</div>
-						<div class="invoice-fields"></div>
+						<div class="section-label payment-section">${__("Payment Method")}</div>
+						<div class="payment-modes"></div>
 					</div>
-					<div class="number-pad"></div>
 				</div>
 				<div class="totals-section">
 					<div class="totals"></div>
@@ -2944,32 +2937,37 @@
     bind_events() {
       const me = this;
       function hideAllFields() {
-        $(`.mode-of-payment-control`).css("display", "none");
-        $(`.mobile-number`).css("display", "none");
-        $(`.approval-code`).css("display", "none");
-        $(`.reference-number`).css("display", "none");
-        $(`.bank-name`).css("display", "none");
-        $(`.holder-name`).css("display", "none");
-        $(`.card_type_control`).css("display", "none");
-        $(`.card-number`).css("display", "none");
-        $(`.expiry-date`).css("display", "none");
-        $(`.confirmation-code`).css("display", "none");
-        $(`.cash-shortcuts`).css("display", "none");
-        $(`.check-name`).css("display", "none");
-        $(`.check-number`).css("display", "none");
-        $(`.check-date`).css("display", "none");
-        $(`.actual-gov-one`).css("display", "none");
-        $(`.actual-gov-two`).css("display", "none");
-        $(`.payment-type`).css("display", "none");
-        $(`.bank-type`).css("display", "none");
-        $(`.qr-reference-number`).css("display", "none");
-        $(`.customer`).css("display", "none");
-        $(`.po-number`).css("display", "none");
-        $(`.representative`).css("display", "none");
-        $(`.id-number`).css("display", "none");
-        $(`.approved-by`).css("display", "none");
+        $(`.mode-of-payment-control`).hide();
+        $(`.mobile-number`).hide();
+        $(`.approval-code`).hide();
+        $(`.reference-number`).hide();
+        $(`.bank-name`).hide();
+        $(`.holder-name`).hide();
+        $(`.card_type_control`).hide();
+        $(`.card-number`).hide();
+        $(`.expiry-date`).hide();
+        $(`.confirmation-code`).hide();
+        $(`.cash-shortcuts`).hide();
+        $(`.check-name`).hide();
+        $(`.check-number`).hide();
+        $(`.check-date`).hide();
+        $(`.actual-gov-one`).hide();
+        $(`.actual-gov-two`).hide();
+        $(`.payment-type`).hide();
+        $(`.bank-type`).hide();
+        $(`.qr-reference-number`).hide();
+        $(`.customer`).hide();
+        $(`.po-number`).hide();
+        $(`.representative`).hide();
+        $(`.id-number`).hide();
+        $(`.approved-by`).hide();
+        $(`.gift-code`).hide();
+        $(`.button-code`).hide();
+        $(`.save-button`).hide();
+        $(`.discard-button`).hide();
+        $(`.cash-button`).hide();
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
-        me.$payment_modes.find(`.loyalty-amount-name`).css("display", "none");
+        me.$payment_modes.find(`.loyalty-amount-name`).hide();
       }
       this.$payment_modes.on("click", ".mode-of-payment", function(e) {
         const mode_clicked = $(this);
@@ -2982,37 +2980,54 @@
         $(".mode-of-payment").removeClass("border-primary");
         if (mode_clicked.hasClass("border-primary")) {
           mode_clicked.removeClass("border-primary");
-          me.selected_mode = "";
+          hideAllFields();
         } else {
           mode_clicked.addClass("border-primary");
           mode_clicked.find(".mode-of-payment-control").css("display", "flex");
-          mode_clicked.find(".mobile-number").css("display", "flex");
-          mode_clicked.find(".reference-number").css("display", "flex");
-          mode_clicked.find(".approval-code").css("display", "flex");
-          mode_clicked.find(".bank-name").css("display", "flex");
-          mode_clicked.find(".holder-name").css("display", "flex");
-          mode_clicked.find(".card_type_control").css("display", "flex");
-          mode_clicked.find(".card-number").css("display", "flex");
-          mode_clicked.find(".expiry-date").css("display", "flex");
-          mode_clicked.find(".confirmation-code").css("display", "flex");
-          mode_clicked.find(".check-name").css("display", "flex");
-          mode_clicked.find(".check-number").css("display", "flex");
-          mode_clicked.find(".check-date").css("display", "flex");
-          mode_clicked.find(".actual-gov-one").css("display", "flex");
-          mode_clicked.find(".actual-gov-two").css("display", "flex");
-          mode_clicked.find(".payment-type").css("display", "flex");
-          mode_clicked.find(".bank-type").css("display", "flex");
-          mode_clicked.find(".qr-reference-number").css("display", "flex");
-          mode_clicked.find(".customer").css("display", "flex");
-          mode_clicked.find(".po-number").css("display", "flex");
-          mode_clicked.find(".representative").css("display", "flex");
-          mode_clicked.find(".id-number").css("display", "flex");
-          mode_clicked.find(".approved-by").css("display", "flex");
-          mode_clicked.find(".cash-shortcuts").css("display", "grid");
-          me.$payment_modes.find(`.${mode}-amount`).css("display", "none");
-          me.$payment_modes.find(`.${mode}-name`).css("display", "inline");
-          me.selected_mode = me[`${mode}_control`];
-          me.selected_mode && me.selected_mode.$input.get().focus();
+          mode_clicked.find(".cash-button").css("display", "flex");
+          if (mode === "gcash" || mode === "paymaya") {
+            mode_clicked.find(".mobile-number").css("display", "flex");
+            mode_clicked.find(".reference-number").css("display", "flex");
+            mode_clicked.find(".save-button").css("display", "flex");
+            mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "cards" || mode === "debit_card" || mode === "credit_card") {
+            mode_clicked.find(".bank-name").css("display", "flex");
+            mode_clicked.find(".holder-name").css("display", "flex");
+            mode_clicked.find(".card_type_control").css("display", "flex");
+            mode_clicked.find(".card-number").css("display", "flex");
+            mode_clicked.find(".expiry-date").css("display", "flex");
+            mode_clicked.find(".approval-code").css("display", "flex");
+            mode_clicked.find(".save-button").css("display", "flex");
+            mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "cheque") {
+            mode_clicked.find(".bank-name").css("display", "flex");
+            mode_clicked.find(".check-name").css("display", "flex");
+            mode_clicked.find(".check-number").css("display", "flex");
+            mode_clicked.find(".check-date").css("display", "flex");
+            mode_clicked.find(".save-button").css("display", "flex");
+            mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "2306") {
+            mode_clicked.find(".actual-gov-one").css("display", "flex");
+            mode_clicked.find(".save-button").css("display", "flex");
+            mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "2307") {
+            mode_clicked.find(".actual-gov-two").css("display", "flex");
+            mode_clicked.find(".save-button").css("display", "flex");
+            mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "qr_payment") {
+            mode_clicked.find(".payment-type").css("display", "flex");
+            mode_clicked.find(".bank-type").css("display", "flex");
+            mode_clicked.find(".qr-reference-number").css("display", "flex");
+            mode_clicked.find(".save-button").css("display", "flex");
+            mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "charge") {
+            mode_clicked.find(".customer").css("display", "flex");
+            mode_clicked.find(".po-number").css("display", "flex");
+            mode_clicked.find(".representative").css("display", "flex");
+            mode_clicked.find(".id-number").css("display", "flex");
+            mode_clicked.find(".approved-by").css("display", "flex");
+          }
+          me.selected_mode && me.selected_mode.$input.get();
           me.auto_set_remaining_amount();
         }
       });
@@ -3210,126 +3225,215 @@
       const customer_group = doc.customer_group;
       const allowed_payment_modes = ["2306", "2307"];
       this.$payment_modes.html(
-        `${payments.map((p, i) => {
+        `<div style="display: flex; flex-wrap: wrap; gap: 16px;">
+				${payments.map((p, i) => {
           const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
           const payment_type = p.type;
-          const margin = i % 2 === 0 ? "pr-2" : "pl-2";
           const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
           let paymentModeHtml = `
-					<div class="payment-mode-wrapper ${margin}">
-						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}">
-							${p.mode_of_payment}
-							<div class="${mode}-amount pay-amount">${amount}</div>
-							<div class="${mode} mode-of-payment-control"></div>
-				`;
+						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px);">
+							<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff; ">
+								<span>${p.mode_of_payment}</span>
+								<div class="${mode}-amount pay-amount" style="font-weight: bold; display: flex; justify-content: space-between; align-items: center;">${amount}</div>
+								<div class="${mode} mode-of-payment-control"></div>
+								<div class="${mode} cash-button"></div>
+					`;
           switch (p.mode_of_payment) {
             case "GCash":
               paymentModeHtml += `
-							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
-							<div class="${mode} reference-number" style="margin-top:10px;"></div>
-						`;
+								<div class="${mode} mobile-number" style="margin-top:10px;"></div>
+								<div class="${mode} reference-number" style="margin-top:10px;"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
+							`;
               break;
             case "Cards":
               paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card_type_control"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
-						`;
+								<div class="${mode} bank-name"></div>
+								<div class="${mode} holder-name"></div>
+								<div class="${mode} card_type_control"></div>
+								<div class="${mode} card-number"></div>
+								<div class="${mode} expiry-date"></div>
+								<div class="${mode} approval-code"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
+							`;
               break;
             case "Debit Card":
               paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
+								<div class="${mode} bank-name"></div>
+								<div class="${mode} holder-name"></div>
+								<div class="${mode} card-number"></div>
+								<div class="${mode} expiry-date"></div>
+								<div class="${mode} approval-code"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
 							`;
               break;
             case "Credit Card":
               paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} holder-name"></div>
-							<div class="${mode} card-number"></div>
-							<div class="${mode} expiry-date"></div>
-							<div class="${mode} approval-code"></div>
-							<div class="${mode} reference-number"></div>
+								<div class="${mode} bank-name"></div>
+								<div class="${mode} holder-name"></div>
+								<div class="${mode} card-number"></div>
+								<div class="${mode} expiry-date"></div>
+								<div class="${mode} approval-code"></div>
+								<div class="${mode} save-button"></div>
+								
 							`;
               break;
             case "PayMaya":
               paymentModeHtml += `
-							<div class="${mode} mobile-number" style="margin-top:10px;"></div>
-							<div class="${mode} reference-number" style="margin-top:10px;"></div>
-						`;
+								<div class="${mode} mobile-number" style="margin-top:10px;"></div>
+								<div class="${mode} reference-number" style="margin-top:10px;"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
+							`;
               break;
             case "Cheque":
               paymentModeHtml += `
-							<div class="${mode} bank-name"></div>
-							<div class="${mode} check-name"></div>
-							<div class="${mode} check-number"></div>
-							<div class="${mode} check-date"></div>
-						`;
+								<div class="${mode} bank-name"></div>
+								<div class="${mode} check-name"></div>
+								<div class="${mode} check-number"></div>
+								<div class="${mode} check-date"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
+							`;
               break;
             case "2306":
               paymentModeHtml += `
-							<div class="${mode} actual-gov-one"></div>
-						`;
+								<div class="${mode} actual-gov-one"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
+							`;
               break;
             case "2307":
               paymentModeHtml += `
-							<div class="${mode} actual-gov-two"></div>
-						`;
+								<div class="${mode} actual-gov-two"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
+							`;
               break;
             case "QR Payment":
               paymentModeHtml += `
-							<div class="${mode} payment-type"></div>
-							<div class="${mode} bank-type"></div>
-							<div class="${mode} qr-reference-number"></div>
-
-						`;
+								<div class="${mode} payment-type"></div>
+								<div class="${mode} bank-type"></div>
+								<div class="${mode} qr-reference-number"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
+							`;
               break;
             case "Charge":
               paymentModeHtml += `
-							<div class="${mode} customer"></div>
-							<div class="${mode} po-number"></div>
-							<div class="${mode} representative"></div>
-							<div class="${mode} id-number"></div>
-							<div class="${mode} approved-by"></div>
-						`;
+								<div class="${mode} customer"></div>
+								<div class="${mode} po-number"></div>
+								<div class="${mode} representative"></div>
+								<div class="${mode} id-number"></div>
+								<div class="${mode} approved-by"></div>
+								
+							`;
+              break;
+            case "Gift Certificate":
+              paymentModeHtml += `
+							   <div class="${mode} gift-code"></div>
+								<div class="${mode} button-code"></div>
+						   `;
               break;
           }
           paymentModeHtml += `
+							</div>
 						</div>
-					</div>
-				`;
+					`;
           return paymentModeHtml;
-        }).join("")}`
+        }).join("")}
+			</div>`
       );
       payments.forEach((p) => {
         const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
         const me = this;
-        const allowed_payment_modes2 = ["2306", "2307"];
         this[`${mode}_control`] = frappe.ui.form.make_control({
           df: {
-            label: p.mode_of_payment,
+            label: "Amount",
             fieldtype: "Currency",
             placeholder: __("Enter {0} amount.", [p.mode_of_payment]),
             onchange: function() {
               const current_value = frappe.model.get_value(p.doctype, p.name, "amount");
               if (current_value != this.value) {
-                frappe.model.set_value(p.doctype, p.name, "amount", flt(this.value)).then(() => me.update_totals_section());
+                frappe.model.then(
+                  () => me.update_totals_section()
+                );
                 const formatted_currency = format_currency(this.value, currency);
                 me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
               }
-            }
+            },
+            reqd: true
           },
           parent: this.$payment_modes.find(`.${mode}.mode-of-payment-control`),
           render_input: true
         });
+        if (mode === "cash") {
+          const save_button = $("<button/>", {
+            text: "Save",
+            class: "btn btn-primary",
+            click: function() {
+              const amount_value = me[`${mode}_control`].get_value();
+              if (!amount_value) {
+                frappe.msgprint({
+                  title: __("Validation Warning"),
+                  message: __("All fields are required."),
+                  indicator: "orange"
+                });
+                return;
+              }
+              frappe.model.set_value(p.doctype, p.name, "amount", flt(amount_value)).then(() => {
+                me.update_totals_section();
+                const formatted_currency = format_currency(amount_value, currency);
+                me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
+                frappe.msgprint({
+                  title: __("Success"),
+                  message: __("Cash payment details have been saved."),
+                  indicator: "green"
+                });
+              });
+            }
+          });
+          const discard_button = $("<button/>", {
+            text: "Discard",
+            class: "btn btn-secondary",
+            click: function() {
+              me[`${mode}_control`].set_value(0);
+              frappe.model.set_value(p.doctype, p.name, "amount", 0).then(() => {
+                me.update_totals_section();
+                me.$payment_modes.find(`.${mode}-amount`).html(format_currency(0, currency));
+                frappe.msgprint(__("Cash payment details have been discarded."));
+              });
+            }
+          });
+          const button_container = $("<div/>", { style: "display: flex; gap: 5px; align-items: center;" });
+          button_container.append(save_button);
+          button_container.append(discard_button);
+          this.$payment_modes.find(`.${mode}.cash-button`).append(button_container);
+          this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).keypress(function(e) {
+            if (e.which === 13) {
+              save_button.click();
+            }
+          });
+        }
         this[`${mode}_control`].set_value(0);
         if (p.mode_of_payment === "Cards") {
           let validateLastFourDigits2 = function(value) {
@@ -3343,9 +3447,7 @@
               label: "Bank",
               fieldtype: "Data",
               placeholder: "Bank Name",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", flt(this.value));
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
             render_input: true
@@ -3358,9 +3460,7 @@
               label: "Name on Card",
               fieldtype: "Data",
               placeholder: "Card name holder",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_card_name", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
@@ -3393,10 +3493,7 @@
                 { label: "Mir", value: "Mir" },
                 { label: "Others", value: "Others" }
               ],
-              onchange: function() {
-                const value = this.value;
-                frappe.model.set_value(p.doctype, p.name, "custom_card_type", value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.card_type_control`),
             render_input: true
@@ -3409,22 +3506,11 @@
               label: "Card Number",
               fieldtype: "Data",
               placeholder: "Last 4 digits",
-              onchange: function() {
-                const value = this.value;
-                if (value === "") {
-                  frappe.model.set_value(p.doctype, p.name, "custom_card_number", "");
-                } else if (validateLastFourDigits2(value)) {
-                  frappe.model.set_value(p.doctype, p.name, "custom_card_number", value);
-                } else {
-                  frappe.msgprint(__("Card number must be exactly 4 digits."));
-                  this.set_value("");
-                }
-              },
-              maxlength: 4
+              maxlength: 4,
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.card-number`),
-            render_input: true,
-            default: existing_custom_card_number || ""
+            render_input: true
           });
           card_number_control.set_value(existing_custom_card_number || "");
           card_number_control.refresh();
@@ -3434,13 +3520,10 @@
               label: "Card Expiration Date",
               fieldtype: "Data",
               placeholder: "MM/YY",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.expiry-date`),
-            render_input: true,
-            default: p.custom_card_expiration_date || ""
+            render_input: true
           });
           expiry_date_control.set_value(existing_custom_card_expiration_date || "");
           expiry_date_control.refresh();
@@ -3450,30 +3533,45 @@
               label: "Approval Code",
               fieldtype: "Data",
               placeholder: "Approval Code",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.approval-code`),
             render_input: true
           });
           custom_approval_code_control.set_value(existing_custom_approval_code || "");
           custom_approval_code_control.refresh();
-          let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
-          let reference_no_control = frappe.ui.form.make_control({
-            df: {
-              label: "Reference No",
-              fieldtype: "Data",
-              placeholder: "Reference No.",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
-              }
-            },
-            parent: this.$payment_modes.find(`.${mode}.reference-number`),
-            render_input: true
+          let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
+          this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+          const me2 = this;
+          save_button.on("click", function() {
+            let amount = me2[`${mode}_control`].get_value();
+            let bank_name = bank_name_control.get_value();
+            let card_name = name_on_card_control.get_value();
+            let card_type = card_type_control.get_value();
+            let card_number = card_number_control.get_value();
+            let card_expiry_date = expiry_date_control.get_value();
+            let approval_code = custom_approval_code_control.get_value();
+            if (!amount || !bank_name || !card_name || !card_type || !card_number || !card_expiry_date || !approval_code) {
+              frappe.msgprint(__("All fields are required."));
+              return;
+            }
+            if (!validateLastFourDigits2(card_number)) {
+              frappe.msgprint(__("Card number must be exactly 4 digits."));
+              return;
+            }
+            frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+            frappe.model.set_value(p.doctype, p.name, "custom_bank_name", bank_name);
+            frappe.model.set_value(p.doctype, p.name, "custom_card_name", card_name);
+            frappe.model.set_value(p.doctype, p.name, "custom_card_type", card_type);
+            frappe.model.set_value(p.doctype, p.name, "custom_card_number", card_number);
+            frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", card_expiry_date);
+            frappe.model.set_value(p.doctype, p.name, "custom_approval_code", approval_code);
+            frappe.msgprint({
+              title: __("Success"),
+              message: __("Card Payment details have been saved."),
+              indicator: "green"
+            });
           });
-          reference_no_control.set_value(existing_reference_no || "");
-          reference_no_control.refresh();
         }
         if (p.mode_of_payment === "GCash" || p.mode_of_payment === "PayMaya") {
           let existing_custom_phone_number = frappe.model.get_value(p.doctype, p.name, "custom_phone_number");
@@ -3481,10 +3579,7 @@
             df: {
               label: "Number",
               fieldtype: "Data",
-              placeholder: "09876543212",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_phone_number", this.value);
-              }
+              placeholder: "09876543212"
             },
             parent: this.$payment_modes.find(`.${mode}.mobile-number`),
             render_input: true
@@ -3496,10 +3591,7 @@
             df: {
               label: "Reference No",
               fieldtype: "Data",
-              placeholder: "Reference No.",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
-              }
+              placeholder: "Reference No."
             },
             parent: this.$payment_modes.find(`.${mode}.reference-number`),
             render_input: true,
@@ -3507,6 +3599,53 @@
           });
           epayment_reference_number_controller.set_value(existing_custom_epayment_reference_number || "");
           epayment_reference_number_controller.refresh();
+          let save_button = $('<button class="btn btn-primary" style="text-align: right;">save</button>');
+          this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+          let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+          this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+          const me2 = this;
+          save_button.on("click", function() {
+            let amount = me2[`${mode}_control`].get_value();
+            let phone_number = phone_number_control.get_value();
+            let reference_no = epayment_reference_number_controller.get_value();
+            if (!amount) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
+            frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
+            frappe.msgprint({
+              title: __("Success"),
+              message: __("Payment details have been saved."),
+              indicator: "green"
+            });
+          });
+          discard_button.on("click", function() {
+            me2[`${mode}_control`].set_value("");
+            phone_number_control.set_value("");
+            epayment_reference_number_controller.set_value("");
+            frappe.model.set_value(p.doctype, p.name, "amount", null);
+            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", "");
+            frappe.model.set_value(p.doctype, p.name, "reference_no", "");
+            frappe.msgprint(__("Payment details have been discarded."));
+          });
+          const controls = [
+            me2[`${mode}_control`],
+            phone_number_control,
+            epayment_reference_number_controller
+          ];
+          controls.forEach((control) => {
+            control.$input && control.$input.keypress(function(e) {
+              if (e.which === 13) {
+                save_button.click();
+              }
+            });
+          });
         }
         if (p.mode_of_payment === "Debit Card" || p.mode_of_payment === "Credit Card") {
           let validateLastFourDigits2 = function(value) {
@@ -3515,106 +3654,141 @@
           };
           var validateLastFourDigits = validateLastFourDigits2;
           let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
+          let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
+          let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
+          let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
+          let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
           let bank_name_control = frappe.ui.form.make_control({
             df: {
               label: "Bank",
               fieldtype: "Data",
               placeholder: "Bank Name",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_bank_name", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
             render_input: true
           });
           bank_name_control.set_value(existing_custom_bank_name || "");
           bank_name_control.refresh();
-          let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
           let name_on_card_control = frappe.ui.form.make_control({
             df: {
               label: "Name on Card",
               fieldtype: "Data",
               placeholder: "Card name holder",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_card_name", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
           });
           name_on_card_control.set_value(existing_custom_card_name || "");
           name_on_card_control.refresh();
-          let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
           let card_number_control = frappe.ui.form.make_control({
             df: {
               label: "Card Number",
               fieldtype: "Data",
               placeholder: "Last 4 digits",
-              onchange: function() {
-                const value = this.value;
-                if (value === "") {
-                  frappe.model.set_value(p.doctype, p.name, "custom_card_number", "");
-                } else if (validateLastFourDigits2(value)) {
-                  frappe.model.set_value(p.doctype, p.name, "custom_card_number", value);
-                } else {
-                  frappe.msgprint(__("Card number must be exactly 4 digits."));
-                  this.set_value("");
-                }
-              },
-              maxlength: 4
+              maxlength: 4,
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.card-number`),
-            render_input: true,
-            default: existing_custom_card_number || ""
+            render_input: true
           });
           card_number_control.set_value(existing_custom_card_number || "");
           card_number_control.refresh();
-          let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
           let expiry_date_control = frappe.ui.form.make_control({
             df: {
               label: "Card Expiration Date",
               fieldtype: "Data",
               placeholder: "MM/YY",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.expiry-date`),
-            render_input: true,
-            default: p.custom_card_expiration_date || ""
+            render_input: true
           });
           expiry_date_control.set_value(existing_custom_card_expiration_date || "");
           expiry_date_control.refresh();
-          let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
           let custom_approval_code_control = frappe.ui.form.make_control({
             df: {
               label: "Approval Code",
               fieldtype: "Data",
               placeholder: "Approval Code",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_approval_code", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.approval-code`),
             render_input: true
           });
           custom_approval_code_control.set_value(existing_custom_approval_code || "");
           custom_approval_code_control.refresh();
-          let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
-          let reference_no_control = frappe.ui.form.make_control({
-            df: {
-              label: "Reference No",
-              fieldtype: "Data",
-              placeholder: "Reference No.",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
-              }
-            },
-            parent: this.$payment_modes.find(`.${mode}.reference-number`),
-            render_input: true
+          let save_button = $('<button class="btn btn-primary" style="text-align: right;">Save</button>');
+          this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+          let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+          this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+          const me2 = this;
+          save_button.on("click", function() {
+            let amount = me2[`${mode}_control`].get_value();
+            let bank_name = bank_name_control.get_value();
+            let card_name = name_on_card_control.get_value();
+            let card_number = card_number_control.get_value();
+            let card_expiry_date = expiry_date_control.get_value();
+            let approval_code = custom_approval_code_control.get_value();
+            if (!amount || !bank_name || !card_name || !card_number || !card_expiry_date || !approval_code) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            if (!validateLastFourDigits2(card_number)) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Card number must be exactly 4 digits."),
+                indicator: "orange"
+              });
+              return;
+            }
+            frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+            frappe.model.set_value(p.doctype, p.name, "custom_bank_name", bank_name);
+            frappe.model.set_value(p.doctype, p.name, "custom_card_name", card_name);
+            frappe.model.set_value(p.doctype, p.name, "custom_card_number", card_number);
+            frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", card_expiry_date);
+            frappe.model.set_value(p.doctype, p.name, "custom_approval_code", approval_code);
+            frappe.msgprint({
+              title: __("Success"),
+              message: __("Card payment details have been saved."),
+              indicator: "green"
+            });
           });
-          reference_no_control.set_value(existing_reference_no || "");
-          reference_no_control.refresh();
+          discard_button.on("click", function() {
+            me2[`${mode}_control`].set_value("");
+            bank_name_control.set_value("");
+            name_on_card_control.set_value("");
+            card_number_control.set_value("");
+            expiry_date_control.set_value("");
+            custom_approval_code_control.set_value("");
+            frappe.model.set_value(p.doctype, p.name, "amount", null);
+            frappe.model.set_value(p.doctype, p.name, "custom_bank_name", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_card_name", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_card_number", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_approval_code", "");
+            frappe.msgprint(__("Card payment details have been discarded."));
+          });
+          const controls = [
+            me2[`${mode}_control`],
+            bank_name_control,
+            name_on_card_control,
+            card_number_control,
+            expiry_date_control,
+            custom_approval_code_control
+          ];
+          controls.forEach((control) => {
+            control.$input && control.$input.keypress(function(e) {
+              if (e.which === 13) {
+                save_button.click();
+              }
+            });
+          });
         }
         if (p.mode_of_payment === "Cheque" || p.mode_of_payment === "Government") {
           let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
@@ -3623,9 +3797,7 @@
               label: "Check Bank Name",
               fieldtype: "Data",
               placeholder: "Check Bank Name",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
             render_input: true
@@ -3638,9 +3810,7 @@
               label: "Name On Check",
               fieldtype: "Data",
               placeholder: "Check Name",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.check-name`),
             render_input: true
@@ -3653,9 +3823,7 @@
               label: "Check Number",
               fieldtype: "Data",
               placeholder: "Check Number",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_check_number", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.check-number`),
             render_input: true
@@ -3669,15 +3837,56 @@
               label: "Check Date",
               fieldtype: "Date",
               placeholder: "Check Date",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_check_date", this.get_value());
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.check-date`),
             render_input: true
           });
           check_date_control.set_value(existing_custom_check_date || frappe.datetime.nowdate());
           check_date_control.refresh();
+          let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
+          this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+          let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+          this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+          const me2 = this;
+          save_button.on("click", function() {
+            let amount = me2[`${mode}_control`].get_value();
+            let bank_name = bank_name_control.get_value();
+            let check_name = check_name_control.get_value();
+            let check_number = check_number_control.get_value();
+            let check_date = check_date_control.get_value();
+            if (!amount || !bank_name || !check_name || !check_number || !check_date) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+            frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", bank_name);
+            frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", check_name);
+            frappe.model.set_value(p.doctype, p.name, "custom_check_number", check_number);
+            frappe.model.set_value(p.doctype, p.name, "custom_check_date", check_date);
+            frappe.msgprint({
+              title: __("Success"),
+              message: __("Cheque payment details have been saved."),
+              indicator: "green"
+            });
+          });
+          discard_button.on("click", function() {
+            me2[`${mode}_control`].set_value("");
+            bank_name_control.set_value("");
+            check_name_control.set_value("");
+            check_number_control.set_value("");
+            check_date_control.set_value("");
+            frappe.model.set_value(p.doctype, p.name, "amount", null);
+            frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_check_number", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_check_date", "");
+            frappe.msgprint(__("Cheque payment details have been discarded."));
+          });
         }
         if (p.mode_of_payment === "2306") {
           let check_form_2306 = frappe.ui.form.make_control({
@@ -3694,6 +3903,43 @@
           frappe.model.set_value(p.doctype, p.name, "custom_form_2306", latest_form_2306_value);
           check_form_2306.set_value(latest_form_2306_value || "");
           check_form_2306.refresh();
+          let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
+          this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+          let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+          this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+          const me2 = this;
+          save_button.on("click", function() {
+            let amount = me2[`${mode}_control`].get_value();
+            if (!amount) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+            frappe.msgprint({
+              title: __("Success"),
+              message: __("Payment details have been saved."),
+              indicator: "green"
+            });
+          });
+          discard_button.on("click", function() {
+            me2[`${mode}_control`].set_value("");
+            frappe.model.set_value(p.doctype, p.name, "amount", null);
+            frappe.msgprint(__("Payment details have been discarded."));
+          });
+          const controls = [
+            me2[`${mode}_control`]
+          ];
+          controls.forEach((control) => {
+            control.$input && control.$input.keypress(function(e) {
+              if (e.which === 13) {
+                save_button.click();
+              }
+            });
+          });
         }
         if (p.mode_of_payment === "2307") {
           let check_form_2307 = frappe.ui.form.make_control({
@@ -3710,6 +3956,43 @@
           frappe.model.set_value(p.doctype, p.name, "custom_form_2307", latest_form_2307_value);
           check_form_2307.set_value(latest_form_2307_value || "");
           check_form_2307.refresh();
+          let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
+          this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+          let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+          this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+          const me2 = this;
+          save_button.on("click", function() {
+            let amount = me2[`${mode}_control`].get_value();
+            if (!amount) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+            frappe.msgprint({
+              title: __("Success"),
+              message: __("Payment details have been saved."),
+              indicator: "green"
+            });
+          });
+          discard_button.on("click", function() {
+            me2[`${mode}_control`].set_value("");
+            frappe.model.set_value(p.doctype, p.name, "amount", null);
+            frappe.msgprint(__("Payment details have been discarded."));
+          });
+          const controls = [
+            me2[`${mode}_control`]
+          ];
+          controls.forEach((control) => {
+            control.$input && control.$input.keypress(function(e) {
+              if (e.which === 13) {
+                save_button.click();
+              }
+            });
+          });
         }
         if (p.mode_of_payment === "QR Payment") {
           let existing_custom_payment_type = frappe.model.get_value(p.doctype, p.name, "custom_payment_type");
@@ -3722,10 +4005,7 @@
                 { label: "Standee", value: "Standee" },
                 { label: "Terminal", value: "Terminnal" }
               ],
-              onchange: function() {
-                const value = this.value;
-                frappe.model.set_value(p.doctype, p.name, "custom_payment_type", value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.payment-type`),
             render_input: true
@@ -3744,10 +4024,7 @@
                 { label: "MAYA", value: "MAYA" },
                 { label: "BDO", value: "BDO" }
               ],
-              onchange: function() {
-                const value = this.value;
-                frappe.model.set_value(p.doctype, p.name, "custom_bank_type", value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-type`),
             render_input: true
@@ -3760,15 +4037,65 @@
               label: `Confirmation Code`,
               fieldtype: "Data",
               placeholder: "Reference # or Confirmation Code",
-              onchange: function() {
-                frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
-              }
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.qr-reference-number`),
             render_input: true
           });
           custom_qr_reference_number.set_value(existing_custom_qr_reference_number || "");
           custom_qr_reference_number.refresh();
+          let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
+          this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+          let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+          this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+          const me2 = this;
+          save_button.on("click", function() {
+            let amount = me2[`${mode}_control`].get_value();
+            let payment_type = custom_payment_type.get_value();
+            let bank_type = custom_bank_type.get_value();
+            let qr_reference_number = custom_qr_reference_number.get_value();
+            if (!amount || !payment_type || !bank_type || !qr_reference_number) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+            frappe.model.set_value(p.doctype, p.name, "custom_payment_type", payment_type);
+            frappe.model.set_value(p.doctype, p.name, "custom_bank_type", bank_type);
+            frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", qr_reference_number);
+            frappe.msgprint({
+              title: __("Success"),
+              message: __("Card payment details have been saved."),
+              indicator: "green"
+            });
+          });
+          discard_button.on("click", function() {
+            me2[`${mode}_control`].set_value("");
+            custom_payment_type.set_value("");
+            custom_bank_type.set_value("");
+            custom_qr_reference_number.set_value("");
+            frappe.model.set_value(p.doctype, p.name, "amount", null);
+            frappe.model.set_value(p.doctype, p.name, "custom_payment_type", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_bank_type", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", "");
+            frappe.msgprint(__("QR payment details have been discarded."));
+          });
+          const controls = [
+            me2[`${mode}_control`],
+            custom_payment_type,
+            custom_bank_type,
+            custom_qr_reference_number
+          ];
+          controls.forEach((control) => {
+            control.$input && control.$input.keypress(function(e) {
+              if (e.which === 13) {
+                save_button.click();
+              }
+            });
+          });
         }
         if (p.mode_of_payment === "Charge") {
           console.log("Mode of payment is Charge");
@@ -3848,7 +4175,57 @@
           custom_approved_by.set_value(existing_custom_approved_by || "");
           custom_approved_by.refresh();
         }
-        this[`${mode}_control`].toggle_label(false);
+        if (p.mode_of_payment === "Gift Certificate") {
+          let code_field = [];
+          let codes = [];
+          let code_input = frappe.ui.form.make_control({
+            df: {
+              fieldtype: "Data",
+              label: "Gift Code",
+              placeholder: "Enter Gift Code"
+            },
+            parent: this.$payment_modes.find(`.${mode}.gift-code`)[0],
+            render_input: true
+          });
+          code_input.refresh();
+          let button = frappe.ui.form.make_control({
+            df: {
+              label: "Fetch",
+              fieldtype: "Button",
+              btn_size: "xs",
+              click: function() {
+                let code_value = code_input.get_value();
+                if (code_value) {
+                  console.log("Button clicked, Code:", code_value);
+                  if (code_value) {
+                    frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
+                      console.log("Gift Cert: ", gift_cert);
+                      frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
+                    }).catch((error) => {
+                      console.error("Error retrieving gift certificate:", error);
+                      frappe.msgprint({
+                        title: __("Error"),
+                        indicator: "red",
+                        message: __("Invalid Gift Code. Please check the code and try again.")
+                      });
+                    });
+                  }
+                  code_field.push(code_value);
+                  console.log("code_field", code_field);
+                } else {
+                  frappe.msgprint({
+                    title: __("Error"),
+                    indicator: "red",
+                    message: __("Please enter a gift code before clicking Fetch.")
+                  });
+                }
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.button-code`)[0],
+            render_input: true
+          });
+          button.refresh();
+        }
         this[`${mode}_control`].set_value(p.amount);
       });
       this.render_loyalty_points_payment_mode();
@@ -5704,4 +6081,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.2CVKAHKT.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.DL5UJEQV.js.map

@@ -13,7 +13,7 @@ from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, ge
 from erpnext.stock.utils import scan_barcode
 from frappe.utils.password import get_decrypted_password
 from frappe.exceptions import AuthenticationError
-from custom_app.customapp.utils.password import check_oic_password, check_password, check_password_without_username
+from custom_app.customapp.utils.password import check_oic_password, check_password, check_password_cashier, check_password_oic, check_password_without_username
 
 import platform
 
@@ -552,7 +552,23 @@ def get_user_details_by_password(password):
     """
     Wrapper function for checking password without requiring a username.
     """
-    return check_password_without_username(password)
+    return check_password_without_username(password)  
+
+@frappe.whitelist()
+def get_cashier_details_by_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_password_cashier(password)
+
+
+@frappe.whitelist()
+def get_oic_details_by_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_password_oic(password)
+
     
 @frappe.whitelist()
 def get_pharmacist_user():
