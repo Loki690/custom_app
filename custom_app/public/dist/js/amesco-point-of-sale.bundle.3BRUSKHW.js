@@ -4490,9 +4490,12 @@
         parent: this.$component.find(".status-field"),
         render_input: true
       });
-      this.search_field.toggle_label(false);
+      this.search_field.toggle_label(true);
       this.status_field.toggle_label(false);
       this.status_field.set_value("Draft");
+      setTimeout(() => {
+        this.search_field.$input.focus();
+      }, 100);
     }
     refresh_list() {
       frappe.dom.freeze();
@@ -5167,7 +5170,6 @@
     }
     prepare_menu() {
       this.page.clear_menu();
-      this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
       this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
       this.page.add_menu_item(
         __("Pending Transaction (F2)"),
@@ -5176,7 +5178,6 @@
         "f2"
       );
       this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
-      this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
       this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
       this.page.add_menu_item(__("Z Reading"), this.z_reading.bind(this), false, "f5");
       this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
@@ -5186,8 +5187,6 @@
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
         { label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2" },
         { label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
-        { label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B" },
-        { label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X" },
         { label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C" }
       ];
       $(".page-actions .btn-custom").remove();
@@ -6083,4 +6082,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.NB7LLQ2D.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.3BRUSKHW.js.map

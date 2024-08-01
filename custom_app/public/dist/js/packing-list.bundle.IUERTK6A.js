@@ -8215,16 +8215,16 @@
       frappe.ui.keys.add_shortcut({
         shortcut: "ctrl+i",
         action: () => {
-          this.focus_search_invoice();
+          const $items = me.$invoices_container.find(".invoice-wrapper");
+          if ($items.length) {
+            $items.first().focus();
+          }
         },
-        condition: () => true,
-        description: __("Focus on Search Field"),
+        condition: () => me.$invoices_container.is(":visible"),
+        description: __("Activate Cart Item Focus"),
         ignore_inputs: true,
         page: cur_page.page.page
       });
-    }
-    focus_search_invoice() {
-      this.search_field.set_focus();
     }
     make_filter_section() {
       const me = this;
@@ -8238,7 +8238,7 @@
           parent: this.$component.find(".search-field"),
           render_input: true
         });
-        this.search_field.toggle_label(false);
+        this.search_field.toggle_label(true);
       }
       if (!this.status_field) {
         this.status_field = frappe.ui.form.make_control({
@@ -9656,4 +9656,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.6SRM6S72.js.map
+//# sourceMappingURL=packing-list.bundle.IUERTK6A.js.map

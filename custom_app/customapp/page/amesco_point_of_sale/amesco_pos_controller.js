@@ -256,7 +256,7 @@ custom_app.PointOfSale.Controller = class {
 	prepare_menu() {
 		this.page.clear_menu();
 
-		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
+		// this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),
@@ -267,7 +267,7 @@ custom_app.PointOfSale.Controller = class {
 
 		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
 
-		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
+		// this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
 		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
 		this.page.add_menu_item(__('Z Reading'), this.z_reading.bind(this), false, "f5");
@@ -281,8 +281,8 @@ custom_app.PointOfSale.Controller = class {
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
 			{label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
-			{label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
-			{label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
+			// {label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
+			// {label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
 			{label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
 		];
 	
