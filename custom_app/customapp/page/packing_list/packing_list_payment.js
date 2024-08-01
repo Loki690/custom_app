@@ -223,7 +223,12 @@ custom_app.PointOfSale.Payment = class {
 					mode_clicked.find(".approved-by").css("display", "flex");
 					mode_clicked.find(".save-button").css("display", "flex");
 					mode_clicked.find(".discard-button").css("display", "flex");
+				} else if (mode === "gift_certificate") {
+					mode_clicked.find(".gift-code").css("display", "flex");
+					mode_clicked.find(".button-code").css("display", "flex");
+					mode_clicked.find(".discard-button").css("display", "flex");
 				}
+	
 	
 				// me.selected_mode = me[`${mode}_control`];
 				me.selected_mode && me.selected_mode.$input.get();
@@ -606,8 +611,11 @@ custom_app.PointOfSale.Payment = class {
 							break;
 						case "Gift Certificate":
 							paymentModeHtml += `
-							   <div class="${mode} gift-code"></div>
-								<div class="${mode} button-code"></div>
+							  <div class="${mode} gift-code"></div>
+							  <div class="${mode} button-row" style="display: flex; gap: 3px; align-items: center;">
+							  		<div class="${mode} button-code mt-2" ></div>
+									<div class="${mode} discard-button"></div>
+								</div>
 						   `;
 							break;
 					}
@@ -634,6 +642,7 @@ custom_app.PointOfSale.Payment = class {
 					label: "Amount",
 					fieldtype: "Currency",
 					placeholder: __("Enter {0} amount.", [p.mode_of_payment]),
+					read_only: (mode === "gift_certificate"), 
 					onchange: function () {
 						const current_value = frappe.model.get_value(p.doctype, p.name, "amount");
 						if (current_value != this.value) {
@@ -879,7 +888,6 @@ custom_app.PointOfSale.Payment = class {
 							: doc.rounded_total;
 						const currency = doc.currency;
 
-						console.log("test", grand_total)
 						if(amount > grand_total){
 							frappe.msgprint({
 								title: __('Validation Warning'),
@@ -1960,7 +1968,7 @@ custom_app.PointOfSale.Payment = class {
 					df: {
 						label: 'Fetch',
 						fieldtype: 'Button',
-						btn_size: 'xs', // xs, sm, lg
+						btn_size: 'sm', // xs, sm, lg
 						click: function () {
 							let code_value = code_input.get_value();
 							if (code_value) {
@@ -1973,6 +1981,11 @@ custom_app.PointOfSale.Payment = class {
 										// Set the amount in the payment document based on the gift certificate amount
 										console.log('Gift Cert: ', gift_cert);
 										frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
+										frappe.msgprint({
+											title: __('Success'),
+											message: __('Gift Certificate payment details have been saved.'),
+											indicator: 'green'
+										});
 									})
 									.catch(error => {
 										console.error("Error retrieving gift certificate:", error);
@@ -1995,12 +2008,52 @@ custom_app.PointOfSale.Payment = class {
 								});
 							}
 						}
+						
 					},
 					parent: this.$payment_modes.find(`.${mode}.button-code`)[0], // Ensure correct parent DOM element
 					render_input: true
+
+					
+
+
+
 				});
 
 				button.refresh();
+
+
+				let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
+
+				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+			
+				const me = this;
+				// Attach an event listener to the save button
+				
+				discard_button.on('click', function() {
+					me[`${mode}_control`].set_value('');
+				
+					// let reference_no = reference_no_control.get_value()
+
+					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
+			
+					frappe.msgprint(__('QR payment details have been discarded.'));
+
+				});
+
+				const controls = [
+					me[`${mode}_control`],
+				
+				];
+			
+				controls.forEach(control => {
+					control.$input && control.$input.keypress(function (e) {
+						if (e.which === 13) { // Enter key pressed
+							save_button.click();
+						}
+					});
+				});
+
 
 
 				// Retrieve existing custom_code if it exists
