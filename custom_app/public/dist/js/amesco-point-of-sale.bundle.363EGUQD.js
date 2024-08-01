@@ -3570,6 +3570,17 @@
               frappe.msgprint(__("Card number must be exactly 4 digits."));
               return;
             }
+            const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
+            const currency2 = doc.currency;
+            console.log("test", grand_total);
+            if (amount > grand_total) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Amount must not exceed the grand total."),
+                indicator: "orange"
+              });
+              return;
+            }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.model.set_value(p.doctype, p.name, "custom_bank_name", bank_name);
             frappe.model.set_value(p.doctype, p.name, "custom_card_name", card_name);
@@ -3656,6 +3667,16 @@
               frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
+            const currency2 = doc.currency;
+            if (amount > grand_total) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Amount must not exceed the grand total."),
                 indicator: "orange"
               });
               return;
@@ -3791,6 +3812,16 @@
               });
               return;
             }
+            const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
+            const currency2 = doc.currency;
+            if (amount > grand_total) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Amount must not exceed the grand total."),
+                indicator: "orange"
+              });
+              return;
+            }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.model.set_value(p.doctype, p.name, "custom_bank_name", bank_name);
             frappe.model.set_value(p.doctype, p.name, "custom_card_name", card_name);
@@ -3903,6 +3934,16 @@
               frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
+            const currency2 = doc.currency;
+            if (amount > grand_total) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Amount must not exceed the grand total."),
                 indicator: "orange"
               });
               return;
@@ -4102,6 +4143,16 @@
               frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
+                indicator: "orange"
+              });
+              return;
+            }
+            const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
+            const currency2 = doc.currency;
+            if (amount > grand_total) {
+              frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Amount must not exceed the grand total."),
                 indicator: "orange"
               });
               return;
@@ -6175,4 +6226,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.7KHEUZSP.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.363EGUQD.js.map
