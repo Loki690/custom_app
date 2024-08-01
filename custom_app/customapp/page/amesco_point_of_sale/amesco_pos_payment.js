@@ -219,6 +219,8 @@ custom_app.PointOfSale.Payment = class {
 					mode_clicked.find(".representative").css("display", "flex");
 					mode_clicked.find(".id-number").css("display", "flex");
 					mode_clicked.find(".approved-by").css("display", "flex");
+					mode_clicked.find(".save-button").css("display", "flex");
+					mode_clicked.find(".discard-button").css("display", "flex");
 				}
 	
 				// me.selected_mode = me[`${mode}_control`];
@@ -226,6 +228,7 @@ custom_app.PointOfSale.Payment = class {
 				me.auto_set_remaining_amount();
 			}
 		});
+	
 	
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
@@ -469,16 +472,14 @@ custom_app.PointOfSale.Payment = class {
 		
 					let paymentModeHtml = `
 						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px);">
-							<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff; ">
-								<span>${p.mode_of_payment}</span>
-								<div class="${mode}-amount pay-amount" style="font-weight: bold; display: flex; justify-content: space-between; align-items: center;">${amount}</div>
-								<div class="${mode} mode-of-payment-control"></div>
-								<div class="${mode} cash-button"></div>
+						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
+							<span>${p.mode_of_payment}</span>
+							<div class="${mode}-amount pay-amount" style="font-weight: bold; display: flex; justify-content: flex-end; align-items: center;">${amount}</div>
+							<div class="${mode} mode-of-payment-control"></div>
+							<div class="${mode} cash-button"></div>
 					`;
 		
-					
-
-
+				
 					switch (p.mode_of_payment) {
 						case "GCash":
 							paymentModeHtml += `
@@ -528,6 +529,7 @@ custom_app.PointOfSale.Payment = class {
 									<div class="${mode} save-button"></div>
 									<div class="${mode} discard-button"></div>
 								</div>
+								
 							`;
 							break;
 						case "PayMaya":
@@ -588,6 +590,10 @@ custom_app.PointOfSale.Payment = class {
 								<div class="${mode} representative"></div>
 								<div class="${mode} id-number"></div>
 								<div class="${mode} approved-by"></div>
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
 								
 							`;
 							break;
@@ -831,6 +837,10 @@ custom_app.PointOfSale.Payment = class {
 				let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
 				this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
 			
+
+				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+
 				const me = this;
 				// Attach an event listener to the save button
 				save_button.on('click', function() {
@@ -868,6 +878,50 @@ custom_app.PointOfSale.Payment = class {
 						indicator: 'green'
 					});
 				});
+
+				discard_button.on('click', function() {
+					// Clear all the fields
+					me[`${mode}_control`].set_value('');
+					bank_name_control.set_value('');
+					name_on_card_control.set_value('');
+					card_type_control.set_value('');
+					card_number_control.set_value('');
+					expiry_date_control.set_value('');
+					custom_approval_code_control.set_value('');
+		
+				
+					// Set values in the model to null or empty string
+					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "custom_bank_name",'');
+					frappe.model.set_value(p.doctype, p.name, "custom_card_name", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_card_type", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_card_number",'');
+					frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_approval_code", '');
+			
+					frappe.msgprint(__('Payment details have been discarded.'));
+				});
+			
+				const controls = [
+					me[`${mode}_control`],
+					bank_name_control,
+					name_on_card_control,
+					card_type_control,
+					card_number_control,
+					expiry_date_control,
+					custom_approval_code_control
+				]
+			
+				controls.forEach(control => {
+					control.$input && control.$input.keypress(function (e) {
+						if (e.which === 13) { // Enter key pressed
+							save_button.click();
+						}
+					});
+				});
+
+
+
 			
 				function validateLastFourDigits(value) {
 					const regex = /^\d{4}$/;
@@ -1355,7 +1409,7 @@ custom_app.PointOfSale.Payment = class {
 			
 					frappe.msgprint({
 						title: __('Success'),
-						message: __('Payment details have been saved.'),
+						message: __('QR payment details have been saved.'),
 						indicator: 'green'
 					});
 				});
@@ -1364,7 +1418,7 @@ custom_app.PointOfSale.Payment = class {
 				discard_button.on('click', function() {
 					me[`${mode}_control`].set_value('');
 					frappe.model.set_value(p.doctype, p.name, "amount", null);
-					frappe.msgprint(__('Payment details have been discarded.'));
+					frappe.msgprint(__('QR payment details have been discarded.'));
 
 				});
 
@@ -1429,7 +1483,7 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
 					frappe.msgprint({
 						title: __('Success'),
-						message: __('Payment details have been saved.'),
+						message: __('QR payment details have been saved.'),
 						indicator: 'green'
 					});
 				});
@@ -1438,7 +1492,7 @@ custom_app.PointOfSale.Payment = class {
 				discard_button.on('click', function() {
 					me[`${mode}_control`].set_value('');
 					frappe.model.set_value(p.doctype, p.name, "amount", null);
-					frappe.msgprint(__('Payment details have been discarded.'));
+					frappe.msgprint(__('QR payment details have been discarded.'));
 
 				});
 
@@ -1618,10 +1672,13 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Customer',
 						fieldtype: "Data",
 						placeholder: 'Customer Name',
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_customer", this.value);
-						},
+						reqd:true
+						// onchange: function () {
+						// 	frappe.model.set_value(p.doctype, p.name, "custom_customer", this.value);
+						// },
 					},
+
+
 					parent: this.$payment_modes.find(`.${mode}.customer`), // Use [0] to select the DOM element
 					render_input: true,
 				});
@@ -1634,9 +1691,10 @@ custom_app.PointOfSale.Payment = class {
 						label: 'PO Number',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'PO Number',
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_po_number", this.value);
-						},
+						reqd:true
+						// onchange: function () {
+						// 	frappe.model.set_value(p.doctype, p.name, "custom_po_number", this.value);
+						// },
 					},
 					parent: this.$payment_modes.find(`.${mode}.po-number`),
 					render_input: true,
@@ -1650,9 +1708,10 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Representative',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'Representative',
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_representative", this.value);
-						},
+						reqd:true
+						// onchange: function () {
+						// 	frappe.model.set_value(p.doctype, p.name, "custom_representative", this.value);
+						// },
 					},
 					parent: this.$payment_modes.find(`.${mode}.representative`),
 					render_input: true,
@@ -1666,9 +1725,10 @@ custom_app.PointOfSale.Payment = class {
 						label: 'ID Number',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'ID Number',
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_id_number", this.value);
-						},
+						reqd:true
+						// onchange: function () {
+						// 	frappe.model.set_value(p.doctype, p.name, "custom_id_number", this.value);
+						// },
 					},
 					parent: this.$payment_modes.find(`.${mode}.id-number`),
 					render_input: true,
@@ -1682,15 +1742,104 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Approved By',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'Approver name',
-						onchange: function () {
-							frappe.model.set_value(p.doctype, p.name, "custom_approved_by", this.value);
-						},
+					
+						// onchange: function () {
+						// 	frappe.model.set_value(p.doctype, p.name, "custom_approved_by", this.value);
+						// },
 					},
 					parent: this.$payment_modes.find(`.${mode}.approved-by`),
 					render_input: true,
 				});
 				custom_approved_by.set_value(existing_custom_approved_by || '');
 				custom_approved_by.refresh();
+
+				
+
+				let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
+				this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+
+				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+			
+				const me = this;
+				// Attach an event listener to the save button
+				save_button.on('click', function() {
+					let amount = me[`${mode}_control`].get_value(); // Get amount value
+					let customer = custom_customer.get_value();
+					let po_number = custom_po_number.get_value();
+					let representative = custom_representative.get_value();
+					let id_number = custom_id_number.get_value();
+					let approved_by = custom_approved_by.get_value();	
+
+					// let reference_no = reference_no_control.get_value();
+	
+					if (!amount || !customer || !po_number || !representative || !id_number ) {
+						frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('All fields are required.'),
+							indicator: 'orange'
+						});
+						return;
+					}
+	
+
+					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+					frappe.model.set_value(p.doctype, p.name, "custom_customer", customer);
+					frappe.model.set_value(p.doctype, p.name, "custom_po_number", po_number);
+					frappe.model.set_value(p.doctype, p.name, "custom_representative", representative);
+					frappe.model.set_value(p.doctype, p.name, "custom_id_number", id_number);
+					frappe.model.set_value(p.doctype, p.name, "custom_approved_by", approved_by);
+					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
+	
+					frappe.msgprint({
+						title: __('Success'),
+						message: __('Card payment details have been saved.'),
+						indicator: 'green'
+					});
+				});
+
+
+				discard_button.on('click', function() {
+					me[`${mode}_control`].set_value('');
+					custom_customer.set_value('');
+					custom_po_number.set_value('');
+					custom_representative.set_value('');
+					custom_id_number.set_value('');
+					custom_approved_by.set_value('');
+					// let reference_no = reference_no_control.get_value();
+
+
+					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "custom_customer", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_po_number",  '');
+					frappe.model.set_value(p.doctype, p.name, "custom_representative", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_id_number",  '');
+					frappe.model.set_value(p.doctype, p.name, "custom_approved_by",  '');
+					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
+			
+					frappe.msgprint(__('QR payment details have been discarded.'));
+
+				});
+
+				const controls = [
+					me[`${mode}_control`],
+					custom_customer,
+					custom_po_number,
+					custom_representative,
+					custom_id_number,
+					custom_approved_by,
+				];
+			
+				controls.forEach(control => {
+					control.$input && control.$input.keypress(function (e) {
+						if (e.which === 13) { // Enter key pressed
+							save_button.click();
+						}
+					});
+				});
+
+
+
 			}
 
 
