@@ -7039,8 +7039,10 @@
 								<div class="${mode} card-number"></div>
 								<div class="${mode} expiry-date"></div>
 								<div class="${mode} approval-code"></div>
-								<div class="${mode} save-button"></div>
-								
+								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
+									<div class="${mode} save-button"></div>
+									<div class="${mode} discard-button"></div>
+								</div>
 							`;
               break;
             case "PayMaya":
@@ -9654,4 +9656,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.4VUN2JVO.js.map
+//# sourceMappingURL=packing-list.bundle.6SRM6S72.js.map
