@@ -519,19 +519,26 @@ def get_user_password():
 # def check_if_match(stored_password_hash, password):
 
 
-@frappe.whitelist()
-def confirm_user_password(password,role):
-    # Check if the provided role is "oic"
+# @frappe.whitelist()
+# def confirm_user_password(password,role):
+#     # Check if the provided role is "oic"
    
-    try:
-        # Check if the entered password matches the stored hashed password
-        if check_oic_password(password, role):
-            return True
-        else:
-            return False
-    except frappe.AuthenticationError:
-        return False
-	
+#     try:
+#         # Check if the entered password matches the stored hashed password
+#         if check_oic_password(password, role):
+#             return True
+#         else:
+#             return False
+#     except frappe.AuthenticationError:
+#         return False
+
+
+@frappe.whitelist()
+def confirm_user_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_oic_password(password)  
 
 @frappe.whitelist()
 def confirm_user_acc_password(password):

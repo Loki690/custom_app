@@ -186,7 +186,7 @@ def check_password_oic(pwd, doctype="User", fieldname="password"):
                     user_doc = frappe.get_doc("User", user["name"])
                     user_roles = [d.role for d in user_doc.get("roles")]
                     
-                    allowed_roles = ['Oic']
+                    allowed_roles = ['Officer-in-Charge']
                     
                     # Check if user has any of the allowed roles
                     if any(role in allowed_roles for role in user_roles):
@@ -205,45 +205,82 @@ def check_password_oic(pwd, doctype="User", fieldname="password"):
         return {"error": str(e)}
 
 
+
+
+
+def check_oic_password(pwd, doctype="User", fieldname="password"):
+    """
+    Checks if the given password matches any user's password.
+    If it matches, return the user's details if they have the allowed roles.
+    """
+    try:
+        # Fetch all user documents
+        all_users = frappe.get_all("User", fields=["name", "email", "full_name", "enabled"])
+
+        for user in all_users:
+            # Check if the entered password matches the stored hashed password
+            try:
+                if check_password(user["name"], pwd):
+                    user_doc = frappe.get_doc("User", user["name"])
+                    user_roles = [d.role for d in user_doc.get("roles")]
+                    
+                    allowed_roles = ['Officer-in-Charge']
+                    
+                    # Check if user has any of the allowed roles
+                    if any(role in allowed_roles for role in user_roles):
+                        return {
+                            "name": user_doc.name,
+                            "email": user_doc.email,
+                            "full_name": user_doc.full_name,
+                            "roles": user_roles,
+                            "enabled": user_doc.enabled,
+                        }
+            except AuthenticationError:
+                continue
+
+        return {"error": "Invalid password or no matching roles"}
+    except Exception as e:
+        return {"error": str(e)}
+
 	
-def check_oic_password(pwd, role, doctype="User", fieldname="password", delete_tracker_cache=True):
-    """Checks if user and password are correct and the user has the specified role, else raises frappe.AuthenticationError"""
+# def check_oic_password(pwd, role, doctype="User", fieldname="password", delete_tracker_cache=True):
+#     """Checks if user and password are correct and the user has the specified role, else raises frappe.AuthenticationError"""
 
-    results = frappe.db.sql(
-        """SELECT auth.password, usr.role_profile_name 
-           FROM __Auth auth 
-           LEFT JOIN tabUser usr ON usr.name = auth.name 
-           WHERE usr.role_profile_name = %s""",
-        (role,),
-        as_dict=True
-    )
+#     results = frappe.db.sql(
+#         """SELECT auth.password, usr.role_profile_name 
+#            FROM __Auth auth 
+#            LEFT JOIN tabUser usr ON usr.name = auth.name 
+#            WHERE usr.role_profile_name = %s""",
+#         (role,),
+#         as_dict=True
+#     )
 
-    if not results:
-        raise frappe.AuthenticationError(_("Incorrect User or Password"))
+#     if not results:
+#         raise frappe.AuthenticationError(_("Incorrect User or Password"))
 
-    authenticated = False
+#     authenticated = False
 
-    for result in results:
-        if passlibctx.verify(pwd, result.password):
-            authenticated = True
-            # Check if the user has the specified role
-            if result.role_profile_name == role:
-                pwd = result.password
+#     for result in results:
+#         if passlibctx.verify(pwd, result.password):
+#             authenticated = True
+#             # Check if the user has the specified role
+#             if result.role_profile_name == role:
+#                 pwd = result.password
 
-                # TODO: This needs to be deleted after checking side effects of it.
-                # We have a LoginAttemptTracker that can take care of tracking related cache.
-                if delete_tracker_cache:
-                    delete_login_failed_cache(pwd)
+#                 # TODO: This needs to be deleted after checking side effects of it.
+#                 # We have a LoginAttemptTracker that can take care of tracking related cache.
+#                 if delete_tracker_cache:
+#                     delete_login_failed_cache(pwd)
 
-                if passlibctx.needs_update(result.password):
-                    update_password(pwd, doctype, fieldname)
+#                 if passlibctx.needs_update(result.password):
+#                     update_password(pwd, doctype, fieldname)
 
-                break
+#                 break
 
-    if not authenticated:
-        raise frappe.AuthenticationError(_("Unauthorized access"))
+#     if not authenticated:
+#         raise frappe.AuthenticationError(_("Unauthorized access"))
 
-    return pwd
+#     return pwd
 
 
 def delete_login_failed_cache(user):

@@ -460,7 +460,6 @@ custom_app.PointOfSale.Payment = class {
 		}
 	}
 
-
 	render_payment_mode_dom() {
 		const doc = this.events.get_frm().doc;
 		const payments = doc.payments;

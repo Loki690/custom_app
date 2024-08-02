@@ -11,8 +11,8 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     init_component() {
-        this.load_items_data();
         this.prepare_dom();
+        this.load_items_data();
         this.make_search_bar();
         this.bind_events();
 		//Highlight
@@ -112,7 +112,7 @@ custom_app.PointOfSale.ItemSelector = class {
 
         this.selected_uom = "PC";
         this.item_uom && this.item_uom.set_value("PC");
-   
+
         this.get_items({}).then(({ message }) => {
             this.render_item_list(message.items);
         });
@@ -177,6 +177,11 @@ custom_app.PointOfSale.ItemSelector = class {
         let indicator_color;
         let qty_to_display = actual_qty;
     
+        if (uom !== 'PC') {
+            return '';
+        }
+
+
         if (item.is_stock_item) {
             indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
     
@@ -210,7 +215,6 @@ custom_app.PointOfSale.ItemSelector = class {
         const item_abbr = $($img).attr("alt");
         $($img).parent().replaceWith(`<div class="item-display abbr">${item_abbr}</div>`);
     }
-    
     make_search_bar() {
 		const me = this;
 		const doc = me.events.get_frm().doc;
@@ -475,7 +479,7 @@ custom_app.PointOfSale.ItemSelector = class {
         
                     const itemCode = unescape(me.selectedItem.attr("data-item-code"));
                     const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
-                    const serialNo = unescape(me.selectedItem.attr("data-serial-no"));https://open.spotify.com/playlist/5Oj4pmgIax99W454A2A7C3
+                    const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
         
                     me.events.item_selected({
                         field: "qty",

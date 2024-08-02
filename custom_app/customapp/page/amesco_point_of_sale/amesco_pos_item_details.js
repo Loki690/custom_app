@@ -230,56 +230,65 @@ custom_app.PointOfSale.ItemDetails = class {
 	
 
 	// Function to trigger OTP authentication
-	oic_authentication(fieldname) {
-		const me = this;
-
-		// Show password dialog for OIC authentication
-		const passwordDialog = new frappe.ui.Dialog({
-			title: __('Enter OIC Password'),
-			fields: [
-				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
-				}
-			],
-			primary_action_label: __('Authorize'),
-			primary_action: (values) => {
-				let password = values.password;
-				let role = "oic";
-
-				frappe.call({
-					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
-					callback: (r) => {
-						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
-							frappe.show_alert({
-								message: __('Verified'),
-								indicator: 'green'
-							});
-							passwordDialog.hide();
-
-							// Allow input to discount_percentage field
-							me.enable_discount_input(fieldname);
-
-							// Set flag indicating OTP authentication
-							me.is_oic_authenticated = true;
-						} else {
-							// Show alert for incorrect password or unauthorized user
-							frappe.show_alert({
-								message: __('Incorrect password or not an OIC'),
-								indicator: 'red'
-							});
-						}
+		// Function to trigger OTP authentication
+		oic_authentication(fieldname) {
+			const me = this;
+			// Show password dialog for OIC authentication
+			const passwordDialog = new frappe.ui.Dialog({
+				title: __('Authorization Required OIC'),
+				fields: [
+					{
+						fieldname: 'password',
+						fieldtype: 'Password',
+						label: __('Password'),
+						reqd: 1
 					}
-				});
-			}
-		});
-
-		passwordDialog.show();
-	}
+				],
+				primary_action_label: __('Authorize'),
+				primary_action: (values) => {
+					let password = values.password;
+			
+		
+					frappe.call({
+						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+						args: { password: password},
+						callback: (r) => {
+							if (r.message) {
+								if (r.message.name) {
+									frappe.show_alert({
+										message: __('Verified'),
+										indicator: 'green'
+									});
+									passwordDialog.hide();
+		
+									// Allow input to discount_percentage field
+									me.enable_discount_input(fieldname);
+		
+									// Set flag indicating OTP authentication
+									me.is_oic_authenticated = true;
+		
+					
+								} else {
+									frappe.show_alert({
+										message: __('Incorrect password'),
+										indicator: 'red'
+									});
+								}
+							} else {
+								// Show alert for incorrect password or unauthorized user
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
+						}
+					});
+				}
+			});
+		
+			passwordDialog.show();
+		}
+	
 
 	// Function to enable input to discount_percentage field after OTP authentication
 	enable_discount_input(fieldname) {

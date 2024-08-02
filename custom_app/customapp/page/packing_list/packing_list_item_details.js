@@ -203,57 +203,69 @@ custom_app.PointOfSale.ItemDetails = class {
 		//this.handle_price_update();
 	}
 
-
-		// Function to trigger OTP authentication
-		oic_authentication(fieldname) {
-			const me = this;
-			// Show password dialog for OIC authentication
-			const passwordDialog = new frappe.ui.Dialog({
-				title: __('Authorization Required OIC'),
-				fields: [
-					{
-						fieldname: 'password',
-						fieldtype: 'Password',
-						label: __('Password'),
-						reqd: 1
-					}
-				],
-				primary_action_label: __('Authorize'),
-				primary_action: (values) => {
-					let password = values.password;
-					let role = "oic";
+	
+	
+	// Function to trigger OTP authentication
+	oic_authentication(fieldname) {
+		const me = this;
+		// Show password dialog for OIC authentication
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __('Authorization Required OIC'),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
+				}
+			],
+			primary_action_label: __('Authorize'),
+			primary_action: (values) => {
+				let password = values.password;
 		
-					frappe.call({
-						method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
-						args: { password: password, role: role },
-						callback: (r) => {
-							if (r.message) {
-								// OIC authentication successful, proceed with discount edit
+	
+				frappe.call({
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					args: { password: password },
+					callback: (r) => {
+						if (r.message) {
+							
+							if (r.message.name) {
 								frappe.show_alert({
 									message: __('Verified'),
 									indicator: 'green'
 								});
 								passwordDialog.hide();
-		
+	
 								// Allow input to discount_percentage field
 								me.enable_discount_input(fieldname);
-		
+	
 								// Set flag indicating OTP authentication
 								me.is_oic_authenticated = true;
+	
 							} else {
-								// Show alert for incorrect password or unauthorized user
 								frappe.show_alert({
 									message: __('Incorrect password or user is not an OIC'),
 									indicator: 'red'
 								});
 							}
+						} else {
+							// Show alert for incorrect password or unauthorized user
+							frappe.show_alert({
+								message: __('Incorrect password or user is not an OIC'),
+								indicator: 'red'
+							});
 						}
-					});
-				}
-			});
-		
-			passwordDialog.show();
-		}
+					}
+				});
+			}
+		});
+	
+		passwordDialog.show();
+	}
+
+
+
 
 
 	// Function to enable input to discount_percentage field after OTP authentication
@@ -268,9 +280,10 @@ custom_app.PointOfSale.ItemDetails = class {
 			'price_list_rate',
 			"rate",
 			"uom",
-			"custom_expiry_date",
+			// "custom_expiry_date",
 			//"conversion_factor",
 			"discount_percentage",
+			"custom_discounted_by",
 			"discount_amount", // added field
 			//"custom_item_discount_amount",
 			//"warehouse",
