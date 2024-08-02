@@ -388,8 +388,8 @@
       this.init_component();
     }
     init_component() {
-      this.prepare_dom();
       this.load_items_data();
+      this.prepare_dom();
       this.make_search_bar();
       this.bind_events();
       this.attach_shortcuts();
@@ -773,11 +773,12 @@
             const itemCode = unescape(me.selectedItem.attr("data-item-code"));
             const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
             const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
-            me.events.item_selected({
-              field: "qty",
-              value: "+" + quantity2,
-              item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM3, quantity: quantity2, rate: totalAmount }
-            });
+            https:
+              me.events.item_selected({
+                field: "qty",
+                value: "+" + quantity2,
+                item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM3, quantity: quantity2, rate: totalAmount }
+              });
             me.search_field.set_focus();
           }
         });
@@ -3424,7 +3425,13 @@
                 frappe.msgprint({
                   title: __("Success"),
                   message: __("Cash payment details have been saved."),
-                  indicator: "green"
+                  indicator: "green",
+                  primary_action: {
+                    label: __("OK"),
+                    action: function() {
+                      frappe.msg_dialog.hide();
+                    }
+                  }
                 });
               });
             }
@@ -3437,7 +3444,16 @@
               frappe.model.set_value(p.doctype, p.name, "amount", 0).then(() => {
                 me.update_totals_section();
                 me.$payment_modes.find(`.${mode}-amount`).html(format_currency(0, currency));
-                frappe.msgprint(__("Cash payment details have been discarded."));
+                frappe.msgprint({
+                  message: __("Cash payment details have been discarded."),
+                  indicator: "blue",
+                  primary_action: {
+                    label: __("OK"),
+                    action: function() {
+                      frappe.msg_dialog.hide();
+                    }
+                  }
+                });
               });
             }
           });
@@ -3597,8 +3613,14 @@
             frappe.model.set_value(p.doctype, p.name, "custom_approval_code", approval_code);
             frappe.msgprint({
               title: __("Success"),
-              message: __("Card Payment details have been saved."),
-              indicator: "green"
+              message: __("Card payment details have been saved."),
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
             });
           });
           discard_button.on("click", function() {
@@ -3616,7 +3638,16 @@
             frappe.model.set_value(p.doctype, p.name, "custom_card_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", "");
             frappe.model.set_value(p.doctype, p.name, "custom_approval_code", "");
-            frappe.msgprint(__("Payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
           const controls = [
             me2[`${mode}_control`],
@@ -3694,7 +3725,13 @@
             frappe.msgprint({
               title: __("Success"),
               message: __("Payment details have been saved."),
-              indicator: "green"
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
             });
           });
           discard_button.on("click", function() {
@@ -3704,7 +3741,16 @@
             frappe.model.set_value(p.doctype, p.name, "amount", null);
             frappe.model.set_value(p.doctype, p.name, "custom_phone_number", "");
             frappe.model.set_value(p.doctype, p.name, "reference_no", "");
-            frappe.msgprint(__("Payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
           const controls = [
             me2[`${mode}_control`],
@@ -3838,7 +3884,13 @@
             frappe.msgprint({
               title: __("Success"),
               message: __("Card payment details have been saved."),
-              indicator: "green"
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
             });
           });
           discard_button.on("click", function() {
@@ -3854,7 +3906,16 @@
             frappe.model.set_value(p.doctype, p.name, "custom_card_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", "");
             frappe.model.set_value(p.doctype, p.name, "custom_approval_code", "");
-            frappe.msgprint(__("Card payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
           const controls = [
             me2[`${mode}_control`],
@@ -3963,7 +4024,13 @@
             frappe.msgprint({
               title: __("Success"),
               message: __("Cheque payment details have been saved."),
-              indicator: "green"
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
             });
           });
           discard_button.on("click", function() {
@@ -3977,7 +4044,16 @@
             frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", "");
             frappe.model.set_value(p.doctype, p.name, "custom_check_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_check_date", "");
-            frappe.msgprint(__("Cheque payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
         }
         if (p.mode_of_payment === "2306") {
@@ -4013,14 +4089,29 @@
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.msgprint({
               title: __("Success"),
-              message: __("QR payment details have been saved."),
-              indicator: "green"
+              message: __("Payment details have been saved."),
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
             });
           });
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", null);
-            frappe.msgprint(__("QR payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
           const controls = [
             me2[`${mode}_control`]
@@ -4066,14 +4157,29 @@
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.msgprint({
               title: __("Success"),
-              message: __("QR payment details have been saved."),
-              indicator: "green"
+              message: __("Payment details have been saved."),
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
             });
           });
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", null);
-            frappe.msgprint(__("QR payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
           const controls = [
             me2[`${mode}_control`]
@@ -4170,8 +4276,14 @@
             frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", qr_reference_number);
             frappe.msgprint({
               title: __("Success"),
-              message: __("Card payment details have been saved."),
-              indicator: "green"
+              message: __("Payment details have been saved."),
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
             });
           });
           discard_button.on("click", function() {
@@ -4183,7 +4295,16 @@
             frappe.model.set_value(p.doctype, p.name, "custom_payment_type", "");
             frappe.model.set_value(p.doctype, p.name, "custom_bank_type", "");
             frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", "");
-            frappe.msgprint(__("QR payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
           const controls = [
             me2[`${mode}_control`],
@@ -4293,8 +4414,14 @@
             frappe.model.set_value(p.doctype, p.name, "custom_approved_by", approved_by);
             frappe.msgprint({
               title: __("Success"),
-              message: __("Card payment details have been saved."),
-              indicator: "green"
+              message: __("Payment details have been saved."),
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
             });
           });
           discard_button.on("click", function() {
@@ -4310,7 +4437,16 @@
             frappe.model.set_value(p.doctype, p.name, "custom_representative", "");
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_approved_by", "");
-            frappe.msgprint(__("QR payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
           const controls = [
             me2[`${mode}_control`],
@@ -4357,7 +4493,13 @@
                       frappe.msgprint({
                         title: __("Success"),
                         message: __("Gift Certificate payment details have been saved."),
-                        indicator: "green"
+                        indicator: "green",
+                        primary_action: {
+                          label: __("OK"),
+                          action: function() {
+                            frappe.msg_dialog.hide();
+                          }
+                        }
                       });
                     }).catch((error) => {
                       console.error("Error retrieving gift certificate:", error);
@@ -4389,7 +4531,16 @@
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", null);
-            frappe.msgprint(__("QR payment details have been discarded."));
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
           });
           const controls = [
             me2[`${mode}_control`]
@@ -6256,4 +6407,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.WNHAAHOI.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.3U4ORLPK.js.map

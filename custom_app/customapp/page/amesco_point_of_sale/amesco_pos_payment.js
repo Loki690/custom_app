@@ -688,7 +688,14 @@ custom_app.PointOfSale.Payment = class {
 								frappe.msgprint({
 									title: __('Success'),
 									message: __('Cash payment details have been saved.'),
-									indicator: 'green'
+									indicator: 'green',
+									primary_action: {
+										label: __('OK'),
+										action: function() {
+											// Close the dialog
+											frappe.msg_dialog.hide();
+										}
+									}
 								});
 							});
 					}
@@ -703,7 +710,18 @@ custom_app.PointOfSale.Payment = class {
 						frappe.model.set_value(p.doctype, p.name, "amount", 0).then(() => {
 							me.update_totals_section();
 							me.$payment_modes.find(`.${mode}-amount`).html(format_currency(0, currency));
-							frappe.msgprint(__('Cash payment details have been discarded.'));
+				
+							frappe.msgprint({
+								message: __('Cash payment details have been discarded.'),
+								indicator: 'blue',
+								primary_action: {
+									label: __('OK'),
+									action: function() {
+										// Close the dialog
+										frappe.msg_dialog.hide();
+									}
+								}
+							});
 						});
 					}
 				});
@@ -904,8 +922,15 @@ custom_app.PointOfSale.Payment = class {
 	
 					frappe.msgprint({
 						title: __('Success'),
-						message: __('Card Payment details have been saved.'),
-						indicator: 'green'
+						message: __('Card payment details have been saved.'),
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
 					});
 				});
 
@@ -929,7 +954,17 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_approval_code", '');
 			
-					frappe.msgprint(__('Payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 				});
 			
 				const controls = [
@@ -1050,7 +1085,14 @@ custom_app.PointOfSale.Payment = class {
 					frappe.msgprint({
 						title: __('Success'),
 						message: __('Payment details have been saved.'),
-						indicator: 'green'
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
 					});
 				});
 			
@@ -1066,7 +1108,17 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", '');
 					frappe.model.set_value(p.doctype, p.name, "reference_no", '');
 			
-					frappe.msgprint(__('Payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 				});
 			
 				const controls = [
@@ -1228,7 +1280,14 @@ custom_app.PointOfSale.Payment = class {
 					frappe.msgprint({
 						title: __('Success'),
 						message: __('Card payment details have been saved.'),
-						indicator: 'green'
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
 					});
 				});
 			
@@ -1250,7 +1309,17 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_approval_code", '');
 			
-					frappe.msgprint(__('Card payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 				});
 			
 				function validateLastFourDigits(value) {
@@ -1409,10 +1478,19 @@ custom_app.PointOfSale.Payment = class {
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 
 
+		
+
 					frappe.msgprint({
 						title: __('Success'),
 						message: __('Cheque payment details have been saved.'),
-						indicator: 'green'
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
 					});
 				});
 
@@ -1433,7 +1511,17 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "custom_check_date", '');
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 			
-					frappe.msgprint(__('Cheque payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 
 				});
 
@@ -1489,8 +1577,15 @@ custom_app.PointOfSale.Payment = class {
 			
 					frappe.msgprint({
 						title: __('Success'),
-						message: __('QR payment details have been saved.'),
-						indicator: 'green'
+						message: __('Payment details have been saved.'),
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
 					});
 				});
 
@@ -1498,7 +1593,17 @@ custom_app.PointOfSale.Payment = class {
 				discard_button.on('click', function() {
 					me[`${mode}_control`].set_value('');
 					frappe.model.set_value(p.doctype, p.name, "amount", null);
-					frappe.msgprint(__('QR payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 
 				});
 
@@ -1563,8 +1668,15 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
 					frappe.msgprint({
 						title: __('Success'),
-						message: __('QR payment details have been saved.'),
-						indicator: 'green'
+						message: __('Payment details have been saved.'),
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
 					});
 				});
 
@@ -1572,7 +1684,17 @@ custom_app.PointOfSale.Payment = class {
 				discard_button.on('click', function() {
 					me[`${mode}_control`].set_value('');
 					frappe.model.set_value(p.doctype, p.name, "amount", null);
-					frappe.msgprint(__('QR payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 
 				});
 
@@ -1714,8 +1836,15 @@ custom_app.PointOfSale.Payment = class {
 	
 					frappe.msgprint({
 						title: __('Success'),
-						message: __('Card payment details have been saved.'),
-						indicator: 'green'
+						message: __('Payment details have been saved.'),
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
 					});
 				});
 
@@ -1734,7 +1863,17 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", '');
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 			
-					frappe.msgprint(__('QR payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 
 				});
 
@@ -1769,9 +1908,6 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data",
 						placeholder: 'Customer Name',
 						reqd:true
-						// onchange: function () {
-						// 	frappe.model.set_value(p.doctype, p.name, "custom_customer", this.value);
-						// },
 					},
 
 
@@ -1788,9 +1924,6 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'PO Number',
 						reqd:true
-						// onchange: function () {
-						// 	frappe.model.set_value(p.doctype, p.name, "custom_po_number", this.value);
-						// },
 					},
 					parent: this.$payment_modes.find(`.${mode}.po-number`),
 					render_input: true,
@@ -1805,9 +1938,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'Representative',
 						reqd:true
-						// onchange: function () {
-						// 	frappe.model.set_value(p.doctype, p.name, "custom_representative", this.value);
-						// },
+	
 					},
 					parent: this.$payment_modes.find(`.${mode}.representative`),
 					render_input: true,
@@ -1822,9 +1953,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'ID Number',
 						reqd:true
-						// onchange: function () {
-						// 	frappe.model.set_value(p.doctype, p.name, "custom_id_number", this.value);
-						// },
+					
 					},
 					parent: this.$payment_modes.find(`.${mode}.id-number`),
 					render_input: true,
@@ -1839,9 +1968,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'Approver name',
 					
-						// onchange: function () {
-						// 	frappe.model.set_value(p.doctype, p.name, "custom_approved_by", this.value);
-						// },
+						
 					},
 					parent: this.$payment_modes.find(`.${mode}.approved-by`),
 					render_input: true,
@@ -1889,8 +2016,15 @@ custom_app.PointOfSale.Payment = class {
 	
 					frappe.msgprint({
 						title: __('Success'),
-						message: __('Card payment details have been saved.'),
-						indicator: 'green'
+						message: __('Payment details have been saved.'),
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
 					});
 				});
 
@@ -1913,7 +2047,17 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "custom_approved_by",  '');
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 			
-					frappe.msgprint(__('QR payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 
 				});
 
@@ -1975,10 +2119,19 @@ custom_app.PointOfSale.Payment = class {
 										// Set the amount in the payment document based on the gift certificate amount
 										console.log('Gift Cert: ', gift_cert);
 										frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
+									
+
 										frappe.msgprint({
 											title: __('Success'),
 											message: __('Gift Certificate payment details have been saved.'),
-											indicator: 'green'
+											indicator: 'green',
+											primary_action: {
+												label: __('OK'),
+												action: function() {
+													// Close the dialog
+													frappe.msg_dialog.hide();
+												}
+											}
 										});
 									})
 									.catch(error => {
@@ -2031,7 +2184,17 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "amount", null);
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 			
-					frappe.msgprint(__('QR payment details have been discarded.'));
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
 
 				});
 

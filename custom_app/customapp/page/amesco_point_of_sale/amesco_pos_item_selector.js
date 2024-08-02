@@ -11,8 +11,8 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     init_component() {
-        this.prepare_dom();
         this.load_items_data();
+        this.prepare_dom();
         this.make_search_bar();
         this.bind_events();
 		//Highlight
@@ -112,7 +112,7 @@ custom_app.PointOfSale.ItemSelector = class {
 
         this.selected_uom = "PC";
         this.item_uom && this.item_uom.set_value("PC");
-
+   
         this.get_items({}).then(({ message }) => {
             this.render_item_list(message.items);
         });
@@ -210,6 +210,7 @@ custom_app.PointOfSale.ItemSelector = class {
         const item_abbr = $($img).attr("alt");
         $($img).parent().replaceWith(`<div class="item-display abbr">${item_abbr}</div>`);
     }
+    
     make_search_bar() {
 		const me = this;
 		const doc = me.events.get_frm().doc;
@@ -474,7 +475,7 @@ custom_app.PointOfSale.ItemSelector = class {
         
                     const itemCode = unescape(me.selectedItem.attr("data-item-code"));
                     const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
-                    const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+                    const serialNo = unescape(me.selectedItem.attr("data-serial-no"));https://open.spotify.com/playlist/5Oj4pmgIax99W454A2A7C3
         
                     me.events.item_selected({
                         field: "qty",
