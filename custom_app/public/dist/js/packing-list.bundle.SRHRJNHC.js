@@ -4221,7 +4221,6 @@
         const description = unescape($item.attr("data-description"));
         const qty = parseFloat(unescape($item.attr("data-qty")));
         const pos_profile = me.events.get_pos_profile();
-        console.log("Item Clicked:", item_code, uom, rate2, description, qty);
         frappe.call({
           method: "custom_app.customapp.page.packing_list.packing_list.get_item_uom_prices",
           args: {
@@ -4349,32 +4348,9 @@
                               title: `${item_code} ${description}`,
                               fields: [
                                 {
-                                  fieldname: "warehouse_table",
-                                  label: "Branches",
-                                  fieldtype: "Table",
-                                  cannot_add_rows: true,
-                                  in_editable_grid: true,
-                                  read_only: 1,
-                                  data: warehouses_with_qty,
-                                  get_data: () => {
-                                    return warehouses_with_qty;
-                                  },
-                                  fields: [
-                                    {
-                                      fieldtype: "Data",
-                                      fieldname: "name",
-                                      label: "Name",
-                                      in_list_view: 1,
-                                      read_only: 1
-                                    },
-                                    {
-                                      fieldtype: "Float",
-                                      fieldname: "actual_qty",
-                                      label: "Quantity",
-                                      in_list_view: 1,
-                                      read_only: 1
-                                    }
-                                  ]
+                                  fieldtype: "HTML",
+                                  fieldname: "warehouse_table_html",
+                                  options: renderWarehousesTable(warehouses_with_qty)
                                 }
                               ],
                               primary_action_label: __("Ok"),
@@ -4387,13 +4363,30 @@
                               "max-height": "80vh",
                               "overflow-y": "auto"
                             });
-                            $(dialog3.fields_dict.warehouse_table.$wrapper).css({
+                            $(dialog3.fields_dict.warehouse_table_html.$wrapper).css({
                               "max-height": "60vh",
                               "overflow-y": "auto"
                             });
                           }).catch((error) => {
                             console.error("Error fetching warehouse data:", error);
                           });
+                          function renderWarehousesTable(data) {
+                            let tableHtml = '<table class="table table-bordered">';
+                            tableHtml += "<thead><tr>";
+                            tableHtml += "<th>Name</th>";
+                            tableHtml += "<th>Quantity</th>";
+                            tableHtml += "</tr></thead>";
+                            tableHtml += "<tbody>";
+                            data.forEach((row) => {
+                              tableHtml += "<tr>";
+                              tableHtml += `<td>${row.name}</td>`;
+                              tableHtml += `<td>${row.actual_qty}</td>`;
+                              tableHtml += "</tr>";
+                            });
+                            tableHtml += "</tbody>";
+                            tableHtml += "</table>";
+                            return tableHtml;
+                          }
                         }
                       });
                     }
@@ -4412,6 +4405,10 @@
                     frappe.msgprint(__("No item selected."));
                     return;
                   }
+                  if (quantity2 > qty) {
+                    frappe.msgprint(__("Entered Quantity Exceeded"));
+                    return;
+                  }
                   frappe.call({
                     method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
                     args: {
@@ -4423,6 +4420,23 @@
                         const { invoices, total_qty } = response2.message;
                         let item_total_qty = total_qty;
                         if (item_total_qty + quantity2 > qty) {
+                          let renderInvoicesTable = function(data) {
+                            let tableHtml = '<table class="table table-bordered">';
+                            tableHtml += "<thead><tr>";
+                            tableHtml += "<th>ID</th>";
+                            tableHtml += "<th>Quantity</th>";
+                            tableHtml += "</tr></thead>";
+                            tableHtml += "<tbody>";
+                            data.forEach((row) => {
+                              tableHtml += "<tr>";
+                              tableHtml += `<td>${row.name}</td>`;
+                              tableHtml += `<td>${row.item_qty}</td>`;
+                              tableHtml += "</tr>";
+                            });
+                            tableHtml += "</tbody>";
+                            tableHtml += "</table>";
+                            return tableHtml;
+                          };
                           const formatted_invoices = invoices.map((invoice) => {
                             const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
                             return {
@@ -4432,35 +4446,12 @@
                             };
                           });
                           const invoice_dialog = new frappe.ui.Dialog({
-                            title: `Items was ordered by other customers`,
+                            title: "Items ordered by other customers",
                             fields: [
                               {
-                                fieldname: "invoices_table",
-                                label: "Items in Draft State",
-                                fieldtype: "Table",
-                                cannot_add_rows: true,
-                                in_editable_grid: false,
-                                read_only: 1,
-                                data: formatted_invoices,
-                                get_data: () => {
-                                  return formatted_invoices;
-                                },
-                                fields: [
-                                  {
-                                    fieldtype: "Data",
-                                    fieldname: "name",
-                                    label: "ID",
-                                    in_list_view: 1,
-                                    read_only: 1
-                                  },
-                                  {
-                                    fieldtype: "Int",
-                                    fieldname: "item_qty",
-                                    label: "Quantity",
-                                    in_list_view: 1,
-                                    read_only: 1
-                                  }
-                                ]
+                                fieldtype: "HTML",
+                                fieldname: "invoices_table_html",
+                                options: renderInvoicesTable(formatted_invoices)
                               }
                             ],
                             primary_action_label: __("Ok"),
@@ -4469,10 +4460,6 @@
                             }
                           });
                           invoice_dialog.show();
-                          return;
-                        }
-                        if (quantity2 > qty) {
-                          frappe.msgprint(__("Entered Quantity Exceeded"));
                           return;
                         }
                         me.selectedItem.find(".item-uom").text(selectedUOM3);
@@ -5467,7 +5454,6 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
       this.render_total_vat(frm.doc.total_taxes_and_charges);
     }
     render_net_total(value) {
@@ -5525,7 +5511,7 @@
       this.$totals_section.find(".total-vat-container").html(`
 				<div style="display: flex; align-items: center; width: 100%;">
 					<span style="flex: 1;">
-						${__("Total VAT")}: 
+						${__("VAT 12%")}:
 					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
@@ -5624,10 +5610,11 @@
       this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
-      console.log(item_data);
       const currency = this.events.get_frm().doc.currency;
       const me = this;
       const customer_group = me.events.get_frm().doc.customer_group;
+      const tax_rate = 0.12;
+      const no_vat = item_data.price_list_rate / (1 + tax_rate);
       if (!$item_to_update.length) {
         this.$cart_items_wrapper.append(
           `<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
@@ -5649,10 +5636,10 @@
 			</div> 
 
 			<div class="item-vat mx-3">
-				<strong>${format_currency(item_data.rate, currency)}</strong>
+				<strong>${format_currency(item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.rate : customer_group === "Senior Citizen" || customer_group === "PWD" ? no_vat : item_data.rate, currency)}</strong>
 			</div>
 			<div class="item-discount mx-3">
-				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+				<strong>${item_data.discount_percentage}%</strong>
 			</div>
 			${get_rate_discount_html(customer_group)}`
       );
@@ -6277,7 +6264,7 @@
         if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
           this.$form_container.find(`.${fieldname}-control input`).on("focus", function() {
             if (!me.is_oic_authenticated) {
-              me.oic_authentication(fieldname);
+              me.oic_authentication(fieldname, item);
             }
           });
         }
@@ -6285,8 +6272,9 @@
       this.make_auto_serial_selection_btn(item);
       this.bind_custom_control_change_event();
     }
-    oic_authentication(fieldname) {
+    oic_authentication(fieldname, item) {
       const me = this;
+      const doc = me.events.get_frm();
       const passwordDialog = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
@@ -8084,7 +8072,6 @@
           });
         }
         if (p.mode_of_payment === "Charge") {
-          console.log("Mode of payment is Charge");
           let existing_custom_customer = frappe.model.get_value(p.doctype, p.name, "custom_customer");
           let custom_customer = frappe.ui.form.make_control({
             df: {
@@ -8248,10 +8235,8 @@
               click: function() {
                 let code_value = code_input.get_value();
                 if (code_value) {
-                  console.log("Button clicked, Code:", code_value);
                   if (code_value) {
                     frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
-                      console.log("Gift Cert: ", gift_cert);
                       frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
                       frappe.msgprint({
                         title: __("Success"),
@@ -8274,7 +8259,6 @@
                     });
                   }
                   code_field.push(code_value);
-                  console.log("code_field", code_field);
                 } else {
                   frappe.msgprint({
                     title: __("Error"),
@@ -9288,6 +9272,23 @@
     save_draft_invoice() {
       if (!this.$components_wrapper.is(":visible"))
         return;
+      let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
+      if (payment_amount < this.frm.doc.grand_total) {
+        const insufficientPaymentDialog = new frappe.ui.Dialog({
+          title: __("Insufficient Payment"),
+          primary_action_label: __("OK"),
+          primary_action: () => {
+            insufficientPaymentDialog.hide();
+          }
+        });
+        insufficientPaymentDialog.body.innerHTML = `
+				<div style="text-align: center; font-size: 30px; margin: 20px 0;">
+					${__("The payment amount is not enough to cover the grand total.")}
+				</div>
+			`;
+        insufficientPaymentDialog.show();
+        return;
+      }
       if (this.frm.doc.items.length == 0) {
         frappe.show_alert({
           message: __("You must add atleast one item to complete the order."),
@@ -9994,4 +9995,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.LB776FD5.js.map
+//# sourceMappingURL=packing-list.bundle.SRHRJNHC.js.map
