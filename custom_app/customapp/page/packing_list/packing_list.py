@@ -125,6 +125,31 @@ def get_item_uoms(item_code):
     return response
 
 
+# import frappe
+
+# @frappe.whitelist()
+# def get_item_uom_and_batch_details(item_code):
+#     uom_prices = {}
+#     batch_details = []
+
+#     # Fetch UOM prices
+#     item_prices = frappe.get_all('Item Price', filters={'item_code': item_code}, fields=['uom', 'price_list_rate'])
+#     for price in item_prices:
+#         uom_prices[price.uom] = price.price_list_rate
+
+#     # Fetch batch details
+#     batches = frappe.get_all('Batch', filters={'item': item_code}, fields=['name', 'expiry_date'])
+#     for batch in batches:
+#         batch_details.append({
+#             'batch_no': batch.name,  # Assuming the primary key field is 'name'
+#             'expiry_date': batch.expiry_date
+#         })
+
+#     return {
+#         'uom_prices': uom_prices,
+#         'batch_details': batch_details
+#     }
+
 @frappe.whitelist()
 def get_item_uom_prices(item_code):
     uom_prices = {}
@@ -132,7 +157,6 @@ def get_item_uom_prices(item_code):
     for price in item_prices:
         uom_prices[price.uom] = price.price_list_rate
     return {'uom_prices': uom_prices}
-
 
 
 
@@ -607,10 +631,11 @@ def get_item_qty_per_warehouse(warehouse, item_code):
 def get_draft_pos_invoice_items(pos_profile, item_code):
     """
     Retrieves all draft POS invoices for the specified POS profile that contain the specified item code.
+    Includes batch details in the response.
     
     :param pos_profile: The POS profile to filter by.
     :param item_code: The item code to search for in the draft POS invoices.
-    :return: A list of draft POS invoices that contain the specified item code and the total quantity of the item.
+    :return: A list of draft POS invoices that contain the specified item code, including batch details, and the total quantity of the item.
     """
     try:
         # Fetch all draft POS invoices for the specified POS profile
@@ -630,7 +655,7 @@ def get_draft_pos_invoice_items(pos_profile, item_code):
             invoice_items = frappe.get_all('POS Invoice Item', filters={
                 'parent': invoice.name,
                 'item_code': item_code
-            }, fields=['item_code', 'item_name', 'qty', 'rate'])
+            }, fields=['item_code', 'item_name', 'qty', 'rate', 'batch_no', 'batch_expiry_date'])
 
             if invoice_items:
                 invoice['items'] = invoice_items
@@ -648,6 +673,7 @@ def get_draft_pos_invoice_items(pos_profile, item_code):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), frappe._("Error fetching draft POS invoices"))
         frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
+
 
 
 def get_draft_pos_invoice_item_quantity(pos_profile, item_code, actual_qty):
@@ -680,5 +706,49 @@ def get_draft_pos_invoice_item_quantity(pos_profile, item_code, actual_qty):
         return actual_qty - total_qty
 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), frappe._("Error fetching draft POS invoices"))
+        frappe.log_error(frappe.get_traceback(), _("Error fetching draft POS invoices"))
         frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
+
+
+
+# @frappe.whitelist()
+# def get_nearest_expiry_batch(item_code):
+#     try:
+#         result = frappe.db.sql("""
+#             SELECT batch_no, expiry_date
+#             FROM `tabSerial and Batch Entry`
+#             WHERE item_code = %s
+#             ORDER BY expiry_date ASC, creation ASC
+#             LIMIT 1
+#         """, (item_code,), as_dict=True)
+        
+#         # Debug logging
+#         frappe.log_error(message=str(result), title="Debug get_nearest_expiry_batch")
+        
+#         if result:
+#             return result[0]
+#         else:
+#             return {"batch_no": None, "expiry_date": None}
+#     except Exception as e:
+#         frappe.log_error(message=str(e), title="Error in get_nearest_expiry_batch")
+#         return {"batch_no": None, "expiry_date": None}
+
+
+# in your custom app file, e.g., custom_app/api.py
+import frappe
+
+@frappe.whitelist()
+def get_fifo_batch(item_code, warehouse):
+    batches = frappe.db.sql("""
+        SELECT name, expiry_date
+        FROM `tabBatch`
+        WHERE item = %s AND (expiry_date IS NULL OR expiry_date > NOW())
+        ORDER BY expiry_date ASC, creation ASC
+        LIMIT 1
+    """, (item_code,), as_dict=True)
+    
+    if batches:
+        return batches[0]
+    else:
+        return None
+
