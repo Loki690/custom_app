@@ -78,19 +78,19 @@ custom_app.PointOfSale.PastOrderList = class {
 		frappe.ui.keys.add_shortcut({
 			shortcut: 'ctrl+i',
 			action: () => {
-				this.focus_search_invoice();
+				const $items = me.$invoices_container.find('.invoice-wrapper');
+				if ($items.length) {
+					$items.first().focus(); // Focus on the first cart item
+				}
 			},
-			condition: () => true,
-			description: __('Focus on Search Field'),
+			condition: () => me.$invoices_container.is(':visible'),
+			description: __('Activate Cart Item Focus'),
 			ignore_inputs: true,
 			page: cur_page.page.page // Replace with your actual page context
 		});
 	}
 	
-	focus_search_invoice() {
-		this.search_field.set_focus();
-	}
-	
+
 	make_filter_section() {
 		const me = this;
 		if (!this.search_field) {
@@ -103,7 +103,8 @@ custom_app.PointOfSale.PastOrderList = class {
 				parent: this.$component.find(".search-field"),
 				render_input: true,
 			});
-			this.search_field.toggle_label(false);
+			this.search_field.toggle_label(true);
+			
 		}
 	
 		if (!this.status_field) {
@@ -123,7 +124,11 @@ custom_app.PointOfSale.PastOrderList = class {
 			this.status_field.toggle_label(false);
 			this.status_field.set_value("Draft"); // set default draft
 		}
+
+		
 	}
+
+
 	
 	refresh_list() {
 		frappe.dom.freeze();

@@ -112,16 +112,23 @@ custom_app.PointOfSale.ItemSelector = class {
             const res = await frappe.db.get_value("POS Profile", this.pos_profile, "selling_price_list");
             this.price_list = res.message.selling_price_list;
         }
-
-
+    
+        // Set the UOM to PC
         this.selected_uom = "PC";
-        this.item_uom && this.item_uom.set_value("PC");
-
-        this.get_items({}).then(({ message }) => {
-            this.render_item_list(message.items);
-        });
+        if (this.item_uom) {
+            this.item_uom.set_value("PC");
+            this.item_uom.refresh();
+        }
+    
+        // Retrieve and render items immediately after setting the values
+        const { message } = await this.get_items({});
+        this.render_item_list(message.items);
+    
+        // Trigger the filter function to apply the UOM filter
+        this.filter_items({ uom: this.selected_uom });
     }
 
+    
     get_items({ start = 0, page_length = 40, search_term = "" }) {
         const doc = this.events.get_frm().doc;
         const price_list = (doc && doc.selling_price_list) || this.price_list;
