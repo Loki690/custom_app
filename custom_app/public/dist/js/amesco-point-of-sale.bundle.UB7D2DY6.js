@@ -2585,8 +2585,9 @@
         "price_list_rate",
         "rate",
         "uom",
-        "custom_expiry_date",
         "discount_percentage",
+        "custom_batch_number",
+        "custom_batch_expiry",
         "discount_amount",
         "custom_vat_amount",
         "custom_vatable_amount",
@@ -6416,4 +6417,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.MD4L4CLS.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.UB7D2DY6.js.map
