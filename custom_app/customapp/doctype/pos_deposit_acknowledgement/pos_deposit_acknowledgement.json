@@ -21,6 +21,7 @@
   "table_szcm",
   "section_break_ssio",
   "oic",
+  "printed",
   "column_break_kwsp",
   "bank_personnel",
   "amended_from"
@@ -140,12 +141,18 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "printed",
+   "fieldtype": "Check",
+   "label": "Printed"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-07-18 13:22:41.448000",
+ "modified": "2024-08-02 16:30:58.387116",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Deposit Acknowledgement",

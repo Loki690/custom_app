@@ -887,7 +887,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	
 		this.render_grand_total(grand_total);
-		this.render_taxes(frm.doc.taxes);
+		// this.render_taxes(frm.doc.taxes);
 		this.render_total_vat(frm.doc.total_taxes_and_charges);
 
 	}
@@ -968,7 +968,7 @@ custom_app.PointOfSale.ItemCart = class {
 			.html(`
 				<div style="display: flex; align-items: center; width: 100%;">
 					<span style="flex: 1;">
-						${__("Total VAT")}: 
+						${__("VAT 12%")}:
 					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
@@ -1126,11 +1126,16 @@ custom_app.PointOfSale.ItemCart = class {
 
 	render_cart_item(item_data, $item_to_update) {
 
-		console.log(item_data)
+		// console.log("Item Data: ",item_data)
 
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
 		const customer_group = me.events.get_frm().doc.customer_group
+		const tax_rate = 0.12;
+		const no_vat = item_data.price_list_rate / (1 + tax_rate);
+
+		// const item_doc = frappe.get_doc('Item', item_data.item_name)
+		// console.log("Item Doc: ", item_doc);
 
 		if (!$item_to_update.length) {
 			this.$cart_items_wrapper.append(
@@ -1154,10 +1159,10 @@ custom_app.PointOfSale.ItemCart = class {
 			</div> 
 
 			<div class="item-vat mx-3">
-				<strong>${format_currency(item_data.rate, currency)}</strong>
+				<strong>${format_currency( item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.rate :  customer_group === "Senior Citizen" || customer_group === "PWD" ? no_vat : item_data.rate, currency)}</strong>
 			</div>
 			<div class="item-discount mx-3">
-				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+				<strong>${(item_data.discount_percentage)}%</strong>
 			</div>
 			${get_rate_discount_html(customer_group)}`
 		);

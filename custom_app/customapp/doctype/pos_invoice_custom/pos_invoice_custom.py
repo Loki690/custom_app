@@ -22,7 +22,7 @@ def generate_pl_series(doc):
     if not warehouse_abbreviation:
         warehouse_abbreviation = "DEFAULT"  # Use a default abbreviation if none is found
 
-    series_pattern = f"{warehouse_abbreviation}-PL-.######"
+    series_pattern = f"{warehouse_abbreviation}-.########"
     return series_pattern
 
 def set_custom_naming_series(doc):
@@ -97,24 +97,33 @@ import json
 @frappe.whitelist()
 def export_multiple_pos_invoices(invoice_names):
     invoice_names = json.loads(invoice_names)  # Parse the JSON string into a list
-    content = ""
+    invoices = []
+
+    # Retrieve and sort invoices by custom_invoice_series
     for invoice_name in invoice_names:
         # Retrieve the POS Invoice document
         invoice = frappe.get_doc('POS Invoice', invoice_name)
-        
+        invoices.append(invoice)
+
+    # Sort invoices by custom_invoice_series in ascending order
+    invoices = sorted(invoices, key=lambda x: x.custom_invoice_series)
+
+    content = ""
+    for invoice in invoices:
         # Append the invoice content
         content += f"POS Invoice: {invoice.custom_invoice_series}\n"
         content += f"Customer: {invoice.customer}\n"
         content += f"Date: {invoice.posting_date}\n"
         content += f"Total: {invoice.grand_total}\n"
         content += "\nItems:\n"
-        
+
         for item in invoice.items:
             content += f" - {item.item_name} ({item.qty} x {item.rate}): {item.amount}\n"
-        
+
         content += "\n---\n\n"
 
     return content
+
 
 from frappe import _
 @frappe.whitelist()
@@ -243,22 +252,6 @@ def pos_opening_validation(doc, method):
     if open_pos_entries:
         frappe.throw(_("There is already an open POS Opening Entry for the POS Profile {0}. Please close it before opening a new one.").format(doc.pos_profile))
         
-        
-        
-        
-        
-def delete_draft_pos_invoices():
-    """
-    Deletes all draft POS invoices.
-    """
-    try:
-        draft_pos_invoices = frappe.get_all('POS Invoice', filters={'status': 0})
-        for invoice in draft_pos_invoices:
-            frappe.delete_doc('POS Invoice', invoice.name, force=1, ignore_permissions=True)
-        frappe.db.commit()
-        frappe.logger().info(f"Deleted {len(draft_pos_invoices)} draft POS invoices.")
-    except Exception as e:
-        frappe.logger().error(f"Failed to delete draft POS invoices: {str(e)}")
         
         
 from frappe.utils import get_files_path

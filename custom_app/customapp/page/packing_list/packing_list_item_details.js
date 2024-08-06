@@ -169,6 +169,8 @@ custom_app.PointOfSale.ItemDetails = class {
 			}
 		
 			const me = this;
+	
+			// console.log("Form Fields:", field_meta)
 		
 			this[`${fieldname}_control`] = frappe.ui.form.make_control({
 				df: {
@@ -182,32 +184,26 @@ custom_app.PointOfSale.ItemDetails = class {
 				render_input: true,
 			});
 			this[`${fieldname}_control`].set_value(item[fieldname]);
-		
+
 			// Add event listener for discount_percentage and discount_amount field click
 			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
 				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
-						me.oic_authentication(fieldname);
+						me.oic_authentication(fieldname, item);
 					}
 				});
-
+	
 			}
-
-		
-			
-			
+	
 		});
 		
 		this.make_auto_serial_selection_btn(item);
 		this.bind_custom_control_change_event();
-		//this.handle_price_update();
 	}
-
 	
-	
-	// Function to trigger OTP authentication
-	oic_authentication(fieldname) {
+	oic_authentication(fieldname, item) {
 		const me = this;
+		const doc = me.events.get_frm()
 		// Show password dialog for OIC authentication
 		const passwordDialog = new frappe.ui.Dialog({
 			title: __('Authorization Required OIC'),
@@ -222,6 +218,7 @@ custom_app.PointOfSale.ItemDetails = class {
 			primary_action_label: __('Authorize'),
 			primary_action: (values) => {
 				let password = values.password;
+
 		
 	
 				frappe.call({
@@ -249,6 +246,8 @@ custom_app.PointOfSale.ItemDetails = class {
 									indicator: 'red'
 								});
 							}
+
+				
 						} else {
 							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
@@ -260,9 +259,11 @@ custom_app.PointOfSale.ItemDetails = class {
 				});
 			}
 		});
+
 	
 		passwordDialog.show();
 	}
+
 
 
 
@@ -280,22 +281,15 @@ custom_app.PointOfSale.ItemDetails = class {
 			'price_list_rate',
 			"rate",
 			"uom",
-			// "custom_expiry_date",
-			//"conversion_factor",
 			"discount_percentage",
 			"custom_discounted_by",
 			"discount_amount", // added field
-			//"custom_item_discount_amount",
-			//"warehouse",
-			//"actual_qty",
-			//"price_list_rate",
-			// "is_free_item",
 
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
 			'custom_zero_rated_amount',
-			//"custom_free",
+			'custom_discount_auth_by',
 			"custom_remarks",
 		];
 		if (item.has_serial_no) fields.push("serial_no");

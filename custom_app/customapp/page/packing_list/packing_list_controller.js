@@ -336,6 +336,28 @@ custom_app.PointOfSale.Controller = class {
 
 	save_draft_invoice() {
 		if (!this.$components_wrapper.is(":visible")) return;
+		let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+
+		if (payment_amount < this.frm.doc.grand_total) {
+			// Show dialog indicating insufficient payment
+			const insufficientPaymentDialog = new frappe.ui.Dialog({
+				title: __('Insufficient Payment'),
+				primary_action_label: __('OK'),
+				primary_action: () => {
+					insufficientPaymentDialog.hide();
+				}
+			});
+
+			insufficientPaymentDialog.body.innerHTML = `
+				<div style="text-align: center; font-size: 30px; margin: 20px 0;">
+					${__('The payment amount is not enough to cover the grand total.')}
+				</div>
+			`;
+
+			insufficientPaymentDialog.show();
+			return; // Exit the function if payment is not sufficient
+		}
 
 		if (this.frm.doc.items.length == 0) {
 			frappe.show_alert({

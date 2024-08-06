@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "autoname": "field:doc_no",
+ "creation": "2024-08-01 16:03:57.736722",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_xjsl",
+  "pos_invoice",
+  "type",
+  "doc_no",
+  "amended_from",
+  "column_break_lmhv",
+  "date_invoiced",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_xjsl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "POS Invoice Manual Invoice",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "pos_invoice",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "POS Invoice rs#",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "Cash Invoice - Small",
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type ",
+   "options": "Cash Invoice - Small\nCash Invoice - Big\nCharge Invoice"
+  },
+  {
+   "fieldname": "date_invoiced",
+   "fieldtype": "Date",
+   "label": "Date Invoiced"
+  },
+  {
+   "fieldname": "column_break_lmhv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "doc_no",
+   "fieldtype": "Data",
+   "label": "Doc No.",
+   "unique": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-08-01 17:35:49.782488",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "POS Invoice Manual Invoice",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

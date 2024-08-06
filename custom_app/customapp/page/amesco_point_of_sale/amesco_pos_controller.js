@@ -58,22 +58,24 @@ custom_app.PointOfSale.Controller = class {
 		const fetch_pos_payment_methods = () => {
 			const pos_profile = dialog.fields_dict.pos_profile.get_value();
 			if (!pos_profile) return;
+
 			frappe.db.get_doc("POS Profile", pos_profile).then(({ payments }) => {
 				dialog.fields_dict.balance_details.df.data = [];
+
 				payments.forEach((pay) => {
 					const { mode_of_payment } = pay;
-					let opening_amount = "0";
 
-					// Add conditional logic to set opening amount for Cash mode_of_payment
+					// Only include "Cash" payment method
 					if (mode_of_payment === "Cash") {
-						opening_amount = "2000";
+						const opening_amount = "2000";
+						dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
 					}
-
-					dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount: opening_amount });
 				});
+
 				dialog.fields_dict.balance_details.grid.refresh();
 			});
 		};
+
 
 		const get_next_shift = async (pos_profile) => {
 			const res = await frappe.call({
@@ -81,12 +83,12 @@ custom_app.PointOfSale.Controller = class {
 				args: { pos_profile }
 			});
 
-			 // Second Frappe call to get the max_shift value from the POS Profile
-			 const max_shift_response = await frappe.call({
+			// Second Frappe call to get the max_shift value from the POS Profile
+			const max_shift_response = await frappe.call({
 				method: 'custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_pos_profile_shift',
 				args: { pos_profile }
 			});
-		
+
 			const max_shift = max_shift_response.message; // Adjust 'max_shift' to the actual field name
 
 			if (res.message >= max_shift) {
@@ -132,7 +134,7 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: async function ({ company, pos_profile, balance_details }) {
 				try {
 					const custom_shift = await get_next_shift(pos_profile);
-	
+
 					// Validate balance details
 					if (!balance_details.length) {
 						frappe.show_alert({
@@ -141,10 +143,10 @@ custom_app.PointOfSale.Controller = class {
 						});
 						return frappe.utils.play_sound("error");
 					}
-	
+
 					// Filter balance details
 					balance_details = balance_details.filter((d) => d.mode_of_payment);
-	
+
 					// Call the custom method to create the opening voucher
 					const method = "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_opening_voucher";
 					const res = await frappe.call({
@@ -152,7 +154,7 @@ custom_app.PointOfSale.Controller = class {
 						args: { pos_profile, company, balance_details, custom_shift },
 						freeze: true,
 					});
-	
+
 					if (!res.exc) {
 						me.prepare_app_defaults(res.message);
 					}
@@ -181,8 +183,8 @@ custom_app.PointOfSale.Controller = class {
 		this.item_stock_map = {};
 		this.settings = {};
 
-		console.log('this.setting:', this.settings)
-		
+		// console.log('this.setting:', this.settings)
+
 		frappe.db.get_value("Stock Settings", undefined, "allow_negative_stock").then(({ message }) => {
 			this.allow_negative_stock = flt(message.allow_negative_stock) || false;
 		});
@@ -223,7 +225,7 @@ custom_app.PointOfSale.Controller = class {
 		this.prepare_menu();
 		this.make_new_invoice();
 
-	
+
 
 	}
 	//Customized Layout For Cashier
@@ -234,16 +236,14 @@ custom_app.PointOfSale.Controller = class {
 	}
 	//Customized Layout For Cashier
 	prepare_components() {
-		this.init_recent_order_list(); 
-		this.init_order_summary(); 
+		this.init_recent_order_list();
+		this.init_order_summary();
 		this.init_item_selector();
 		this.init_item_details();
-		this.init_item_cart(); 
+		this.init_item_cart();
 		this.init_payments();
-	
-	}
 
-	
+	}
 
 	prepare_menu() {
 		this.page.clear_menu();
@@ -270,79 +270,81 @@ custom_app.PointOfSale.Controller = class {
 
 	add_buttons_to_toolbar() {
 		const buttons = [
+
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
 			{label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			// {label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			// {label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
 			{label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
+
 		];
-	
+
 		// Clear existing buttons to avoid duplication
 		$('.page-actions .btn-custom').remove();
-	
+
 		buttons.forEach(btn => {
-			this.page.add_button(btn.label, btn.action, {shortcut: btn.shortcut}).addClass('btn-custom');
+			this.page.add_button(btn.label, btn.action, { shortcut: btn.shortcut }).addClass('btn-custom');
 		});
 	}
 
 
-	
+
 	z_reading() {
 
 		const me = this;
-			// Show password dialog for OIC authentication
-			const passwordDialog = new frappe.ui.Dialog({
-				title: __('Authorization Required OIC'),
-				fields: [
-					{
-						fieldname: 'password',
-						fieldtype: 'Password',
-						label: __('Password'),
-						reqd: 1
-					}
-				],
-				primary_action_label: __('Authorize'),
-				primary_action: (values) => {
-					let password = values.password;
-					let role = "oic";
-		
-					frappe.call({
-						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-						args: { password: password, role: role },
-						callback: (r) => {
-							if (r.message) {
-								// OIC authentication successful, proceed with discount edit
-								frappe.show_alert({
-									message: __('Verified'),
-									indicator: 'green'
-								});
-								passwordDialog.hide();
-								
-
-								if (!this.$components_wrapper.is(":visible")) return;
-								let voucher = frappe.model.get_new_doc("POS Z Reading");
-								voucher.pos_profile = this.frm.doc.pos_profile;
-								frappe.set_route("Form", "POS Z Reading", voucher.name);
-								
-							} else {
-								// Show alert for incorrect password or unauthorized user
-								frappe.show_alert({
-									message: __('Incorrect password or user is not an OIC'),
-									indicator: 'red'
-								});
-							}
-						}
-					});
+		// Show password dialog for OIC authentication
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __('Authorization Required OIC'),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
 				}
-			});
-		
-			passwordDialog.show();
+			],
+			primary_action_label: __('Authorize'),
+			primary_action: (values) => {
+				let password = values.password;
+				let role = "oic";
+
+				frappe.call({
+					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+					args: { password: password, role: role },
+					callback: (r) => {
+						if (r.message) {
+							// OIC authentication successful, proceed with discount edit
+							frappe.show_alert({
+								message: __('Verified'),
+								indicator: 'green'
+							});
+							passwordDialog.hide();
+
+
+							if (!this.$components_wrapper.is(":visible")) return;
+							let voucher = frappe.model.get_new_doc("POS Z Reading");
+							voucher.pos_profile = this.frm.doc.pos_profile;
+							frappe.set_route("Form", "POS Z Reading", voucher.name);
+
+						} else {
+							// Show alert for incorrect password or unauthorized user
+							frappe.show_alert({
+								message: __('Incorrect password or user is not an OIC'),
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		});
+
+		passwordDialog.show();
 
 	}
 
 
-	
+
 	//Cash Voucher
 	cash_voucher() {
 		if (!this.$components_wrapper.is(":visible")) return;
@@ -352,7 +354,7 @@ custom_app.PointOfSale.Controller = class {
 		voucher.custom_opening_entry = this.pos_opening;
 		frappe.set_route("Form", "Cash Voucher Entry", voucher.name);
 	}
-	
+
 
 	//Check Encashment
 	check_encashment() {
@@ -394,9 +396,9 @@ custom_app.PointOfSale.Controller = class {
 			() => this.item_selector.toggle_component(true),
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(true),
-			() => window.location.reload(), 
+			() => window.location.reload(),
 			() => frappe.dom.unfreeze(),
-			
+
 		]);
 	}
 
@@ -409,7 +411,7 @@ custom_app.PointOfSale.Controller = class {
 	toggle_recent_order() {
 		const show = this.recent_order_list.$component.is(":hidden");
 		this.toggle_recent_order_list(show);
-		this.payment.toggle_component(false); 
+		this.payment.toggle_component(false);
 		this.item_details.toggle_component(false); /// Add to fix ui hide payment is Order list toggled in Menu
 	}
 
@@ -487,7 +489,7 @@ custom_app.PointOfSale.Controller = class {
 										() => frappe.dom.unfreeze(),
 
 									]);
-									
+
 									passwordDialog.hide();
 									localStorage.removeItem('posCartItems'); // remove stored data from local storage
 								});
@@ -508,59 +510,105 @@ custom_app.PointOfSale.Controller = class {
 	close_pos() {
 
 		const me = this;
-			// Show password dialog for OIC authentication
-			const passwordDialog = new frappe.ui.Dialog({
-				title: __('Authorization Required OIC'),
-				fields: [
-					{
-						fieldname: 'password',
-						fieldtype: 'Password',
-						label: __('Password'),
-						reqd: 1
-					}
-				],
-				primary_action_label: __('Authorize'),
-				primary_action: (values) => {
-					let password = values.password;
-					let role = "oic";
-		
-					frappe.call({
-						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-						args: { password: password, role: role },
-						callback: (r) => {
-							if (r.message) {
-								// OIC authentication successful, proceed with discount edit
-								frappe.show_alert({
-									message: __('Verified'),
-									indicator: 'green'
-								});
-								passwordDialog.hide();
-		
-								if (!this.$components_wrapper.is(":visible")) return;
-
-								let voucher = frappe.model.get_new_doc("POS Closing Entry");
-								voucher.pos_profile = this.frm.doc.pos_profile;
-								voucher.user = frappe.session.user;
-								voucher.company = this.frm.doc.company;
-								voucher.pos_opening_entry = this.pos_opening;
-								voucher.period_end_date = frappe.datetime.now_datetime();
-								voucher.posting_date = frappe.datetime.now_date();
-								voucher.posting_time = frappe.datetime.now_time();
-								frappe.set_route("Form", "POS Closing Entry", voucher.name);
-
-							} else {
-								// Show alert for incorrect password or unauthorized user
-								frappe.show_alert({
-									message: __('Incorrect password or user is not an OIC'),
-									indicator: 'red'
-								});
-							}
-						}
-					});
+		// Show password dialog for OIC authentication
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __('Authorization Required OIC'),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
 				}
-			});
-		
-			passwordDialog.show();
+			],
+			// size: 'small',
+			primary_action_label: __('Authorize'),
+			primary_action: (values) => {
+				let password = values.password;
+				let role = "oic";
+
+				frappe.call({
+					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+					args: { password: password, role: role },
+					callback: (r) => {
+						if (r.message) {
+							// OIC authentication successful, proceed with discount edit
+							frappe.show_alert({
+								message: __('Verified'),
+								indicator: 'green'
+							});
+							passwordDialog.hide();
+
+							// if (!this.$components_wrapper.is(":visible")) return;
+
+							// frappe.call({
+							// 	method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_and_submit_pos_closing_entry",
+							// 	args: {
+							// 		cashier: frappe.session.user,
+							// 		pos_profile: this.frm.doc.pos_profile,
+							// 		company: this.frm.doc.company,
+							// 		pos_opening_entry_id: this.pos_opening,
+							// 		posting_date: frappe.datetime.now_date(),
+							// 		posting_time: frappe.datetime.now_time()
+							// 	},
+							// 	callback: function(r) {
+							// 		if (r.message) {
+
+							// 			frappe.utils.print(
+							// 				'POS Closing Entry',
+							// 				r.message,
+							// 				'Custom X Reading',
+							// 				'Amesco Drug Corporation',
+							// 				'en' || frappe.boot.lang
+							// 			);
+
+							// 			passwordDialog.hide();
+							// 			frappe.show_alert({
+							// 				message: __(`Success ${ r.message}`),
+							// 				indicator: 'green'
+							// 			});
+
+							// 			  // Reload the page after 3 seconds
+							// 			  setTimeout(function(){
+							// 				location.reload();
+							// 			}, 3000);
+
+							// 			//frappe.set_route("Form", "POS Closing Entry", r.message);
+							// 		} else {
+							// 			frappe.show_alert({
+							// 				message: __('Failed to create POS Closing Entry'),
+							// 				indicator: 'red'
+							// 			});
+							// 		}
+							// 	}
+							// });
+
+
+
+							if (!this.$components_wrapper.is(":visible")) return;
+
+							let voucher = frappe.model.get_new_doc("POS Closing Entry");
+							voucher.pos_profile = this.frm.doc.pos_profile;
+							voucher.user = frappe.session.user;
+							voucher.company = this.frm.doc.company;
+							voucher.pos_opening_entry = this.pos_opening;
+							voucher.period_end_date = frappe.datetime.now_datetime();
+							voucher.posting_date = frappe.datetime.now_date();
+							voucher.posting_time = frappe.datetime.now_time();
+							frappe.set_route("Form", "POS Closing Entry", voucher.name);
+						} else {
+							// Show alert for incorrect password or unauthorized user
+							frappe.show_alert({
+								message: __('Incorrect password or user is not an OIC'),
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		});
+
+		passwordDialog.show();
 
 
 	}
@@ -595,7 +643,7 @@ custom_app.PointOfSale.Controller = class {
 
 								if (posWarehouse === selectedWarehouse || selectedWarehouse === null) {
 									this.on_cart_update(args); // Proceed if warehouses match
-								}else {
+								} else {
 									frappe.show_alert({
 										message: __("You cannot add items from a different branch."),
 										indicator: "red",
@@ -604,7 +652,7 @@ custom_app.PointOfSale.Controller = class {
 									return;
 								}
 							} else {
-								
+
 								frappe.show_alert({
 									message: __("Could not retrieve the warehouse for the POS Profile."),
 									indicator: "red",
@@ -616,6 +664,9 @@ custom_app.PointOfSale.Controller = class {
 					});
 				},
 				get_frm: () => this.frm || {},
+				get_pos_profile: () => {
+					return this.pos_profile
+				}
 			},
 		});
 	}
@@ -740,7 +791,7 @@ custom_app.PointOfSale.Controller = class {
 				submit_invoice: () => {
 					// Calculate the total payment amount
 					let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
-				
+
 					// Check if payment is sufficient
 					if (payment_amount < this.frm.doc.grand_total) {
 						// Show dialog indicating insufficient payment
@@ -751,17 +802,17 @@ custom_app.PointOfSale.Controller = class {
 								insufficientPaymentDialog.hide();
 							}
 						});
-				
+
 						insufficientPaymentDialog.body.innerHTML = `
 							<div style="text-align: center; font-size: 30px; margin: 20px 0;">
 								${__('The payment amount is not enough to cover the grand total.')}
 							</div>
 						`;
-				
+
 						insufficientPaymentDialog.show();
 						return; // Exit the function if payment is not sufficient
 					}
-			
+
 					// Proceed with submitting the invoice if payment is sufficient
 					this.frm.save('Submit').then((r) => {
 						this.toggle_components(false);
@@ -771,15 +822,15 @@ custom_app.PointOfSale.Controller = class {
 						this.remove_pos_cart_items();
 						this.order_summary.load_summary_of(this.frm.doc, true);
 						this.order_summary.print_receipt();
-						
+
 						frappe.show_alert({
 							indicator: "green",
 							message: __("Order successfully completed"),
 						});
-				
+
 						// Calculate the change
 						let change_amount = payment_amount - this.frm.doc.grand_total;
-				
+
 						// Show change in a dialog
 						const changeDialog = new frappe.ui.Dialog({
 							title: __('Change Amount'),
@@ -796,11 +847,11 @@ custom_app.PointOfSale.Controller = class {
 								${format_currency(change_amount)}
 							</div>
 						`;
-				
+
 						changeDialog.show();
 					});
 				}
-				
+
 			},
 		});
 	}
@@ -826,7 +877,7 @@ custom_app.PointOfSale.Controller = class {
 				source_warehouse: () => {
 					return this.settings.warehouse;
 				},
-				
+
 				reset_summary: () => this.order_summary.toggle_summary_placeholder(true),
 			},
 		});
@@ -837,10 +888,10 @@ custom_app.PointOfSale.Controller = class {
 			wrapper: this.$components_wrapper,
 			events: {
 				get_frm: () => this.frm,
-				
+
 				process_return: (name) => {
 					this.recent_order_list.toggle_component(false);
-		           
+
 					frappe.db.get_doc("POS Invoice", name).then((doc) => {
 						frappe.run_serially([
 							() => this.make_return_invoice(doc),
@@ -858,7 +909,7 @@ custom_app.PointOfSale.Controller = class {
 				delete_order: (name) => {
 					this.oic_delete_confirm(name)
 				},
-				
+
 				new_order: () => {
 
 					frappe.run_serially([
@@ -873,13 +924,13 @@ custom_app.PointOfSale.Controller = class {
 				proceed_order: (name) => {
 					this.recent_order_list.toggle_component(false);
 					frappe.run_serially([
-				
+
 						() => this.frm.refresh(name),
 						() => this.cart.load_invoice(),
 						() => this.item_selector.toggle_component(true),
 						() => this.save_and_checkout(true),
 						() => this.cart.toggle_checkout_btn(false),
-						
+
 					]);
 				},
 
@@ -892,7 +943,7 @@ custom_app.PointOfSale.Controller = class {
 						() => this.toggle_recent_order_list(true),
 						() => frappe.dom.unfreeze(),
 					]);
-	
+
 				},
 
 
@@ -917,7 +968,7 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				let role = "oic";
-	
+
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
 					args: { password: password, role: role },
@@ -941,14 +992,14 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
-	
+
 		passwordDialog.show();
 		this.toggle_components(true); //Toggle True so order summary stays while authentication modal is activated
 	}
-	
-  
+
+
 	oic_delete_confirm(name) {
-	    const passwordDialog = new frappe.ui.Dialog({
+		const passwordDialog = new frappe.ui.Dialog({
 			title: __('Enter OIC Password'),
 			fields: [
 				{
@@ -962,7 +1013,7 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: (values) => {
 				let password = values.password;
 				let role = "oic";
-	
+
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
 					args: { password: password, role: role },
@@ -984,24 +1035,24 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
-	
-		passwordDialog.show();			
-    }
+
+		passwordDialog.show();
+	}
 
 
-	
-	
+
+
 	toggle_recent_order_list(show) {
 		// Toggle recent order list component
 		this.recent_order_list.toggle_component(show);
-		
+
 		// Toggle order summary component
 		this.order_summary.toggle_component(show);
-	
+
 		// Toggle item cart component
 		this.cart.toggle_component(!show);
 		this.item_selector.toggle_component(!show);
-	
+
 		// Hide item details and payment if recent order is toggled off
 		!show ? this.item_details.toggle_component(false) || this.payment.toggle_component(false) : "";
 	}
@@ -1015,16 +1066,16 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	make_new_invoice() {
-        return frappe.run_serially([
-            () => frappe.dom.freeze(),
-            () => this.make_sales_invoice_frm(),
-            () => this.set_pos_profile_data(),
-            () => this.set_pos_profile_status(),
-            () => this.cart.load_invoice(), // Load the invoice first
-            () => frappe.dom.unfreeze(),
-            () => this.cart.toggle_component(false) // Hide the cart component after loading the invoice
-        ]);
-    }
+		return frappe.run_serially([
+			() => frappe.dom.freeze(),
+			() => this.make_sales_invoice_frm(),
+			() => this.set_pos_profile_data(),
+			() => this.set_pos_profile_status(),
+			() => this.cart.load_invoice(), // Load the invoice first
+			() => frappe.dom.unfreeze(),
+			() => this.cart.toggle_component(false) // Hide the cart component after loading the invoice
+		]);
+	}
 
 	make_sales_invoice_frm() {
 		const doctype = "POS Invoice";
@@ -1130,7 +1181,7 @@ custom_app.PointOfSale.Controller = class {
 					await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);
 					new_item["serial_no"] = serial_no;
 				}
-				
+
 
 				if (field === "serial_no") new_item["qty"] = value.split(`\n`).length || 0;
 
@@ -1264,20 +1315,20 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	async check_serial_no_availablilty(item_code, warehouse, serial_no) {
-        const method = "erpnext.stock.doctype.serial_no.serial_no.get_pos_reserved_serial_nos";
-        const args = { filters: { item_code, warehouse } };
-        const res = await frappe.call({ method, args });
+		const method = "erpnext.stock.doctype.serial_no.serial_no.get_pos_reserved_serial_nos";
+		const args = { filters: { item_code, warehouse } };
+		const res = await frappe.call({ method, args });
 
-        if (res.message.includes(serial_no)) {
-            frappe.throw({
-                title: ("Not Available"),
-                message: ("Serial No: {0} has already been transacted into another POS Invoice.", [
-                    serial_no.bold(),
-                ]),
-            });
-        }
-    }
-	
+		if (res.message.includes(serial_no)) {
+			frappe.throw({
+				title: ("Not Available"),
+				message: ("Serial No: {0} has already been transacted into another POS Invoice.", [
+					serial_no.bold(),
+				]),
+			});
+		}
+	}
+
 	get_available_stock(item_code, warehouse) {
 		const me = this;
 		return frappe.call({
@@ -1375,6 +1426,7 @@ custom_app.PointOfSale.Controller = class {
 			],
 			primary_action_label: __('Ok'),
 			primary_action: (values) => {
+
                 let password = values.password;
                 frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
@@ -1418,6 +1470,7 @@ custom_app.PointOfSale.Controller = class {
 		passwordDialog.show();
 	}
 
+
 	async save_and_checkout() {
 		if (this.frm.is_dirty()) {
 			let save_error = false;
@@ -1433,5 +1486,5 @@ custom_app.PointOfSale.Controller = class {
 			this.payment.checkout();
 		}
 	}
-	
+
 };

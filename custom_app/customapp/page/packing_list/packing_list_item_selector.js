@@ -372,7 +372,7 @@ custom_app.PointOfSale.ItemSelector = class {
             const pos_profile = me.events.get_pos_profile();
 
             // Debugging logs
-            console.log("Item Clicked:", item_code, uom, rate, description, qty);
+            // console.log("Item Clicked:", item_code, uom, rate, description, qty);
 
             frappe.call({
                 method: 'custom_app.customapp.page.packing_list.packing_list.get_item_uom_prices',
@@ -509,36 +509,14 @@ custom_app.PointOfSale.ItemSelector = class {
                                                 Promise.all(warehouse_data_promises).then(warehouses_with_qty => {
                                                     // Filter out warehouses with zero quantity
                                                     warehouses_with_qty = warehouses_with_qty.filter(warehouse => warehouse.actual_qty > 0);
+                                                
                                                     const dialog = new frappe.ui.Dialog({
                                                         title: `${item_code} ${description}`,
                                                         fields: [
                                                             {
-                                                                fieldname: 'warehouse_table',
-                                                                label: 'Branches',
-                                                                fieldtype: 'Table',
-                                                                cannot_add_rows: true,
-                                                                in_editable_grid: true,
-                                                                read_only: 1,
-                                                                data: warehouses_with_qty,
-                                                                get_data: () => {
-                                                                    return warehouses_with_qty;
-                                                                },
-                                                                fields: [
-                                                                    {
-                                                                        fieldtype: 'Data',
-                                                                        fieldname: 'name',
-                                                                        label: 'Name',
-                                                                        in_list_view: 1,
-                                                                        read_only: 1,
-                                                                    },
-                                                                    {
-                                                                        fieldtype: 'Float',
-                                                                        fieldname: 'actual_qty',
-                                                                        label: 'Quantity',
-                                                                        in_list_view: 1,
-                                                                        read_only: 1,
-                                                                    }
-                                                                ]
+                                                                fieldtype: 'HTML',
+                                                                fieldname: 'warehouse_table_html',
+                                                                options: renderWarehousesTable(warehouses_with_qty)
                                                             }
                                                         ],
                                                         primary_action_label: __("Ok"),
@@ -546,24 +524,49 @@ custom_app.PointOfSale.ItemSelector = class {
                                                             dialog.hide();
                                                         }
                                                     });
-
+                                                
                                                     // Show the dialog and adjust its width
                                                     dialog.show();
-
+                                                
                                                     // Adjust dialog width and enable scrolling for the table
                                                     $(dialog.$wrapper).css({
                                                         "max-height": "80vh", // Adjust max height as needed
                                                         "overflow-y": "auto" // Enable vertical scrolling
                                                     });
-
+                                                
                                                     // Ensure the table within the dialog is scrollable
-                                                    $(dialog.fields_dict.warehouse_table.$wrapper).css({
+                                                    $(dialog.fields_dict.warehouse_table_html.$wrapper).css({
                                                         "max-height": "60vh", // Adjust table max height as needed
                                                         "overflow-y": "auto" // Enable vertical scrolling for the table
                                                     });
+                                                
                                                 }).catch(error => {
                                                     console.error("Error fetching warehouse data:", error);
                                                 });
+                                                
+                                                function renderWarehousesTable(data) {
+                                                    // Start building the HTML table
+                                                    let tableHtml = '<table class="table table-bordered">';
+                                                    tableHtml += '<thead><tr>';
+                                                    tableHtml += '<th>Name</th>';
+                                                    tableHtml += '<th>Quantity</th>';
+                                                    tableHtml += '</tr></thead>';
+                                                    tableHtml += '<tbody>';
+                                                
+                                                    // Populate table rows with data
+                                                    data.forEach(row => {
+                                                        tableHtml += '<tr>';
+                                                        tableHtml += `<td>${row.name}</td>`;
+                                                        tableHtml += `<td>${row.actual_qty}</td>`;
+                                                        tableHtml += '</tr>';
+                                                    });
+                                                
+                                                    tableHtml += '</tbody>';
+                                                    tableHtml += '</table>';
+                                                
+                                                    return tableHtml;
+                                                }
+                                                
                                             }
                                         });
                                     },
@@ -584,6 +587,11 @@ custom_app.PointOfSale.ItemSelector = class {
 
                                 if (!me.selectedItem) {
                                     frappe.msgprint(__("No item selected."));
+                                    return;
+                                }
+
+                                if (quantity > qty) {
+                                    frappe.msgprint(__("Entered Quantity Exceeded"));
                                     return;
                                 }
 
@@ -612,42 +620,12 @@ custom_app.PointOfSale.ItemSelector = class {
                                                 });
                                             
                                                 const invoice_dialog = new frappe.ui.Dialog({
-                                                    title: `Items was ordered by other customers`,
+                                                    title: 'Items ordered by other customers',
                                                     fields: [
                                                         {
-                                                            fieldname: 'invoices_table',
-                                                            label: 'Items in Draft State',
-                                                            fieldtype: 'Table',
-                                                            cannot_add_rows: true,
-                                                            in_editable_grid: false,
-                                                            read_only: 1,
-                                                            data: formatted_invoices,
-                                                            get_data: () => {
-                                                                return formatted_invoices;
-                                                            },
-                                                            fields: [
-                                                                {
-                                                                    fieldtype: 'Data',
-                                                                    fieldname: 'name',
-                                                                    label: 'ID',
-                                                                    in_list_view: 1,
-                                                                    read_only: 1,
-                                                                },
-                                                                // {
-                                                                //     fieldtype: 'Data',
-                                                                //     fieldname: 'customer',
-                                                                //     label: 'Customer',
-                                                                //     in_list_view: 1,
-                                                                //     read_only: 1,
-                                                                // },
-                                                                {
-                                                                    fieldtype: 'Int',
-                                                                    fieldname: 'item_qty',
-                                                                    label: 'Quantity',
-                                                                    in_list_view: 1,
-                                                                    read_only: 1,
-                                                                }
-                                                            ]
+                                                            fieldtype: 'HTML',
+                                                            fieldname: 'invoices_table_html',
+                                                            options: renderInvoicesTable(formatted_invoices)
                                                         }
                                                     ],
                                                     primary_action_label: __("Ok"),
@@ -655,15 +633,37 @@ custom_app.PointOfSale.ItemSelector = class {
                                                         invoice_dialog.hide();
                                                     }
                                                 });
+
+                                                function renderInvoicesTable(data) {
+                                                    // Start building the HTML table
+                                                    let tableHtml = '<table class="table table-bordered">';
+                                                    tableHtml += '<thead><tr>';
+                                                    tableHtml += '<th>ID</th>';
+                                                    // tableHtml += '<th>Customer</th>';
+                                                    tableHtml += '<th>Quantity</th>';
+                                                    tableHtml += '</tr></thead>';
+                                                    tableHtml += '<tbody>';
+                                                
+                                                    // Populate table rows with data
+                                                    data.forEach(row => {
+                                                        tableHtml += '<tr>';
+                                                        tableHtml += `<td>${row.name}</td>`;
+                                                        // tableHtml += `<td>${row.customer}</td>`;
+                                                        tableHtml += `<td>${row.item_qty}</td>`;
+                                                        tableHtml += '</tr>';
+                                                    });
+                                                
+                                                    tableHtml += '</tbody>';
+                                                    tableHtml += '</table>';
+                                                
+                                                    return tableHtml;
+                                                }
                                             
                                                 invoice_dialog.show();
                                                 return;
                                             }
 
-                                            if (quantity > qty) {
-                                                frappe.msgprint(__("Entered Quantity Exceeded"));
-                                                return;
-                                            }
+                                         
 
                                             // Proceed with adding the item to the cart if conditions are not met
                                             me.selectedItem.find(".item-uom").text(selectedUOM);

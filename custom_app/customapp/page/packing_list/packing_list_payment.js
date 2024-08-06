@@ -1905,8 +1905,6 @@ custom_app.PointOfSale.Payment = class {
 
 	
 			if (p.mode_of_payment === "Charge") {
-				console.log('Mode of payment is Charge');
-			
 				let existing_custom_customer = frappe.model.get_value(p.doctype, p.name, "custom_customer");
 				let custom_customer = frappe.ui.form.make_control({
 					df: {
@@ -2116,14 +2114,9 @@ custom_app.PointOfSale.Payment = class {
 						click: function () {
 							let code_value = code_input.get_value();
 							if (code_value) {
-								console.log('Button clicked, Code:', code_value);
-
-
 								if(code_value) {
 									frappe.db.get_doc("Amesco Gift Certificate", code_value)
 									.then(gift_cert => {
-										// Set the amount in the payment document based on the gift certificate amount
-										console.log('Gift Cert: ', gift_cert);
 										frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
 									
 
@@ -2149,10 +2142,7 @@ custom_app.PointOfSale.Payment = class {
 										});
 									});
 								}
-
-
 								code_field.push(code_value);
-								console.log("code_field", code_field);
 							} else {
 								frappe.msgprint({
 									title: __('Error'),

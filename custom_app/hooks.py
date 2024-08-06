@@ -232,10 +232,10 @@ app_license = "mit"
 doc_events = {
     "POS Invoice": {
         "before_insert": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_insert",
-        # "validate": "custom_app.customapp.doctype.sample.sample.custom_validate",
-        # "on_submit": "custom_app.customapp.doctype.sample.sample.custom_on_submit"
         "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
+        # "validate": "custom_app.customapp.doctype.sample.sample.custom_validate",
+        # "on_submit": "custom_app.customapp.doctype.sample.sample.custom_on_submit"
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
     },
    'POS Z Reading': {
@@ -246,15 +246,17 @@ doc_events = {
 #    },
    'Amesco Gift Certificate':{
        "before_insert": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.before_save",
+   },
+   'POS Closing Entry': {
+       'on_submit': 'custom_app.customapp.doctype.cash_count_denomination_entry.cash_count_denomination_entry.on_submit',
    }
 }
 
 # scheduler_events = {
 #     "hourly": [
-#         "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.delete_draft_pos_invoices",
+#         "custom_app.customapp.utils.executables.delete.delete_draft_pos_invoices",
 #     ],
 # }
-
 
 jenv = {
     'methods': [
@@ -263,9 +265,6 @@ jenv = {
 }
 
 app_include_js = [
-    "custom_app/customapp/doctype/amesco_gift_certificate/amesco_gift_certificate.js"
+    # "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.js",
+    #  "/assets/custom_app/js/contact_address_quick_entry.bundle.js"
 ]
-
-
-
-
