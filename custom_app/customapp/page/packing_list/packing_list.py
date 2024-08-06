@@ -577,7 +577,7 @@ def confirm_user_acc_password(password):
             return False
     except AuthenticationError:
         return False
-    
+  
 @frappe.whitelist()
 def get_user_details_by_password(password):
     """
@@ -671,7 +671,7 @@ def get_draft_pos_invoice_items(pos_profile, item_code):
         }
 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), _("Error fetching draft POS invoices"))
+        frappe.log_error(frappe.get_traceback(), frappe._("Error fetching draft POS invoices"))
         frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
 
 
@@ -751,3 +751,4 @@ def get_fifo_batch(item_code, warehouse):
         return batches[0]
     else:
         return None
+

@@ -201,7 +201,7 @@ custom_app.PointOfSale.ItemSelector = class {
         onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
-            data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}">
+            data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}" data-qty="${qty_to_display}">
             <td class="item-code" style=" width: 15%;">${item_code}</td> 
             <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
@@ -354,9 +354,13 @@ custom_app.PointOfSale.ItemSelector = class {
         this.$component.on("click", ".item-wrapper", async function() {
             const $item = $(this);
             me.selectedItem = $item;
-            const uom = unescape($item.attr("data-uom"));
             const item_code = unescape($item.attr("data-item-code"));
+            const uom = unescape($item.attr("data-uom"));
+            const rate = parseFloat(unescape($item.attr("data-rate")));
             const description = unescape($item.attr("data-description"));
+            const qty = parseFloat(unescape($item.attr("data-qty")));
+            const pos_profile = me.events.get_pos_profile();
+
         
             // Fetch prices for different UOMs from the server
             const response = await frappe.call({
@@ -396,42 +400,42 @@ custom_app.PointOfSale.ItemSelector = class {
                         fieldtype: "HTML",
                         title: __("Item Details"),
                         options: `
-                        <div class="row">
-                            <div class="col-lg">
-                                <div class="form-group">
-                                    <label class="control-label">Item Code </label>
-                                    <input class="form-control" readonly data-fieldname="description" type="text" value= "${item_code}"/>
+                            <div class="row">
+                                <div class="col-lg">
+                                    <div class="form-group">
+                                        <label class="control-label">Item Code</label>
+                                        <input class="form-control" readonly data-fieldname="description" type="text" value="${item_code}"/>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         `
-                    }, 
+                    },
                     {
                         fieldtype: "HTML",
                         title: __("Item Details"),
                         options: `
-                        <div class="row">
-                            <div class="col-lg">
-                                <div class="form-group">
-                                    <label class="control-label">Item Description</label>
-                                    <input class="form-control" readonly data-fieldname="description" type="text" value= "${description}"/>
+                            <div class="row">
+                                <div class="col-lg">
+                                    <div class="form-group">
+                                        <label class="control-label">Item Description</label>
+                                        <input class="form-control" readonly data-fieldname="description" type="text" value="${description}"/>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         `
-                    }, 
+                    },
                     {
                         fieldtype: "HTML",
                         label: __("Quantity"),
                         options: `
-                        <div class="row">
-                            <div class="col-lg">
-                                <div class="form-group">
-                                    <label class="control-label">${__("Quantity")}</label>
-                                    <input class="form-control" type="number" id="quantity-field" data-fieldname="quantity" required value="1" />
+                            <div class="row">
+                                <div class="col-lg">
+                                    <div class="form-group">
+                                        <label class="control-label">${__("Quantity")}</label>
+                                        <input class="form-control" type="number" data-fieldname="quantity" required value="0" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         `
                     },
                     {
@@ -454,41 +458,232 @@ custom_app.PointOfSale.ItemSelector = class {
                                 </div>
                             </div>
                         `
-                    }
-                ],
+                    },
+                            {
+                        label: 'Branch Item INVTY',
+                        fieldtype: 'Button',
+                        btn_size: 'sm', // xs, sm, lg
+                        click: function () {
+                            // Step 1: Fetch the list of warehouses
+                            let warehouses = [];
+                            // const current_wareouse = // frappe.db.get_value("POS Profile", this.pos_profile, warehouse)
+                            // console.log("Current Warehouse: ", current_wareouse)
 
+                            frappe.call({
+                                method: "frappe.client.get_list",
+                                args: {
+                                    doctype: "Warehouse",
+                                    fields: ["name", "warehouse_type", "parent_warehouse"],
+                                    limit_page_length: 0 // Fetch all items without limit
+                                },
+                                callback: function (response) {
+                                    warehouses = response.message;
+
+                                    // Step 2: Fetch item quantity for each warehouse
+                                    let warehouse_data_promises = warehouses.map(warehouse => {
+                                        return new Promise((resolve, reject) => {
+                                            frappe.call({
+                                                method: "custom_app.customapp.page.packing_list.packing_list.get_item_qty_per_warehouse",
+                                                args: {
+                                                    warehouse: warehouse.name,
+                                                    item_code: item_code // Replace with your item code variable
+                                                },
+                                                callback: function (response) {
+                                                    warehouse.actual_qty = response.message;
+                                                    resolve(warehouse);
+                                                },
+                                                error: function (error) {
+                                                    reject(error);
+                                                }
+                                            });
+                                        });
+                                    });
+
+                                    Promise.all(warehouse_data_promises).then(warehouses_with_qty => {
+                                        // Filter out warehouses with zero quantity
+                                        warehouses_with_qty = warehouses_with_qty.filter(warehouse => warehouse.actual_qty > 0);
+                                    
+                                        const dialog = new frappe.ui.Dialog({
+                                            title: `${item_code} ${description}`,
+                                            fields: [
+                                                {
+                                                    fieldtype: 'HTML',
+                                                    fieldname: 'warehouse_table_html',
+                                                    options: renderWarehousesTable(warehouses_with_qty)
+                                                }
+                                            ],
+                                            primary_action_label: __("Ok"),
+                                            primary_action: function () {
+                                                dialog.hide();
+                                            }
+                                        });
+                                    
+                                        // Show the dialog and adjust its width
+                                        dialog.show();
+                                    
+                                        // Adjust dialog width and enable scrolling for the table
+                                        $(dialog.$wrapper).css({
+                                            "max-height": "80vh", // Adjust max height as needed
+                                            "overflow-y": "auto" // Enable vertical scrolling
+                                        });
+                                    
+                                        // Ensure the table within the dialog is scrollable
+                                        $(dialog.fields_dict.warehouse_table_html.$wrapper).css({
+                                            "max-height": "60vh", // Adjust table max height as needed
+                                            "overflow-y": "auto" // Enable vertical scrolling for the table
+                                        });
+                                    
+                                    }).catch(error => {
+                                        console.error("Error fetching warehouse data:", error);
+                                    });
+                                    
+                                    function renderWarehousesTable(data) {
+                                        // Start building the HTML table
+                                        let tableHtml = '<table class="table table-bordered">';
+                                        tableHtml += '<thead><tr>';
+                                        tableHtml += '<th>Name</th>';
+                                        tableHtml += '<th>Quantity</th>';
+                                        tableHtml += '</tr></thead>';
+                                        tableHtml += '<tbody>';
+                                    
+                                        // Populate table rows with data
+                                        data.forEach(row => {
+                                            tableHtml += '<tr>';
+                                            tableHtml += `<td>${row.name}</td>`;
+                                            tableHtml += `<td>${row.actual_qty}</td>`;
+                                            tableHtml += '</tr>';
+                                        });
+                                    
+                                        tableHtml += '</tbody>';
+                                        tableHtml += '</table>';
+                                    
+                                        return tableHtml;
+                                    }
+                                    
+                                }
+                            });
+                        },
+                    }
+
+
+                ],
                 primary_action_label: __("Ok"),
-                primary_action: function() {
+                primary_action: function () {
                     const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
                     const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
                     const totalAmount = parseFloat(dialog.wrapper.find('input[data-fieldname="total_amount"]').val());
-        
+
                     if (!quantity || quantity <= 0) {
                         frappe.msgprint(__("Please enter a valid quantity."));
                         return;
                     }
-        
-                    dialog.hide();
-        
+
                     if (!me.selectedItem) {
                         frappe.msgprint(__("No item selected."));
                         return;
                     }
-        
-                    // me.selectedItem.find(".item-uom").text(selectedUOM);
-        
-                    const itemCode = unescape(me.selectedItem.attr("data-item-code"));
-                    const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
-                    const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
-        
-                    me.events.item_selected({
-                        field: "qty",
-                        value: "+" + quantity,
-                        item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
+
+                    if (quantity > qty) {
+                        frappe.msgprint(__("Entered Quantity Exceeded"));
+                        return;
+                    }
+
+                    frappe.call({
+                        method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
+                        args: {
+                            pos_profile: pos_profile,// Replace with your actual pos_profile
+                            item_code: item_code // Replace with your actual item_code
+                        },
+                        callback: function (response) {
+                            if (response.message) {
+                                const { invoices, total_qty } = response.message;
+                                let item_total_qty = total_qty; // Use the total_qty from the response
+
+                                // console.log("Draft POS Invoices with specified item:", invoices);
+                                // console.log(`Total Quantity of Item (${item_code}): ${item_total_qty}`);
+
+                                if ((item_total_qty + quantity) > qty) {
+                                    const formatted_invoices = invoices.map(invoice => {
+                                        const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
+                                        return {
+                                            name: invoice.name,
+                                            customer: invoice.customer, 
+                                            item_qty: item_qty
+                                        };
+                                    });
+                                
+                                    const invoice_dialog = new frappe.ui.Dialog({
+                                        title: 'Items ordered by other customers',
+                                        fields: [
+                                            {
+                                                fieldtype: 'HTML',
+                                                fieldname: 'invoices_table_html',
+                                                options: renderInvoicesTable(formatted_invoices)
+                                            }
+                                        ],
+                                        primary_action_label: __("Ok"),
+                                        primary_action: function () {
+                                            invoice_dialog.hide();
+                                        }
+                                    });
+
+                                    function renderInvoicesTable(data) {
+                                        // Start building the HTML table
+                                        let tableHtml = '<table class="table table-bordered">';
+                                        tableHtml += '<thead><tr>';
+                                        tableHtml += '<th>ID</th>';
+                                        // tableHtml += '<th>Customer</th>';
+                                        tableHtml += '<th>Quantity</th>';
+                                        tableHtml += '</tr></thead>';
+                                        tableHtml += '<tbody>';
+                                    
+                                        // Populate table rows with data
+                                        data.forEach(row => {
+                                            tableHtml += '<tr>';
+                                            tableHtml += `<td>${row.name}</td>`;
+                                            // tableHtml += `<td>${row.customer}</td>`;
+                                            tableHtml += `<td>${row.item_qty}</td>`;
+                                            tableHtml += '</tr>';
+                                        });
+                                    
+                                        tableHtml += '</tbody>';
+                                        tableHtml += '</table>';
+                                    
+                                        return tableHtml;
+                                    }
+                                
+                                    invoice_dialog.show();
+                                    return;
+                                }
+
+                             
+
+                                // Proceed with adding the item to the cart if conditions are not met
+                                me.selectedItem.find(".item-uom").text(selectedUOM);
+
+                                const itemCode = unescape(me.selectedItem.attr("data-item-code"));
+                                const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
+                                const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+
+                                me.events.item_selected({
+                                    field: "qty",
+                                    value: "+" + quantity,
+                                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
+                                });
+
+                                me.search_field.set_focus();
+
+                                dialog.hide();
+                            } else {
+                                console.log("No matching draft POS invoices found.");
+                            }
+                        },
+                        error: function (error) {
+                            console.error("Error fetching draft POS invoices:", error);
+                        }
                     });
-        
-                    me.search_field.set_focus();
                 }
+
             });
 
             // Set focus on the quantity field when the dialog is shown
