@@ -296,3 +296,14 @@ def get_encryption_key():
 
 def get_password_reset_limit():
 	return frappe.get_system_settings("password_reset_limit") or 3
+
+def confirm_user_acc_user_password(user, password):
+    # Get the current user
+    try:
+        # Check if the entered password matches the stored hashed password
+        if check_password(user, password):
+            return True
+        else:
+            return False
+    except AuthenticationError:
+        return False

@@ -16,6 +16,8 @@ from erpnext.stock.utils import scan_barcode
 #from frappe.utils.password import check_oic_password, check_password
 from custom_app.customapp.utils.password import check_oic_password, check_password
 
+from custom_app.customapp.doctype.cash_count_denomination_entry.cash_count_denomination_entry import create_cash_count_denomination_entry
+
 
 def search_by_term(search_term, warehouse, price_list):
 	result = search_for_serial_or_batch_or_barcode_number(search_term) or {}
@@ -508,4 +510,46 @@ def get_pos_closing_details(parent):
 def get_pos_warehouse(pos_profile):
     warehouse = frappe.db.get_value("POS Profile", pos_profile, "warehouse")
     return warehouse
+@frappe.whitelist()
+def create_and_submit_pos_closing_entry(cashier, pos_profile, company, pos_opening_entry_id, posting_date, posting_time):
+    """
+    Create and submit a new POS Closing Entry document.
+
+    Args:
+        cashier (str): The user creating the entry
+        pos_profile (str): The POS profile
+        company (str): The company name
+        pos_opening_entry_id (str): The ID of the POS opening entry
+
+    Returns:
+        str: The name of the submitted document
+    """
+    try:
+        # Create a new POS Closing Entry document
+        voucher = frappe.new_doc("POS Closing Entry")
+        voucher.pos_profile = pos_profile
+        voucher.user = cashier
+        voucher.company = company
+        voucher.pos_opening_entry = pos_opening_entry_id
+        voucher.period_end_date = frappe.utils.now_datetime()
+        voucher.posting_date = posting_date
+        voucher.posting_time = posting_time
+        
+        # Insert and submit the document
+        voucher.insert()
+        # add time to submit
+        #
+        voucher.submit()
+
+        # Commit the transaction to save changes
+        frappe.db.commit()        
+        # user the create_cash_count_denomination_entry here import
+        create_cash_count_denomination_entry(cashier, pos_profile, voucher.pos_opening_entry)
+        return voucher.name
+
+    except frappe.exceptions.ValidationError as e:
+        frappe.throw(frappe._("Validation Error: {0}").format(str(e)))
+
+    except Exception as e:
+        frappe.throw(frappe._("An error occurred while creating the document: {0}").format(str(e)))
     

@@ -336,6 +336,28 @@ custom_app.PointOfSale.Controller = class {
 
 	save_draft_invoice() {
 		if (!this.$components_wrapper.is(":visible")) return;
+		let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+
+		if (payment_amount < this.frm.doc.grand_total) {
+			// Show dialog indicating insufficient payment
+			const insufficientPaymentDialog = new frappe.ui.Dialog({
+				title: __('Insufficient Payment'),
+				primary_action_label: __('OK'),
+				primary_action: () => {
+					insufficientPaymentDialog.hide();
+				}
+			});
+
+			insufficientPaymentDialog.body.innerHTML = `
+				<div style="text-align: center; font-size: 30px; margin: 20px 0;">
+					${__('The payment amount is not enough to cover the grand total.')}
+				</div>
+			`;
+
+			insufficientPaymentDialog.show();
+			return; // Exit the function if payment is not sufficient
+		}
 
 		if (this.frm.doc.items.length == 0) {
 			frappe.show_alert({
@@ -364,37 +386,43 @@ custom_app.PointOfSale.Controller = class {
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
-							this.set_pharmacist_assist(this.frm, r.message.name)
-							this.frm
-								.save(undefined, undefined, undefined, () => {
-									frappe.show_alert({
-										message: __("There was an error saving the document."),
-										indicator: "red",
+							if(r.message.name) {
+								this.set_pharmacist_assist(this.frm, r.message.name)
+								this.frm
+									.save(undefined, undefined, undefined, () => {
+										frappe.show_alert({
+											message: __("There was an error saving the document."),
+											indicator: "red",
+										});
+										frappe.utils.play_sound("error");
+									})
+									.then(() => {
+										frappe.run_serially([
+											() => frappe.dom.freeze(),
+											() => this.make_new_invoice(),
+											() => frappe.dom.unfreeze(),
+	
+										]);
+										passwordDialog.hide();
+	
+										this.order_summary.load_summary_of(this.frm.doc, true);
+										this.order_summary.print_receipt();
+										window.location.reload(); // reload after successfull entered password
+										localStorage.removeItem('posCartItems'); // remove stored data from local storage
+										frappe.show_alert({
+											message: __("Invoice Printed"),
+											indicator: "blue",
+										});
 									});
-									frappe.utils.play_sound("error");
-								})
-								.then(() => {
-									frappe.run_serially([
-										() => frappe.dom.freeze(),
-										() => this.make_new_invoice(),
-										() => frappe.dom.unfreeze(),
-
-									]);
-									passwordDialog.hide();
-
-									this.order_summary.load_summary_of(this.frm.doc, true);
-									this.order_summary.print_receipt();
-									window.location.reload(); // reload after successfull entered password
-									localStorage.removeItem('posCartItems'); // remove stored data from local storage
-									frappe.show_alert({
-										message: __("Invoice Printed"),
-										indicator: "blue",
-									});
+							}else{
+								frappe.show_alert({
+									message: __('Invalid password or no matching roles'),
+									indicator: 'red'
 								});
-
+							}
 						} else {
 							frappe.show_alert({
-								message: __('Incorrect password'),
+								message: __(`${r.message.error}`),
 								indicator: 'red'
 							});
 						}

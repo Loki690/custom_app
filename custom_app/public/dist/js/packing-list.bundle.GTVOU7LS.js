@@ -376,9 +376,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/Barcode.js
+  // ../../node_modules/jsbarcode/bin/barcodes/Barcode.js
   var require_Barcode = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/Barcode.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/Barcode.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -398,9 +398,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE39/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE39/index.js
   var require_CODE39 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE39/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE39/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -506,9 +506,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE128/constants.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/constants.js
   var require_constants = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE128/constants.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE128/constants.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -548,9 +548,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128.js
   var require_CODE128 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -694,9 +694,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE128/auto.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/auto.js
   var require_auto = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE128/auto.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE128/auto.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -752,9 +752,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128_AUTO.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128_AUTO.js
   var require_CODE128_AUTO = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128_AUTO.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128_AUTO.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -802,9 +802,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128A.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128A.js
   var require_CODE128A = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128A.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128A.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -871,9 +871,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128B.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128B.js
   var require_CODE128B = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128B.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128B.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -940,9 +940,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE128/CODE128C.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128C.js
   var require_CODE128C = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE128/CODE128C.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE128/CODE128C.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1009,9 +1009,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/CODE128/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/CODE128/index.js
   var require_CODE1282 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/CODE128/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/CODE128/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1035,9 +1035,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/constants.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/constants.js
   var require_constants2 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/constants.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/constants.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1112,9 +1112,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/encoder.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/encoder.js
   var require_encoder = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/encoder.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/encoder.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1138,9 +1138,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN.js
   var require_EAN = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1248,9 +1248,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN13.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN13.js
   var require_EAN13 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN13.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN13.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1397,9 +1397,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN8.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN8.js
   var require_EAN8 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN8.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN8.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1519,9 +1519,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN5.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN5.js
   var require_EAN5 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN5.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN5.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1607,9 +1607,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN2.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN2.js
   var require_EAN2 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN2.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/EAN2.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1687,9 +1687,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPC.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPC.js
   var require_UPC = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPC.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPC.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -1845,9 +1845,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPCE.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPCE.js
   var require_UPCE = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPCE.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/UPCE.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2021,9 +2021,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/EAN_UPC/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/index.js
   var require_EAN_UPC = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/EAN_UPC/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/EAN_UPC/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2053,9 +2053,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/ITF/constants.js
+  // ../../node_modules/jsbarcode/bin/barcodes/ITF/constants.js
   var require_constants3 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/ITF/constants.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/ITF/constants.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2066,9 +2066,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/ITF/ITF.js
+  // ../../node_modules/jsbarcode/bin/barcodes/ITF/ITF.js
   var require_ITF = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/ITF/ITF.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/ITF/ITF.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2155,9 +2155,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/ITF/ITF14.js
+  // ../../node_modules/jsbarcode/bin/barcodes/ITF/ITF14.js
   var require_ITF14 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/ITF/ITF14.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/ITF/ITF14.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2234,9 +2234,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/ITF/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/ITF/index.js
   var require_ITF2 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/ITF/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/ITF/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2254,9 +2254,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/MSI/MSI.js
+  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI.js
   var require_MSI = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/MSI/MSI.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2346,9 +2346,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/MSI/checksums.js
+  // ../../node_modules/jsbarcode/bin/barcodes/MSI/checksums.js
   var require_checksums = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/MSI/checksums.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/MSI/checksums.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2379,9 +2379,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/MSI/MSI10.js
+  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI10.js
   var require_MSI10 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/MSI/MSI10.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI10.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2423,9 +2423,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/MSI/MSI11.js
+  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI11.js
   var require_MSI11 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/MSI/MSI11.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI11.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2467,9 +2467,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/MSI/MSI1010.js
+  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI1010.js
   var require_MSI1010 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/MSI/MSI1010.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI1010.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2513,9 +2513,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/MSI/MSI1110.js
+  // ../../node_modules/jsbarcode/bin/barcodes/MSI/MSI1110.js
   var require_MSI1110 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/MSI/MSI1110.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/MSI/MSI1110.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2559,9 +2559,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/MSI/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/MSI/index.js
   var require_MSI2 = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/MSI/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/MSI/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2588,9 +2588,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/pharmacode/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/pharmacode/index.js
   var require_pharmacode = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/pharmacode/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/pharmacode/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2679,9 +2679,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/codabar/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/codabar/index.js
   var require_codabar = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/codabar/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/codabar/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2795,9 +2795,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/GenericBarcode/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/GenericBarcode/index.js
   var require_GenericBarcode = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/GenericBarcode/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/GenericBarcode/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2872,9 +2872,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/barcodes/index.js
+  // ../../node_modules/jsbarcode/bin/barcodes/index.js
   var require_barcodes = __commonJS({
-    "node_modules/jsbarcode/bin/barcodes/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/barcodes/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2913,9 +2913,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/help/merge.js
+  // ../../node_modules/jsbarcode/bin/help/merge.js
   var require_merge = __commonJS({
-    "node_modules/jsbarcode/bin/help/merge.js"(exports) {
+    "../../node_modules/jsbarcode/bin/help/merge.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2937,9 +2937,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/help/linearizeEncodings.js
+  // ../../node_modules/jsbarcode/bin/help/linearizeEncodings.js
   var require_linearizeEncodings = __commonJS({
-    "node_modules/jsbarcode/bin/help/linearizeEncodings.js"(exports) {
+    "../../node_modules/jsbarcode/bin/help/linearizeEncodings.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2964,9 +2964,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/help/fixOptions.js
+  // ../../node_modules/jsbarcode/bin/help/fixOptions.js
   var require_fixOptions = __commonJS({
-    "node_modules/jsbarcode/bin/help/fixOptions.js"(exports) {
+    "../../node_modules/jsbarcode/bin/help/fixOptions.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -2982,9 +2982,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/help/optionsFromStrings.js
+  // ../../node_modules/jsbarcode/bin/help/optionsFromStrings.js
   var require_optionsFromStrings = __commonJS({
-    "node_modules/jsbarcode/bin/help/optionsFromStrings.js"(exports) {
+    "../../node_modules/jsbarcode/bin/help/optionsFromStrings.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3008,9 +3008,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/options/defaults.js
+  // ../../node_modules/jsbarcode/bin/options/defaults.js
   var require_defaults = __commonJS({
-    "node_modules/jsbarcode/bin/options/defaults.js"(exports) {
+    "../../node_modules/jsbarcode/bin/options/defaults.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3041,9 +3041,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/help/getOptionsFromElement.js
+  // ../../node_modules/jsbarcode/bin/help/getOptionsFromElement.js
   var require_getOptionsFromElement = __commonJS({
-    "node_modules/jsbarcode/bin/help/getOptionsFromElement.js"(exports) {
+    "../../node_modules/jsbarcode/bin/help/getOptionsFromElement.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3075,9 +3075,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/renderers/shared.js
+  // ../../node_modules/jsbarcode/bin/renderers/shared.js
   var require_shared = __commonJS({
-    "node_modules/jsbarcode/bin/renderers/shared.js"(exports) {
+    "../../node_modules/jsbarcode/bin/renderers/shared.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3160,9 +3160,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/renderers/canvas.js
+  // ../../node_modules/jsbarcode/bin/renderers/canvas.js
   var require_canvas = __commonJS({
-    "node_modules/jsbarcode/bin/renderers/canvas.js"(exports) {
+    "../../node_modules/jsbarcode/bin/renderers/canvas.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3302,9 +3302,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/renderers/svg.js
+  // ../../node_modules/jsbarcode/bin/renderers/svg.js
   var require_svg = __commonJS({
-    "node_modules/jsbarcode/bin/renderers/svg.js"(exports) {
+    "../../node_modules/jsbarcode/bin/renderers/svg.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3475,9 +3475,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/renderers/object.js
+  // ../../node_modules/jsbarcode/bin/renderers/object.js
   var require_object = __commonJS({
-    "node_modules/jsbarcode/bin/renderers/object.js"(exports) {
+    "../../node_modules/jsbarcode/bin/renderers/object.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3525,9 +3525,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/renderers/index.js
+  // ../../node_modules/jsbarcode/bin/renderers/index.js
   var require_renderers = __commonJS({
-    "node_modules/jsbarcode/bin/renderers/index.js"(exports) {
+    "../../node_modules/jsbarcode/bin/renderers/index.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3545,9 +3545,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/exceptions/exceptions.js
+  // ../../node_modules/jsbarcode/bin/exceptions/exceptions.js
   var require_exceptions = __commonJS({
-    "node_modules/jsbarcode/bin/exceptions/exceptions.js"(exports) {
+    "../../node_modules/jsbarcode/bin/exceptions/exceptions.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3612,9 +3612,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/help/getRenderProperties.js
+  // ../../node_modules/jsbarcode/bin/help/getRenderProperties.js
   var require_getRenderProperties = __commonJS({
-    "node_modules/jsbarcode/bin/help/getRenderProperties.js"(exports) {
+    "../../node_modules/jsbarcode/bin/help/getRenderProperties.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3696,9 +3696,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/exceptions/ErrorHandler.js
+  // ../../node_modules/jsbarcode/bin/exceptions/ErrorHandler.js
   var require_ErrorHandler = __commonJS({
-    "node_modules/jsbarcode/bin/exceptions/ErrorHandler.js"(exports) {
+    "../../node_modules/jsbarcode/bin/exceptions/ErrorHandler.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", {
         value: true
@@ -3766,9 +3766,9 @@
     }
   });
 
-  // node_modules/jsbarcode/bin/JsBarcode.js
+  // ../../node_modules/jsbarcode/bin/JsBarcode.js
   var require_JsBarcode = __commonJS({
-    "node_modules/jsbarcode/bin/JsBarcode.js"(exports, module) {
+    "../../node_modules/jsbarcode/bin/JsBarcode.js"(exports, module) {
       "use strict";
       var _barcodes = require_barcodes();
       var _barcodes2 = _interopRequireDefault(_barcodes);
@@ -4218,7 +4218,6 @@
         const description = unescape($item.attr("data-description"));
         const qty = parseFloat(unescape($item.attr("data-qty")));
         const pos_profile = me.events.get_pos_profile();
-        console.log("Item Clicked:", item_code, uom, rate2, description, qty);
         frappe.call({
           method: "custom_app.customapp.page.packing_list.packing_list.get_item_uom_prices",
           args: {
@@ -4346,32 +4345,9 @@
                               title: `${item_code} ${description}`,
                               fields: [
                                 {
-                                  fieldname: "warehouse_table",
-                                  label: "Branches",
-                                  fieldtype: "Table",
-                                  cannot_add_rows: true,
-                                  in_editable_grid: true,
-                                  read_only: 1,
-                                  data: warehouses_with_qty,
-                                  get_data: () => {
-                                    return warehouses_with_qty;
-                                  },
-                                  fields: [
-                                    {
-                                      fieldtype: "Data",
-                                      fieldname: "name",
-                                      label: "Name",
-                                      in_list_view: 1,
-                                      read_only: 1
-                                    },
-                                    {
-                                      fieldtype: "Float",
-                                      fieldname: "actual_qty",
-                                      label: "Quantity",
-                                      in_list_view: 1,
-                                      read_only: 1
-                                    }
-                                  ]
+                                  fieldtype: "HTML",
+                                  fieldname: "warehouse_table_html",
+                                  options: renderWarehousesTable(warehouses_with_qty)
                                 }
                               ],
                               primary_action_label: __("Ok"),
@@ -4384,13 +4360,30 @@
                               "max-height": "80vh",
                               "overflow-y": "auto"
                             });
-                            $(dialog3.fields_dict.warehouse_table.$wrapper).css({
+                            $(dialog3.fields_dict.warehouse_table_html.$wrapper).css({
                               "max-height": "60vh",
                               "overflow-y": "auto"
                             });
                           }).catch((error) => {
                             console.error("Error fetching warehouse data:", error);
                           });
+                          function renderWarehousesTable(data) {
+                            let tableHtml = '<table class="table table-bordered">';
+                            tableHtml += "<thead><tr>";
+                            tableHtml += "<th>Name</th>";
+                            tableHtml += "<th>Quantity</th>";
+                            tableHtml += "</tr></thead>";
+                            tableHtml += "<tbody>";
+                            data.forEach((row) => {
+                              tableHtml += "<tr>";
+                              tableHtml += `<td>${row.name}</td>`;
+                              tableHtml += `<td>${row.actual_qty}</td>`;
+                              tableHtml += "</tr>";
+                            });
+                            tableHtml += "</tbody>";
+                            tableHtml += "</table>";
+                            return tableHtml;
+                          }
                         }
                       });
                     }
@@ -4409,6 +4402,10 @@
                     frappe.msgprint(__("No item selected."));
                     return;
                   }
+                  if (quantity2 > qty) {
+                    frappe.msgprint(__("Entered Quantity Exceeded"));
+                    return;
+                  }
                   frappe.call({
                     method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
                     args: {
@@ -4420,6 +4417,23 @@
                         const { invoices, total_qty } = response2.message;
                         let item_total_qty = total_qty;
                         if (item_total_qty + quantity2 > qty) {
+                          let renderInvoicesTable = function(data) {
+                            let tableHtml = '<table class="table table-bordered">';
+                            tableHtml += "<thead><tr>";
+                            tableHtml += "<th>ID</th>";
+                            tableHtml += "<th>Quantity</th>";
+                            tableHtml += "</tr></thead>";
+                            tableHtml += "<tbody>";
+                            data.forEach((row) => {
+                              tableHtml += "<tr>";
+                              tableHtml += `<td>${row.name}</td>`;
+                              tableHtml += `<td>${row.item_qty}</td>`;
+                              tableHtml += "</tr>";
+                            });
+                            tableHtml += "</tbody>";
+                            tableHtml += "</table>";
+                            return tableHtml;
+                          };
                           const formatted_invoices = invoices.map((invoice) => {
                             const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
                             return {
@@ -4429,35 +4443,12 @@
                             };
                           });
                           const invoice_dialog = new frappe.ui.Dialog({
-                            title: `Items was ordered by other customers`,
+                            title: "Items ordered by other customers",
                             fields: [
                               {
-                                fieldname: "invoices_table",
-                                label: "Items in Draft State",
-                                fieldtype: "Table",
-                                cannot_add_rows: true,
-                                in_editable_grid: false,
-                                read_only: 1,
-                                data: formatted_invoices,
-                                get_data: () => {
-                                  return formatted_invoices;
-                                },
-                                fields: [
-                                  {
-                                    fieldtype: "Data",
-                                    fieldname: "name",
-                                    label: "ID",
-                                    in_list_view: 1,
-                                    read_only: 1
-                                  },
-                                  {
-                                    fieldtype: "Int",
-                                    fieldname: "item_qty",
-                                    label: "Quantity",
-                                    in_list_view: 1,
-                                    read_only: 1
-                                  }
-                                ]
+                                fieldtype: "HTML",
+                                fieldname: "invoices_table_html",
+                                options: renderInvoicesTable(formatted_invoices)
                               }
                             ],
                             primary_action_label: __("Ok"),
@@ -4466,10 +4457,6 @@
                             }
                           });
                           invoice_dialog.show();
-                          return;
-                        }
-                        if (quantity2 > qty) {
-                          frappe.msgprint(__("Entered Quantity Exceeded"));
                           return;
                         }
                         me.selectedItem.find(".item-uom").text(selectedUOM3);
@@ -5464,7 +5451,6 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
       this.render_total_vat(frm.doc.total_taxes_and_charges);
     }
     render_net_total(value) {
@@ -5522,7 +5508,7 @@
       this.$totals_section.find(".total-vat-container").html(`
 				<div style="display: flex; align-items: center; width: 100%;">
 					<span style="flex: 1;">
-						${__("Total VAT")}: 
+						${__("VAT 12%")}:
 					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
@@ -5621,10 +5607,11 @@
       this.update_customer_section();
     }
     render_cart_item(item_data, $item_to_update) {
-      console.log(item_data);
       const currency = this.events.get_frm().doc.currency;
       const me = this;
       const customer_group = me.events.get_frm().doc.customer_group;
+      const tax_rate = 0.12;
+      const no_vat = item_data.price_list_rate / (1 + tax_rate);
       if (!$item_to_update.length) {
         this.$cart_items_wrapper.append(
           `<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
@@ -5646,10 +5633,10 @@
 			</div> 
 
 			<div class="item-vat mx-3">
-				<strong>${format_currency(item_data.rate, currency)}</strong>
+				<strong>${format_currency(item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.rate : customer_group === "Senior Citizen" || customer_group === "PWD" ? no_vat : item_data.rate, currency)}</strong>
 			</div>
 			<div class="item-discount mx-3">
-				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+				<strong>${item_data.discount_percentage}%</strong>
 			</div>
 			${get_rate_discount_html(customer_group)}`
       );
@@ -6274,7 +6261,7 @@
         if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
           this.$form_container.find(`.${fieldname}-control input`).on("focus", function() {
             if (!me.is_oic_authenticated) {
-              me.oic_authentication(fieldname);
+              me.oic_authentication(fieldname, item);
             }
           });
         }
@@ -6282,8 +6269,9 @@
       this.make_auto_serial_selection_btn(item);
       this.bind_custom_control_change_event();
     }
-    oic_authentication(fieldname) {
+    oic_authentication(fieldname, item) {
       const me = this;
+      const doc = me.events.get_frm();
       const passwordDialog = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
@@ -6309,6 +6297,11 @@
                 });
                 passwordDialog.hide();
                 me.enable_discount_input(fieldname);
+                let current_discount_log = doc.doc.custom_manual_dicsount || "";
+                let discount_log = `${item.item_code} - Sample User - ${frappe.datetime.now_datetime()}
+`;
+                let updated_discount_log = current_discount_log + discount_log;
+                doc.set_value("custom_manual_dicsount", updated_discount_log);
                 me.is_oic_authenticated = true;
               } else {
                 frappe.show_alert({
@@ -6332,13 +6325,13 @@
         "price_list_rate",
         "rate",
         "uom",
-        "custom_expiry_date",
         "discount_percentage",
         "discount_amount",
         "custom_vat_amount",
         "custom_vatable_amount",
         "custom_vat_exempt_amount",
         "custom_zero_rated_amount",
+        "custom_discount_auth_by",
         "custom_remarks"
       ];
       if (item.has_serial_no)
@@ -7531,7 +7524,6 @@
           custom_qr_reference_number.refresh();
         }
         if (p.mode_of_payment === "Charge") {
-          console.log("Mode of payment is Charge");
           let existing_custom_customer = frappe.model.get_value(p.doctype, p.name, "custom_customer");
           let custom_customer = frappe.ui.form.make_control({
             df: {
@@ -7629,10 +7621,8 @@
               click: function() {
                 let code_value = code_input.get_value();
                 if (code_value) {
-                  console.log("Button clicked, Code:", code_value);
                   if (code_value) {
                     frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
-                      console.log("Gift Cert: ", gift_cert);
                       frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
                     }).catch((error) => {
                       console.error("Error retrieving gift certificate:", error);
@@ -7644,7 +7634,6 @@
                     });
                   }
                   code_field.push(code_value);
-                  console.log("code_field", code_field);
                 } else {
                   frappe.msgprint({
                     title: __("Error"),
@@ -8632,6 +8621,23 @@
     save_draft_invoice() {
       if (!this.$components_wrapper.is(":visible"))
         return;
+      let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
+      if (payment_amount < this.frm.doc.grand_total) {
+        const insufficientPaymentDialog = new frappe.ui.Dialog({
+          title: __("Insufficient Payment"),
+          primary_action_label: __("OK"),
+          primary_action: () => {
+            insufficientPaymentDialog.hide();
+          }
+        });
+        insufficientPaymentDialog.body.innerHTML = `
+				<div style="text-align: center; font-size: 30px; margin: 20px 0;">
+					${__("The payment amount is not enough to cover the grand total.")}
+				</div>
+			`;
+        insufficientPaymentDialog.show();
+        return;
+      }
       if (this.frm.doc.items.length == 0) {
         frappe.show_alert({
           message: __("You must add atleast one item to complete the order."),
@@ -8658,32 +8664,39 @@
             args: { password },
             callback: (r) => {
               if (r.message) {
-                this.set_pharmacist_assist(this.frm, r.message.name);
-                this.frm.save(void 0, void 0, void 0, () => {
+                if (r.message.name) {
+                  this.set_pharmacist_assist(this.frm, r.message.name);
+                  this.frm.save(void 0, void 0, void 0, () => {
+                    frappe.show_alert({
+                      message: __("There was an error saving the document."),
+                      indicator: "red"
+                    });
+                    frappe.utils.play_sound("error");
+                  }).then(() => {
+                    frappe.run_serially([
+                      () => frappe.dom.freeze(),
+                      () => this.make_new_invoice(),
+                      () => frappe.dom.unfreeze()
+                    ]);
+                    passwordDialog.hide();
+                    this.order_summary.load_summary_of(this.frm.doc, true);
+                    this.order_summary.print_receipt();
+                    window.location.reload();
+                    localStorage.removeItem("posCartItems");
+                    frappe.show_alert({
+                      message: __("Invoice Printed"),
+                      indicator: "blue"
+                    });
+                  });
+                } else {
                   frappe.show_alert({
-                    message: __("There was an error saving the document."),
+                    message: __("Invalid password or no matching roles"),
                     indicator: "red"
                   });
-                  frappe.utils.play_sound("error");
-                }).then(() => {
-                  frappe.run_serially([
-                    () => frappe.dom.freeze(),
-                    () => this.make_new_invoice(),
-                    () => frappe.dom.unfreeze()
-                  ]);
-                  passwordDialog.hide();
-                  this.order_summary.load_summary_of(this.frm.doc, true);
-                  this.order_summary.print_receipt();
-                  window.location.reload();
-                  localStorage.removeItem("posCartItems");
-                  frappe.show_alert({
-                    message: __("Invoice Printed"),
-                    indicator: "blue"
-                  });
-                });
+                }
               } else {
                 frappe.show_alert({
-                  message: __("Incorrect password"),
+                  message: __(`${r.message.error}`),
                   indicator: "red"
                 });
               }
@@ -9369,4 +9382,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.LDW6XMSY.js.map
+//# sourceMappingURL=packing-list.bundle.GTVOU7LS.js.map
