@@ -282,7 +282,8 @@ custom_app.PointOfSale.ItemDetails = class {
 			"rate",
 			"uom",
 			"discount_percentage",
-			"custom_discounted_by",
+			"custom_batch_number",
+			"custom_batch_expiry",
 			"discount_amount", // added field
 
 			'custom_vat_amount',

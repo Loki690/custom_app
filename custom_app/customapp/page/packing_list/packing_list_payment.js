@@ -642,16 +642,14 @@ custom_app.PointOfSale.Payment = class {
 					label: "Amount",
 					fieldtype: "Currency",
 					placeholder: __("Enter {0} amount.", [p.mode_of_payment]),
-					read_only: (mode === "gift_certificate"), 
+					read_only: (mode === "gift_certificate"),
 					onchange: function () {
 						const current_value = frappe.model.get_value(p.doctype, p.name, "amount");
 						if (current_value != this.value) {
 							frappe.model
-								.then(
-									() => me.update_totals_section(),
-									// () => me.hideAllFields()
-								);
-			
+								.set_value(p.doctype, p.name, "amount", flt(this.value))
+								.then(() => me.update_totals_section());
+							
 							const formatted_currency = format_currency(this.value, currency);
 							me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
 						}
@@ -661,7 +659,7 @@ custom_app.PointOfSale.Payment = class {
 				parent: this.$payment_modes.find(`.${mode}.mode-of-payment-control`),
 				render_input: true,
 			});
-			
+		
 			// Add save and discard buttons for cash mode
 			if (mode === "cash") {
 				// Add save button

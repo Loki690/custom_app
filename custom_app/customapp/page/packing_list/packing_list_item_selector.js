@@ -834,14 +834,13 @@ custom_app.PointOfSale.ItemSelector = class {
 
 
         frappe.ui.keys.on("enter", (e) => {
-
-            if (e.ctrlKey) return; // Skip handling if Shift + Enter is pressed
-
+            if (e.ctrlKey) return; // Skip handling if Ctrl + Enter is pressed
+        
             const selector_is_visible = this.$component.is(":visible");
             const dialog_is_open = document.querySelector(".modal.show");
-
+        
             if (!selector_is_visible || this.search_field.get_value() === "") return;
-
+        
             if (this.items.length == 1) {
                 this.$items_container.find(".item-wrapper").click();
                 frappe.utils.play_sound("submit");
@@ -855,7 +854,7 @@ custom_app.PointOfSale.ItemSelector = class {
                 this.barcode_scanned = false;
                 this.set_search_value("");
             }
-
+        
             if (dialog_is_open && document.activeElement.tagName === "SELECT") {
                 // Trigger action to add the selected item to the cart
                 this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
@@ -873,6 +872,7 @@ custom_app.PointOfSale.ItemSelector = class {
                 this.search_field.set_focus();
             }
         });
+        
 
     }
 

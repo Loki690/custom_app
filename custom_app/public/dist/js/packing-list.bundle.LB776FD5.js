@@ -6342,7 +6342,8 @@
         "rate",
         "uom",
         "discount_percentage",
-        "custom_discounted_by",
+        "custom_batch_number",
+        "custom_batch_expiry",
         "discount_amount",
         "custom_vat_amount",
         "custom_vatable_amount",
@@ -7156,9 +7157,7 @@
             onchange: function() {
               const current_value = frappe.model.get_value(p.doctype, p.name, "amount");
               if (current_value != this.value) {
-                frappe.model.then(
-                  () => me.update_totals_section()
-                );
+                frappe.model.set_value(p.doctype, p.name, "amount", flt(this.value)).then(() => me.update_totals_section());
                 const formatted_currency = format_currency(this.value, currency);
                 me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
               }
@@ -9995,4 +9994,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.RH76KV3Q.js.map
+//# sourceMappingURL=packing-list.bundle.LB776FD5.js.map
