@@ -226,6 +226,8 @@ custom_app.PointOfSale.ItemDetails = class {
 					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
+
+							console.log('User: ', r.message)
 							
 							if (r.message.name) {
 								frappe.show_alert({
@@ -236,7 +238,15 @@ custom_app.PointOfSale.ItemDetails = class {
 	
 								// Allow input to discount_percentage field
 								me.enable_discount_input(fieldname);
-	
+
+								let current_discount_log = doc.doc.custom_manual_dicsount || '';
+							// Append new log information
+								let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
+								let updated_discount_log = current_discount_log + discount_log;
+
+								// Set the updated value
+								doc.set_value('custom_manual_dicsount', updated_discount_log);
+		
 								// Set flag indicating OTP authentication
 								me.is_oic_authenticated = true;
 	
