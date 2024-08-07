@@ -176,10 +176,6 @@ custom_app.PointOfSale.ItemSelector = class {
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
-    
-        if (uom !== 'PC') {
-            return '';
-        }
 
 
         if (item.is_stock_item) {

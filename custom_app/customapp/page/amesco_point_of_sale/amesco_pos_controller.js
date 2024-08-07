@@ -1553,9 +1553,16 @@ custom_app.PointOfSale.Controller = class {
 	// }
 	
 
+	
 	remove_item_from_cart() {
-
-		const passwordDialog = new frappe.ui.Dialog({
+		// Destroy any previous instances of the dialog
+		if (this.passwordDialog) {
+			this.passwordDialog.$wrapper.remove();
+			delete this.passwordDialog;
+		}
+	
+		// Create and show the password dialog
+		this.passwordDialog = new frappe.ui.Dialog({
 			title: __('Enter OIC Password'),
 			fields: [
 				{
@@ -1573,15 +1580,16 @@ custom_app.PointOfSale.Controller = class {
 			primary_action: () => {
 				// Retrieve the password value from the HTML field
 				let password = document.getElementById('password_field').value;
-                frappe.call({
-					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-                    args: { password: password },
-                    callback: (r) => {
-                        if (r.message) {
-                            if(r.message.name) {
+	
+				frappe.call({
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					args: { password: password },
+					callback: (r) => {
+						if (r.message) {
+							if (r.message.name) {
 								frappe.dom.freeze();
 								const { doctype, name, current_item } = this.item_details;
-		
+	
 								frappe.model
 									.set_value(doctype, name, "qty", 0)
 									.then(() => {
@@ -1589,32 +1597,40 @@ custom_app.PointOfSale.Controller = class {
 										this.update_cart_html(current_item, true);
 										this.item_details.toggle_item_details_section(null);
 										frappe.dom.unfreeze();
-										passwordDialog.hide();
+										this.passwordDialog.hide();
 									})
 									.catch((e) => {
 										console.log(e);
 										frappe.dom.unfreeze();
-										passwordDialog.hide();
+										this.passwordDialog.hide();
 									});
-                            }else{
-                                frappe.show_alert({
-                                    message: ('Incorrect password'),
-                                    indicator: 'red'
-                                });
-                            }
-                        } else {
-                            frappe.show_alert({
-                                message: ('Incorrect password'),
-                                indicator: 'red'
-                            });
-                        }
-                    }
-                });
-            }
-		})
-		passwordDialog.show();
+							} else {
+								frappe.show_alert({
+									message: ('Incorrect password'),
+									indicator: 'red'
+								});
+							}
+						} else {
+							frappe.show_alert({
+								message: ('Incorrect password'),
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		});
+	
+		this.passwordDialog.show();
+	
+		// Ensure the password field gains focus every time the dialog is opened
+		this.passwordDialog.$wrapper.on('shown.bs.modal', function () {
+			setTimeout(() => {
+				document.getElementById('password_field').focus();
+			}, 100); // Slight delay to ensure field is rendered before focusing
+		});
 	}
-
+	
 
 	async save_and_checkout() {
 		if (this.frm.is_dirty()) {

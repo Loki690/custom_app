@@ -516,9 +516,6 @@
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
-      if (uom !== "PC") {
-        return "";
-      }
       if (item.is_stock_item) {
         indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
         if (Math.round(qty_to_display) > 999) {
@@ -7002,7 +6999,11 @@
       }
     }
     remove_item_from_cart() {
-      const passwordDialog = new frappe.ui.Dialog({
+      if (this.passwordDialog) {
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      this.passwordDialog = new frappe.ui.Dialog({
         title: __("Enter OIC Password"),
         fields: [
           {
@@ -7020,7 +7021,7 @@
         primary_action: () => {
           let password = document.getElementById("password_field").value;
           frappe.call({
-            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
             args: { password },
             callback: (r) => {
               if (r.message) {
@@ -7032,11 +7033,11 @@
                     this.update_cart_html(current_item, true);
                     this.item_details.toggle_item_details_section(null);
                     frappe.dom.unfreeze();
-                    passwordDialog.hide();
+                    this.passwordDialog.hide();
                   }).catch((e) => {
                     console.log(e);
                     frappe.dom.unfreeze();
-                    passwordDialog.hide();
+                    this.passwordDialog.hide();
                   });
                 } else {
                   frappe.show_alert({
@@ -7054,7 +7055,12 @@
           });
         }
       });
-      passwordDialog.show();
+      this.passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", function() {
+        setTimeout(() => {
+          document.getElementById("password_field").focus();
+        }, 100);
+      });
     }
     async save_and_checkout() {
       if (this.frm.is_dirty()) {
@@ -7069,4 +7075,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.VTNRRYAX.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.BPOVFYOP.js.map
