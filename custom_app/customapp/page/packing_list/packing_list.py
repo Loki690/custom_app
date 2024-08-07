@@ -655,7 +655,7 @@ def get_draft_pos_invoice_items(pos_profile, item_code):
             invoice_items = frappe.get_all('POS Invoice Item', filters={
                 'parent': invoice.name,
                 'item_code': item_code
-            }, fields=['item_code', 'item_name', 'qty', 'rate', 'batch_no', 'batch_expiry_date'])
+            }, fields=['item_code', 'item_name', 'qty', 'rate'])
 
             if invoice_items:
                 invoice['items'] = invoice_items

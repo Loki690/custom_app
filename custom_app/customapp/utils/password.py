@@ -227,7 +227,7 @@ def check_oic_password(pwd, doctype="User", fieldname="password"):
                     user_doc = frappe.get_doc("User", user["name"])
                     user_roles = [d.role for d in user_doc.get("roles")]
                     
-                    allowed_roles = ['Officer-in-Charge']
+                    allowed_roles = ['Officer-in-Charge', 'System Manager', 'IT Manager ']
                     
                     # Check if user has any of the allowed roles
                     if any(role in allowed_roles for role in user_roles):
