@@ -234,7 +234,7 @@ doc_events = {
         "before_insert": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_insert",
         "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
-        # "validate": "custom_app.customapp.doctype.sample.sample.custom_validate",
+        "validate": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.validate",
         # "on_submit": "custom_app.customapp.doctype.sample.sample.custom_on_submit"
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
     },
@@ -252,11 +252,11 @@ doc_events = {
    }
 }
 
-# scheduler_events = {
-#     "hourly": [
-#         "custom_app.customapp.utils.executables.delete.delete_draft_pos_invoices",
-#     ],
-# }
+scheduler_events = {
+    "hourly": [
+        "custom_app.customapp.utils.executables.delete.delete_draft_pos_invoices",
+    ],
+}
 
 jenv = {
     'methods': [
