@@ -647,7 +647,7 @@ custom_app.PointOfSale.Payment = class {
 						const current_value = frappe.model.get_value(p.doctype, p.name, "amount");
 						if (current_value != this.value) {
 							frappe.model
-								.set_value(p.doctype, p.name, "amount", flt(this.value))
+								// .set_value(p.doctype, p.name, "amount", flt(this.value))
 								.then(() => me.update_totals_section());
 							
 							const formatted_currency = format_currency(this.value, currency);
