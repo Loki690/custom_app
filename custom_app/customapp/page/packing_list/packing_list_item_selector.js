@@ -88,7 +88,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Vat Type</th>
                                 <th>Price</th>
                                 <th>UOM</th>
-                                <th>QTY</th>
+                                <th>QOH</th>
                             </tr>
                         </thead>
                         <tbody class="items-container"></tbody>
@@ -695,10 +695,12 @@ custom_app.PointOfSale.ItemSelector = class {
 
                         dialog.on_page_show = function() {
                             setTimeout(() => {
-                                dialog.wrapper.find('input[data-fieldname="quantity"]').focus();
+                                const $quantityField = dialog.wrapper.find('input[data-fieldname="quantity"]');
+                                $quantityField.focus();
+                                $quantityField.select(); // Selects the text inside the field for easy replacement
                             }, 300); // Use a small delay to ensure the element is in the DOM
                         };
-            
+                        
                         dialog.show();
                     
                         // Set the default UOM and amount fields

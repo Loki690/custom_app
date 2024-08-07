@@ -257,7 +257,7 @@ custom_app.PointOfSale.Controller = class {
 			"f2"
 		);
 
-		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
+		this.page.add_menu_item(__("Save as Draft"), this.save_draft.bind(this), false, "f3");
 
 		// this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
@@ -273,7 +273,7 @@ custom_app.PointOfSale.Controller = class {
 
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
 			{label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2"},
-			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
+			{label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3"},
 			// {label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			// {label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
 			{label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
@@ -291,42 +291,71 @@ custom_app.PointOfSale.Controller = class {
 
 
 	z_reading() {
-
 		const me = this;
+	
+		// Cleanup any existing password dialog
+		if (this.passwordDialog) {
+			this.passwordDialog.hide();
+			this.passwordDialog.$wrapper.remove();
+			delete this.passwordDialog;
+		}
+	
 		// Show password dialog for OIC authentication
-		const passwordDialog = new frappe.ui.Dialog({
+		this.passwordDialog = new frappe.ui.Dialog({
 			title: __('Authorization Required OIC'),
 			fields: [
 				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
+					fieldtype: 'HTML',
+					fieldname: 'password_html',
+					options: `
+						<div class="form-group">
+							<label for="password_field">${__('Password')}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
 				}
 			],
-			primary_action_label: __('Authorize'),
-			primary_action: (values) => {
-				let password = values.password;
-				let role = "oic";
-
+			primary_action_label: __('Ok'),
+			primary_action: () => {
+				// Retrieve the password value from the HTML field
+				let password = document.getElementById('password_field').value;
+	
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
+					args: { password: password, role: "OIC" }, // Add role if needed
 					callback: (r) => {
-						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
+						if (r.message.name) {
+							// OIC authentication successful
 							frappe.show_alert({
 								message: __('Verified'),
 								indicator: 'green'
 							});
-							passwordDialog.hide();
-
-
+							this.passwordDialog.hide();
+	
+							// Create and save a new POS Z Reading document
 							if (!this.$components_wrapper.is(":visible")) return;
+	
 							let voucher = frappe.model.get_new_doc("POS Z Reading");
 							voucher.pos_profile = this.frm.doc.pos_profile;
-							frappe.set_route("Form", "POS Z Reading", voucher.name);
-
+							voucher.user = frappe.session.user;
+							voucher.company = this.frm.doc.company;
+							voucher.posting_date = frappe.datetime.now_date();
+							voucher.posting_time = frappe.datetime.now_time();
+	
+							// Save the POS Z Reading document
+							frappe.get_doc("POS Z Reading", voucher.name).save().then(() => {
+								frappe.show_alert({
+									message: __("POS Z Reading saved successfully."),
+									indicator: 'green'
+								});
+								frappe.set_route("Form", "POS Z Reading", voucher.name);
+							}).catch((e) => {
+								frappe.show_alert({
+									message: __("Failed to save POS Z Reading."),
+									indicator: 'red'
+								});
+								console.error(e);
+							});
 						} else {
 							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
@@ -338,10 +367,21 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
-
-		passwordDialog.show();
-
+	
+		// Ensure the password field gains focus every time the dialog is opened
+		this.passwordDialog.$wrapper.on('shown.bs.modal', function () {
+			setTimeout(() => {
+				const passwordField = document.getElementById('password_field');
+				if (passwordField) {
+					passwordField.focus();
+				}
+			}, 100); // Slight delay to ensure field is rendered before focusing
+		});
+	
+		// Show the dialog
+		this.passwordDialog.show();
 	}
+	
 
 
 
@@ -444,36 +484,49 @@ custom_app.PointOfSale.Controller = class {
 
 
 	save_draft() {
+		// Cleanup any existing dialog
+		if (this.passwordDialog) {
+			this.passwordDialog.hide();
+			this.passwordDialog.$wrapper.remove();
+			delete this.passwordDialog;
+		}
+	
 		if (!this.$components_wrapper.is(":visible")) return;
-
-		if (this.frm.doc.items.length == 0) {
+	
+		if (this.frm.doc.items.length === 0) {
 			frappe.show_alert({
-				message: __("You must add atleast one item to complete the order."),
+				message: __("You must add at least one item to complete the order."),
 				indicator: "red",
 			});
 			frappe.utils.play_sound("error");
 			return;
 		}
-
-		const passwordDialog = new frappe.ui.Dialog({
+	
+		// Create a new password dialog
+		this.passwordDialog = new frappe.ui.Dialog({
 			title: __('Enter Your Password'),
 			fields: [
 				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
+					fieldtype: 'HTML',
+					fieldname: 'password_html',
+					options: `
+						<div class="form-group">
+							<label for="password_field">${__('Password')}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
 				}
 			],
 			primary_action_label: __('Ok'),
-			primary_action: (values) => {
-				let password = values.password;
+			primary_action: () => {
+				// Retrieve the password value from the HTML field
+				let password = document.getElementById('password_field').value;
 				frappe.call({
 					method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
 					args: { password: password },
 					callback: (r) => {
-						if (r.message.name) {
-							this.set_pharmacist_assist(this.frm, r.message.name)
+						if (r.message && r.message.name) {
+							this.set_pharmacist_assist(this.frm, r.message.name);
 							this.frm
 								.save(undefined, undefined, undefined, () => {
 									frappe.show_alert({
@@ -487,106 +540,88 @@ custom_app.PointOfSale.Controller = class {
 										() => frappe.dom.freeze(),
 										() => this.make_new_invoice(),
 										() => frappe.dom.unfreeze(),
-
 									]);
-
-									passwordDialog.hide();
+	
+									this.passwordDialog.hide();
 									localStorage.removeItem('posCartItems'); // remove stored data from local storage
 								});
-
 						} else {
 							frappe.show_alert({
-								message: `${r.message.error}`,
+								message: r.message ? r.message.error : __('Incorrect password'),
 								indicator: 'red'
 							});
 						}
 					}
 				});
 			}
-		})
-		passwordDialog.show();
+		});
+	
+		// Ensure the password field gains focus every time the dialog is opened
+		this.passwordDialog.$wrapper.on('shown.bs.modal', () => {
+			// Use a short timeout to ensure the dialog is fully rendered
+			setTimeout(() => {
+				const passwordField = document.getElementById('password_field');
+				if (passwordField) {
+					passwordField.focus();
+				}
+			}, 100); // Increase delay if necessary
+		});
+	
+		// Show the dialog
+		this.passwordDialog.show();
+	}
+	
+
+	set_pharmacist_assist(frm, user) {
+		frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_pharmacist_assistant", user);
+		frm.refresh_field('custom_pharmacist_assistant');
 	}
 
 	close_pos() {
-
 		const me = this;
-		// Show password dialog for OIC authentication
-		const passwordDialog = new frappe.ui.Dialog({
+	
+		// Cleanup any existing dialog
+		if (this.passwordDialog) {
+			this.passwordDialog.hide();
+			this.passwordDialog.$wrapper.remove();
+			delete this.passwordDialog;
+		}
+	
+		// Create a new password dialog
+		this.passwordDialog = new frappe.ui.Dialog({
 			title: __('Authorization Required OIC'),
 			fields: [
 				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
+					fieldtype: 'HTML',
+					fieldname: 'password_html',
+					options: `
+						<div class="form-group">
+							<label for="password_field">${__('Password')}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
 				}
 			],
-			// size: 'small',
-			primary_action_label: __('Authorize'),
-			primary_action: (values) => {
-				let password = values.password;
-				let role = "oic";
-
+			primary_action_label: __('Ok'),
+			primary_action: () => {
+				// Retrieve the password value from the HTML field
+				let password = document.getElementById('password_field').value;
+	
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
+					args: { password: password },
 					callback: (r) => {
-						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
+						if (r.message.name) {
+							// OIC authentication successful
 							frappe.show_alert({
 								message: __('Verified'),
 								indicator: 'green'
 							});
-							passwordDialog.hide();
-
-							// if (!this.$components_wrapper.is(":visible")) return;
-
-							// frappe.call({
-							// 	method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_and_submit_pos_closing_entry",
-							// 	args: {
-							// 		cashier: frappe.session.user,
-							// 		pos_profile: this.frm.doc.pos_profile,
-							// 		company: this.frm.doc.company,
-							// 		pos_opening_entry_id: this.pos_opening,
-							// 		posting_date: frappe.datetime.now_date(),
-							// 		posting_time: frappe.datetime.now_time()
-							// 	},
-							// 	callback: function(r) {
-							// 		if (r.message) {
-
-							// 			frappe.utils.print(
-							// 				'POS Closing Entry',
-							// 				r.message,
-							// 				'Custom X Reading',
-							// 				'Amesco Drug Corporation',
-							// 				'en' || frappe.boot.lang
-							// 			);
-
-							// 			passwordDialog.hide();
-							// 			frappe.show_alert({
-							// 				message: __(`Success ${ r.message}`),
-							// 				indicator: 'green'
-							// 			});
-
-							// 			  // Reload the page after 3 seconds
-							// 			  setTimeout(function(){
-							// 				location.reload();
-							// 			}, 3000);
-
-							// 			//frappe.set_route("Form", "POS Closing Entry", r.message);
-							// 		} else {
-							// 			frappe.show_alert({
-							// 				message: __('Failed to create POS Closing Entry'),
-							// 				indicator: 'red'
-							// 			});
-							// 		}
-							// 	}
-							// });
-
-
-
+							this.passwordDialog.hide();
+	
+							// Create and open the POS Closing Entry form
 							if (!this.$components_wrapper.is(":visible")) return;
-
+	
 							let voucher = frappe.model.get_new_doc("POS Closing Entry");
 							voucher.pos_profile = this.frm.doc.pos_profile;
 							voucher.user = frappe.session.user;
@@ -596,6 +631,7 @@ custom_app.PointOfSale.Controller = class {
 							voucher.posting_date = frappe.datetime.now_date();
 							voucher.posting_time = frappe.datetime.now_time();
 							frappe.set_route("Form", "POS Closing Entry", voucher.name);
+	
 						} else {
 							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
@@ -607,11 +643,21 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
-
-		passwordDialog.show();
-
-
+	
+		// Ensure the password field gains focus every time the dialog is opened
+		this.passwordDialog.$wrapper.on('shown.bs.modal', () => {
+			setTimeout(() => {
+				const passwordField = document.getElementById('password_field');
+				if (passwordField) {
+					passwordField.focus();
+				}
+			}, 100); // Adjust delay as needed
+		});
+	
+		// Show the dialog
+		this.passwordDialog.show();
 	}
+	
 
 	cash_count() {
 		if (!this.$components_wrapper.is(":visible")) return;
@@ -953,35 +999,110 @@ custom_app.PointOfSale.Controller = class {
 
 
 
+	// oic_edit_confirm(name) {
+	// 	const passwordDialog = new frappe.ui.Dialog({
+	// 		title: __('Enter OIC Password'),
+	// 		fields: [
+	// 			{
+	// 				fieldtype: 'HTML',
+	// 				fieldname: 'password_html',
+	// 				options: `
+	// 					<div class="form-group">
+	// 						<label for="password_field">${__('Password')}</label>
+	// 						<input type="password" id="password_field" class="form-control" required>
+	// 					</div>
+	// 				`
+	// 			}
+	// 		],
+	// 		primary_action_label: __('Edit Order'),
+	// 		primary_action: (values) => {
+	// 			let password = values.password;
+	// 			let role = "oic";
+
+	// 			frappe.call({
+	// 				method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+	// 				args: { password: password, role: role },
+	// 				callback: (r) => {
+	// 					if (r.message) {
+	// 						this.recent_order_list.toggle_component(false);
+	// 						frappe.run_serially([
+	// 							() => this.frm.refresh(name),
+	// 							() => this.cart.load_invoice(),
+	// 							() => this.item_selector.toggle_component(true),
+	// 							() => this.toggle_recent_order_list(false), // Toggle false order list to remove order summary
+	// 						]);
+	// 						passwordDialog.hide();
+	// 					} else {
+	// 						frappe.show_alert({
+	// 							message: __('Incorrect password or user is not an OIC'),
+	// 							indicator: 'red'
+	// 						});
+	// 					}
+	// 				}
+	// 			});
+	// 		}
+	// 	});
+
+	// 	passwordDialog.show();
+	// 	this.toggle_components(true); //Toggle True so order summary stays while authentication modal is activated
+	// }
+
+
+
 	oic_edit_confirm(name) {
-		const passwordDialog = new frappe.ui.Dialog({
-			title: __('Enter OIC Password'),
+		// Cleanup any existing dialog
+		if (this.passwordDialog) {
+			this.passwordDialog.$wrapper.remove();
+			delete this.passwordDialog;
+		}
+	
+		let isAuthorized = false;
+	
+		// Create a new password dialog
+		this.passwordDialog = new frappe.ui.Dialog({
+			title: __('Authorization Required OIC'),
 			fields: [
 				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
+					fieldtype: 'HTML',
+					fieldname: 'password_html',
+					options: `
+						<div class="form-group">
+							<label for="password_field">${__('Password')}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
 				}
 			],
-			primary_action_label: __('Edit Order'),
-			primary_action: (values) => {
-				let password = values.password;
-				let role = "oic";
-
+			primary_action_label: __('Authorize'),
+			primary_action: () => {
+				let password = document.getElementById('password_field').value;
+	
 				frappe.call({
-					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
-							this.recent_order_list.toggle_component(false);
-							frappe.run_serially([
-								() => this.frm.refresh(name),
-								() => this.cart.load_invoice(),
-								() => this.item_selector.toggle_component(true),
-								() => this.toggle_recent_order_list(false), // Toggle false order list to remove order summary
-							]);
-							passwordDialog.hide();
+							if (r.message.name) {
+								isAuthorized = true;
+								frappe.show_alert({
+									message: __('Verified'),
+									indicator: 'green'
+								});
+	
+								frappe.run_serially([
+									() => this.frm.refresh(name),
+									() => this.cart.load_invoice(),
+									() => this.item_selector.toggle_component(true),
+									() => this.toggle_recent_order_list(false),
+								]).then(() => {
+									this.passwordDialog.hide();
+								});
+							} else {
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
 						} else {
 							frappe.show_alert({
 								message: __('Incorrect password or user is not an OIC'),
@@ -992,10 +1113,26 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
-
-		passwordDialog.show();
-		this.toggle_components(true); //Toggle True so order summary stays while authentication modal is activated
+	
+		// Bind an event to reload the window when the dialog is hidden
+		this.passwordDialog.$wrapper.on('hidden.bs.modal', () => {
+			if (!isAuthorized) {
+				window.location.reload();
+			}
+		});
+	
+		// Show the dialog
+		this.passwordDialog.show();
+	
+		
+		// Ensure the password field gains focus every time the dialog is opened
+		this.passwordDialog.$wrapper.on('shown.bs.modal', () => {
+			setTimeout(() => {
+				document.getElementById('password_field').focus();
+			}, 100); // Slight delay to ensure field is rendered before focusing
+		});
 	}
+	
 
 
 	oic_delete_confirm(name) {
@@ -1003,10 +1140,14 @@ custom_app.PointOfSale.Controller = class {
 			title: __('Enter OIC Password'),
 			fields: [
 				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
+					fieldtype: 'HTML',
+					fieldname: 'password_html',
+					options: `
+						<div class="form-group">
+							<label for="password_field">${__('Password')}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
 				}
 			],
 			primary_action_label: __('Authenticate'),
@@ -1418,16 +1559,20 @@ custom_app.PointOfSale.Controller = class {
 			title: __('Enter OIC Password'),
 			fields: [
 				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
+					fieldtype: 'HTML',
+					fieldname: 'password_html',
+					options: `
+						<div class="form-group">
+							<label for="password_field">${__('Password')}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
 				}
 			],
 			primary_action_label: __('Ok'),
-			primary_action: (values) => {
-
-                let password = values.password;
+			primary_action: () => {
+				// Retrieve the password value from the HTML field
+				let password = document.getElementById('password_field').value;
                 frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
                     args: { password: password },
@@ -1474,7 +1619,7 @@ custom_app.PointOfSale.Controller = class {
 	async save_and_checkout() {
 		if (this.frm.is_dirty()) {
 			let save_error = false;
-			await this.frm.save(null, null, null, () => (save_error = true));
+			// await this.frm.save(null, null, null, () => (save_error = true));
 			// only move to payment section if save is successful
 			!save_error && this.payment.checkout();
 			// show checkout button on error

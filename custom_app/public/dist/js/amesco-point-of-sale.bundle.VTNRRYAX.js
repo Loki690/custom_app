@@ -454,7 +454,7 @@
                                 <th>Vat Type</th>
                                 <th>Price</th>
                                 <th>UOM</th>
-                                <th>QTY</th>
+                                <th>QOH</th>
                             </tr>
                         </thead>
                         <tbody class="items-container"></tbody>
@@ -672,303 +672,307 @@
         const description = unescape($item.attr("data-description"));
         const qty = parseFloat(unescape($item.attr("data-qty")));
         const pos_profile = me.events.get_pos_profile();
-        const response = await frappe.call({
+        frappe.call({
           method: "custom_app.customapp.page.packing_list.packing_list.get_item_uom_prices",
           args: {
             item_code
-          }
-        });
-        let uomPrices = {};
-        if (response.message) {
-          uomPrices = response.message.uom_prices;
-        }
-        const uomOptions = Object.keys(uomPrices).filter((uom2) => uom2 && uom2 !== "null").map((uom2) => ({
-          label: uom2,
-          value: uom2
-        }));
-        let defaultUOM = uom;
-        if (!uomPrices.hasOwnProperty(defaultUOM)) {
-          defaultUOM = uomOptions.length > 0 ? uomOptions[0].value : null;
-          if (!defaultUOM) {
-            frappe.msgprint(__("No valid UOMs found for this item."));
-            return;
-          }
-        }
-        const defaultRate = uomPrices[defaultUOM];
-        const dialog2 = new frappe.ui.Dialog({
-          title: __("Item Details"),
-          fields: [
-            {
-              fieldtype: "HTML",
-              title: __("Item Details"),
-              options: `
-                            <div class="row">
-                                <div class="col-lg">
-                                    <div class="form-group">
-                                        <label class="control-label">Item Code</label>
-                                        <input class="form-control" readonly data-fieldname="description" type="text" value="${item_code}"/>
-                                    </div>
-                                </div>
-                            </div>
-                        `
-            },
-            {
-              fieldtype: "HTML",
-              title: __("Item Details"),
-              options: `
-                            <div class="row">
-                                <div class="col-lg">
-                                    <div class="form-group">
-                                        <label class="control-label">Item Description</label>
-                                        <input class="form-control" readonly data-fieldname="description" type="text" value="${description}"/>
-                                    </div>
-                                </div>
-                            </div>
-                        `
-            },
-            {
-              fieldtype: "HTML",
-              label: __("Quantity"),
-              options: `
-                            <div class="row">
-                                <div class="col-lg">
-                                    <div class="form-group">
-                                        <label class="control-label">${__("Quantity")}</label>
-                                        <input class="form-control" type="number" data-fieldname="quantity" required value="0" />
-                                    </div>
-                                </div>
-                            </div>
-                        `
-            },
-            {
-              fieldtype: "Select",
-              label: __("UOM"),
-              fieldname: "uom",
-              options: uomOptions,
-              default: defaultUOM
-            },
-            {
-              fieldtype: "HTML",
-              label: __("Amount"),
-              options: `
-                            <div class="row">
-                                <div class="col-lg">
-                                    <div class="form-group">
-                                        <label class="control-label">Amount</label>
-                                        <input class="form-control" data-fieldname="total_amount" value="${defaultRate.toFixed(2)}" readonly />
-                                    </div>
-                                </div>
-                            </div>
-                        `
-            },
-            {
-              label: "Branch Item INVTY",
-              fieldtype: "Button",
-              btn_size: "sm",
-              click: function() {
-                let warehouses = [];
-                frappe.call({
-                  method: "frappe.client.get_list",
-                  args: {
-                    doctype: "Warehouse",
-                    fields: ["name", "warehouse_type", "parent_warehouse"],
-                    limit_page_length: 0
+          },
+          callback: function(response) {
+            if (response.message) {
+              const uomPrices = response.message.uom_prices;
+              console.log("UOM Prices:", uomPrices);
+              const uomOptions = Object.keys(uomPrices).filter((uom2) => uom2 && uom2 !== "null").map((uom2) => ({
+                label: uom2,
+                value: uom2
+              }));
+              let defaultUOM = uom;
+              if (!uomPrices.hasOwnProperty(defaultUOM)) {
+                defaultUOM = uomOptions.length > 0 ? uomOptions[0].value : null;
+                if (!defaultUOM) {
+                  frappe.msgprint(__("No valid UOMs found for this item."));
+                  return;
+                }
+              }
+              const defaultRate = uomPrices[defaultUOM];
+              const dialog2 = new frappe.ui.Dialog({
+                title: __("Item Details"),
+                fields: [
+                  {
+                    fieldtype: "HTML",
+                    title: __("Item Details"),
+                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Item Code</label>
+                                                    <input class="form-control" readonly data-fieldname="description" type="text" value="${item_code}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
                   },
-                  callback: function(response2) {
-                    warehouses = response2.message;
-                    let warehouse_data_promises = warehouses.map((warehouse) => {
-                      return new Promise((resolve, reject) => {
-                        frappe.call({
-                          method: "custom_app.customapp.page.packing_list.packing_list.get_item_qty_per_warehouse",
-                          args: {
-                            warehouse: warehouse.name,
-                            item_code
-                          },
-                          callback: function(response3) {
-                            warehouse.actual_qty = response3.message;
-                            resolve(warehouse);
-                          },
-                          error: function(error) {
-                            reject(error);
+                  {
+                    fieldtype: "HTML",
+                    title: __("Item Details"),
+                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Item Description</label>
+                                                    <input class="form-control" readonly data-fieldname="description" type="text" value="${description}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                  },
+                  {
+                    fieldtype: "HTML",
+                    label: __("Quantity"),
+                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">${__("Quantity")}</label>
+                                                    <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                  },
+                  {
+                    fieldtype: "Select",
+                    label: __("UOM"),
+                    fieldname: "uom",
+                    options: uomOptions,
+                    default: defaultUOM
+                  },
+                  {
+                    fieldtype: "HTML",
+                    label: __("Amount"),
+                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Amount</label>
+                                                    <input class="form-control" data-fieldname="total_amount" value="${defaultRate.toFixed(2)}" readonly />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                  },
+                  {
+                    label: "Branch Item INVTY",
+                    fieldtype: "Button",
+                    btn_size: "sm",
+                    click: function() {
+                      let warehouses = [];
+                      frappe.call({
+                        method: "frappe.client.get_list",
+                        args: {
+                          doctype: "Warehouse",
+                          fields: ["name", "warehouse_type", "parent_warehouse"],
+                          limit_page_length: 0
+                        },
+                        callback: function(response2) {
+                          warehouses = response2.message;
+                          let warehouse_data_promises = warehouses.map((warehouse) => {
+                            return new Promise((resolve, reject) => {
+                              frappe.call({
+                                method: "custom_app.customapp.page.packing_list.packing_list.get_item_qty_per_warehouse",
+                                args: {
+                                  warehouse: warehouse.name,
+                                  item_code
+                                },
+                                callback: function(response3) {
+                                  warehouse.actual_qty = response3.message;
+                                  resolve(warehouse);
+                                },
+                                error: function(error) {
+                                  reject(error);
+                                }
+                              });
+                            });
+                          });
+                          Promise.all(warehouse_data_promises).then((warehouses_with_qty) => {
+                            warehouses_with_qty = warehouses_with_qty.filter((warehouse) => warehouse.actual_qty > 0);
+                            const dialog3 = new frappe.ui.Dialog({
+                              title: `${item_code} ${description}`,
+                              fields: [
+                                {
+                                  fieldtype: "HTML",
+                                  fieldname: "warehouse_table_html",
+                                  options: renderWarehousesTable(warehouses_with_qty)
+                                }
+                              ],
+                              primary_action_label: __("Ok"),
+                              primary_action: function() {
+                                dialog3.hide();
+                              }
+                            });
+                            dialog3.show();
+                            $(dialog3.$wrapper).css({
+                              "max-height": "80vh",
+                              "overflow-y": "auto"
+                            });
+                            $(dialog3.fields_dict.warehouse_table_html.$wrapper).css({
+                              "max-height": "60vh",
+                              "overflow-y": "auto"
+                            });
+                          }).catch((error) => {
+                            console.error("Error fetching warehouse data:", error);
+                          });
+                          function renderWarehousesTable(data) {
+                            let tableHtml = '<table class="table table-bordered">';
+                            tableHtml += "<thead><tr>";
+                            tableHtml += "<th>Name</th>";
+                            tableHtml += "<th>Quantity</th>";
+                            tableHtml += "</tr></thead>";
+                            tableHtml += "<tbody>";
+                            data.forEach((row) => {
+                              tableHtml += "<tr>";
+                              tableHtml += `<td>${row.name}</td>`;
+                              tableHtml += `<td>${row.actual_qty}</td>`;
+                              tableHtml += "</tr>";
+                            });
+                            tableHtml += "</tbody>";
+                            tableHtml += "</table>";
+                            return tableHtml;
                           }
-                        });
-                      });
-                    });
-                    Promise.all(warehouse_data_promises).then((warehouses_with_qty) => {
-                      warehouses_with_qty = warehouses_with_qty.filter((warehouse) => warehouse.actual_qty > 0);
-                      const dialog3 = new frappe.ui.Dialog({
-                        title: `${item_code} ${description}`,
-                        fields: [
-                          {
-                            fieldtype: "HTML",
-                            fieldname: "warehouse_table_html",
-                            options: renderWarehousesTable(warehouses_with_qty)
-                          }
-                        ],
-                        primary_action_label: __("Ok"),
-                        primary_action: function() {
-                          dialog3.hide();
                         }
                       });
-                      dialog3.show();
-                      $(dialog3.$wrapper).css({
-                        "max-height": "80vh",
-                        "overflow-y": "auto"
-                      });
-                      $(dialog3.fields_dict.warehouse_table_html.$wrapper).css({
-                        "max-height": "60vh",
-                        "overflow-y": "auto"
-                      });
-                    }).catch((error) => {
-                      console.error("Error fetching warehouse data:", error);
-                    });
-                    function renderWarehousesTable(data) {
-                      let tableHtml = '<table class="table table-bordered">';
-                      tableHtml += "<thead><tr>";
-                      tableHtml += "<th>Name</th>";
-                      tableHtml += "<th>Quantity</th>";
-                      tableHtml += "</tr></thead>";
-                      tableHtml += "<tbody>";
-                      data.forEach((row) => {
-                        tableHtml += "<tr>";
-                        tableHtml += `<td>${row.name}</td>`;
-                        tableHtml += `<td>${row.actual_qty}</td>`;
-                        tableHtml += "</tr>";
-                      });
-                      tableHtml += "</tbody>";
-                      tableHtml += "</table>";
-                      return tableHtml;
                     }
                   }
-                });
-              }
-            }
-          ],
-          primary_action_label: __("Ok"),
-          primary_action: function() {
-            const quantity2 = parseFloat(dialog2.wrapper.find('input[data-fieldname="quantity"]').val());
-            const selectedUOM3 = dialog2.wrapper.find('select[data-fieldname="uom"]').val();
-            const totalAmount = parseFloat(dialog2.wrapper.find('input[data-fieldname="total_amount"]').val());
-            if (!quantity2 || quantity2 <= 0) {
-              frappe.msgprint(__("Please enter a valid quantity."));
-              return;
-            }
-            if (!me.selectedItem) {
-              frappe.msgprint(__("No item selected."));
-              return;
-            }
-            if (quantity2 > qty) {
-              frappe.msgprint(__("Entered Quantity Exceeded"));
-              return;
-            }
-            frappe.call({
-              method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
-              args: {
-                pos_profile,
-                item_code
-              },
-              callback: function(response2) {
-                if (response2.message) {
-                  const { invoices, total_qty } = response2.message;
-                  let item_total_qty = total_qty;
-                  if (item_total_qty + quantity2 > qty) {
-                    let renderInvoicesTable = function(data) {
-                      let tableHtml = '<table class="table table-bordered">';
-                      tableHtml += "<thead><tr>";
-                      tableHtml += "<th>ID</th>";
-                      tableHtml += "<th>Quantity</th>";
-                      tableHtml += "</tr></thead>";
-                      tableHtml += "<tbody>";
-                      data.forEach((row) => {
-                        tableHtml += "<tr>";
-                        tableHtml += `<td>${row.name}</td>`;
-                        tableHtml += `<td>${row.item_qty}</td>`;
-                        tableHtml += "</tr>";
-                      });
-                      tableHtml += "</tbody>";
-                      tableHtml += "</table>";
-                      return tableHtml;
-                    };
-                    const formatted_invoices = invoices.map((invoice) => {
-                      const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
-                      return {
-                        name: invoice.name,
-                        customer: invoice.customer,
-                        item_qty
-                      };
-                    });
-                    const invoice_dialog = new frappe.ui.Dialog({
-                      title: "Items ordered by other customers",
-                      fields: [
-                        {
-                          fieldtype: "HTML",
-                          fieldname: "invoices_table_html",
-                          options: renderInvoicesTable(formatted_invoices)
-                        }
-                      ],
-                      primary_action_label: __("Ok"),
-                      primary_action: function() {
-                        invoice_dialog.hide();
-                      }
-                    });
-                    invoice_dialog.show();
+                ],
+                primary_action_label: __("Ok"),
+                primary_action: function() {
+                  const quantity2 = parseFloat(dialog2.wrapper.find('input[data-fieldname="quantity"]').val());
+                  const selectedUOM3 = dialog2.wrapper.find('select[data-fieldname="uom"]').val();
+                  const totalAmount = parseFloat(dialog2.wrapper.find('input[data-fieldname="total_amount"]').val());
+                  if (!quantity2 || quantity2 <= 0) {
+                    frappe.msgprint(__("Please enter a valid quantity."));
                     return;
                   }
-                  me.selectedItem.find(".item-uom").text(selectedUOM3);
-                  const itemCode = unescape(me.selectedItem.attr("data-item-code"));
-                  const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
-                  const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
-                  me.events.item_selected({
-                    field: "qty",
-                    value: "+" + quantity2,
-                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM3, quantity: quantity2, rate: totalAmount }
+                  if (!me.selectedItem) {
+                    frappe.msgprint(__("No item selected."));
+                    return;
+                  }
+                  if (quantity2 > qty) {
+                    frappe.msgprint(__("Entered Quantity Exceeded"));
+                    return;
+                  }
+                  frappe.call({
+                    method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
+                    args: {
+                      pos_profile,
+                      item_code
+                    },
+                    callback: function(response2) {
+                      if (response2.message) {
+                        const { invoices, total_qty } = response2.message;
+                        let item_total_qty = total_qty;
+                        if (item_total_qty + quantity2 > qty) {
+                          let renderInvoicesTable = function(data) {
+                            let tableHtml = '<table class="table table-bordered">';
+                            tableHtml += "<thead><tr>";
+                            tableHtml += "<th>ID</th>";
+                            tableHtml += "<th>Quantity</th>";
+                            tableHtml += "</tr></thead>";
+                            tableHtml += "<tbody>";
+                            data.forEach((row) => {
+                              tableHtml += "<tr>";
+                              tableHtml += `<td>${row.name}</td>`;
+                              tableHtml += `<td>${row.item_qty}</td>`;
+                              tableHtml += "</tr>";
+                            });
+                            tableHtml += "</tbody>";
+                            tableHtml += "</table>";
+                            return tableHtml;
+                          };
+                          const formatted_invoices = invoices.map((invoice) => {
+                            const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
+                            return {
+                              name: invoice.name,
+                              customer: invoice.customer,
+                              item_qty
+                            };
+                          });
+                          const invoice_dialog = new frappe.ui.Dialog({
+                            title: "Items ordered by other customers",
+                            fields: [
+                              {
+                                fieldtype: "HTML",
+                                fieldname: "invoices_table_html",
+                                options: renderInvoicesTable(formatted_invoices)
+                              }
+                            ],
+                            primary_action_label: __("Ok"),
+                            primary_action: function() {
+                              invoice_dialog.hide();
+                            }
+                          });
+                          invoice_dialog.show();
+                          return;
+                        }
+                        me.selectedItem.find(".item-uom").text(selectedUOM3);
+                        const itemCode = unescape(me.selectedItem.attr("data-item-code"));
+                        const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
+                        const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+                        me.events.item_selected({
+                          field: "qty",
+                          value: "+" + quantity2,
+                          item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM3, quantity: quantity2, rate: totalAmount }
+                        });
+                        me.search_field.set_focus();
+                        dialog2.hide();
+                      } else {
+                        console.log("No matching draft POS invoices found.");
+                      }
+                    },
+                    error: function(error) {
+                      console.error("Error fetching draft POS invoices:", error);
+                    }
                   });
-                  me.search_field.set_focus();
-                  dialog2.hide();
-                } else {
-                  console.log("No matching draft POS invoices found.");
                 }
-              },
-              error: function(error) {
-                console.error("Error fetching draft POS invoices:", error);
-              }
-            });
-          }
-        });
-        dialog2.on_page_show = function() {
-          setTimeout(() => {
-            dialog2.wrapper.find('input[data-fieldname="quantity"]').focus();
-          }, 300);
-        };
-        dialog2.show();
-        dialog2.wrapper.find('select[data-fieldname="uom"]').val(defaultUOM);
-        dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(defaultRate.toFixed(2));
-        dialog2.wrapper.find('input[data-fieldname="quantity"]').on("input", function() {
-          const quantity2 = parseFloat($(this).val());
-          const selectedUOM3 = dialog2.wrapper.find('select[data-fieldname="uom"]').val();
-          const rate3 = uomPrices[selectedUOM3];
-          if (!isNaN(quantity2)) {
-            const totalAmount = (quantity2 * rate3).toFixed(2);
-            dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
-          } else {
-            dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(rate3.toFixed(2));
-          }
-        });
-        dialog2.wrapper.find('select[data-fieldname="uom"]').on("change", function() {
-          const selectedUOM3 = $(this).val();
-          const rate3 = uomPrices[selectedUOM3];
-          const quantity2 = parseFloat(dialog2.wrapper.find('input[data-fieldname="quantity"]').val());
-          if (!isNaN(quantity2)) {
-            const totalAmount = (quantity2 * rate3).toFixed(2);
-            dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
-          } else {
-            dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(rate3.toFixed(2));
-          }
-        });
-        dialog2.wrapper.find('input[data-fieldname="quantity"]').on("keypress", function(e) {
-          if (e.which === 13) {
-            e.preventDefault();
-            dialog2.primary_action();
+              });
+              dialog2.on_page_show = function() {
+                setTimeout(() => {
+                  const $quantityField = dialog2.wrapper.find('input[data-fieldname="quantity"]');
+                  $quantityField.focus();
+                  $quantityField.select();
+                }, 300);
+              };
+              dialog2.show();
+              dialog2.wrapper.find('select[data-fieldname="uom"]').val(defaultUOM);
+              dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(defaultRate.toFixed(2));
+              dialog2.wrapper.find('input[data-fieldname="quantity"]').on("input", function() {
+                const quantity2 = parseFloat($(this).val());
+                const selectedUOM3 = dialog2.wrapper.find('select[data-fieldname="uom"]').val();
+                const rate3 = uomPrices[selectedUOM3];
+                if (!isNaN(quantity2)) {
+                  const totalAmount = (quantity2 * rate3).toFixed(2);
+                  dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                } else {
+                  dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(rate3.toFixed(2));
+                }
+              });
+              dialog2.wrapper.find('select[data-fieldname="uom"]').on("change", function() {
+                const selectedUOM3 = $(this).val();
+                const rate3 = uomPrices[selectedUOM3];
+                const quantity2 = parseFloat(dialog2.wrapper.find('input[data-fieldname="quantity"]').val());
+                if (!isNaN(quantity2)) {
+                  const totalAmount = (quantity2 * rate3).toFixed(2);
+                  dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                } else {
+                  dialog2.wrapper.find('input[data-fieldname="total_amount"]').val(rate3.toFixed(2));
+                }
+              });
+              dialog2.wrapper.find('input[data-fieldname="quantity"]').on("keypress", function(e) {
+                if (e.which === 13) {
+                  e.preventDefault();
+                  dialog2.primary_action();
+                }
+              });
+            }
           }
         });
       });
@@ -1359,28 +1363,35 @@
         me.allow_discount_change && me.$add_discount_elem.removeClass("d-none");
       });
       this.$totals_section.on("click", ".edit-cart-btn", () => {
-        const passwordDialog = new frappe.ui.Dialog({
+        if (this.passwordDialog) {
+          this.passwordDialog.$wrapper.remove();
+          delete this.passwordDialog;
+        }
+        this.passwordDialog = new frappe.ui.Dialog({
           title: __("Enter OIC Password"),
           fields: [
             {
-              fieldname: "password",
-              fieldtype: "Password",
-              label: __("Password"),
-              reqd: 1
+              fieldtype: "HTML",
+              fieldname: "password_html",
+              options: `
+							<div class="form-group">
+								<label for="password_field">${__("Password")}</label>
+								<input type="password" id="password_field" class="form-control" required>
+							</div>
+						`
             }
           ],
-          primary_action_label: __("Edit Order"),
-          primary_action: (values) => {
-            let password = values.password;
-            let role = "oic";
+          primary_action_label: __("Ok"),
+          primary_action: () => {
+            let password = document.getElementById("password_field").value;
             frappe.call({
-              method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-              args: { password, role },
+              method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+              args: { password },
               callback: (r) => {
-                if (r.message) {
+                if (r.message && r.message.name) {
                   this.events.edit_cart();
                   this.toggle_checkout_btn(true);
-                  passwordDialog.hide();
+                  this.passwordDialog.hide();
                 } else {
                   frappe.show_alert({
                     message: __("Incorrect password or user is not an OIC"),
@@ -1391,7 +1402,12 @@
             });
           }
         });
-        passwordDialog.show();
+        this.passwordDialog.show();
+        this.passwordDialog.$wrapper.on("shown.bs.modal", function() {
+          setTimeout(() => {
+            document.getElementById("password_field").focus();
+          }, 100);
+        });
       });
       this.$component.on("click", ".add-discount-wrapper", () => {
         if (!this.is_oic_authenticated) {
@@ -2737,9 +2753,9 @@
         "rate",
         "uom",
         "discount_percentage",
+        "discount_amount",
         "custom_batch_number",
         "custom_batch_expiry",
-        "discount_amount",
         "custom_vat_amount",
         "custom_vatable_amount",
         "custom_vat_exempt_amount",
@@ -3130,6 +3146,11 @@
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).hide();
       }
+      function focusAndHighlightAmountField(mode_clicked) {
+        const $amountField = mode_clicked.find(".frappe-control.input-max-width[data-fieldtype='Currency'] input");
+        $amountField.focus();
+        $amountField[0].setSelectionRange(0, $amountField.val().length);
+      }
       this.$payment_modes.on("click", ".mode-of-payment", function(e) {
         const mode_clicked = $(this);
         if (!$(e.target).is(mode_clicked))
@@ -3194,6 +3215,7 @@
             mode_clicked.find(".button-code").css("display", "flex");
             mode_clicked.find(".discard-button").css("display", "flex");
           }
+          focusAndHighlightAmountField(mode_clicked);
           me.selected_mode && me.selected_mode.$input.get();
           me.auto_set_remaining_amount();
         }
@@ -3552,9 +3574,7 @@
             onchange: function() {
               const current_value = frappe.model.get_value(p.doctype, p.name, "amount");
               if (current_value != this.value) {
-                frappe.model.then(
-                  () => me.update_totals_section()
-                );
+                frappe.model.then(() => me.update_totals_section());
                 const formatted_currency = format_currency(this.value, currency);
                 me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
               }
@@ -3564,6 +3584,11 @@
           parent: this.$payment_modes.find(`.${mode}.mode-of-payment-control`),
           render_input: true
         });
+        setTimeout(() => {
+          const $amountField = this.$payment_modes.find(`.${mode}.mode-of-payment-control input[data-fieldname="amount"]`);
+          $amountField.focus();
+          $amountField.select();
+        }, 300);
         if (mode === "cash") {
           const save_button2 = $("<button/>", {
             text: "Save",
@@ -3571,10 +3596,24 @@
             click: function() {
               const amount_value = me[`${mode}_control`].get_value();
               if (!amount_value) {
-                frappe.msgprint({
+                const dialog2 = frappe.msgprint({
                   title: __("Validation Warning"),
                   message: __("All fields are required."),
-                  indicator: "orange"
+                  indicator: "orange",
+                  primary_action: {
+                    label: __("OK"),
+                    action: function() {
+                      frappe.msg_dialog.hide();
+                    }
+                  }
+                });
+                $(document).on("keydown", function(e) {
+                  if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                    dialog2.get_primary_btn().trigger("click");
+                  }
+                });
+                dialog2.$wrapper.on("hidden.bs.modal", function() {
+                  $(document).off("keydown");
                 });
                 return;
               }
@@ -3582,7 +3621,7 @@
                 me.update_totals_section();
                 const formatted_currency = format_currency(amount_value, currency);
                 me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
-                frappe.msgprint({
+                const dialog2 = frappe.msgprint({
                   title: __("Success"),
                   message: __("Cash payment details have been saved."),
                   indicator: "green",
@@ -3592,6 +3631,14 @@
                       frappe.msg_dialog.hide();
                     }
                   }
+                });
+                $(document).on("keydown", function(e) {
+                  if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                    dialog2.get_primary_btn().trigger("click");
+                  }
+                });
+                dialog2.$wrapper.on("hidden.bs.modal", function() {
+                  $(document).off("keydown");
                 });
               });
             }
@@ -3604,7 +3651,7 @@
               frappe.model.set_value(p.doctype, p.name, "amount", 0).then(() => {
                 me.update_totals_section();
                 me.$payment_modes.find(`.${mode}-amount`).html(format_currency(0, currency));
-                frappe.msgprint({
+                const dialog2 = frappe.msgprint({
                   message: __("Cash payment details have been discarded."),
                   indicator: "blue",
                   primary_action: {
@@ -3613,6 +3660,14 @@
                       frappe.msg_dialog.hide();
                     }
                   }
+                });
+                $(document).on("keydown", function(e) {
+                  if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                    dialog2.get_primary_btn().trigger("click");
+                  }
+                });
+                dialog2.$wrapper.on("hidden.bs.modal", function() {
+                  $(document).off("keydown");
                 });
               });
             }
@@ -3647,6 +3702,7 @@
           });
           bank_name_control.set_value(existing_custom_bank_name || "");
           bank_name_control.refresh();
+          const selected_customer = cur_frm.doc.customer;
           let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
           let name_on_card_control = frappe.ui.form.make_control({
             df: {
@@ -3658,7 +3714,7 @@
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
           });
-          name_on_card_control.set_value(existing_custom_card_name || "");
+          name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
           name_on_card_control.refresh();
           let existing_custom_card_type = frappe.model.get_value(p.doctype, p.name, "custom_card_type");
           let card_type_control = frappe.ui.form.make_control({
@@ -3747,11 +3803,47 @@
             let card_expiry_date = expiry_date_control.get_value();
             let approval_code = custom_approval_code_control.get_value();
             if (!amount || !bank_name || !card_name || !card_type || !card_number || !card_expiry_date || !approval_code) {
-              frappe.msgprint(__("All fields are required."));
+              const dialog3 = frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("All fields are required."),
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
+              });
               return;
             }
             if (!validateLastFourDigits2(card_number)) {
-              frappe.msgprint(__("Card number must be exactly 4 digits."));
+              const dialog3 = frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Card number must be exactly 4 digits."),
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
+              });
               return;
             }
             const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
@@ -3771,7 +3863,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_card_number", card_number);
             frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", card_expiry_date);
             frappe.model.set_value(p.doctype, p.name, "custom_approval_code", approval_code);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               title: __("Success"),
               message: __("Card payment details have been saved."),
               indicator: "green",
@@ -3781,6 +3873,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           discard_button.on("click", function() {
@@ -3862,27 +3962,55 @@
             let phone_number = phone_number_control.get_value();
             let reference_no = epayment_reference_number_controller.get_value();
             if (!amount) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
             const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
             const currency2 = doc.currency;
             if (amount > grand_total) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("Amount must not exceed the grand total."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
             frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               title: __("Success"),
               message: __("Payment details have been saved."),
               indicator: "green",
@@ -3892,6 +4020,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           discard_button.on("click", function() {
@@ -3948,6 +4084,7 @@
           });
           bank_name_control.set_value(existing_custom_bank_name || "");
           bank_name_control.refresh();
+          const selected_customer = cur_frm.doc.customer;
           let name_on_card_control = frappe.ui.form.make_control({
             df: {
               label: "Name on Card",
@@ -3958,7 +4095,7 @@
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
           });
-          name_on_card_control.set_value(existing_custom_card_name || "");
+          name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
           name_on_card_control.refresh();
           let card_number_control = frappe.ui.form.make_control({
             df: {
@@ -4010,28 +4147,64 @@
             let card_expiry_date = expiry_date_control.get_value();
             let approval_code = custom_approval_code_control.get_value();
             if (!amount || !bank_name || !card_name || !card_number || !card_expiry_date || !approval_code) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
             if (!validateLastFourDigits2(card_number)) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("Card number must be exactly 4 digits."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
             const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
             const currency2 = doc.currency;
             if (amount > grand_total) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("Amount must not exceed the grand total."),
                 indicator: "orange"
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
@@ -4041,7 +4214,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_card_number", card_number);
             frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", card_expiry_date);
             frappe.model.set_value(p.doctype, p.name, "custom_approval_code", approval_code);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               title: __("Success"),
               message: __("Card payment details have been saved."),
               indicator: "green",
@@ -4051,6 +4224,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           discard_button.on("click", function() {
@@ -4066,7 +4247,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_card_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", "");
             frappe.model.set_value(p.doctype, p.name, "custom_approval_code", "");
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               message: __("Payment details have been discarded."),
               indicator: "blue",
               primary_action: {
@@ -4075,6 +4256,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           const controls = [
@@ -4107,6 +4296,7 @@
           });
           bank_name_control.set_value(existing_custom_bank_name || "");
           bank_name_control.refresh();
+          const selected_customer = cur_frm.doc.customer;
           let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_name_on_check");
           let check_name_control = frappe.ui.form.make_control({
             df: {
@@ -4118,7 +4308,7 @@
             parent: this.$payment_modes.find(`.${mode}.check-name`),
             render_input: true
           });
-          check_name_control.set_value(existing_custom_check_name || "");
+          check_name_control.set_value(existing_custom_check_name || selected_customer || "");
           check_name_control.refresh();
           let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
           let check_number_control = frappe.ui.form.make_control({
@@ -4159,20 +4349,48 @@
             let check_number = check_number_control.get_value();
             let check_date = check_date_control.get_value();
             if (!amount || !bank_name || !check_name || !check_number || !check_date) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
             const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
             const currency2 = doc.currency;
             if (amount > grand_total) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("Amount must not exceed the grand total."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
@@ -4181,7 +4399,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", check_name);
             frappe.model.set_value(p.doctype, p.name, "custom_check_number", check_number);
             frappe.model.set_value(p.doctype, p.name, "custom_check_date", check_date);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               title: __("Success"),
               message: __("Cheque payment details have been saved."),
               indicator: "green",
@@ -4191,6 +4409,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           discard_button.on("click", function() {
@@ -4204,7 +4430,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", "");
             frappe.model.set_value(p.doctype, p.name, "custom_check_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_check_date", "");
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               message: __("Payment details have been discarded."),
               indicator: "blue",
               primary_action: {
@@ -4212,6 +4438,28 @@
                 action: function() {
                   frappe.msg_dialog.hide();
                 }
+              }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
+            });
+          });
+          const controls = [
+            me2[`${mode}_control`],
+            bank_name_control,
+            check_name_control,
+            check_number_control,
+            check_date_control
+          ];
+          controls.forEach((control) => {
+            control.$input && control.$input.keypress(function(e) {
+              if (e.which === 13) {
+                save_button2.click();
               }
             });
           });
@@ -4239,15 +4487,29 @@
           save_button2.on("click", function() {
             let amount = me2[`${mode}_control`].get_value();
             if (!amount) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               title: __("Success"),
               message: __("Payment details have been saved."),
               indicator: "green",
@@ -4258,11 +4520,19 @@
                 }
               }
             });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
+            });
           });
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", null);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               message: __("Payment details have been discarded."),
               indicator: "blue",
               primary_action: {
@@ -4271,6 +4541,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           const controls = [
@@ -4307,15 +4585,29 @@
           save_button2.on("click", function() {
             let amount = me2[`${mode}_control`].get_value();
             if (!amount) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               title: __("Success"),
               message: __("Payment details have been saved."),
               indicator: "green",
@@ -4326,11 +4618,19 @@
                 }
               }
             });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
+            });
           });
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", null);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               message: __("Payment details have been discarded."),
               indicator: "blue",
               primary_action: {
@@ -4339,6 +4639,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           const controls = [
@@ -4413,20 +4721,48 @@
             let bank_type = custom_bank_type.get_value();
             let qr_reference_number = custom_qr_reference_number.get_value();
             if (!amount || !payment_type || !bank_type || !qr_reference_number) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
             const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
             const currency2 = doc.currency;
             if (amount > grand_total) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("Amount must not exceed the grand total."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
@@ -4434,7 +4770,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_payment_type", payment_type);
             frappe.model.set_value(p.doctype, p.name, "custom_bank_type", bank_type);
             frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", qr_reference_number);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               title: __("Success"),
               message: __("Payment details have been saved."),
               indicator: "green",
@@ -4444,6 +4780,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           discard_button.on("click", function() {
@@ -4455,7 +4799,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_payment_type", "");
             frappe.model.set_value(p.doctype, p.name, "custom_bank_type", "");
             frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", "");
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               message: __("Payment details have been discarded."),
               indicator: "blue",
               primary_action: {
@@ -4464,6 +4808,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           const controls = [
@@ -4481,7 +4833,7 @@
           });
         }
         if (p.mode_of_payment === "Charge") {
-          console.log("Mode of payment is Charge");
+          const selected_customer = cur_frm.doc.customer;
           let existing_custom_customer = frappe.model.get_value(p.doctype, p.name, "custom_customer");
           let custom_customer = frappe.ui.form.make_control({
             df: {
@@ -4493,7 +4845,7 @@
             parent: this.$payment_modes.find(`.${mode}.customer`),
             render_input: true
           });
-          custom_customer.set_value(existing_custom_customer || "");
+          custom_customer.set_value(existing_custom_customer || selected_customer || "");
           custom_customer.refresh();
           let existing_custom_po_number = frappe.model.get_value(p.doctype, p.name, "custom_po_number");
           let custom_po_number = frappe.ui.form.make_control({
@@ -4559,10 +4911,24 @@
             let id_number = custom_id_number.get_value();
             let approved_by = custom_approved_by.get_value();
             if (!amount || !customer || !po_number || !representative || !id_number) {
-              frappe.msgprint({
+              const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
-                indicator: "orange"
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
               });
               return;
             }
@@ -4572,7 +4938,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_representative", representative);
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", id_number);
             frappe.model.set_value(p.doctype, p.name, "custom_approved_by", approved_by);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               title: __("Success"),
               message: __("Payment details have been saved."),
               indicator: "green",
@@ -4582,6 +4948,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           discard_button.on("click", function() {
@@ -4597,7 +4971,7 @@
             frappe.model.set_value(p.doctype, p.name, "custom_representative", "");
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_approved_by", "");
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               message: __("Payment details have been discarded."),
               indicator: "blue",
               primary_action: {
@@ -4606,6 +4980,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           const controls = [
@@ -4645,12 +5027,10 @@
               click: function() {
                 let code_value = code_input.get_value();
                 if (code_value) {
-                  console.log("Button clicked, Code:", code_value);
                   if (code_value) {
                     frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
-                      console.log("Gift Cert: ", gift_cert);
                       frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
-                      frappe.msgprint({
+                      const dialog2 = frappe.msgprint({
                         title: __("Success"),
                         message: __("Gift Certificate payment details have been saved."),
                         indicator: "green",
@@ -4660,6 +5040,14 @@
                             frappe.msg_dialog.hide();
                           }
                         }
+                      });
+                      $(document).on("keydown", function(e) {
+                        if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                          dialog2.get_primary_btn().trigger("click");
+                        }
+                      });
+                      dialog2.$wrapper.on("hidden.bs.modal", function() {
+                        $(document).off("keydown");
                       });
                     }).catch((error) => {
                       console.error("Error retrieving gift certificate:", error);
@@ -4671,7 +5059,6 @@
                     });
                   }
                   code_field.push(code_value);
-                  console.log("code_field", code_field);
                 } else {
                   frappe.msgprint({
                     title: __("Error"),
@@ -4691,7 +5078,7 @@
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", null);
-            frappe.msgprint({
+            const dialog2 = frappe.msgprint({
               message: __("Payment details have been discarded."),
               indicator: "blue",
               primary_action: {
@@ -4700,6 +5087,14 @@
                   frappe.msg_dialog.hide();
                 }
               }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
             });
           });
           const controls = [
@@ -5654,7 +6049,7 @@
         false,
         "f2"
       );
-      this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
+      this.page.add_menu_item(__("Save as Draft"), this.save_draft.bind(this), false, "f3");
       this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
       this.page.add_menu_item(__("Z Reading"), this.z_reading.bind(this), false, "f5");
       this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
@@ -5663,7 +6058,7 @@
       const buttons = [
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
         { label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2" },
-        { label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
+        { label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3" },
         { label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C" }
       ];
       $(".page-actions .btn-custom").remove();
@@ -5673,35 +6068,59 @@
     }
     z_reading() {
       const me = this;
-      const passwordDialog = new frappe.ui.Dialog({
+      if (this.passwordDialog) {
+        this.passwordDialog.hide();
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      this.passwordDialog = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
-        primary_action_label: __("Authorize"),
-        primary_action: (values) => {
-          let password = values.password;
-          let role = "oic";
+        primary_action_label: __("Ok"),
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
+            args: { password, role: "OIC" },
             callback: (r) => {
-              if (r.message) {
+              if (r.message.name) {
                 frappe.show_alert({
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog.hide();
+                this.passwordDialog.hide();
                 if (!this.$components_wrapper.is(":visible"))
                   return;
                 let voucher = frappe.model.get_new_doc("POS Z Reading");
                 voucher.pos_profile = this.frm.doc.pos_profile;
-                frappe.set_route("Form", "POS Z Reading", voucher.name);
+                voucher.user = frappe.session.user;
+                voucher.company = this.frm.doc.company;
+                voucher.posting_date = frappe.datetime.now_date();
+                voucher.posting_time = frappe.datetime.now_time();
+                frappe.get_doc("POS Z Reading", voucher.name).save().then(() => {
+                  frappe.show_alert({
+                    message: __("POS Z Reading saved successfully."),
+                    indicator: "green"
+                  });
+                  frappe.set_route("Form", "POS Z Reading", voucher.name);
+                }).catch((e) => {
+                  frappe.show_alert({
+                    message: __("Failed to save POS Z Reading."),
+                    indicator: "red"
+                  });
+                  console.error(e);
+                });
               } else {
                 frappe.show_alert({
                   message: __("Incorrect password or user is not an OIC"),
@@ -5712,7 +6131,15 @@
           });
         }
       });
-      passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", function() {
+        setTimeout(() => {
+          const passwordField = document.getElementById("password_field");
+          if (passwordField) {
+            passwordField.focus();
+          }
+        }, 100);
+      });
+      this.passwordDialog.show();
     }
     cash_voucher() {
       if (!this.$components_wrapper.is(":visible"))
@@ -5796,34 +6223,43 @@
       });
     }
     save_draft() {
+      if (this.passwordDialog) {
+        this.passwordDialog.hide();
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
       if (!this.$components_wrapper.is(":visible"))
         return;
-      if (this.frm.doc.items.length == 0) {
+      if (this.frm.doc.items.length === 0) {
         frappe.show_alert({
-          message: __("You must add atleast one item to complete the order."),
+          message: __("You must add at least one item to complete the order."),
           indicator: "red"
         });
         frappe.utils.play_sound("error");
         return;
       }
-      const passwordDialog = new frappe.ui.Dialog({
+      this.passwordDialog = new frappe.ui.Dialog({
         title: __("Enter Your Password"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
         primary_action_label: __("Ok"),
-        primary_action: (values) => {
-          let password = values.password;
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
             args: { password },
             callback: (r) => {
-              if (r.message.name) {
+              if (r.message && r.message.name) {
                 this.set_pharmacist_assist(this.frm, r.message.name);
                 this.frm.save(void 0, void 0, void 0, () => {
                   frappe.show_alert({
@@ -5837,12 +6273,12 @@
                     () => this.make_new_invoice(),
                     () => frappe.dom.unfreeze()
                   ]);
-                  passwordDialog.hide();
+                  this.passwordDialog.hide();
                   localStorage.removeItem("posCartItems");
                 });
               } else {
                 frappe.show_alert({
-                  message: `${r.message.error}`,
+                  message: r.message ? r.message.error : __("Incorrect password"),
                   indicator: "red"
                 });
               }
@@ -5850,34 +6286,54 @@
           });
         }
       });
-      passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
+        setTimeout(() => {
+          const passwordField = document.getElementById("password_field");
+          if (passwordField) {
+            passwordField.focus();
+          }
+        }, 100);
+      });
+      this.passwordDialog.show();
+    }
+    set_pharmacist_assist(frm, user) {
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_pharmacist_assistant", user);
+      frm.refresh_field("custom_pharmacist_assistant");
     }
     close_pos() {
       const me = this;
-      const passwordDialog = new frappe.ui.Dialog({
+      if (this.passwordDialog) {
+        this.passwordDialog.hide();
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      this.passwordDialog = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
-        primary_action_label: __("Authorize"),
-        primary_action: (values) => {
-          let password = values.password;
-          let role = "oic";
+        primary_action_label: __("Ok"),
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
+            args: { password },
             callback: (r) => {
-              if (r.message) {
+              if (r.message.name) {
                 frappe.show_alert({
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog.hide();
+                this.passwordDialog.hide();
                 if (!this.$components_wrapper.is(":visible"))
                   return;
                 let voucher = frappe.model.get_new_doc("POS Closing Entry");
@@ -5899,7 +6355,15 @@
           });
         }
       });
-      passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
+        setTimeout(() => {
+          const passwordField = document.getElementById("password_field");
+          if (passwordField) {
+            passwordField.focus();
+          }
+        }, 100);
+      });
+      this.passwordDialog.show();
     }
     cash_count() {
       if (!this.$components_wrapper.is(":visible"))
@@ -6173,33 +6637,53 @@
       });
     }
     oic_edit_confirm(name) {
-      const passwordDialog = new frappe.ui.Dialog({
-        title: __("Enter OIC Password"),
+      if (this.passwordDialog) {
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      let isAuthorized = false;
+      this.passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
-        primary_action_label: __("Edit Order"),
-        primary_action: (values) => {
-          let password = values.password;
-          let role = "oic";
+        primary_action_label: __("Authorize"),
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
-            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+            args: { password },
             callback: (r) => {
               if (r.message) {
-                this.recent_order_list.toggle_component(false);
-                frappe.run_serially([
-                  () => this.frm.refresh(name),
-                  () => this.cart.load_invoice(),
-                  () => this.item_selector.toggle_component(true),
-                  () => this.toggle_recent_order_list(false)
-                ]);
-                passwordDialog.hide();
+                if (r.message.name) {
+                  isAuthorized = true;
+                  frappe.show_alert({
+                    message: __("Verified"),
+                    indicator: "green"
+                  });
+                  frappe.run_serially([
+                    () => this.frm.refresh(name),
+                    () => this.cart.load_invoice(),
+                    () => this.item_selector.toggle_component(true),
+                    () => this.toggle_recent_order_list(false)
+                  ]).then(() => {
+                    this.passwordDialog.hide();
+                  });
+                } else {
+                  frappe.show_alert({
+                    message: __("Incorrect password or user is not an OIC"),
+                    indicator: "red"
+                  });
+                }
               } else {
                 frappe.show_alert({
                   message: __("Incorrect password or user is not an OIC"),
@@ -6210,18 +6694,31 @@
           });
         }
       });
-      passwordDialog.show();
-      this.toggle_components(true);
+      this.passwordDialog.$wrapper.on("hidden.bs.modal", () => {
+        if (!isAuthorized) {
+          window.location.reload();
+        }
+      });
+      this.passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
+        setTimeout(() => {
+          document.getElementById("password_field").focus();
+        }, 100);
+      });
     }
     oic_delete_confirm(name) {
       const passwordDialog = new frappe.ui.Dialog({
         title: __("Enter OIC Password"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
         primary_action_label: __("Authenticate"),
@@ -6509,15 +7006,19 @@
         title: __("Enter OIC Password"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
         primary_action_label: __("Ok"),
-        primary_action: (values) => {
-          let password = values.password;
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
             args: { password },
@@ -6558,7 +7059,6 @@
     async save_and_checkout() {
       if (this.frm.is_dirty()) {
         let save_error = false;
-        await this.frm.save(null, null, null, () => save_error = true);
         !save_error && this.payment.checkout();
         save_error && setTimeout(() => {
           this.cart.toggle_checkout_btn(true);
@@ -6569,4 +7069,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.REGU4IAX.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.VTNRRYAX.js.map

@@ -86,7 +86,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Vat Type</th>
                                 <th>Price</th>
                                 <th>UOM</th>
-                                <th>QTY</th>
+                                <th>QOH</th>
                             </tr>
                         </thead>
                         <tbody class="items-container"></tbody>
@@ -350,8 +350,10 @@ custom_app.PointOfSale.ItemSelector = class {
             },
         });
 
+
+
         let selectedUOM;
-        this.$component.on("click", ".item-wrapper", async function() {
+        this.$component.on("click", ".item-wrapper", async function () {
             const $item = $(this);
             me.selectedItem = $item;
             const item_code = unescape($item.attr("data-item-code"));
@@ -361,380 +363,379 @@ custom_app.PointOfSale.ItemSelector = class {
             const qty = parseFloat(unescape($item.attr("data-qty")));
             const pos_profile = me.events.get_pos_profile();
 
-        
-            // Fetch prices for different UOMs from the server
-            const response = await frappe.call({
+            // Debugging logs
+            // console.log("Item Clicked:", item_code, uom, rate, description, qty);
+
+            frappe.call({
                 method: 'custom_app.customapp.page.packing_list.packing_list.get_item_uom_prices',
                 args: {
                     item_code: item_code
-                }
-            });
-        
-            let uomPrices = {};
-            if (response.message) {
-                uomPrices = response.message.uom_prices;
-            }
-        
-            // Ensure "PC" is in the options if it exists in the fetched data
-            const uomOptions = Object.keys(uomPrices).filter(uom => uom && uom !== "null").map(uom => ({
-                label: uom,
-                value: uom
-            }));
-        
-            // Set default UOM to "PC" if it exists, otherwise use the first available UOM
-            let defaultUOM = uom;
-            if (!uomPrices.hasOwnProperty(defaultUOM)) {
-                defaultUOM = uomOptions.length > 0 ? uomOptions[0].value : null;
-                if (!defaultUOM) {
-                    frappe.msgprint(__('No valid UOMs found for this item.'));
-                    return;
-                }
-            }
-            
-            const defaultRate = uomPrices[defaultUOM];
-        
-            const dialog = new frappe.ui.Dialog({
-                title: __("Item Details"),
-                fields: [
-                    {
-                        fieldtype: "HTML",
-                        title: __("Item Details"),
-                        options: `
-                            <div class="row">
-                                <div class="col-lg">
-                                    <div class="form-group">
-                                        <label class="control-label">Item Code</label>
-                                        <input class="form-control" readonly data-fieldname="description" type="text" value="${item_code}"/>
-                                    </div>
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        fieldtype: "HTML",
-                        title: __("Item Details"),
-                        options: `
-                            <div class="row">
-                                <div class="col-lg">
-                                    <div class="form-group">
-                                        <label class="control-label">Item Description</label>
-                                        <input class="form-control" readonly data-fieldname="description" type="text" value="${description}"/>
-                                    </div>
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        fieldtype: "HTML",
-                        label: __("Quantity"),
-                        options: `
-                            <div class="row">
-                                <div class="col-lg">
-                                    <div class="form-group">
-                                        <label class="control-label">${__("Quantity")}</label>
-                                        <input class="form-control" type="number" data-fieldname="quantity" required value="0" />
-                                    </div>
-                                </div>
-                            </div>
-                        `
-                    },
-                    {
-                        fieldtype: 'Select',
-                        label: __("UOM"),
-                        fieldname: 'uom',
-                        options: uomOptions,
-                        default: defaultUOM
-                    },
-                    {
-                        fieldtype: "HTML",
-                        label: __("Amount"),
-                        options: `
-                            <div class="row">
-                                <div class="col-lg">
-                                    <div class="form-group">
-                                        <label class="control-label">Amount</label>
-                                        <input class="form-control" data-fieldname="total_amount" value="${defaultRate.toFixed(2)}" readonly />
-                                    </div>
-                                </div>
-                            </div>
-                        `
-                    },
-                            {
-                        label: 'Branch Item INVTY',
-                        fieldtype: 'Button',
-                        btn_size: 'sm', // xs, sm, lg
-                        click: function () {
-                            // Step 1: Fetch the list of warehouses
-                            let warehouses = [];
-                            // const current_wareouse = // frappe.db.get_value("POS Profile", this.pos_profile, warehouse)
-                            // console.log("Current Warehouse: ", current_wareouse)
+                },
+                callback: function (response) {
+                    if (response.message) {
+                        const uomPrices = response.message.uom_prices;
+                        console.log("UOM Prices:", uomPrices);
 
-                            frappe.call({
-                                method: "frappe.client.get_list",
-                                args: {
-                                    doctype: "Warehouse",
-                                    fields: ["name", "warehouse_type", "parent_warehouse"],
-                                    limit_page_length: 0 // Fetch all items without limit
+                        const uomOptions = Object.keys(uomPrices).filter(uom => uom && uom !== "null").map(uom => ({
+                            label: uom,
+                            value: uom
+                        }));
+
+                        let defaultUOM = uom;
+                        if (!uomPrices.hasOwnProperty(defaultUOM)) {
+                            defaultUOM = uomOptions.length > 0 ? uomOptions[0].value : null;
+                            if (!defaultUOM) {
+                                frappe.msgprint(__('No valid UOMs found for this item.'));
+                                return;
+                            }
+                        }
+
+                        const defaultRate = uomPrices[defaultUOM];
+
+                        const dialog = new frappe.ui.Dialog({
+                            title: __("Item Details"),
+                            fields: [
+                                {
+                                    fieldtype: "HTML",
+                                    title: __("Item Details"),
+                                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Item Code</label>
+                                                    <input class="form-control" readonly data-fieldname="description" type="text" value="${item_code}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
                                 },
-                                callback: function (response) {
-                                    warehouses = response.message;
+                                {
+                                    fieldtype: "HTML",
+                                    title: __("Item Details"),
+                                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Item Description</label>
+                                                    <input class="form-control" readonly data-fieldname="description" type="text" value="${description}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                                },
+                                {
+                                    fieldtype: "HTML",
+                                    label: __("Quantity"),
+                                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">${__("Quantity")}</label>
+                                                    <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                                },
+                                {
+                                    fieldtype: 'Select',
+                                    label: __("UOM"),
+                                    fieldname: 'uom',
+                                    options: uomOptions,
+                                    default: defaultUOM
+                                },
+                                {
+                                    fieldtype: "HTML",
+                                    label: __("Amount"),
+                                    options: `
+                                        <div class="row">
+                                            <div class="col-lg">
+                                                <div class="form-group">
+                                                    <label class="control-label">Amount</label>
+                                                    <input class="form-control" data-fieldname="total_amount" value="${defaultRate.toFixed(2)}" readonly />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `
+                                },
+                                        {
+                                    label: 'Branch Item INVTY',
+                                    fieldtype: 'Button',
+                                    btn_size: 'sm', // xs, sm, lg
+                                    click: function () {
+                                        // Step 1: Fetch the list of warehouses
+                                        let warehouses = [];
+                                        // const current_wareouse = // frappe.db.get_value("POS Profile", this.pos_profile, warehouse)
+                                        // console.log("Current Warehouse: ", current_wareouse)
 
-                                    // Step 2: Fetch item quantity for each warehouse
-                                    let warehouse_data_promises = warehouses.map(warehouse => {
-                                        return new Promise((resolve, reject) => {
-                                            frappe.call({
-                                                method: "custom_app.customapp.page.packing_list.packing_list.get_item_qty_per_warehouse",
-                                                args: {
-                                                    warehouse: warehouse.name,
-                                                    item_code: item_code // Replace with your item code variable
-                                                },
-                                                callback: function (response) {
-                                                    warehouse.actual_qty = response.message;
-                                                    resolve(warehouse);
-                                                },
-                                                error: function (error) {
-                                                    reject(error);
-                                                }
-                                            });
-                                        });
-                                    });
+                                        frappe.call({
+                                            method: "frappe.client.get_list",
+                                            args: {
+                                                doctype: "Warehouse",
+                                                fields: ["name", "warehouse_type", "parent_warehouse"],
+                                                limit_page_length: 0 // Fetch all items without limit
+                                            },
+                                            callback: function (response) {
+                                                warehouses = response.message;
 
-                                    Promise.all(warehouse_data_promises).then(warehouses_with_qty => {
-                                        // Filter out warehouses with zero quantity
-                                        warehouses_with_qty = warehouses_with_qty.filter(warehouse => warehouse.actual_qty > 0);
-                                    
-                                        const dialog = new frappe.ui.Dialog({
-                                            title: `${item_code} ${description}`,
-                                            fields: [
-                                                {
-                                                    fieldtype: 'HTML',
-                                                    fieldname: 'warehouse_table_html',
-                                                    options: renderWarehousesTable(warehouses_with_qty)
+                                                // Step 2: Fetch item quantity for each warehouse
+                                                let warehouse_data_promises = warehouses.map(warehouse => {
+                                                    return new Promise((resolve, reject) => {
+                                                        frappe.call({
+                                                            method: "custom_app.customapp.page.packing_list.packing_list.get_item_qty_per_warehouse",
+                                                            args: {
+                                                                warehouse: warehouse.name,
+                                                                item_code: item_code // Replace with your item code variable
+                                                            },
+                                                            callback: function (response) {
+                                                                warehouse.actual_qty = response.message;
+                                                                resolve(warehouse);
+                                                            },
+                                                            error: function (error) {
+                                                                reject(error);
+                                                            }
+                                                        });
+                                                    });
+                                                });
+
+                                                Promise.all(warehouse_data_promises).then(warehouses_with_qty => {
+                                                    // Filter out warehouses with zero quantity
+                                                    warehouses_with_qty = warehouses_with_qty.filter(warehouse => warehouse.actual_qty > 0);
+                                                
+                                                    const dialog = new frappe.ui.Dialog({
+                                                        title: `${item_code} ${description}`,
+                                                        fields: [
+                                                            {
+                                                                fieldtype: 'HTML',
+                                                                fieldname: 'warehouse_table_html',
+                                                                options: renderWarehousesTable(warehouses_with_qty)
+                                                            }
+                                                        ],
+                                                        primary_action_label: __("Ok"),
+                                                        primary_action: function () {
+                                                            dialog.hide();
+                                                        }
+                                                    });
+                                                
+                                                    // Show the dialog and adjust its width
+                                                    dialog.show();
+                                                
+                                                    // Adjust dialog width and enable scrolling for the table
+                                                    $(dialog.$wrapper).css({
+                                                        "max-height": "80vh", // Adjust max height as needed
+                                                        "overflow-y": "auto" // Enable vertical scrolling
+                                                    });
+                                                
+                                                    // Ensure the table within the dialog is scrollable
+                                                    $(dialog.fields_dict.warehouse_table_html.$wrapper).css({
+                                                        "max-height": "60vh", // Adjust table max height as needed
+                                                        "overflow-y": "auto" // Enable vertical scrolling for the table
+                                                    });
+                                                
+                                                }).catch(error => {
+                                                    console.error("Error fetching warehouse data:", error);
+                                                });
+                                                
+                                                function renderWarehousesTable(data) {
+                                                    // Start building the HTML table
+                                                    let tableHtml = '<table class="table table-bordered">';
+                                                    tableHtml += '<thead><tr>';
+                                                    tableHtml += '<th>Name</th>';
+                                                    tableHtml += '<th>Quantity</th>';
+                                                    tableHtml += '</tr></thead>';
+                                                    tableHtml += '<tbody>';
+                                                
+                                                    // Populate table rows with data
+                                                    data.forEach(row => {
+                                                        tableHtml += '<tr>';
+                                                        tableHtml += `<td>${row.name}</td>`;
+                                                        tableHtml += `<td>${row.actual_qty}</td>`;
+                                                        tableHtml += '</tr>';
+                                                    });
+                                                
+                                                    tableHtml += '</tbody>';
+                                                    tableHtml += '</table>';
+                                                
+                                                    return tableHtml;
                                                 }
-                                            ],
-                                            primary_action_label: __("Ok"),
-                                            primary_action: function () {
-                                                dialog.hide();
+                                                
                                             }
                                         });
-                                    
-                                        // Show the dialog and adjust its width
-                                        dialog.show();
-                                    
-                                        // Adjust dialog width and enable scrolling for the table
-                                        $(dialog.$wrapper).css({
-                                            "max-height": "80vh", // Adjust max height as needed
-                                            "overflow-y": "auto" // Enable vertical scrolling
-                                        });
-                                    
-                                        // Ensure the table within the dialog is scrollable
-                                        $(dialog.fields_dict.warehouse_table_html.$wrapper).css({
-                                            "max-height": "60vh", // Adjust table max height as needed
-                                            "overflow-y": "auto" // Enable vertical scrolling for the table
-                                        });
-                                    
-                                    }).catch(error => {
-                                        console.error("Error fetching warehouse data:", error);
-                                    });
-                                    
-                                    function renderWarehousesTable(data) {
-                                        // Start building the HTML table
-                                        let tableHtml = '<table class="table table-bordered">';
-                                        tableHtml += '<thead><tr>';
-                                        tableHtml += '<th>Name</th>';
-                                        tableHtml += '<th>Quantity</th>';
-                                        tableHtml += '</tr></thead>';
-                                        tableHtml += '<tbody>';
-                                    
-                                        // Populate table rows with data
-                                        data.forEach(row => {
-                                            tableHtml += '<tr>';
-                                            tableHtml += `<td>${row.name}</td>`;
-                                            tableHtml += `<td>${row.actual_qty}</td>`;
-                                            tableHtml += '</tr>';
-                                        });
-                                    
-                                        tableHtml += '</tbody>';
-                                        tableHtml += '</table>';
-                                    
-                                        return tableHtml;
-                                    }
-                                    
+                                    },
                                 }
-                            });
-                        },
-                    }
 
 
-                ],
-                primary_action_label: __("Ok"),
-                primary_action: function () {
-                    const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
-                    const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
-                    const totalAmount = parseFloat(dialog.wrapper.find('input[data-fieldname="total_amount"]').val());
+                            ],
+                            primary_action_label: __("Ok"),
+                            primary_action: function () {
+                                const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
+                                const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
+                                const totalAmount = parseFloat(dialog.wrapper.find('input[data-fieldname="total_amount"]').val());
 
-                    if (!quantity || quantity <= 0) {
-                        frappe.msgprint(__("Please enter a valid quantity."));
-                        return;
-                    }
-
-                    if (!me.selectedItem) {
-                        frappe.msgprint(__("No item selected."));
-                        return;
-                    }
-
-                    if (quantity > qty) {
-                        frappe.msgprint(__("Entered Quantity Exceeded"));
-                        return;
-                    }
-
-                    frappe.call({
-                        method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
-                        args: {
-                            pos_profile: pos_profile,// Replace with your actual pos_profile
-                            item_code: item_code // Replace with your actual item_code
-                        },
-                        callback: function (response) {
-                            if (response.message) {
-                                const { invoices, total_qty } = response.message;
-                                let item_total_qty = total_qty; // Use the total_qty from the response
-
-                                // console.log("Draft POS Invoices with specified item:", invoices);
-                                // console.log(`Total Quantity of Item (${item_code}): ${item_total_qty}`);
-
-                                if ((item_total_qty + quantity) > qty) {
-                                    const formatted_invoices = invoices.map(invoice => {
-                                        const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
-                                        return {
-                                            name: invoice.name,
-                                            customer: invoice.customer, 
-                                            item_qty: item_qty
-                                        };
-                                    });
-                                
-                                    const invoice_dialog = new frappe.ui.Dialog({
-                                        title: 'Items ordered by other customers',
-                                        fields: [
-                                            {
-                                                fieldtype: 'HTML',
-                                                fieldname: 'invoices_table_html',
-                                                options: renderInvoicesTable(formatted_invoices)
-                                            }
-                                        ],
-                                        primary_action_label: __("Ok"),
-                                        primary_action: function () {
-                                            invoice_dialog.hide();
-                                        }
-                                    });
-
-                                    function renderInvoicesTable(data) {
-                                        // Start building the HTML table
-                                        let tableHtml = '<table class="table table-bordered">';
-                                        tableHtml += '<thead><tr>';
-                                        tableHtml += '<th>ID</th>';
-                                        // tableHtml += '<th>Customer</th>';
-                                        tableHtml += '<th>Quantity</th>';
-                                        tableHtml += '</tr></thead>';
-                                        tableHtml += '<tbody>';
-                                    
-                                        // Populate table rows with data
-                                        data.forEach(row => {
-                                            tableHtml += '<tr>';
-                                            tableHtml += `<td>${row.name}</td>`;
-                                            // tableHtml += `<td>${row.customer}</td>`;
-                                            tableHtml += `<td>${row.item_qty}</td>`;
-                                            tableHtml += '</tr>';
-                                        });
-                                    
-                                        tableHtml += '</tbody>';
-                                        tableHtml += '</table>';
-                                    
-                                        return tableHtml;
-                                    }
-                                
-                                    invoice_dialog.show();
+                                if (!quantity || quantity <= 0) {
+                                    frappe.msgprint(__("Please enter a valid quantity."));
                                     return;
                                 }
 
-                             
+                                if (!me.selectedItem) {
+                                    frappe.msgprint(__("No item selected."));
+                                    return;
+                                }
 
-                                // Proceed with adding the item to the cart if conditions are not met
-                                me.selectedItem.find(".item-uom").text(selectedUOM);
+                                if (quantity > qty) {
+                                    frappe.msgprint(__("Entered Quantity Exceeded"));
+                                    return;
+                                }
 
-                                const itemCode = unescape(me.selectedItem.attr("data-item-code"));
-                                const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
-                                const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+                                frappe.call({
+                                    method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
+                                    args: {
+                                        pos_profile: pos_profile,// Replace with your actual pos_profile
+                                        item_code: item_code // Replace with your actual item_code
+                                    },
+                                    callback: function (response) {
+                                        if (response.message) {
+                                            const { invoices, total_qty } = response.message;
+                                            let item_total_qty = total_qty; // Use the total_qty from the response
 
-                                me.events.item_selected({
-                                    field: "qty",
-                                    value: "+" + quantity,
-                                    item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
+                                            // console.log("Draft POS Invoices with specified item:", invoices);
+                                            // console.log(`Total Quantity of Item (${item_code}): ${item_total_qty}`);
+
+                                            if ((item_total_qty + quantity) > qty) {
+                                                const formatted_invoices = invoices.map(invoice => {
+                                                    const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
+                                                    return {
+                                                        name: invoice.name,
+                                                        customer: invoice.customer, 
+                                                        item_qty: item_qty
+                                                    };
+                                                });
+                                            
+                                                const invoice_dialog = new frappe.ui.Dialog({
+                                                    title: 'Items ordered by other customers',
+                                                    fields: [
+                                                        {
+                                                            fieldtype: 'HTML',
+                                                            fieldname: 'invoices_table_html',
+                                                            options: renderInvoicesTable(formatted_invoices)
+                                                        }
+                                                    ],
+                                                    primary_action_label: __("Ok"),
+                                                    primary_action: function () {
+                                                        invoice_dialog.hide();
+                                                    }
+                                                });
+
+                                                function renderInvoicesTable(data) {
+                                                    // Start building the HTML table
+                                                    let tableHtml = '<table class="table table-bordered">';
+                                                    tableHtml += '<thead><tr>';
+                                                    tableHtml += '<th>ID</th>';
+                                                    // tableHtml += '<th>Customer</th>';
+                                                    tableHtml += '<th>Quantity</th>';
+                                                    tableHtml += '</tr></thead>';
+                                                    tableHtml += '<tbody>';
+                                                
+                                                    // Populate table rows with data
+                                                    data.forEach(row => {
+                                                        tableHtml += '<tr>';
+                                                        tableHtml += `<td>${row.name}</td>`;
+                                                        // tableHtml += `<td>${row.customer}</td>`;
+                                                        tableHtml += `<td>${row.item_qty}</td>`;
+                                                        tableHtml += '</tr>';
+                                                    });
+                                                
+                                                    tableHtml += '</tbody>';
+                                                    tableHtml += '</table>';
+                                                
+                                                    return tableHtml;
+                                                }
+                                            
+                                                invoice_dialog.show();
+                                                return;
+                                            }
+
+                                         
+
+                                            // Proceed with adding the item to the cart if conditions are not met
+                                            me.selectedItem.find(".item-uom").text(selectedUOM);
+
+                                            const itemCode = unescape(me.selectedItem.attr("data-item-code"));
+                                            const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
+                                            const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+
+                                            me.events.item_selected({
+                                                field: "qty",
+                                                value: "+" + quantity,
+                                                item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
+                                            });
+
+                                            me.search_field.set_focus();
+
+                                            dialog.hide();
+                                        } else {
+                                            console.log("No matching draft POS invoices found.");
+                                        }
+                                    },
+                                    error: function (error) {
+                                        console.error("Error fetching draft POS invoices:", error);
+                                    }
                                 });
-
-                                me.search_field.set_focus();
-
-                                dialog.hide();
-                            } else {
-                                console.log("No matching draft POS invoices found.");
                             }
-                        },
-                        error: function (error) {
-                            console.error("Error fetching draft POS invoices:", error);
-                        }
-                    });
-                }
 
-            });
+                        });
 
-            // Set focus on the quantity field when the dialog is shown
-           // Set focus on the quantity field when the dialog is shown
-            dialog.on_page_show = function() {
-                setTimeout(() => {
-                    dialog.wrapper.find('input[data-fieldname="quantity"]').focus();
-                }, 300); // Use a small delay to ensure the element is in the DOM
-            };
+                     
+                        dialog.on_page_show = function() {
+                            setTimeout(() => {
+                                const $quantityField = dialog.wrapper.find('input[data-fieldname="quantity"]');
+                                $quantityField.focus();
+                                $quantityField.select(); // Selects the text inside the field for easy replacement
+                            }, 300); // Use a small delay to ensure the element is in the DOM
+                        };
+            
+                        dialog.show();
+                    
+                        // Set the default UOM and amount fields
+                        dialog.wrapper.find('select[data-fieldname="uom"]').val(defaultUOM);
+                        dialog.wrapper.find('input[data-fieldname="total_amount"]').val(defaultRate.toFixed(2));
+                        
 
-            dialog.show();
-        
-            // Set the default UOM and amount fields
-            dialog.wrapper.find('select[data-fieldname="uom"]').val(defaultUOM);
-            dialog.wrapper.find('input[data-fieldname="total_amount"]').val(defaultRate.toFixed(2));
-        
-            // Event listener for quantity input
-            dialog.wrapper.find('input[data-fieldname="quantity"]').on('input', function () {
-                const quantity = parseFloat($(this).val());
-                const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
-                const rate = uomPrices[selectedUOM];
-                if (!isNaN(quantity)) {
-                    const totalAmount = (quantity * rate).toFixed(2);
-                    dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
-                } else {
-                    dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
-                }
-            });
-        
-            // Event listener for UOM change
-            dialog.wrapper.find('select[data-fieldname="uom"]').on('change', function () {
-                const selectedUOM = $(this).val();
-                const rate = uomPrices[selectedUOM];
-                const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
-                if (!isNaN(quantity)) {
-                    const totalAmount = (quantity * rate).toFixed(2);
-                    dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
-                } else {
-                    dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
-                }
-            });
+                        dialog.wrapper.find('input[data-fieldname="quantity"]').on('input', function () {
+                            const quantity = parseFloat($(this).val());
+                            const selectedUOM = dialog.wrapper.find('select[data-fieldname="uom"]').val();
+                            const rate = uomPrices[selectedUOM];
+                            if (!isNaN(quantity)) {
+                                const totalAmount = (quantity * rate).toFixed(2);
+                                dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                            } else {
+                                dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
+                            }
+                        });
 
-            dialog.wrapper.find('input[data-fieldname="quantity"]').on('keypress', function(e) {
-                if (e.which === 13) { // Enter key pressed
-                    e.preventDefault();
-                    dialog.primary_action();
+                        dialog.wrapper.find('select[data-fieldname="uom"]').on('change', function () {
+                            const selectedUOM = $(this).val();
+                            const rate = uomPrices[selectedUOM];
+                            const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
+                            if (!isNaN(quantity)) {
+                                const totalAmount = (quantity * rate).toFixed(2);
+                                dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                            } else {
+                                dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
+                            }
+                        });
+
+                        dialog.wrapper.find('input[data-fieldname="quantity"]').on('keypress', function(e) {
+                            if (e.which === 13) { // Enter key pressed
+                                e.preventDefault();
+                                dialog.primary_action();
+                            }
+                        });
+                    }
                 }
             });
-
         });
-        
+       
           
         
        

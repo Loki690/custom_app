@@ -289,32 +289,42 @@ custom_app.PointOfSale.ItemCart = class {
 		});
 
 		this.$totals_section.on("click", ".edit-cart-btn", () => {
-
-			// Show password dialog for OIC authentication
-			const passwordDialog = new frappe.ui.Dialog({
+			// Destroy any previous instances of the dialog
+			
+			if (this.passwordDialog) {
+				this.passwordDialog.$wrapper.remove();
+				delete this.passwordDialog;
+			}
+		
+			// Create and show the password dialog
+			this.passwordDialog = new frappe.ui.Dialog({
 				title: __('Enter OIC Password'),
 				fields: [
 					{
-						fieldname: 'password',
-						fieldtype: 'Password',
-						label: __('Password'),
-						reqd: 1
+						fieldtype: 'HTML',
+						fieldname: 'password_html',
+						options: `
+							<div class="form-group">
+								<label for="password_field">${__('Password')}</label>
+								<input type="password" id="password_field" class="form-control" required>
+							</div>
+						`
 					}
 				],
-				primary_action_label: __('Edit Order'),
-				primary_action: (values) => {
-					let password = values.password;
-					let role = "oic";
-
+				primary_action_label: __('Ok'),
+				primary_action: () => {
+					// Retrieve the password value from the HTML field
+					let password = document.getElementById('password_field').value;
+		
 					frappe.call({
-						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-						args: { password: password, role: role },
+						method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+						args: { password: password },
 						callback: (r) => {
-							if (r.message) {
+							if (r.message && r.message.name) {
 								// OIC authentication successful, proceed with editing the cart
 								this.events.edit_cart();
 								this.toggle_checkout_btn(true);
-								passwordDialog.hide();
+								this.passwordDialog.hide();
 							} else {
 								// Show alert for incorrect password or unauthorized user
 								frappe.show_alert({
@@ -326,10 +336,18 @@ custom_app.PointOfSale.ItemCart = class {
 					});
 				}
 			});
-
-			passwordDialog.show();
-
+		
+			this.passwordDialog.show();
+		
+		
+			// Ensure the password field gains focus every time the dialog is opened
+			this.passwordDialog.$wrapper.on('shown.bs.modal', function () {
+				setTimeout(() => {
+					document.getElementById('password_field').focus();
+				}, 100); // Slight delay to ensure field is rendered before focusing
+			});
 		});
+		
 
 		this.$component.on("click", ".add-discount-wrapper", () => {
 			// Check if OIC authentication is required
