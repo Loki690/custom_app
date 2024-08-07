@@ -262,9 +262,9 @@ custom_app.PointOfSale.Controller = class {
 		// this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
 		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
-		this.page.add_menu_item(__('Z Reading'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__('Z Reading (BIR)'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__('DSRS'), this.dsrs_reading.bind(this), false, "f0");
 		this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
-
 	}
 
 
@@ -290,12 +290,9 @@ custom_app.PointOfSale.Controller = class {
 
 
 
-	z_reading() {
-
-		const me = this;
-		// Show password dialog for OIC authentication
+	showPasswordDialog(title, onSuccess) {
 		const passwordDialog = new frappe.ui.Dialog({
-			title: __('Authorization Required OIC'),
+			title: __(title),
 			fields: [
 				{
 					fieldname: 'password',
@@ -307,28 +304,20 @@ custom_app.PointOfSale.Controller = class {
 			primary_action_label: __('Authorize'),
 			primary_action: (values) => {
 				let password = values.password;
-				let role = "oic";
+				
 
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
+					args: { password: password},
 					callback: (r) => {
-						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
+						if (r.message.name) {
 							frappe.show_alert({
 								message: __('Verified'),
 								indicator: 'green'
 							});
 							passwordDialog.hide();
-
-
-							if (!this.$components_wrapper.is(":visible")) return;
-							let voucher = frappe.model.get_new_doc("POS Z Reading");
-							voucher.pos_profile = this.frm.doc.pos_profile;
-							frappe.set_route("Form", "POS Z Reading", voucher.name);
-
+							onSuccess();
 						} else {
-							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
 								message: __('Incorrect password or user is not an OIC'),
 								indicator: 'red'
@@ -340,7 +329,28 @@ custom_app.PointOfSale.Controller = class {
 		});
 
 		passwordDialog.show();
+	}
 
+	z_reading() {
+		const onSuccess = () => {
+			if (!this.$components_wrapper.is(":visible")) return;
+			let voucher = frappe.model.get_new_doc("POS Z Reading");
+			voucher.pos_profile = this.frm.doc.pos_profile;
+			frappe.set_route("Form", "POS Z Reading", voucher.name);
+		};
+
+		this.showPasswordDialog('OIC Authorization Required for Z Reading', onSuccess);
+	}
+
+	dsrs_reading() {
+		const onSuccess = () => {
+			if (!this.$components_wrapper.is(":visible")) return;
+			let voucher = frappe.model.get_new_doc("POS Daily Sales Report Summary");
+			voucher.pos_profile = this.frm.doc.pos_profile;
+			frappe.set_route("Form", "POS Daily Sales Report Summary", voucher.name);
+		};
+
+		this.showPasswordDialog('OIC Authorization Required for DSRS', onSuccess);
 	}
 
 
@@ -1474,7 +1484,7 @@ custom_app.PointOfSale.Controller = class {
 	async save_and_checkout() {
 		if (this.frm.is_dirty()) {
 			let save_error = false;
-			await this.frm.save(null, null, null, () => (save_error = true));
+			// await this.frm.save(null, null, null, () => (save_error = true));
 			// only move to payment section if save is successful
 			!save_error && this.payment.checkout();
 			// show checkout button on error
