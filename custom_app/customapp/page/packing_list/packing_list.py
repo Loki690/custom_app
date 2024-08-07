@@ -12,9 +12,8 @@ from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availabil
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
 from frappe.utils.password import get_decrypted_password
-from frappe.utils.password import check_password
 from frappe.exceptions import AuthenticationError
-from frappe.utils.password import check_oic_password, check_password
+from custom_app.customapp.utils.password import check_oic_password, check_password, check_password_cashier, check_password_oic, check_password_without_username
 
 import platform
 
@@ -126,6 +125,41 @@ def get_item_uoms(item_code):
     return response
 
 
+# import frappe
+
+# @frappe.whitelist()
+# def get_item_uom_and_batch_details(item_code):
+#     uom_prices = {}
+#     batch_details = []
+
+#     # Fetch UOM prices
+#     item_prices = frappe.get_all('Item Price', filters={'item_code': item_code}, fields=['uom', 'price_list_rate'])
+#     for price in item_prices:
+#         uom_prices[price.uom] = price.price_list_rate
+
+#     # Fetch batch details
+#     batches = frappe.get_all('Batch', filters={'item': item_code}, fields=['name', 'expiry_date'])
+#     for batch in batches:
+#         batch_details.append({
+#             'batch_no': batch.name,  # Assuming the primary key field is 'name'
+#             'expiry_date': batch.expiry_date
+#         })
+
+#     return {
+#         'uom_prices': uom_prices,
+#         'batch_details': batch_details
+#     }
+
+@frappe.whitelist()
+def get_item_uom_prices(item_code):
+    uom_prices = {}
+    item_prices = frappe.get_all('Item Price', filters={'item_code': item_code}, fields=['uom', 'price_list_rate'])
+    for price in item_prices:
+        uom_prices[price.uom] = price.price_list_rate
+    return {'uom_prices': uom_prices}
+
+
+
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None):
     # Fetch selected warehouse from the request or POS Profile
@@ -167,7 +201,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.name AS item_code,
             item.item_name,
             item.description,
-			item.custom_is_vatable,
+            item.custom_is_vatable,
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
@@ -205,7 +239,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         as_dict=1,
     )
 
-    # return (empty) list if there are no results
+    # Return an empty list if there are no results
     if not items_data:
         return result
 
@@ -213,6 +247,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         uoms = frappe.get_doc("Item", item.item_code).get("uoms", [])
 
         item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
+        #item.actual_qty = get_draft_pos_invoice_item_quantity(pos_profile, item.item_code, item.actual_qty)
         item.uom = item.stock_uom
 
         item_price = frappe.get_all(
@@ -363,21 +398,25 @@ def serial_number():
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, limit=100):
+def get_past_order_list(search_term, status, pos_profile, limit=1000):
 	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
 	if search_term and status:
 		invoices_by_customer = frappe.db.get_all(
 			"POS Invoice",
-			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
+			filters={"customer": ["like", f"%{search_term}%"], 
+            'pos_profile': pos_profile, 
+            "status": status},
 			fields=fields,
 			order_by="posting_time asc", 
 			page_length=limit,
 		)
 		invoices_by_name = frappe.db.get_all(
 			"POS Invoice",
-			filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
+			filters={"name": ["like", f"%{search_term}%"], 
+            'pos_profile': pos_profile, 
+            "status": status},
 			fields=fields,
 			page_length=limit,
 		)
@@ -385,7 +424,9 @@ def get_past_order_list(search_term, status, pos_profile, limit=100):
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
+			"POS Invoice", filters={"status": status, 
+                           'pos_profile': pos_profile
+                           }, fields=fields, order_by="posting_time asc",   page_length=limit
 		)
 		
 	return invoice_list
@@ -393,49 +434,64 @@ def get_past_order_list(search_term, status, pos_profile, limit=100):
 
 @frappe.whitelist()
 def set_customer_info(fieldname, customer, value=""):
-	if fieldname == "loyalty_program":
-		frappe.db.set_value("Customer", customer, "loyalty_program", value)
+    # Set loyalty program if applicable
+    if fieldname == "loyalty_program":
+        frappe.db.set_value("Customer", customer, "loyalty_program", value)
+    
+    # Fetch or create the primary contact for the customer
+    contact = frappe.get_cached_value("Customer", customer, "customer_primary_contact")
+    if not contact:
+        contact = frappe.db.sql(
+            """
+            SELECT parent FROM `tabDynamic Link`
+            WHERE
+                parenttype = 'Contact' AND
+                parentfield = 'links' AND
+                link_doctype = 'Customer' AND
+                link_name = %s
+            """,
+            (customer),
+            as_dict=1,
+        )
+        contact = contact[0].get("parent") if contact else None
 
-	contact = frappe.get_cached_value("Customer", customer, "customer_primary_contact")
-	if not contact:
-		contact = frappe.db.sql(
-			"""
-			SELECT parent FROM `tabDynamic Link`
-			WHERE
-				parenttype = 'Contact' AND
-				parentfield = 'links' AND
-				link_doctype = 'Customer' AND
-				link_name = %s
-			""",
-			(customer),
-			as_dict=1,
-		)
-		contact = contact[0].get("parent") if contact else None
+    if not contact:
+        new_contact = frappe.new_doc("Contact")
+        new_contact.is_primary_contact = 1
+        new_contact.first_name = customer
+        new_contact.set("links", [{"link_doctype": "Customer", "link_name": customer}])
+        new_contact.save()
+        contact = new_contact.name
+        frappe.db.set_value("Customer", customer, "customer_primary_contact", contact)
 
-	if not contact:
-		new_contact = frappe.new_doc("Contact")
-		new_contact.is_primary_contact = 1
-		new_contact.first_name = customer
-		new_contact.set("links", [{"link_doctype": "Customer", "link_name": customer}])
-		new_contact.save()
-		contact = new_contact.name
-		frappe.db.set_value("Customer", customer, "customer_primary_contact", contact)
-
-	contact_doc = frappe.get_doc("Contact", contact)
-	if fieldname == "email_id":
-		contact_doc.set("email_ids", [{"email_id": value, "is_primary": 1}])
-		frappe.db.set_value("Customer", customer, "email_id", value)
-	elif fieldname == "mobile_no":
-		contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
-		frappe.db.set_value("Customer", customer, "mobile_no", value)
-	elif fieldname == "custom_oscapwdid":
-		contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
-		frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
-	elif fieldname == "custom_transaction_type":
-		contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
-		frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
-
-	contact_doc.save()
+    contact_doc = frappe.get_doc("Contact", contact)
+    # customer_doc = frappe.get_doc("Customer", customer)
+    
+    # Set fields in the contact based on fieldname
+    if fieldname == "email_id":
+        contact_doc.set("email_ids", [{"email_id": value, "is_primary": 1}])
+        frappe.db.set_value("Customer", customer, "email_id", value)
+    elif fieldname == "mobile_no":
+        contact_doc.set("phone_nos", [{"phone": value, "is_primary_mobile_no": 1}])
+        frappe.db.set_value("Customer", customer, "mobile_no", value)
+    elif fieldname == "custom_oscapwdid":
+        contact_doc.set("custom_osca_or_pwd_ids", [{"osca_pwd_id": value, "is_primary": 1}])
+        frappe.db.set_value("Customer", customer, "custom_oscapwdid", value)
+    elif fieldname == "custom_transaction_type":
+        contact_doc.set("custom_transaction_types", [{"transaction_type": value, "is_primary_transaction": 1}])
+        frappe.db.set_value("Customer", customer, "custom_transaction_type", value)
+        
+        
+        
+    # elif fieldname == "custom_osca_id":
+    #      customer_doc.set("custom_osca_id", value)
+    #      #frappe.db.set_value("Customer", customer, "custom_osca_id", value)
+    # elif fieldname == "custom_pwd_id":
+    #      customer_doc.set("custom_pwd_id", value)
+    #      #frappe.db.set_value("Customer", customer, "custom_pwd_id", value)
+    
+    # customer_doc.save()
+    contact_doc.save()
 
 @frappe.whitelist()
 def get_pos_profile_data(pos_profile):
@@ -450,8 +506,6 @@ def get_pos_profile_data(pos_profile):
 	pos_profile.customer_groups = _customer_groups_with_children
 	return pos_profile
 
-from frappe.utils.password import get_decrypted_password
-from frappe.utils.password import check_password
 from frappe.exceptions import AuthenticationError
 
 @frappe.whitelist()
@@ -489,19 +543,26 @@ def get_user_password():
 # def check_if_match(stored_password_hash, password):
 
 
-@frappe.whitelist()
-def confirm_user_password(password,role):
-    # Check if the provided role is "oic"
+# @frappe.whitelist()
+# def confirm_user_password(password,role):
+#     # Check if the provided role is "oic"
    
-    try:
-        # Check if the entered password matches the stored hashed password
-        if check_oic_password(password, role):
-            return True
-        else:
-            return False
-    except frappe.AuthenticationError:
-        return False
-	
+#     try:
+#         # Check if the entered password matches the stored hashed password
+#         if check_oic_password(password, role):
+#             return True
+#         else:
+#             return False
+#     except frappe.AuthenticationError:
+#         return False
+
+
+@frappe.whitelist()
+def confirm_user_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_oic_password(password)  
 
 @frappe.whitelist()
 def confirm_user_acc_password(password):
@@ -516,6 +577,29 @@ def confirm_user_acc_password(password):
             return False
     except AuthenticationError:
         return False
+  
+@frappe.whitelist()
+def get_user_details_by_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_password_without_username(password)  
+
+@frappe.whitelist()
+def get_cashier_details_by_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_password_cashier(password)
+
+
+@frappe.whitelist()
+def get_oic_details_by_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_password_oic(password)
+
     
 @frappe.whitelist()
 def get_pharmacist_user():
@@ -526,4 +610,145 @@ def get_pharmacist_user():
 def get_pos_warehouse(pos_profile):
     warehouse = frappe.db.get_value("POS Profile", pos_profile, "warehouse")
     return warehouse
+
+
+@frappe.whitelist()
+def get_item_qty_per_warehouse(warehouse, item_code):
+    """
+    Get the item quantity of the specified warehouse.
+    """
+   
+    bin_qty = frappe.db.sql(
+		"""select actual_qty from `tabBin`
+		where item_code = %s and warehouse = %s
+		limit 1""",
+		(item_code, warehouse),
+		as_dict=1,
+	)
+    return bin_qty[0].actual_qty or 0 if bin_qty else 0
+       
+@frappe.whitelist()
+def get_draft_pos_invoice_items(pos_profile, item_code):
+    """
+    Retrieves all draft POS invoices for the specified POS profile that contain the specified item code.
+    Includes batch details in the response.
     
+    :param pos_profile: The POS profile to filter by.
+    :param item_code: The item code to search for in the draft POS invoices.
+    :return: A list of draft POS invoices that contain the specified item code, including batch details, and the total quantity of the item.
+    """
+    try:
+        # Fetch all draft POS invoices for the specified POS profile
+        draft_invoices = frappe.get_all('POS Invoice', filters={
+            'docstatus': 0,
+            'pos_profile': pos_profile
+        }, fields=['name', 'customer', 'grand_total'])
+
+        # Initialize a list to store invoices containing the item code
+        matching_invoices = []
+
+        # Initialize total quantity
+        total_qty = 0
+
+        # Iterate through the draft invoices to find matching items
+        for invoice in draft_invoices:
+            invoice_items = frappe.get_all('POS Invoice Item', filters={
+                'parent': invoice.name,
+                'item_code': item_code
+            }, fields=['item_code', 'item_name', 'qty', 'rate'])
+
+            if invoice_items:
+                invoice['items'] = invoice_items
+                matching_invoices.append(invoice)
+
+                # Sum the quantity of the item in this invoice
+                for item in invoice_items:
+                    total_qty += item.qty
+
+        return {
+            'invoices': matching_invoices,
+            'total_qty': total_qty
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), frappe._("Error fetching draft POS invoices"))
+        frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
+
+
+
+def get_draft_pos_invoice_item_quantity(pos_profile, item_code, actual_qty):
+    """
+    Retrieves the total quantity of the specified item code in draft POS invoices for the given POS profile.
+
+    :param pos_profile: The POS profile to filter by.
+    :param item_code: The item code to search for in the draft POS invoices.
+    :return: The adjusted available quantity of the item (integer).
+    """
+    try:
+        total_qty = 0
+
+        # Fetch all draft POS invoices for the specified POS profile
+        draft_invoices = frappe.get_all('POS Invoice', filters={
+            'docstatus': 0,
+            'pos_profile': pos_profile
+        }, fields=['name'])
+
+        # Iterate through the draft invoices and accumulate total quantity
+        for invoice in draft_invoices:
+            invoice_items = frappe.get_all('POS Invoice Item', filters={
+                'parent': invoice.name,
+                'item_code': item_code
+            }, fields=['qty'])
+
+            for item in invoice_items:
+                total_qty += item.qty
+
+        return actual_qty - total_qty
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), _("Error fetching draft POS invoices"))
+        frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
+
+
+
+# @frappe.whitelist()
+# def get_nearest_expiry_batch(item_code):
+#     try:
+#         result = frappe.db.sql("""
+#             SELECT batch_no, expiry_date
+#             FROM `tabSerial and Batch Entry`
+#             WHERE item_code = %s
+#             ORDER BY expiry_date ASC, creation ASC
+#             LIMIT 1
+#         """, (item_code,), as_dict=True)
+        
+#         # Debug logging
+#         frappe.log_error(message=str(result), title="Debug get_nearest_expiry_batch")
+        
+#         if result:
+#             return result[0]
+#         else:
+#             return {"batch_no": None, "expiry_date": None}
+#     except Exception as e:
+#         frappe.log_error(message=str(e), title="Error in get_nearest_expiry_batch")
+#         return {"batch_no": None, "expiry_date": None}
+
+
+# in your custom app file, e.g., custom_app/api.py
+import frappe
+
+@frappe.whitelist()
+def get_fifo_batch(item_code, warehouse):
+    batches = frappe.db.sql("""
+        SELECT name, expiry_date
+        FROM `tabBatch`
+        WHERE item = %s AND (expiry_date IS NULL OR expiry_date > NOW())
+        ORDER BY expiry_date ASC, creation ASC
+        LIMIT 1
+    """, (item_code,), as_dict=True)
+    
+    if batches:
+        return batches[0]
+    else:
+        return None
+
