@@ -236,18 +236,8 @@ custom_app.PointOfSale.ItemDetails = class {
 								});
 								passwordDialog.hide();
 	
-								// Allow input to discount_percentage field
 								me.enable_discount_input(fieldname);
-
-								let current_discount_log = doc.doc.custom_manual_dicsount || '';
-							// Append new log information
-								let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
-								let updated_discount_log = current_discount_log + discount_log;
-
-								// Set the updated value
-								doc.set_value('custom_manual_dicsount', updated_discount_log);
-		
-								// Set flag indicating OTP authentication
+								me.set_discount_log(doc, item)
 								me.is_oic_authenticated = true;
 	
 							} else {
@@ -274,10 +264,12 @@ custom_app.PointOfSale.ItemDetails = class {
 		passwordDialog.show();
 	}
 
-
-
-
-
+	set_discount_log(doc, item) {
+		let current_discount_log = doc.doc.custom_manual_dicsount || '';
+		let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
+		let updated_discount_log = current_discount_log + discount_log;
+		doc.set_value('custom_manual_dicsount', updated_discount_log);
+	}
 
 	// Function to enable input to discount_percentage field after OTP authentication
 	enable_discount_input(fieldname) {
@@ -302,7 +294,6 @@ custom_app.PointOfSale.ItemDetails = class {
 			//"actual_qty",
 			//"price_list_rate",
 			// "is_free_item",
-
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
