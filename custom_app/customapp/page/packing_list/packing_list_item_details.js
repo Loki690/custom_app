@@ -39,7 +39,6 @@ custom_app.PointOfSale.ItemDetails = class {
 					<div class="item-desc"></div>
 					<div class="item-price"></div>
 				</div>
-				<div class="item-image"></div>
 			</div>
 			<div class="discount-section"></div>
 			<div class="form-container"></div>
@@ -131,17 +130,6 @@ custom_app.PointOfSale.ItemDetails = class {
 		this.$item_name.html(item_name);
 		this.$item_description.html(get_description_html());
 		this.$item_price.html(format_currency(price_list_rate, this.currency));
-		if (!this.hide_images && image) {
-			this.$item_image.html(
-				`<img
-					onerror="cur_pos.item_details.handle_broken_image(this)"
-					class="h-full" src="${image}"
-					alt="${frappe.get_abbr(item_name)}"
-					style="object-fit: cover;">`
-			);
-		} else {
-			this.$item_image.html(`<div class="item-abbr">${frappe.get_abbr(item_name)}</div>`);
-		}
 	}
 
 	handle_broken_image($img) {
@@ -181,6 +169,8 @@ custom_app.PointOfSale.ItemDetails = class {
 			}
 		
 			const me = this;
+	
+			// console.log("Form Fields:", field_meta)
 		
 			this[`${fieldname}_control`] = frappe.ui.form.make_control({
 				df: {
@@ -194,79 +184,92 @@ custom_app.PointOfSale.ItemDetails = class {
 				render_input: true,
 			});
 			this[`${fieldname}_control`].set_value(item[fieldname]);
-		
+
 			// Add event listener for discount_percentage and discount_amount field click
 			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
 				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
-						me.oic_authentication(fieldname);
+						me.oic_authentication(fieldname, item);
 					}
 				});
-
+	
 			}
-
-		
-			
-			
+	
 		});
 		
 		this.make_auto_serial_selection_btn(item);
 		this.bind_custom_control_change_event();
-		//this.handle_price_update();
 	}
+	
+	oic_authentication(fieldname, item) {
+		const me = this;
+		const doc = me.events.get_frm()
+		// Show password dialog for OIC authentication
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __('Authorization Required OIC'),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
+				}
+			],
+			primary_action_label: __('Authorize'),
+			primary_action: (values) => {
+				let password = values.password;
 
-
-		// Function to trigger OTP authentication
-		oic_authentication(fieldname) {
-			const me = this;
-			// Show password dialog for OIC authentication
-			const passwordDialog = new frappe.ui.Dialog({
-				title: __('Authorization Required OIC'),
-				fields: [
-					{
-						fieldname: 'password',
-						fieldtype: 'Password',
-						label: __('Password'),
-						reqd: 1
-					}
-				],
-				primary_action_label: __('Authorize'),
-				primary_action: (values) => {
-					let password = values.password;
-					let role = "oic";
 		
-					frappe.call({
-						method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
-						args: { password: password, role: role },
-						callback: (r) => {
-							if (r.message) {
-								// OIC authentication successful, proceed with discount edit
+	
+				frappe.call({
+					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+					args: { password: password },
+					callback: (r) => {
+						if (r.message) {
+
+							console.log('User: ', r.message)
+							
+							if (r.message.name) {
 								frappe.show_alert({
 									message: __('Verified'),
 									indicator: 'green'
 								});
 								passwordDialog.hide();
-		
-								// Allow input to discount_percentage field
+	
 								me.enable_discount_input(fieldname);
-		
-								// Set flag indicating OTP authentication
+								me.set_discount_log(doc, item)
 								me.is_oic_authenticated = true;
+	
 							} else {
-								// Show alert for incorrect password or unauthorized user
 								frappe.show_alert({
 									message: __('Incorrect password or user is not an OIC'),
 									indicator: 'red'
 								});
 							}
-						}
-					});
-				}
-			});
-		
-			passwordDialog.show();
-		}
 
+				
+						} else {
+							// Show alert for incorrect password or unauthorized user
+							frappe.show_alert({
+								message: __('Incorrect password or user is not an OIC'),
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		});
+
+	
+		passwordDialog.show();
+	}
+
+	set_discount_log(doc, item) {
+		let current_discount_log = doc.doc.custom_manual_dicsount || '';
+		let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
+		let updated_discount_log = current_discount_log + discount_log;
+		doc.set_value('custom_manual_dicsount', updated_discount_log);
+	}
 
 	// Function to enable input to discount_percentage field after OTP authentication
 	enable_discount_input(fieldname) {
@@ -276,20 +279,21 @@ custom_app.PointOfSale.ItemDetails = class {
 	get_form_fields(item) {
 		const fields = [
 			"custom_free",
-			// "qty",
+			"qty",
 			'price_list_rate',
 			"rate",
 			"uom",
-			"custom_expiry_date",
+			// "custom_expiry_date",
 			//"conversion_factor",
 			"discount_percentage",
+			"custom_batch_number",
+			"custom_batch_expiry",
 			"discount_amount", // added field
 			//"custom_item_discount_amount",
 			//"warehouse",
 			//"actual_qty",
 			//"price_list_rate",
 			// "is_free_item",
-
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
@@ -365,23 +369,23 @@ custom_app.PointOfSale.ItemDetails = class {
 			// this.rate_control.refresh();
 		}
 		// Ensure frm.doc is checked for existence before accessing it
+		
+		
+		// if (this.discount_percentage_control && !this.allow_discount_change) {
+		// 	this.discount_percentage_control.df.read_only = 1;
+		// 	this.discount_percentage_control.refresh();
+		// }
+
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
 			const frm = me.events.get_frm();
-			if (frm.doc.customer_group === 'Senior Citizen') {
-				if (me.discount_percentage_control && !me.allow_discount_change) {
-					me.discount_percentage_control.df.read_only = 1;
-				}
+			if (frm.doc.customer_group === 'Senior Citizen'|| frm.doc.customer_group === 'PWD' ) {
+				return;
 			} else {
 				if (me.discount_percentage_control && !me.allow_discount_change) {
 					me.discount_percentage_control.df.read_only = 1;
 					me.discount_percentage_control.refresh();
 				}
 			}
-		}
-		
-		if (this.discount_percentage_control && !this.allow_discount_change) {
-			this.discount_percentage_control.df.read_only = 1;
-			this.discount_percentage_control.refresh();
 		}
 
 		if (this.warehouse_control) {

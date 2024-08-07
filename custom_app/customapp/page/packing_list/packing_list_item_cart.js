@@ -163,8 +163,8 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="item-qty-total-value">0.00</div>
 			</div>
 			<div class="vatable-sales-container mt-2"></div>
-			<div class="vat-exempt-container"></div>
-			<div class="zero-rated-container"></div>
+			<div class="vat-exempt-container mt-2"></div>
+			<div class="zero-rated-container mt-2"></div>
 			
 			
 			<div class="ex-total-container"></div>
@@ -206,6 +206,7 @@ custom_app.PointOfSale.ItemCart = class {
 			],
 			css_classes: [
 				["", "", "", "col-span-2 remove-btn"],
+				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
 				["", "", "", "col-span-2"],
 				// ["", "", "", "col-span-2 remove-btn"],
@@ -461,8 +462,6 @@ custom_app.PointOfSale.ItemCart = class {
 						this.$numpad_section.find(`.numpad-btn[data-button-value="${fieldname}"]`).click();
 					}
 				});
-
-
 			}
 		}
 		const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
@@ -649,7 +648,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (customer) {
 			return new Promise((resolve) => {
 				frappe.db
-					.get_value("Customer", customer, ["email_id", "mobile_no", 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program",
+					.get_value("Customer", customer, ["email_id", "mobile_no", "image", "loyalty_program",
 						"custom_osca_id", "custom_pwd_id"])
 					.then(({ message }) => {
 						const { loyalty_program } = message;
@@ -872,8 +871,6 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-
-
 		// console.log(frm.doc);
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
@@ -881,14 +878,16 @@ custom_app.PointOfSale.ItemCart = class {
 		// this.render_vat(frm.doc.custom_vat_amount)
 		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
+		
 		this.render_total_item_qty(frm.doc.items);
 
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.grand_total
 			: frm.doc.rounded_total;
 
+	
 		this.render_grand_total(grand_total);
-		this.render_taxes(frm.doc.taxes);
+		// this.render_taxes(frm.doc.taxes);
 		this.render_total_vat(frm.doc.total_taxes_and_charges);
 
 	}
@@ -909,20 +908,26 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".vatable-sales-container")
 			.html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VATable Sales")}: </span>
-					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("VATable Sales")}: 
+					</span>
+					<span style="flex-shrink: 0;  ">${format_currency(value, currency)}</span>
+					</span>
 				</div>
 			`);
 	}
+	
 
 	render_vat_exempt_sales(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".vat-exempt-container")
 			.html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VAT-Exempt Sales")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("VAT-Exempt Sales")}: 
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -933,8 +938,10 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".zero-rated-container")
 			.html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Zero Rated Sales")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("Zero Rated Sales")}: 
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -945,8 +952,10 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".vat-container")
 			.html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("VAT 12%")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("VAT 12%")}:
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -957,8 +966,10 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".total-vat-container")
 			.html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Total VAT")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("VAT 12%")}:
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -969,8 +980,10 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".ex-total-container")
 			.html(`
-				<div style="display: flex; justify-content: space-between;">
-					<span style="flex: 1;">${__("Ex Total")}: </span>
+				<div style="display: flex; align-items: center; width: 100%;">
+					<span style="flex: 1;">
+						${__("Ex Total")}: 
+					</span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -1101,7 +1114,6 @@ custom_app.PointOfSale.ItemCart = class {
 
 	set_cash_customer() {
 		const frm = this.events.get_frm();
-
 		// Get the value of "custom_customer_2"
 		const customCustomer2Value = frm.doc.custom_customer_2;
 
@@ -1113,9 +1125,17 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	render_cart_item(item_data, $item_to_update) {
+
+		// console.log("Item Data: ",item_data)
+
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
 		const customer_group = me.events.get_frm().doc.customer_group
+		const tax_rate = 0.12;
+		const no_vat = item_data.price_list_rate / (1 + tax_rate);
+
+		// const item_doc = frappe.get_doc('Item', item_data.item_name)
+		// console.log("Item Doc: ", item_doc);
 
 		if (!$item_to_update.length) {
 			this.$cart_items_wrapper.append(
@@ -1133,15 +1153,16 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
-			<!-- <div class="item-vat mx-3">
-				<strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
-			</div> -->
-			
+      
 			<div class="item-vat mx-3">
-				<strong>${format_currency(item_data.rate, currency)}</strong>
+				<strong>${getVatType(item_data)}</strong>
+			</div> 
+
+			<div class="item-vat mx-3">
+				<strong>${format_currency( item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.rate :  customer_group === "Senior Citizen" || customer_group === "PWD" ? no_vat : item_data.rate, currency)}</strong>
 			</div>
 			<div class="item-discount mx-3">
-				<strong>${Math.round(item_data.discount_percentage)}%</strong>
+				<strong>${(item_data.discount_percentage)}%</strong>
 			</div>
 			${get_rate_discount_html(customer_group)}`
 		);
@@ -1164,6 +1185,19 @@ custom_app.PointOfSale.ItemCart = class {
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
 
+		function getVatType(item_data) {
+			if (item_data.custom_vat_exempt_amount && item_data.custom_vat_exempt_amount != 0) {
+				return 'VAT-Exempt';
+			} else if (item_data.custom_vatable_amount && item_data.custom_vatable_amount != 0) {
+				return 'VATable';
+			} else if (item_data.custom_zero_rated_amount && item_data.custom_zero_rated_amount != 0) {
+				return 'Zero Rated';
+			} else {
+				return 'Unknown';
+			}
+		}
+
+
 		function get_rate_discount_html(customer_group) {
 
 
@@ -1179,25 +1213,21 @@ custom_app.PointOfSale.ItemCart = class {
 						</div>`;
 
 
-			} else if (customer_group === "Senior Citizen") {
 
-				// if (item_data.pricing_rules === "") {
-				// 	console.log('Pricing rule is empty')
-				// }
-
-				// console.log('Item Data: ', item_data)
+			} else if (customer_group === "Senior Citizen" || customer_group === "PWD") {
 
 				return `
-						<div class="item-qty-rate">
-							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-							<div class="item-rate-amount">
-								<div class="item-rate">${format_currency( item_data.pricing_rules === "" ? item_data.amount  : 
-									
-									item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount, currency)}</div>
-								
-							</div>
-						</div>`;
-
+					<div class="item-qty-rate">
+						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+						<div class="item-rate-amount">
+							<div class="item-rate">${format_currency(
+								item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.amount : 
+								(item_data.pricing_rules === "" ? item_data.amount : 
+									(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount)
+								), currency
+							)}</div>
+						</div>
+					</div>`;
 			} else {
 				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 					return `
@@ -1217,9 +1247,6 @@ custom_app.PointOfSale.ItemCart = class {
 						</div>`;
 				}
 			}
-
-
-
 
 		}
 
@@ -1490,8 +1517,6 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="customer-fields-container">
 					<div class="email_id-field"></div>
 					<div class="mobile_no-field"></div>
-					<div class="custom_transaction_type-field"></div>
-					<div class="custom_oscapwdid-field"></div>
 					<div class="custom_osca_id-field"></div>
 					<div class="custom_pwd_id-field"></div>
 					<div class="loyalty_program-field"></div>
@@ -1533,19 +1558,6 @@ custom_app.PointOfSale.ItemCart = class {
 				fieldtype: "Data",
 				placeholder: __("Enter customer's phone number"),
 			},
-			// {
-			// 	fieldname: "custom_transaction_type",
-			// 	label: __("Transaction Type"),
-			// 	fieldtype: "Select",
-			// 	options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
-			// 	placeholder: __("Enter customer's transaction type"),
-			// },
-			// {
-			// 	fieldname: "custom_oscapwdid",
-			// 	label: __("Osca or PWD ID"),
-			// 	fieldtype: "Data",
-			// 	placeholder: __("Enter customer's Osca or PWD ID"),
-			// },
 			{
 				fieldname: "loyalty_program",
 				label: __("Loyalty Program"),

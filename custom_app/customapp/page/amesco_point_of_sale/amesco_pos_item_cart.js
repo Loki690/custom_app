@@ -66,12 +66,16 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$component.append(
 			`<div class="cart-container">
 				<div class="abs-cart-container">
-					<div class="cart-label">${__("Item Cart")}</div>
+					<div class="cart-label" >${__("Item Cart")}</div>
 					<div class="cart-header">
 						<div class="name-header">${__("Item")}</div>
-				        <div class="qty-header">${__("Vat Type")}</div>
-						<div class="qty-header">${__("Disc %")}</div>
+
+						<div class="qty-header">${__("Vat Type")}</div>
+						<div class="qty-header">${__("Price")}</div>
+						<div class="qty-header" >${__("Disc %")}</div>
+
 						<div class="qty-header">${__("Quantity")}</div>
+						
 						<div class="rate-amount-header">${__("Amount")}</div>
 					</div>
 					<div class="cart-items-section"></div>
@@ -128,9 +132,9 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="net-total-value">0.00</div>
 			</div>
 
-			<div class="vat-container"></div>
-
 		 <div class="taxes-container"></div>
+		 <div class="vat-container"></div>
+		 <div class="total-vat-container"></div>
 			<div class="grand-total-container">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
@@ -595,7 +599,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (customer) {
 			return new Promise((resolve) => {
 				frappe.db
-					.get_value("Customer", customer, ["email_id", "mobile_no" , 'custom_oscapwdid', 'custom_transaction_type', "image", "loyalty_program",
+					.get_value("Customer", customer, ["email_id", "mobile_no" , "image", "loyalty_program",
 					"custom_osca_id", "custom_pwd_id"])
 					.then(({ message }) => {
 						const { loyalty_program } = message;
@@ -834,6 +838,7 @@ custom_app.PointOfSale.ItemCart = class {
 			
 		this.render_grand_total(grand_total);
 		this.render_taxes(frm.doc.taxes);
+		this.render_total_vat(frm.doc.total_taxes_and_charges);
 	}
 
 	render_net_total(value) {
@@ -890,6 +895,18 @@ custom_app.PointOfSale.ItemCart = class {
 			.html(`
 				<div style="display: flex; justify-content: space-between;">
 					<span style="flex: 1;">${__("VAT 12%")}: </span>
+					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
+				</div>
+			`);
+	}
+
+	render_total_vat(value) {
+		const currency = this.events.get_frm().doc.currency;
+		this.$totals_section
+			.find(".total-vat-container")
+			.html(`
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Total VAT")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -1040,7 +1057,8 @@ custom_app.PointOfSale.ItemCart = class {
 	render_cart_item(item_data, $item_to_update) {
 		const currency = this.events.get_frm().doc.currency;
 		const me = this;
-	
+		const customer_group = me.events.get_frm().doc.customer_group
+
 		if (!$item_to_update.length) {
 			this.$cart_items_wrapper.append(
 				`<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
@@ -1048,7 +1066,7 @@ custom_app.PointOfSale.ItemCart = class {
 			);
 			$item_to_update = this.get_cart_item(item_data);
 		}
-	
+
 		$item_to_update.html(
 			`${get_item_image_html()}
 			<div class="item-name-desc">
@@ -1057,17 +1075,22 @@ custom_app.PointOfSale.ItemCart = class {
 				</div>
 				${get_description_html()}
 			</div>
+			
 			<div class="item-vat mx-3">
-				<strong>${item_data.custom_is_item_vatable === 0 ? 'VAT-Exempt' : 'VATable'}</strong>
+				<strong>${getVatType(item_data)}</strong>
+			</div> 
+			
+			<div class="item-vat mx-3">
+				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
-			${get_rate_discount_html()}`
+			${get_rate_discount_html(customer_group)}`
 		);
-	
+
 		set_dynamic_rate_header_width();
-	
+
 		function set_dynamic_rate_header_width() {
 			const rate_cols = Array.from(me.$cart_items_wrapper.find(".item-rate-amount"));
 			me.$cart_header.find(".rate-amount-header").css("width", "");
@@ -1076,35 +1099,80 @@ custom_app.PointOfSale.ItemCart = class {
 				if ($(elm).width() > max_width) max_width = $(elm).width();
 				return max_width;
 			}, 0);
-	
+
 			max_width += 1;
 			if (max_width === 1) max_width = "";
-	
+
 			me.$cart_header.find(".rate-amount-header").css("width", max_width);
 			me.$cart_items_wrapper.find(".item-rate-amount").css("width", max_width);
 		}
-	
-		function get_rate_discount_html() {
-			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
-				return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
-							<div class="item-amount">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+
+
+		function getVatType(item_data) {
+			if (item_data.custom_vat_exempt_amount && item_data.custom_vat_exempt_amount != 0) {
+				return 'VAT-Exempt';
+			} else if (item_data.custom_vatable_amount && item_data.custom_vatable_amount != 0) {
+				return 'VATable';
+			} else if (item_data.custom_zero_rated_amount && item_data.custom_zero_rated_amount != 0) {
+				return 'Zero Rated';
 			} else {
-				return `
-					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
-						</div>
-					</div>`;
+				return 'Unknown';
 			}
 		}
-	
+
+		function get_rate_discount_html(customer_group) {
+
+
+			if (customer_group === "Zero Rated") {
+
+				return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
+								
+							</div>
+						</div>`;
+
+
+
+			} else if (customer_group === "Senior Citizen" || customer_group === "PWD") {
+
+				return `
+					<div class="item-qty-rate">
+						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+						<div class="item-rate-amount">
+							<div class="item-rate">${format_currency(
+								item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.amount : 
+								(item_data.pricing_rules === "" ? item_data.amount : 
+									(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount)
+								), currency
+							)}</div>
+						</div>
+					</div>`;
+
+			} else {
+				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
+					return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
+							</div>
+						</div>`;
+				} else {
+					return `
+						<div class="item-qty-rate">
+							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-rate-amount">
+								<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
+							</div>
+						</div>`;
+				}
+			}
+
+		}
+
 		function get_description_html() {
 			if (item_data.description) {
 				if (item_data.description.indexOf("<div>") !== -1) {
@@ -1122,7 +1190,7 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 			return ``;
 		}
-	
+
 		function get_item_image_html() {
 			const { image, item_name } = item_data;
 			if (!me.hide_images && image) {
@@ -1136,13 +1204,13 @@ custom_app.PointOfSale.ItemCart = class {
 				return `<div class="item-image item-abbr">${frappe.get_abbr(item_name)}</div>`;
 			}
 		}
-	
+
 		// Event listener for handling keydown events on cart items
-		this.$cart_items_wrapper.off('keydown', '.cart-item-wrapper').on('keydown', '.cart-item-wrapper', function(event) {
+		this.$cart_items_wrapper.off('keydown', '.cart-item-wrapper').on('keydown', '.cart-item-wrapper', function (event) {
 			const $items = me.$cart_items_wrapper.find('.cart-item-wrapper');
 			const currentIndex = $items.index($(this));
 			let nextIndex = currentIndex;
-	
+
 			switch (event.which) {
 				case 13: // Enter key
 					$(this).click(); // Trigger click event immediately on Enter key press
@@ -1156,10 +1224,10 @@ custom_app.PointOfSale.ItemCart = class {
 				default:
 					return; // Exit if other keys are pressed
 			}
-	
+
 			$items.eq(nextIndex).focus(); // Move focus to the next item
 		});
-	
+
 		// Add Ctrl+C shortcut to focus on the first cart item
 		frappe.ui.keys.add_shortcut({
 			shortcut: 'ctrl+c',
@@ -1370,8 +1438,6 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="customer-fields-container">
 					<div class="email_id-field"></div>
 					<div class="mobile_no-field"></div>
-					<div class="custom_transaction_type-field"></div>
-					<div class="custom_oscapwdid-field"></div>
 					<div class="custom_osca_id-field"></div>
 					<div class="custom_pwd_id-field"></div>
 					<div class="loyalty_program-field"></div>
@@ -1412,19 +1478,6 @@ custom_app.PointOfSale.ItemCart = class {
 				fieldtype: "Data",
 				placeholder: __("Enter customer's phone number"),
 			},
-			// {
-			// 	fieldname: "custom_transaction_type",
-			// 	label: __("Transaction Type"),
-			// 	fieldtype: "Select",
-			// 	options: "\nRegular-Retail\nRegular-Wholesale\nSenior Citizen\nPWD\nPhilpost\nZero Rated\nGoverment",
-			// 	placeholder: __("Enter customer's transaction type"),
-			// },
-			// {
-			// 	fieldname: "custom_oscapwdid",
-			// 	label: __("Osca or PWD ID"),
-			// 	fieldtype: "Data",
-			// 	placeholder: __("Enter customer's Osca or PWD ID"),
-			// },
 			{
 				fieldname: "loyalty_program",
 				label: __("Loyalty Program"),
