@@ -86,7 +86,8 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Item Code</th>
                                 <th>Name</th>
                                 <th>Vat Type</th>
-                                <th>Price</th>
+                                <th>Vatin Price</th>
+                                <th>Vatex Price</th>
                                 <th>UOM</th>
                                 <th>QTY</th>
                             </tr>
@@ -203,6 +204,9 @@ custom_app.PointOfSale.ItemSelector = class {
             indicator_color = "";
             qty_to_display = "";
         }
+        const tax_rate = 0.12;
+		const no_vat = price_list_rate / (1 + tax_rate);
+
 
         const item_description = description ? description : "Description not available";
 
@@ -216,6 +220,7 @@ custom_app.PointOfSale.ItemSelector = class {
             <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency( custom_is_vatable == 0 ? price_list_rate : no_vat, item.currency) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
             <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;

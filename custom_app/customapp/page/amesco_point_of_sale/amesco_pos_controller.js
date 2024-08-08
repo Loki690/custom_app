@@ -304,8 +304,6 @@ custom_app.PointOfSale.Controller = class {
 			primary_action_label: __('Authorize'),
 			primary_action: (values) => {
 				let password = values.password;
-				
-
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
 					args: { password: password},
@@ -334,9 +332,18 @@ custom_app.PointOfSale.Controller = class {
 	z_reading() {
 		const onSuccess = () => {
 			if (!this.$components_wrapper.is(":visible")) return;
-			let voucher = frappe.model.get_new_doc("POS Z Reading");
-			voucher.pos_profile = this.frm.doc.pos_profile;
-			frappe.set_route("Form", "POS Z Reading", voucher.name);
+			frappe.db.get_doc('POS Profile', this.frm.doc.pos_profile)
+			.then(pos_profile => {
+				let voucher = frappe.model.get_new_doc("POS Z Reading");
+				voucher.pos_profile = this.frm.doc.pos_profile;
+				voucher.date_from = pos_profile.custom_start_operating_date;
+				voucher.date_to = frappe.datetime.now_datetime();
+				frappe.set_route("Form", "POS Z Reading", voucher.name);
+			})
+			.catch(error => {
+				console.error("Error fetching POS Profile:", error);
+				frappe.msgprint(__('Failed to fetch POS Profile. Please try again.'));
+			});
 		};
 
 		this.showPasswordDialog('OIC Authorization Required for Z Reading', onSuccess);

@@ -16,13 +16,13 @@ def on_submit(doc, method):
     It creates a 'Cash Count Denomination Entry' record.
     """
     try:
-        create_cash_count_denomination_entry(doc.user, doc.pos_profile, doc.pos_opening_entry, doc.name)
+        create_cash_count_denomination_entry(doc.user, doc.pos_profile, doc.pos_opening_entry, doc.name, doc.custom_shift, doc)
     except frappe.exceptions.ValidationError as e:
         frappe.throw(frappe._("Validation Error: {0}").format(str(e)))
     except Exception as e:
         frappe.throw(frappe._("An error occurred during on_submit: {0}").format(str(e)))
 
-def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry_id, pos_closing_entry_id):
+def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry_id, pos_closing_entry_id, shift, doc):
 
     try:
     
@@ -31,6 +31,13 @@ def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry
         new_entry.custom_pos_profile = pos_profile
         new_entry.custom_pos_opening_entry_id = pos_opening_entry_id
         new_entry.custom_pos_closing_entry_id = pos_closing_entry_id
+        new_entry.custom_shift = shift
+        new_entry.custom_cash_sales = doc.custom_cash_sales
+        new_entry.custom_check_sales = doc.custom_check_sales
+        new_entry.custom_total_cashcheck_sales = doc.custom_total_cash_and_check_sales
+        new_entry.custom_cash_check_voucher = doc.custom_cash_and_check_voucher
+        new_entry.custom_sales_return = doc.custom_sales_return
+        
         default_denominations = [
             {"amount": 1000, "name": "1000 PESOS"},
             {"amount": 500, "name": "500 PESOS"},
