@@ -475,10 +475,13 @@
         this.price_list = res.message.selling_price_list;
       }
       this.selected_uom = "PC";
-      this.item_uom && this.item_uom.set_value("PC");
-      this.get_items({}).then(({ message }) => {
-        this.render_item_list(message.items);
-      });
+      if (this.item_uom) {
+        this.item_uom.set_value("PC");
+        this.item_uom.refresh();
+      }
+      const { message } = await this.get_items({});
+      this.render_item_list(message.items);
+      this.filter_items({ uom: this.selected_uom });
     }
     get_items({ start = 0, page_length = 40, search_term = "" }) {
       const doc = this.events.get_frm().doc;
@@ -507,8 +510,9 @@
         const item_html = this.get_item_html(item);
         this.$items_container.append(item_html);
       });
-      this.highlighted_row_index = 0;
+      this.highlighted_row_index = -1;
       this.highlight_row(this.highlighted_row_index);
+      console.log("Rendered Items: ", items);
     }
     get_item_html(item) {
       const me = this;
@@ -560,6 +564,12 @@
         parent: this.$component.find(".search-field"),
         render_input: true
       });
+      this.search_field.$input.on("input", () => {
+        let value = this.search_field.get_value().trim();
+        if (!value) {
+          this.load_items_data();
+        }
+      });
       this.item_group_field = frappe.ui.form.make_control({
         df: {
           label: __("Item Group"),
@@ -582,6 +592,12 @@
         },
         parent: this.$component.find(".item-group-field"),
         render_input: true
+      });
+      this.item_group_field.$input.on("input", () => {
+        let value = this.item_group_field.get_value().trim();
+        if (!value) {
+          this.load_items_data();
+        }
       });
       this.item_uom = frappe.ui.form.make_control({
         df: {
@@ -615,6 +631,7 @@
       this.$clear_search_btn.on("click", "a", () => {
         this.set_search_value("");
         this.search_field.set_focus();
+        this.load_items_data();
       });
     }
     set_search_value(value) {
@@ -1041,11 +1058,7 @@
         const dialog_is_open = document.querySelector(".modal.show");
         if (!selector_is_visible || this.search_field.get_value() === "")
           return;
-        if (this.items.length == 1) {
-          this.$items_container.find(".item-wrapper").click();
-          frappe.utils.play_sound("submit");
-          this.set_search_value("");
-        } else if (this.items.length == 0 && this.barcode_scanned) {
+        if (this.items.length == 0 && this.barcode_scanned) {
           frappe.show_alert({
             message: __("No items found. Scan barcode again."),
             indicator: "orange"
@@ -1068,17 +1081,8 @@
         }
       });
     }
-    focus_next_field() {
-      const customerField = document.querySelector("_init_customer_selector");
-      const doctorField = document.querySelector("init_doctor_selector");
-      if (document.activeElement === this.search_field.$input[0]) {
-        customerField.focus();
-      } else if (document.activeElement === customerField) {
-        doctorField.focus();
-      }
-    }
     navigate_up() {
-      if (this.highlighted_row_index > 0) {
+      if (this.highlighted_row_index > -1) {
         this.highlighted_row_index--;
         this.highlight_row(this.highlighted_row_index);
       }
@@ -1090,11 +1094,20 @@
       }
     }
     highlight_row(index) {
+      if (index === -1) {
+        this.$items_container.find(".item-wrapper").removeClass("highlight");
+        return;
+      }
       this.$items_container.find(".item-wrapper").removeClass("highlight");
-      this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+      if (index >= 0 && index < this.items.length) {
+        this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+      }
     }
     select_highlighted_item() {
-      this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index).click();
+      const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
+      if (highlightedItem.length) {
+        highlightedItem.click();
+      }
     }
     filter_items({ search_term = "", uom = "" } = {}) {
       if (search_term) {
@@ -6166,9 +6179,12 @@
         () => this.item_selector.toggle_component(),
         () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(false),
-        () => frappe.dom.unfreeze(),
-        () => this.item_selector.refresh()
-      ]);
+        () => this.item_selector.load_items_data(),
+        () => frappe.dom.unfreeze()
+      ]).catch((error) => {
+        console.error("An error occurred during add_new_order sequence:", error);
+        frappe.dom.unfreeze();
+      });
     }
     remove_pos_cart_items() {
       localStorage.removeItem("posCartItems");
@@ -6244,14 +6260,15 @@
             options: `
 						<div class="form-group">
 							<label for="password_field">${__("Password")}</label>
-							<input type="password" id="password_field" class="form-control" required>
+							<input type="password" id="save_draft" class="form-control" required>
 						</div>
 					`
           }
         ],
         primary_action_label: __("Ok"),
         primary_action: () => {
-          let password = document.getElementById("password_field").value;
+          let password = document.getElementById("save_draft").value;
+          let errorOccurred = false;
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
             args: { password },
@@ -6260,24 +6277,38 @@
                 this.set_pharmacist_assist(this.frm, r.message.name);
                 this.frm.save(void 0, void 0, void 0, () => {
                   frappe.show_alert({
-                    message: __("There was an error saving the document."),
+                    message: "There was an error saving the document.",
                     indicator: "red"
                   });
                   frappe.utils.play_sound("error");
+                  errorOccurred = true;
                 }).then(() => {
+                  if (errorOccurred)
+                    return;
+                  this.passwordDialog.hide();
+                  this.order_summary.load_summary_of(this.frm.doc, true);
+                  this.order_summary.print_receipt();
+                  localStorage.removeItem("posCartItems");
+                  frappe.show_alert({
+                    message: "Invoice Printed",
+                    indicator: "blue"
+                  });
                   frappe.run_serially([
                     () => frappe.dom.freeze(),
                     () => this.make_new_invoice(),
-                    () => frappe.dom.unfreeze()
+                    () => frappe.dom.unfreeze(),
+                    () => window.location.reload()
                   ]);
-                  this.passwordDialog.hide();
-                  localStorage.removeItem("posCartItems");
+                }).catch((err) => {
+                  console.error("Unexpected error:", err);
+                  errorOccurred = true;
                 });
               } else {
                 frappe.show_alert({
-                  message: r.message ? r.message.error : __("Incorrect password"),
+                  message: "Incorrect password",
                   indicator: "red"
                 });
+                errorOccurred = true;
               }
             }
           });
@@ -6285,7 +6316,7 @@
       });
       this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
         setTimeout(() => {
-          const passwordField = document.getElementById("password_field");
+          const passwordField = document.getElementById("save_draft");
           if (passwordField) {
             passwordField.focus();
           }
@@ -6372,7 +6403,6 @@
       frappe.set_route("Form", "Cash Count Denomination Entry", voucher.name);
     }
     init_item_selector() {
-      this.selected_uom = "PC";
       this.item_selector = new custom_app.PointOfSale.ItemSelector({
         wrapper: this.$components_wrapper,
         pos_profile: this.pos_profile,
@@ -6515,6 +6545,7 @@
           },
           submit_invoice: () => {
             let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
+            let errorOccurred = false;
             if (payment_amount < this.frm.doc.grand_total) {
               const insufficientPaymentDialog = new frappe.ui.Dialog({
                 title: __("Insufficient Payment"),
@@ -6531,32 +6562,50 @@
               insufficientPaymentDialog.show();
               return;
             }
-            this.frm.save("Submit").then((r) => {
-              this.toggle_components(false);
-              this.cart.toggle_component(false);
-              this.order_summary.toggle_component(false);
-              this.remove_pos_cart_items();
-              this.order_summary.load_summary_of(this.frm.doc, true);
-              this.order_summary.print_receipt();
+            this.frm.set_value("base_paid_amount", this.frm.doc.grand_total);
+            this.frm.save(void 0, void 0, void 0, () => {
               frappe.show_alert({
-                indicator: "green",
-                message: __("Order successfully completed")
+                message: "There was an error saving the document.",
+                indicator: "red"
               });
-              let change_amount = payment_amount - this.frm.doc.grand_total;
-              const changeDialog = new frappe.ui.Dialog({
-                title: __("Change Amount"),
-                primary_action_label: __("OK"),
-                primary_action: () => {
-                  window.location.reload();
-                  changeDialog.hide();
-                }
+              frappe.utils.play_sound("error");
+              errorOccurred = true;
+            }).then((r) => {
+              if (errorOccurred)
+                return;
+              this.frm.save("Submit").then((r2) => {
+                this.toggle_components(false);
+                this.cart.toggle_component(false);
+                this.order_summary.toggle_component(false);
+                this.remove_pos_cart_items();
+                this.order_summary.load_summary_of(this.frm.doc, true);
+                this.order_summary.print_receipt();
+                frappe.show_alert({
+                  indicator: "green",
+                  message: __("Order successfully completed")
+                });
+                let change_amount = payment_amount - this.frm.doc.grand_total;
+                const changeDialog = new frappe.ui.Dialog({
+                  title: __("Change Amount"),
+                  primary_action_label: __("OK"),
+                  primary_action: () => {
+                    window.location.reload();
+                    changeDialog.hide();
+                  }
+                });
+                changeDialog.body.innerHTML = `
+								<div style="text-align: center; font-size: 60px; margin: 20px 0;">
+									${format_currency(change_amount)}
+								</div>
+							`;
+                changeDialog.show();
               });
-              changeDialog.body.innerHTML = `
-							<div style="text-align: center; font-size: 60px; margin: 20px 0;">
-								${format_currency(change_amount)}
-							</div>
-						`;
-              changeDialog.show();
+            }).catch((err) => {
+              frappe.show_alert({
+                message: __("An unexpected error occurred while saving the document. Please try again."),
+                indicator: "red"
+              });
+              errorOccurred = true;
             });
           }
         }
@@ -6671,7 +6720,8 @@
                     () => this.frm.refresh(name),
                     () => this.cart.load_invoice(),
                     () => this.item_selector.toggle_component(true),
-                    () => this.toggle_recent_order_list(false)
+                    () => this.toggle_recent_order_list(false),
+                    () => this.item_selector.load_items_data()
                   ]).then(() => {
                     this.passwordDialog.hide();
                   });
@@ -7075,4 +7125,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.BPOVFYOP.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.ASXZXCOK.js.map

@@ -242,7 +242,6 @@ custom_app.PointOfSale.Controller = class {
 		this.init_item_details();
 		this.init_item_cart();
 		this.init_payments();
-
 	}
 
 	prepare_menu() {
@@ -416,10 +415,15 @@ custom_app.PointOfSale.Controller = class {
 			() => this.item_selector.toggle_component(),
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(false),
-			() => frappe.dom.unfreeze(),
-			() => this.item_selector.refresh(),
-		]);
+			() => this.item_selector.load_items_data(), // Load item data after refreshing the item selector
+			() => frappe.dom.unfreeze(), // Unfreeze the UI once the data is loaded
+		]).catch((error) => {
+			console.error("An error occurred during add_new_order sequence:", error);
+			frappe.dom.unfreeze(); // Ensure UI is unfrozen in case of an error
+		});
 	}
+	
+	
 
 
 	remove_pos_cart_items() {
@@ -512,44 +516,72 @@ custom_app.PointOfSale.Controller = class {
 					options: `
 						<div class="form-group">
 							<label for="password_field">${__('Password')}</label>
-							<input type="password" id="password_field" class="form-control" required>
+							<input type="password" id="save_draft" class="form-control" required>
 						</div>
 					`
 				}
 			],
 			primary_action_label: __('Ok'),
 			primary_action: () => {
-				// Retrieve the password value from the HTML field
-				let password = document.getElementById('password_field').value;
+				let password = document.getElementById('save_draft').value;
+			
+				let errorOccurred = false;  // Flag to track errors
+			
 				frappe.call({
 					method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message && r.message.name) {
 							this.set_pharmacist_assist(this.frm, r.message.name);
+			
 							this.frm
 								.save(undefined, undefined, undefined, () => {
+									// Error handling during save
 									frappe.show_alert({
-										message: __("There was an error saving the document."),
+										message: ("There was an error saving the document."),
 										indicator: "red",
 									});
 									frappe.utils.play_sound("error");
+									errorOccurred = true;  // Set error flag
 								})
 								.then(() => {
+									if (errorOccurred) return;  // Skip further actions if an error occurred
+			
+									this.passwordDialog.hide();
+			
+									// Load the order summary and print the receipt
+									this.order_summary.load_summary_of(this.frm.doc, true);
+									this.order_summary.print_receipt();
+			
+									// Remove stored data from local storage
+									localStorage.removeItem('posCartItems');
+			
+									// Show alert after printing
+									frappe.show_alert({
+										message: ("Invoice Printed"),
+										indicator: "blue",
+									});
+			
+									// Only run this block if no error occurred
 									frappe.run_serially([
 										() => frappe.dom.freeze(),
 										() => this.make_new_invoice(),
 										() => frappe.dom.unfreeze(),
+										() => window.location.reload()
 									]);
-	
-									this.passwordDialog.hide();
-									localStorage.removeItem('posCartItems'); // remove stored data from local storage
+								})
+								.catch((err) => {
+									// Handle any unanticipated errors
+									console.error("Unexpected error:", err);
+									errorOccurred = true;  // Set error flag
 								});
 						} else {
+							// Handle incorrect password
 							frappe.show_alert({
-								message: r.message ? r.message.error : __('Incorrect password'),
+								message: ('Incorrect password'),
 								indicator: 'red'
 							});
+							errorOccurred = true;  // Set error flag
 						}
 					}
 				});
@@ -560,7 +592,7 @@ custom_app.PointOfSale.Controller = class {
 		this.passwordDialog.$wrapper.on('shown.bs.modal', () => {
 			// Use a short timeout to ensure the dialog is fully rendered
 			setTimeout(() => {
-				const passwordField = document.getElementById('password_field');
+				const passwordField = document.getElementById('save_draft');
 				if (passwordField) {
 					passwordField.focus();
 				}
@@ -669,7 +701,7 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	init_item_selector() {
-		this.selected_uom = "PC";
+
 		this.item_selector = new custom_app.PointOfSale.ItemSelector({
 			wrapper: this.$components_wrapper,
 			pos_profile: this.pos_profile,
@@ -838,6 +870,7 @@ custom_app.PointOfSale.Controller = class {
 					// Calculate the total payment amount
 					let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
 
+					let errorOccurred = false;  // Flag to track errors
 					// Check if payment is sufficient
 					if (payment_amount < this.frm.doc.grand_total) {
 						// Show dialog indicating insufficient payment
@@ -848,55 +881,88 @@ custom_app.PointOfSale.Controller = class {
 								insufficientPaymentDialog.hide();
 							}
 						});
-
+				
 						insufficientPaymentDialog.body.innerHTML = `
 							<div style="text-align: center; font-size: 30px; margin: 20px 0;">
 								${__('The payment amount is not enough to cover the grand total.')}
 							</div>
 						`;
-
+				
 						insufficientPaymentDialog.show();
 						return; // Exit the function if payment is not sufficient
 					}
-
+				
 					// Proceed with submitting the invoice if payment is sufficient
-					this.frm.save('Submit').then((r) => {
-						this.toggle_components(false);
-						// Customized Layout to toggle off Cart
-						this.cart.toggle_component(false);
-						this.order_summary.toggle_component(false);
-						this.remove_pos_cart_items();
-						this.order_summary.load_summary_of(this.frm.doc, true);
-						this.order_summary.print_receipt();
 
+					this.frm.set_value('base_paid_amount', this.frm.doc.grand_total);
+
+					this.frm
+					.save(undefined, undefined, undefined, () => {
+						// Error handling during save
 						frappe.show_alert({
-							indicator: "green",
-							message: __("Order successfully completed"),
+							message: ("There was an error saving the document."),
+							indicator: "red",
+						});
+						frappe.utils.play_sound("error");
+						errorOccurred = true;  // Set error flag
+					}).then((r) => {
+						if (errorOccurred) return;  
+						this.frm
+						.save('Submit')
+						.then((r) => {  
+							// If there is no error in the response, proceed with further actions
+							this.toggle_components(false);
+							// Customized Layout to toggle off Cart
+							this.cart.toggle_component(false);
+							this.order_summary.toggle_component(false);
+							this.remove_pos_cart_items();
+							this.order_summary.load_summary_of(this.frm.doc, true);
+							this.order_summary.print_receipt();
+				
+							frappe.show_alert({
+								indicator: "green",
+								message: __("Order successfully completed"),
+							});
+				
+							// Calculate the change
+							let change_amount = payment_amount - this.frm.doc.grand_total;
+				
+							// Show change in a dialog
+							const changeDialog = new frappe.ui.Dialog({
+								title: __('Change Amount'),
+								primary_action_label: __('OK'),
+								primary_action: () => {
+									window.location.reload();
+									changeDialog.hide();
+								}
+							});
+							// Add custom HTML with large text for the change amount
+							changeDialog.body.innerHTML = `
+								<div style="text-align: center; font-size: 60px; margin: 20px 0;">
+									${format_currency(change_amount)}
+								</div>
+							`;
+				
+							changeDialog.show();
 						});
 
-						// Calculate the change
-						let change_amount = payment_amount - this.frm.doc.grand_total;
-
-						// Show change in a dialog
-						const changeDialog = new frappe.ui.Dialog({
-							title: __('Change Amount'),
-							primary_action_label: __('OK'),
-							primary_action: () => {
-								// this.remove_pos_cart_items();
-								window.location.reload();
-								changeDialog.hide();
-							}
+					})
+					.catch((err) => {
+						// Handle any unanticipated errors
+						frappe.show_alert({
+							message: __('An unexpected error occurred while saving the document. Please try again.'),
+							indicator: 'red'
 						});
-						// Add custom HTML with large text for the change amount
-						changeDialog.body.innerHTML = `
-							<div style="text-align: center; font-size: 60px; margin: 20px 0;">
-								${format_currency(change_amount)}
-							</div>
-						`;
-
-						changeDialog.show();
+						errorOccurred = true;  // Set error flag
 					});
+
+
+					
+
 				}
+				
+				
+				
 
 			},
 		});
@@ -1094,6 +1160,7 @@ custom_app.PointOfSale.Controller = class {
 									() => this.cart.load_invoice(),
 									() => this.item_selector.toggle_component(true),
 									() => this.toggle_recent_order_list(false),
+									() => this.item_selector.load_items_data(), 
 								]).then(() => {
 									this.passwordDialog.hide();
 								});

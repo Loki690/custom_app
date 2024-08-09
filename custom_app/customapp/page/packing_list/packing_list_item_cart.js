@@ -223,7 +223,7 @@ custom_app.PointOfSale.ItemCart = class {
 		);
 
 		this.$numpad_section.append(
-			`<div class="numpad-btn checkout-btn" data-button-value="checkout">${__("Checkout")}</div>`
+			`<div class="numpad-btn checkout-btn" data-button-value="checkout">${__("Order")}</div>`
 		);
 	}
 

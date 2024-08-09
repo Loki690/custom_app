@@ -23,6 +23,7 @@ custom_app.PointOfSale.ItemSelector = class {
         
     }
 
+
 	//For highlight items 
 
 	inject_css() {
@@ -109,13 +110,20 @@ custom_app.PointOfSale.ItemSelector = class {
             const res = await frappe.db.get_value("POS Profile", this.pos_profile, "selling_price_list");
             this.price_list = res.message.selling_price_list;
         }
-
+    
+        // Set the UOM to PC
         this.selected_uom = "PC";
-        this.item_uom && this.item_uom.set_value("PC");
-
-        this.get_items({}).then(({ message }) => {
-            this.render_item_list(message.items);
-        });
+        if (this.item_uom) {
+            this.item_uom.set_value("PC");
+            this.item_uom.refresh();
+        }
+    
+        // Retrieve and render items immediately after setting the values
+        const { message } = await this.get_items({});
+        this.render_item_list(message.items);
+    
+        // Trigger the filter function to apply the UOM filter
+        this.filter_items({ uom: this.selected_uom });
 
 
     }
@@ -149,25 +157,25 @@ custom_app.PointOfSale.ItemSelector = class {
        render_item_list(items) {
         // Clear the current items in the container
         this.$items_container.html("");
-    
-        // Filter items where the unit of measurement (UOM) is "PC"
-        // const filtered_items_pc_uom = items.filter(item => item.uom === "PC");
-        // console.log("Filtered Items (UOM = PC): ", filtered_items_pc_uom);
-    
-        // Set the class property `items` to the filtered items
+        
+        // Set the class property items to the provided items
         this.items = items;
-        // Log all filtered items to the console
-       
+    
+        // Render each item and append it to the container
         items.forEach((item) => {
             const item_html = this.get_item_html(item);
             this.$items_container.append(item_html);
         });
-
-
-        this.highlighted_row_index = 0;
+    
+        // Set highlighted_row_index to -1 to ensure no item is highlighted by default
+        this.highlighted_row_index = -1;
+    
+        // Ensure no item is highlighted
         this.highlight_row(this.highlighted_row_index);
+    
+        // Log the items to the console for debugging
+        console.log("Rendered Items: ", items);
     }
-
 
     get_item_html(item) {
         const me = this;
@@ -230,6 +238,14 @@ custom_app.PointOfSale.ItemSelector = class {
 			render_input: true,
 		});
 
+        this.search_field.$input.on('input', () => {
+            let value = this.search_field.get_value().trim(); // Get and trim the input value
+            if (!value) {
+                // If the value is empty, call load_items_data
+                this.load_items_data();
+            }
+        });
+
 		this.item_group_field = frappe.ui.form.make_control({
 			df: {
 				label: __("Item Group"),
@@ -254,6 +270,14 @@ custom_app.PointOfSale.ItemSelector = class {
 			render_input: true,
 		});
 
+        this.item_group_field.$input.on('input', () => {
+            let value = this.item_group_field.get_value().trim(); // Get and trim the input value
+            if (!value) {
+                // If the value is empty, call load_items_data
+                this.load_items_data();
+            }
+        });
+
 
         this.item_uom = frappe.ui.form.make_control({
             df: {
@@ -269,6 +293,8 @@ custom_app.PointOfSale.ItemSelector = class {
             parent: this.$component.find(".item-uoms"),
             render_input: true,
         });
+
+     
 
         // this.item_uom.set_value("PC");
         this.item_uom.refresh();
@@ -295,6 +321,7 @@ custom_app.PointOfSale.ItemSelector = class {
 		this.$clear_search_btn.on("click", "a", () => {
 			this.set_search_value("");
 			this.search_field.set_focus();
+            this.load_items_data();
 		});
 	}
 
@@ -765,14 +792,14 @@ custom_app.PointOfSale.ItemSelector = class {
                 const search_term = e.target.value;
                 this.filter_items({ search_term });
             }, 300);
-    
+
             this.$clear_search_btn.toggle(Boolean(this.search_field.$input.val()));
         });
-    
+
         this.search_field.$input.on("focus", () => {
             this.$clear_search_btn.toggle(Boolean(this.search_field.$input.val()));
         });
-    
+
         this.$component.on("keydown", (e) => {
             const key = e.which || e.keyCode;
             switch (key) {
@@ -796,8 +823,11 @@ custom_app.PointOfSale.ItemSelector = class {
             }
         });
     }
+    
 
     
+
+
     attach_shortcuts() {
         const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
         this.search_field.parent.attr("title", `${ctrl_label}+S`);
@@ -838,11 +868,7 @@ custom_app.PointOfSale.ItemSelector = class {
         
             if (!selector_is_visible || this.search_field.get_value() === "") return;
         
-            if (this.items.length == 1) {
-                this.$items_container.find(".item-wrapper").click();
-                frappe.utils.play_sound("submit");
-                this.set_search_value("");
-            } else if (this.items.length == 0 && this.barcode_scanned) {
+            if (this.items.length == 0 && this.barcode_scanned) {
                 frappe.show_alert({
                     message: __("No items found. Scan barcode again."),
                     indicator: "orange",
@@ -873,21 +899,9 @@ custom_app.PointOfSale.ItemSelector = class {
     }
     
     // The rest of your class definition...
-    
-    focus_next_field() {
-     
-        const customerField = document.querySelector("_init_customer_selector"); 
-        const doctorField = document.querySelector("init_doctor_selector"); 
-    
-        if (document.activeElement === this.search_field.$input[0]) {
-            customerField.focus();
-        } else if (document.activeElement === customerField) {
-            doctorField.focus();
-        }
-    }
-    
+ 
     navigate_up() {
-        if (this.highlighted_row_index > 0) {
+        if (this.highlighted_row_index > -1) {
             this.highlighted_row_index--;
             this.highlight_row(this.highlighted_row_index);
         }
@@ -901,14 +915,27 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     highlight_row(index) {
+        // Ensure no highlight initially
+        if (index === -1) {
+            this.$items_container.find(".item-wrapper").removeClass("highlight");
+            return;
+        }
+
+        // Remove highlight from all items
         this.$items_container.find(".item-wrapper").removeClass("highlight");
-        this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+
+        // Highlight the item at the current index
+        if (index >= 0 && index < this.items.length) {
+            this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+        }
     }
 
     select_highlighted_item() {
-        this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index).click();
+        const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
+        if (highlightedItem.length) {
+            highlightedItem.click(); // Simulate click action
+        }
     }
-
     
     
 

@@ -335,6 +335,7 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	save_draft_invoice() {
+		
 		if (this.passwordDialog) {
 			this.passwordDialog.hide();
 			this.passwordDialog.$wrapper.remove();
@@ -375,10 +376,10 @@ custom_app.PointOfSale.Controller = class {
 		}
 	
 		// Destroy any previous password dialogs
-		if (this.passwordDialog) {
-			this.passwordDialog.$wrapper.remove();
-			delete this.passwordDialog;
-		}
+		// if (this.passwordDialog) {
+		// 	this.passwordDialog.$wrapper.remove();
+		// 	delete this.passwordDialog;
+		// }
 	
 		// Create and show the password dialog
 		this.passwordDialog = new frappe.ui.Dialog({
@@ -390,55 +391,82 @@ custom_app.PointOfSale.Controller = class {
 					options: `
 						<div class="form-group">
 							<label for="password_field">${__('Password')}</label>
-							<input type="password" id="password_field" class="form-control" required>
+							<input type="password" id="sumbit_password" class="form-control" required>
 						</div>
 					`
 				}
 			],
 			primary_action_label: __('Ok'),
 			primary_action: () => {
-				let password = document.getElementById('password_field').value;
-		
+				let password = document.getElementById('sumbit_password').value;
+			
+				let errorOccurred = false;  // Flag to track errors
+			
 				frappe.call({
 					method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message && r.message.name) {
 							this.set_pharmacist_assist(this.frm, r.message.name);
+							console.log("USER DATA",r.message)
+			
 							this.frm
 								.save(undefined, undefined, undefined, () => {
+									// Error handling during save
 									frappe.show_alert({
 										message: ("There was an error saving the document."),
 										indicator: "red",
 									});
 									frappe.utils.play_sound("error");
+									errorOccurred = true;  // Set error flag
 								})
 								.then(() => {
-									frappe.run_serially([
-										() => frappe.dom.freeze(),
-										() => this.make_new_invoice(),
-										() => frappe.dom.unfreeze(),
-									]);
+									if (errorOccurred) return;  // Skip further actions if an error occurred
+			
 									this.passwordDialog.hide();
-		
+			
+									// Load the order summary and print the receipt
 									this.order_summary.load_summary_of(this.frm.doc, true);
 									this.order_summary.print_receipt();
-									window.location.reload(); // reload after successful entered password
-									localStorage.removeItem('posCartItems'); // remove stored data from local storage
+			
+									// Remove stored data from local storage
+									localStorage.removeItem('posCartItems');
+			
+									// Show alert after printing
 									frappe.show_alert({
 										message: ("Invoice Printed"),
 										indicator: "blue",
 									});
+			
+									// Only run this block if no error occurred
+									frappe.run_serially([
+										() => frappe.dom.freeze(),
+										() => this.make_new_invoice(),
+										() => frappe.dom.unfreeze(),
+										() => window.location.reload()
+									]);
+								})
+								.catch((err) => {
+									// Handle any unanticipated errors
+									frappe.show_alert({
+										message: __('An unexpected error occurred while saving the document. Please try again.'),
+										indicator: 'red'
+									});
+									errorOccurred = true;  // Set error flag
 								});
+
 						} else {
+							// Handle incorrect password
 							frappe.show_alert({
 								message: ('Incorrect password'),
 								indicator: 'red'
 							});
+							errorOccurred = true;  // Set error flag
 						}
 					}
 				});
 			}
+			
 		});
 
 
@@ -446,7 +474,7 @@ custom_app.PointOfSale.Controller = class {
 		this.passwordDialog.$wrapper.on('shown.bs.modal', () => {
 			// Use a short timeout to ensure the dialog is fully rendered
 			setTimeout(() => {
-				const passwordField = document.getElementById('password_field');
+				const passwordField = document.getElementById('sumbit_password');
 				if (passwordField) {
 					passwordField.focus();
 				}
@@ -456,6 +484,122 @@ custom_app.PointOfSale.Controller = class {
 		this.passwordDialog.show();
 	}
 	
+
+	// save_draft_invoice() {
+	// 	if (!this.$components_wrapper.is(":visible")) return;
+	// 	let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+
+	// 	if (payment_amount < this.frm.doc.grand_total) {
+	// 		// Show dialog indicating insufficient payment
+	// 		const insufficientPaymentDialog = new frappe.ui.Dialog({
+	// 			title: __('Insufficient Payment'),
+	// 			primary_action_label: __('OK'),
+	// 			primary_action: () => {
+	// 				insufficientPaymentDialog.hide();
+	// 			}
+	// 		});
+
+	// 		insufficientPaymentDialog.body.innerHTML = `
+	// 			<div style="text-align: center; font-size: 30px; margin: 20px 0;">
+	// 				${__('The payment amount is not enough to cover the grand total.')}
+	// 			</div>
+	// 		`;
+
+	// 		insufficientPaymentDialog.show();
+	// 		return; // Exit the function if payment is not sufficient
+	// 	}
+
+	// 	if (this.frm.doc.items.length == 0) {
+	// 		frappe.show_alert({
+	// 			message: __("You must add atleast one item to complete the order."),
+	// 			indicator: "red",
+	// 		});
+	// 		frappe.utils.play_sound("error");
+	// 		return;
+	// 	}
+
+	// 	const passwordDialog = new frappe.ui.Dialog({
+	// 		title: __('Enter Your Password'),
+	// 		fields: [
+	// 			{
+	// 				fieldname: 'password',
+	// 				fieldtype: 'Password',
+	// 				label: __('Password'),
+	// 				reqd: 1
+	// 			}
+	// 		],
+	// 		primary_action_label: __('Ok'),
+	// 		primary_action: (values) => {
+    //             let password = values.password;
+	// 			let errorOccurred = false;
+				
+    //             frappe.call({
+    //                 method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
+    //                 args: { password: password },
+    //                 callback: (r) => {
+    //                     if (r.message) {
+    //                         if(r.message.name) {
+    //                             this.set_pharmacist_assist(this.frm, r.message.name)
+	// 							console.log(this.frm, r.message.name)
+    //                             this.frm
+    //                                 .save(undefined, undefined, undefined, () => {
+    //                                     frappe.show_alert({
+    //                                         message: ("There was an error saving the document."),
+    //                                         indicator: "red",
+    //                                     });
+    //                                     frappe.utils.play_sound("error");
+	// 									errorOccurred = true;  
+    //                                 })
+    //                                 .then(() => {
+
+	// 									if (errorOccurred) return; 
+
+    //                                     frappe.run_serially([
+    //                                         () => frappe.dom.freeze(),
+    //                                         () => this.make_new_invoice(),
+    //                                         () => frappe.dom.unfreeze(),
+	// 										() => window.location.reload()
+
+    //                                     ]);
+    //                                     passwordDialog.hide();
+
+    //                                     this.order_summary.load_summary_of(this.frm.doc, true);
+    //                                     this.order_summary.print_receipt();
+    //                                    // reload after successfull entered password
+    //                                     localStorage.removeItem('posCartItems'); // remove stored data from local storage
+    //                                     frappe.show_alert({
+    //                                         message: ("Invoice Printed"),
+    //                                         indicator: "blue",
+    //                                     }).catch((err) => {
+	// 										// Handle any unanticipated errors
+	// 										frappe.show_alert({
+	// 											message: __('An unexpected error occurred while saving the document. Please try again.'),
+	// 											indicator: 'red'
+	// 										});
+	// 										errorOccurred = true;  // Set error flag
+	// 									});
+    //                                 });
+    //                         }else{
+    //                             frappe.show_alert({
+    //                                 message: ('Incorrect password'),
+    //                                 indicator: 'red'
+    //                             });
+	// 							errorOccurred = true;  
+    //                         }
+    //                     } else {
+    //                         frappe.show_alert({
+    //                             message: ('Incorrect password'),
+    //                             indicator: 'red'
+    //                         });
+    //                     }
+    //                 }
+    //             });
+    //         }
+	// 	})
+	// 	passwordDialog.show();
+	// }
+
 
 	save_draft() {
 		// Cleanup any existing dialog
@@ -493,37 +637,65 @@ custom_app.PointOfSale.Controller = class {
 			],
 			primary_action_label: __('Ok'),
 			primary_action: () => {
-				// Retrieve the password value from the HTML field
 				let password = document.getElementById('password_field').value;
+			
+				let errorOccurred = false;  // Flag to track errors
+			
 				frappe.call({
 					method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message && r.message.name) {
 							this.set_pharmacist_assist(this.frm, r.message.name);
+			
 							this.frm
 								.save(undefined, undefined, undefined, () => {
+									// Error handling during save
 									frappe.show_alert({
-										message: __("There was an error saving the document."),
+										message: ("There was an error saving the document."),
 										indicator: "red",
 									});
 									frappe.utils.play_sound("error");
+									errorOccurred = true;  // Set error flag
 								})
 								.then(() => {
+									if (errorOccurred) return;  // Skip further actions if an error occurred
+			
+									this.passwordDialog.hide();
+			
+									// Load the order summary and print the receipt
+									this.order_summary.load_summary_of(this.frm.doc, true);
+									this.order_summary.print_receipt();
+			
+									// Remove stored data from local storage
+									localStorage.removeItem('posCartItems');
+			
+									// Show alert after printing
+									frappe.show_alert({
+										message: ("Invoice Printed"),
+										indicator: "blue",
+									});
+			
+									// Only run this block if no error occurred
 									frappe.run_serially([
 										() => frappe.dom.freeze(),
 										() => this.make_new_invoice(),
 										() => frappe.dom.unfreeze(),
+										() => window.location.reload()
 									]);
-	
-									this.passwordDialog.hide();
-									localStorage.removeItem('posCartItems'); // remove stored data from local storage
+								})
+								.catch((err) => {
+									// Handle any unanticipated errors
+									console.error("Unexpected error:", err);
+									errorOccurred = true;  // Set error flag
 								});
 						} else {
+							// Handle incorrect password
 							frappe.show_alert({
-								message: r.message ? r.message.error : __('Incorrect password'),
+								message: ('Incorrect password'),
 								indicator: 'red'
 							});
+							errorOccurred = true;  // Set error flag
 						}
 					}
 				});
@@ -854,6 +1026,7 @@ custom_app.PointOfSale.Controller = class {
 									() => this.cart.load_invoice(),
 									() => this.item_selector.toggle_component(true),
 									() => this.toggle_recent_order_list(false),
+									() => this.item_selector.load_items_data()
 								]).then(() => {
 									this.passwordDialog.hide();
 								});

@@ -205,7 +205,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
-            MAX(batch.name) as batch_number,
+            MAX(batch.name) as batch_no,
             MAX(batch.expiry_date) AS latest_expiry_date
         FROM
             `tabItem` item

@@ -129,7 +129,7 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
+    get_items({ start = 0, page_length = 20, search_term = "" }) {
         const doc = this.events.get_frm().doc;
         const price_list = (doc && doc.selling_price_list) || this.price_list;
         let { item_group, pos_profile } = this;
@@ -173,7 +173,7 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$items_container.append(item_html);
         });
 
-        this.highlighted_row_index = 0;
+        this.highlighted_row_index = -1;
         this.highlight_row(this.highlighted_row_index);
     }
 
@@ -234,14 +234,22 @@ custom_app.PointOfSale.ItemSelector = class {
         //branch field
         // this.$component.find(".branch-field").html("");
 
-        this.search_field = frappe.ui.form.make_control({
-            df: {
-                label: __("Search"),
-                fieldtype: "Data",
-                placeholder: __("Search by item code, serial number or barcode"),
-            },
-            parent: this.$component.find(".search-field"),
-            render_input: true,
+    	this.search_field = frappe.ui.form.make_control({
+			df: {
+				label: __("Search"),
+				fieldtype: "Data",
+				placeholder: __("Search by item code, serial number or barcode"),
+			},
+			parent: this.$component.find(".search-field"),
+			render_input: true,
+		});
+
+        this.search_field.$input.on('input', () => {
+            let value = this.search_field.get_value().trim(); // Get and trim the input value
+            if (!value) {
+                // If the value is empty, call load_items_data
+                this.load_items_data();
+            }
         });
 
         this.item_group_field = frappe.ui.form.make_control({
@@ -295,21 +303,22 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     attach_clear_btn() {
-        this.search_field.$wrapper.find(".control-input").append(
-            `<span class="link-btn" style="top: 2px;">
+		this.search_field.$wrapper.find(".control-input").append(
+			`<span class="link-btn" style="top: 2px;">
 				<a class="btn-open no-decoration" title="${__("Clear")}">
 					${frappe.utils.icon("close", "sm")}
 				</a>
 			</span>`
-        );
+		);
 
-        this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn");
+		this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn");
 
-        this.$clear_search_btn.on("click", "a", () => {
-            this.set_search_value("");
-            this.search_field.set_focus();
-        });
-    }
+		this.$clear_search_btn.on("click", "a", () => {
+			this.set_search_value("");
+			this.search_field.set_focus();
+            this.load_items_data();
+		});
+	}
 
     set_search_value(value) {
         $(this.search_field.$input[0]).val(value).trigger("input");
@@ -681,6 +690,9 @@ custom_app.PointOfSale.ItemSelector = class {
                                             me.search_field.set_focus();
 
                                             dialog.hide();
+
+
+                                            
                                         } else {
                                             console.log("No matching draft POS invoices found.");
                                         }
@@ -836,18 +848,15 @@ custom_app.PointOfSale.ItemSelector = class {
 
 
         frappe.ui.keys.on("enter", (e) => {
-            if (e.ctrlKey) return; // Skip handling if Ctrl + Enter is pressed
+
+            if (e.ctrlKey) return; // Skip handling if Shift + Enter is pressed
         
             const selector_is_visible = this.$component.is(":visible");
             const dialog_is_open = document.querySelector(".modal.show");
         
             if (!selector_is_visible || this.search_field.get_value() === "") return;
         
-            if (this.items.length == 1) {
-                this.$items_container.find(".item-wrapper").click();
-                frappe.utils.play_sound("submit");
-                this.set_search_value("");
-            } else if (this.items.length == 0 && this.barcode_scanned) {
+            if (this.items.length == 0 && this.barcode_scanned) {
                 frappe.show_alert({
                     message: __("No items found. Scan barcode again."),
                     indicator: "orange",
@@ -860,20 +869,21 @@ custom_app.PointOfSale.ItemSelector = class {
             if (dialog_is_open && document.activeElement.tagName === "SELECT") {
                 // Trigger action to add the selected item to the cart
                 this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
-
+        
                 const itemCode = unescape(this.selectedItem.attr("data-item-code"));
                 const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
                 const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
-
+        
                 this.events.item_selected({
                     field: "qty",
                     value: quantity,
                     item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate },
                 });
-
+        
                 this.search_field.set_focus();
             }
         });
+        
         
 
     }
@@ -907,7 +917,7 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     navigate_up() {
-        if (this.highlighted_row_index > 0) {
+        if (this.highlighted_row_index > -1) {
             this.highlighted_row_index--;
             this.highlight_row(this.highlighted_row_index);
         }
@@ -921,14 +931,28 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     highlight_row(index) {
+        // Ensure no highlight initially
+        if (index === -1) {
+            this.$items_container.find(".item-wrapper").removeClass("highlight");
+            return;
+        }
+
+        // Remove highlight from all items
         this.$items_container.find(".item-wrapper").removeClass("highlight");
-        this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+
+        // Highlight the item at the current index
+        if (index >= 0 && index < this.items.length) {
+            this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+        }
     }
 
     select_highlighted_item() {
-        this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index).click();
+        const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
+        if (highlightedItem.length) {
+            highlightedItem.click(); // Simulate click action
+        }
     }
-
+    
 
 
 

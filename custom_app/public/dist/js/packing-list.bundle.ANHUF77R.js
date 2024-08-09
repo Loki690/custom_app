@@ -4035,7 +4035,7 @@
       this.render_item_list(message.items);
       this.filter_items({ uom: this.selected_uom });
     }
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
+    get_items({ start = 0, page_length = 20, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list;
       let { item_group, pos_profile } = this;
@@ -4062,7 +4062,7 @@
         const item_html = this.get_item_html(item);
         this.$items_container.append(item_html);
       });
-      this.highlighted_row_index = 0;
+      this.highlighted_row_index = -1;
       this.highlight_row(this.highlighted_row_index);
     }
     get_item_html(item) {
@@ -4111,6 +4111,12 @@
         },
         parent: this.$component.find(".search-field"),
         render_input: true
+      });
+      this.search_field.$input.on("input", () => {
+        let value = this.search_field.get_value().trim();
+        if (!value) {
+          this.load_items_data();
+        }
       });
       this.item_group_field = frappe.ui.form.make_control({
         df: {
@@ -4167,6 +4173,7 @@
       this.$clear_search_btn.on("click", "a", () => {
         this.set_search_value("");
         this.search_field.set_focus();
+        this.load_items_data();
       });
     }
     set_search_value(value) {
@@ -4593,11 +4600,7 @@
         const dialog_is_open = document.querySelector(".modal.show");
         if (!selector_is_visible || this.search_field.get_value() === "")
           return;
-        if (this.items.length == 1) {
-          this.$items_container.find(".item-wrapper").click();
-          frappe.utils.play_sound("submit");
-          this.set_search_value("");
-        } else if (this.items.length == 0 && this.barcode_scanned) {
+        if (this.items.length == 0 && this.barcode_scanned) {
           frappe.show_alert({
             message: __("No items found. Scan barcode again."),
             indicator: "orange"
@@ -4640,7 +4643,7 @@
       }
     }
     navigate_up() {
-      if (this.highlighted_row_index > 0) {
+      if (this.highlighted_row_index > -1) {
         this.highlighted_row_index--;
         this.highlight_row(this.highlighted_row_index);
       }
@@ -4652,11 +4655,20 @@
       }
     }
     highlight_row(index) {
+      if (index === -1) {
+        this.$items_container.find(".item-wrapper").removeClass("highlight");
+        return;
+      }
       this.$items_container.find(".item-wrapper").removeClass("highlight");
-      this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+      if (index >= 0 && index < this.items.length) {
+        this.$items_container.find(".item-wrapper").eq(index).addClass("highlight");
+      }
     }
     select_highlighted_item() {
-      this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index).click();
+      const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
+      if (highlightedItem.length) {
+        highlightedItem.click();
+      }
     }
     filter_items({ search_term = "", uom = "" } = {}) {
       if (search_term) {
@@ -4906,7 +4918,7 @@
 			</div>`
       );
       this.$numpad_section.append(
-        `<div class="numpad-btn checkout-btn" data-button-value="checkout">${__("Checkout")}</div>`
+        `<div class="numpad-btn checkout-btn" data-button-value="checkout">${__("Order")}</div>`
       );
     }
     bind_events() {
@@ -9707,10 +9719,6 @@
         frappe.utils.play_sound("error");
         return;
       }
-      if (this.passwordDialog) {
-        this.passwordDialog.$wrapper.remove();
-        delete this.passwordDialog;
-      }
       this.passwordDialog = new frappe.ui.Dialog({
         title: __("Enter Your Password"),
         fields: [
@@ -9720,47 +9728,59 @@
             options: `
 						<div class="form-group">
 							<label for="password_field">${__("Password")}</label>
-							<input type="password" id="password_field" class="form-control" required>
+							<input type="password" id="sumbit_password" class="form-control" required>
 						</div>
 					`
           }
         ],
         primary_action_label: __("Ok"),
         primary_action: () => {
-          let password = document.getElementById("password_field").value;
+          let password = document.getElementById("sumbit_password").value;
+          let errorOccurred = false;
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
             args: { password },
             callback: (r) => {
               if (r.message && r.message.name) {
                 this.set_pharmacist_assist(this.frm, r.message.name);
+                console.log("USER DATA", r.message);
                 this.frm.save(void 0, void 0, void 0, () => {
                   frappe.show_alert({
                     message: "There was an error saving the document.",
                     indicator: "red"
                   });
                   frappe.utils.play_sound("error");
+                  errorOccurred = true;
                 }).then(() => {
-                  frappe.run_serially([
-                    () => frappe.dom.freeze(),
-                    () => this.make_new_invoice(),
-                    () => frappe.dom.unfreeze()
-                  ]);
+                  if (errorOccurred)
+                    return;
                   this.passwordDialog.hide();
                   this.order_summary.load_summary_of(this.frm.doc, true);
                   this.order_summary.print_receipt();
-                  window.location.reload();
                   localStorage.removeItem("posCartItems");
                   frappe.show_alert({
                     message: "Invoice Printed",
                     indicator: "blue"
                   });
+                  frappe.run_serially([
+                    () => frappe.dom.freeze(),
+                    () => this.make_new_invoice(),
+                    () => frappe.dom.unfreeze(),
+                    () => window.location.reload()
+                  ]);
+                }).catch((err) => {
+                  frappe.show_alert({
+                    message: __("An unexpected error occurred while saving the document. Please try again."),
+                    indicator: "red"
+                  });
+                  errorOccurred = true;
                 });
               } else {
                 frappe.show_alert({
                   message: "Incorrect password",
                   indicator: "red"
                 });
+                errorOccurred = true;
               }
             }
           });
@@ -9768,7 +9788,7 @@
       });
       this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
         setTimeout(() => {
-          const passwordField = document.getElementById("password_field");
+          const passwordField = document.getElementById("sumbit_password");
           if (passwordField) {
             passwordField.focus();
           }
@@ -9809,6 +9829,7 @@
         primary_action_label: __("Ok"),
         primary_action: () => {
           let password = document.getElementById("password_field").value;
+          let errorOccurred = false;
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
             args: { password },
@@ -9817,24 +9838,38 @@
                 this.set_pharmacist_assist(this.frm, r.message.name);
                 this.frm.save(void 0, void 0, void 0, () => {
                   frappe.show_alert({
-                    message: __("There was an error saving the document."),
+                    message: "There was an error saving the document.",
                     indicator: "red"
                   });
                   frappe.utils.play_sound("error");
+                  errorOccurred = true;
                 }).then(() => {
+                  if (errorOccurred)
+                    return;
+                  this.passwordDialog.hide();
+                  this.order_summary.load_summary_of(this.frm.doc, true);
+                  this.order_summary.print_receipt();
+                  localStorage.removeItem("posCartItems");
+                  frappe.show_alert({
+                    message: "Invoice Printed",
+                    indicator: "blue"
+                  });
                   frappe.run_serially([
                     () => frappe.dom.freeze(),
                     () => this.make_new_invoice(),
-                    () => frappe.dom.unfreeze()
+                    () => frappe.dom.unfreeze(),
+                    () => window.location.reload()
                   ]);
-                  this.passwordDialog.hide();
-                  localStorage.removeItem("posCartItems");
+                }).catch((err) => {
+                  console.error("Unexpected error:", err);
+                  errorOccurred = true;
                 });
               } else {
                 frappe.show_alert({
-                  message: r.message ? r.message.error : __("Incorrect password"),
+                  message: "Incorrect password",
                   indicator: "red"
                 });
+                errorOccurred = true;
               }
             }
           });
@@ -10112,7 +10147,8 @@
                     () => this.frm.refresh(name),
                     () => this.cart.load_invoice(),
                     () => this.item_selector.toggle_component(true),
-                    () => this.toggle_recent_order_list(false)
+                    () => this.toggle_recent_order_list(false),
+                    () => this.item_selector.load_items_data()
                   ]).then(() => {
                     this.passwordDialog.hide();
                   });
@@ -10472,4 +10508,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.JHK2N6C6.js.map
+//# sourceMappingURL=packing-list.bundle.ANHUF77R.js.map

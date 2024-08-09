@@ -380,10 +380,12 @@ custom_app.PointOfSale.Payment = class {
 			this.selected_mode.set_value(remaining_amount);
 		}
 	}
-
+	
 	attach_shortcuts() {
 		const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
 		this.$component.find(".submit-order-btn").attr("title", `${ctrl_label}+Enter`);
+	
+		// Ctrl + Enter shortcut for submitting the order
 		frappe.ui.keys.on("ctrl+enter", () => {
 			const payment_is_visible = this.$component.is(":visible");
 			const active_mode = this.$payment_modes.find(".border-primary");
@@ -391,16 +393,17 @@ custom_app.PointOfSale.Payment = class {
 				this.$component.find(".submit-order-btn").click();
 			}
 		});
-
+	
+		// Tab key shortcut for switching between payment modes
 		frappe.ui.keys.add_shortcut({
 			shortcut: "tab",
 			action: () => {
 				const payment_is_visible = this.$component.is(":visible");
 				let active_mode = this.$payment_modes.find(".border-primary");
 				active_mode = active_mode.length ? active_mode.attr("data-mode") : undefined;
-
+	
 				if (!active_mode) return;
-
+	
 				const mode_of_payments = Array.from(this.$payment_modes.find(".mode-of-payment")).map((m) =>
 					$(m).attr("data-mode")
 				);
@@ -409,7 +412,7 @@ custom_app.PointOfSale.Payment = class {
 				const next_mode_to_be_clicked = this.$payment_modes.find(
 					`.mode-of-payment[data-mode="${mode_of_payments[next_mode_index]}"]`
 				);
-
+	
 				if (payment_is_visible && mode_index != next_mode_index) {
 					next_mode_to_be_clicked.click();
 				}
@@ -420,7 +423,10 @@ custom_app.PointOfSale.Payment = class {
 			ignore_inputs: true,
 			page: cur_page.page.page,
 		});
+	
+		
 	}
+	
 
 	toggle_numpad() {
 		// pass
