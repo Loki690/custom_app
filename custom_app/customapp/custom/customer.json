@@ -262,7 +262,9 @@
    "creation": "2024-07-12 17:29:34.891414",
    "default": null,
    "depends_on": "eval:doc.customer_type=='Individual';",
+
    "description": "Write N/A if none",
+
    "docstatus": 0,
    "dt": "Customer",
    "fetch_from": null,
@@ -324,7 +326,9 @@
    "creation": "2024-07-12 17:29:34.758555",
    "default": null,
    "depends_on": "eval:doc.customer_type=='Individual';",
+
    "description": "Write N/A if none",
+
    "docstatus": 0,
    "dt": "Customer",
    "fetch_from": null,
@@ -527,7 +531,9 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-08-06 10:12:10.561309",
+
    "default_value": null,
    "doc_type": "Customer",
    "docstatus": 0,
@@ -535,7 +541,9 @@
    "field_name": null,
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 10:12:10.561309",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-main-field_order",
@@ -558,7 +566,9 @@
    "field_name": "tax_category",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.158799",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-tax_category-default",
@@ -581,7 +591,9 @@
    "field_name": "customer_group",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.152991",
+8
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-customer_group-default",
@@ -604,7 +616,9 @@
    "field_name": "gender",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.145470",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-gender-mandatory_depends_on",
@@ -627,7 +641,9 @@
    "field_name": "customer_type",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.140423",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-customer_type-default",
@@ -650,7 +666,9 @@
    "field_name": "territory",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.135450",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-territory-depends_on",
@@ -673,7 +691,9 @@
    "field_name": "lead_name",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.129630",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-lead_name-depends_on",
@@ -696,7 +716,9 @@
    "field_name": "opportunity_name",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.124608",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-opportunity_name-depends_on",
@@ -719,7 +741,9 @@
    "field_name": "account_manager",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.119531",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-account_manager-depends_on",
@@ -742,7 +766,9 @@
    "field_name": "customer_name",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.113836",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-customer_name-mandatory_depends_on",
@@ -765,7 +791,9 @@
    "field_name": "customer_group",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.108742",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-customer_group-allow_in_quick_entry",
@@ -788,7 +816,9 @@
    "field_name": "customer_group",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.103515",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-customer_group-mandatory_depends_on",
@@ -811,7 +841,9 @@
    "field_name": "customer_group",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.097840",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-customer_group-depends_on",
@@ -834,7 +866,9 @@
    "field_name": "mobile_no",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.092434",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-mobile_no-mandatory_depends_on",
@@ -857,7 +891,9 @@
    "field_name": "email_id",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.087433",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-email_id-label",
@@ -880,7 +916,9 @@
    "field_name": "naming_series",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.076709",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-naming_series-reqd",
@@ -903,7 +941,9 @@
    "field_name": "naming_series",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.071533",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-naming_series-hidden",
@@ -926,7 +966,9 @@
    "field_name": null,
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.066512",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-main-autoname",
@@ -949,7 +991,9 @@
    "field_name": "naming_series",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-08-06 09:56:22.060823",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Customer-naming_series-options",
