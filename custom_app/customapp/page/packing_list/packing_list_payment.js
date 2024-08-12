@@ -147,6 +147,8 @@ custom_app.PointOfSale.Payment = class {
 			$(`.approved-by`).hide();
 			$(`.gift-code`).hide();
 			$(`.button-code`).hide();
+			$(`.amesco-code`).hide();
+			$(`.button-amesco-plus`).hide();
 			$(`.save-button`).hide();
 			$(`.discard-button`).hide();
 			$(`.cash-button`).hide();
@@ -227,9 +229,10 @@ custom_app.PointOfSale.Payment = class {
 					mode_clicked.find(".gift-code").css("display", "flex");
 					mode_clicked.find(".button-code").css("display", "flex");
 					mode_clicked.find(".discard-button").css("display", "flex");
-				}
-	
-	
+				} else if (mode === "amesco_plus") {
+					mode_clicked.find(".amesco-code").css("display", "flex");
+					mode_clicked.find(".button-amesco-plus").css("display", "flex");
+				} 
 				// me.selected_mode = me[`${mode}_control`];
 				me.selected_mode && me.selected_mode.$input.get();
 				me.auto_set_remaining_amount();
@@ -618,6 +621,12 @@ custom_app.PointOfSale.Payment = class {
 								</div>
 						   `;
 							break;
+						case "Amesco Plus":
+							paymentModeHtml += `
+							<div class="${mode} amesco-code"></div>
+							<div class="${mode} button-amesco-plus mt-2" ></div>
+							   `;
+								break;
 					}
 		
 					paymentModeHtml += `
@@ -2116,8 +2125,6 @@ custom_app.PointOfSale.Payment = class {
 									frappe.db.get_doc("Amesco Gift Certificate", code_value)
 									.then(gift_cert => {
 										frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
-									
-
 										frappe.msgprint({
 											title: __('Success'),
 											message: __('Gift Certificate payment details have been saved.'),
@@ -2125,7 +2132,6 @@ custom_app.PointOfSale.Payment = class {
 											primary_action: {
 												label: __('OK'),
 												action: function() {
-													// Close the dialog
 													frappe.msg_dialog.hide();
 												}
 											}
@@ -2153,31 +2159,19 @@ custom_app.PointOfSale.Payment = class {
 					},
 					parent: this.$payment_modes.find(`.${mode}.button-code`)[0], // Ensure correct parent DOM element
 					render_input: true
-
-					
-
-
-
 				});
 
 				button.refresh();
-
-
 				let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
-
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
-			
 				const me = this;
 				// Attach an event listener to the save button
-				
+
 				discard_button.on('click', function() {
 					me[`${mode}_control`].set_value('');
-				
 					// let reference_no = reference_no_control.get_value()
-
 					frappe.model.set_value(p.doctype, p.name, "amount", null);
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-			
 					frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
@@ -2189,14 +2183,10 @@ custom_app.PointOfSale.Payment = class {
 							}
 						}
 					});
-
 				});
-
 				const controls = [
 					me[`${mode}_control`],
-				
 				];
-			
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -2204,70 +2194,87 @@ custom_app.PointOfSale.Payment = class {
 						}
 					});
 				});
-
-
-
-				// Retrieve existing custom_code if it exists
-				// let existing_custom_code = frappe.model.get_value(p.doctype, p.name, "custom_code");
-
-				// // Create a new input control for Gift Code
-				// let custom_code = frappe.ui.form.make_control({
-				// 	df: {
-				// 		label: 'Gift Code',
-				// 		fieldtype: "Data",
-				// 		placeholder: '1234',
-				// 		onchange: function () {
-				// 			let gift_code_value = this.value;
-
-				// 			// Function to set custom_code and then get the gift certificate
-				// 			function setCustomCodeAndGetGiftCert() {
-				// 				// Set custom_code field value in the payment document
-				// 				frappe.model.set_value(p.doctype, p.name, "custom_code", gift_code_value);
-
-				// 				if(gift_code_value) {
-				// 					frappe.db.get_doc("Amesco Gift Certificate", gift_code_value)
-				// 					.then(gift_cert => {
-				// 						// Set the amount in the payment document based on the gift certificate amount
-				// 						console.log('Gift Cert: ', gift_cert);
-				// 						frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
-				// 					})
-				// 					.catch(error => {
-				// 						console.error("Error retrieving gift certificate:", error);
-				// 						frappe.msgprint({
-				// 							title: __('Error'),
-				// 							indicator: 'red',
-				// 							message: __('Invalid Gift Code. Please check the code and try again.')
-				// 						});
-				// 					});
-				// 				}
-
-				// 				// Retrieve the gift certificate document based on the provided gift code
-
-				// 			}
-
-				// 			// Call the function to set custom_code and get the gift certificate
-				// 			setCustomCodeAndGetGiftCert();
-				// 		}
-				// 	},
-				// 	parent: this.$payment_modes.find(`.${mode}.gift-code`)[0], // Ensure correct parent DOM element
-				// 	render_input: true
-				// });
-
-				// // Set the existing custom_code value to the input control if it exists
-				// custom_code.set_value(existing_custom_code || '');
-				// custom_code.refresh();
 			}
 
+			if (p.mode_of_payment === "Amesco Plus") {
+				let button = frappe.ui.form.make_control({
+					df: {
+						label: 'Scan',
+						fieldtype: 'Button',
+						btn_size: 'sm', // xs, sm, lg
+						click: function () {
+							console.log('Click');
+							new frappe.ui.Scanner({
+								dialog: true, // open camera scanner in a dialog
+								multiple: false, // stop after scanning one value
+								on_scan(data) {
+									// Assuming the scanned data is comma-separated
+									let scannedData = data.decodedText.split(',');
+									console.log("scannedData", scannedData);
+									// Extracting fields from the scanned data
+									let voucher_code = scannedData[0];
+									let user_id = scannedData[1];
+									// let date = scannedData[3];
+									let email = scannedData[4];
+									let amesco_points = scannedData[2];
+
+									let details_dialog = new frappe.ui.Dialog({
+										title: __('Scanned Amesco Plus User'),
+										fields: [
+											{
+												label: 'Voucher Code',
+												fieldname: 'voucher_code',
+												fieldtype: 'Data',
+												read_only: 1,
+												default: voucher_code
+											},
+											{
+												label: 'User ID',
+												fieldname: 'user_id',
+												fieldtype: 'Data',
+												read_only: 1,
+												default: user_id
+											},
+											{
+												label: 'Email',
+												fieldname: 'email',
+												fieldtype: 'Data',
+												read_only: 1,
+												default: email
+											},
+											{
+												label: 'Redeem Points',
+												fieldname: 'points',
+												fieldtype: 'Data',
+												read_only: 1,
+												default: amesco_points
+											}
+										],
+										primary_action_label: __('Ok'),
+										primary_action: function() {
+											frappe.model.set_value(p.doctype, p.name, "custom_am_voucher_code", voucher_code);
+											frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
+											frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
+											frappe.model.set_value(p.doctype, p.name, "amount", flt(amesco_points));
+											details_dialog.hide();
+										}
+									});
+									details_dialog.show();
+								}
+							})
+						}
+						
+					},
+					parent: this.$payment_modes.find(`.${mode}.button-amesco-plus`)[0],
+					render_input: true
+				});
+				button.refresh();
+			}
 			// this[`${mode}_control`].toggle_label(true);
 			this[`${mode}_control`].set_value(p.amount);
-
-
-
 		});
 		this.render_loyalty_points_payment_mode();
 		this.attach_cash_shortcuts(doc);
-
-
 	}
 
 
