@@ -1421,7 +1421,7 @@
       });
       this.$component.on("click", ".add-discount-wrapper", () => {
         if (!this.is_oic_authenticated) {
-          const passwordDialog2 = new frappe.ui.Dialog({
+          const passwordDialog = new frappe.ui.Dialog({
             title: __("Enter OIC Password"),
             fields: [
               {
@@ -1442,7 +1442,7 @@
                   if (r2.message) {
                     this.is_oic_authenticated = true;
                     this.show_discount_control();
-                    passwordDialog2.hide();
+                    passwordDialog.hide();
                   } else {
                     frappe.show_alert({
                       message: __("Incorrect password or user is not an OIC"),
@@ -1453,7 +1453,7 @@
               });
             }
           });
-          passwordDialog2.show();
+          passwordDialog.show();
         } else {
           const can_edit_discount = this.$add_discount_elem.find(".edit-discount-btn").length;
           if (!this.discount_field || can_edit_discount)
@@ -2709,7 +2709,7 @@
     oic_authentication(fieldname, item) {
       const me = this;
       const doc = me.events.get_frm();
-      const passwordDialog2 = new frappe.ui.Dialog({
+      const passwordDialog = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
           {
@@ -2732,7 +2732,7 @@
                     message: __("Verified"),
                     indicator: "green"
                   });
-                  passwordDialog2.hide();
+                  passwordDialog.hide();
                   me.enable_discount_input(fieldname);
                   me.set_discount_log(doc, item);
                   me.is_oic_authenticated = true;
@@ -2752,7 +2752,7 @@
           });
         }
       });
-      passwordDialog2.show();
+      passwordDialog.show();
     }
     set_discount_log(doc, item) {
       let current_discount_log = doc.doc.custom_manual_dicsount || "";
@@ -4971,7 +4971,7 @@
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.model.set_value(p.doctype, p.name, "custom_customer", customer);
-            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", charge_invoice_number);
+            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", charge_invoice_no);
             frappe.model.set_value(p.doctype, p.name, "custom_po_number", po_number);
             frappe.model.set_value(p.doctype, p.name, "custom_representative", representative);
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", id_number);
@@ -6109,7 +6109,7 @@
       });
     }
     showPasswordDialog(title, onSuccess) {
-      const passwordDialog2 = new frappe.ui.Dialog({
+      const passwordDialog = new frappe.ui.Dialog({
         title: __(title),
         fields: [
           {
@@ -6131,7 +6131,7 @@
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog2.hide();
+                passwordDialog.hide();
                 onSuccess();
               } else {
                 frappe.show_alert({
@@ -6143,7 +6143,7 @@
           });
         }
       });
-      passwordDialog2.show();
+      passwordDialog.show();
     }
     z_reading() {
       const onSuccess = () => {
@@ -6382,7 +6382,7 @@
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog.hide();
+                this.passwordDialog.hide();
                 if (!this.$components_wrapper.is(":visible"))
                   return;
                 let voucher = frappe.model.get_new_doc("POS Closing Entry");
@@ -6775,7 +6775,7 @@
       });
     }
     oic_delete_confirm(name) {
-      const passwordDialog2 = new frappe.ui.Dialog({
+      const passwordDialog = new frappe.ui.Dialog({
         title: __("Enter OIC Password"),
         fields: [
           {
@@ -6801,7 +6801,7 @@
                 frappe.model.delete_doc(this.frm.doc.doctype, name, () => {
                   this.recent_order_list.refresh_list();
                   this.recent_order_list.toggle_component(true);
-                  passwordDialog2.hide();
+                  passwordDialog.hide();
                 });
               } else {
                 frappe.show_alert({
@@ -6813,7 +6813,7 @@
           });
         }
       });
-      passwordDialog2.show();
+      passwordDialog.show();
     }
     toggle_recent_order_list(show2) {
       this.recent_order_list.toggle_component(show2);
@@ -7146,4 +7146,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.6TQWLMFO.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.GDWEBRK5.js.map

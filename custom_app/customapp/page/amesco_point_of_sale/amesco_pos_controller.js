@@ -718,8 +718,9 @@ custom_app.PointOfSale.Controller = class {
 								message: __('Verified'),
 								indicator: 'green'
 							});
-							passwordDialog.hide();
-
+							this.passwordDialog.hide();
+	
+							// Create and open the POS Closing Entry form
 							if (!this.$components_wrapper.is(":visible")) return;
 	
 							let voucher = frappe.model.get_new_doc("POS Closing Entry");

@@ -8580,7 +8580,7 @@
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.model.set_value(p.doctype, p.name, "custom_customer", customer);
-            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", charge_invoice_number);
+            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", charge_invoice_no);
             frappe.model.set_value(p.doctype, p.name, "custom_po_number", po_number);
             frappe.model.set_value(p.doctype, p.name, "custom_representative", representative);
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", id_number);
@@ -10674,4 +10674,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.4SAIPIVT.js.map
+//# sourceMappingURL=packing-list.bundle.35B6B643.js.map
