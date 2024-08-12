@@ -67,7 +67,7 @@ custom_app.PointOfSale.Controller = class {
 
 					// Only include "Cash" payment method
 					if (mode_of_payment === "Cash") {
-						const opening_amount = "2000";
+						const opening_amount = "1500";
 						dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
 					}
 				});
@@ -555,53 +555,6 @@ custom_app.PointOfSale.Controller = class {
 								indicator: 'green'
 							});
 							passwordDialog.hide();
-
-							// if (!this.$components_wrapper.is(":visible")) return;
-
-							// frappe.call({
-							// 	method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_and_submit_pos_closing_entry",
-							// 	args: {
-							// 		cashier: frappe.session.user,
-							// 		pos_profile: this.frm.doc.pos_profile,
-							// 		company: this.frm.doc.company,
-							// 		pos_opening_entry_id: this.pos_opening,
-							// 		posting_date: frappe.datetime.now_date(),
-							// 		posting_time: frappe.datetime.now_time()
-							// 	},
-							// 	callback: function(r) {
-							// 		if (r.message) {
-
-							// 			frappe.utils.print(
-							// 				'POS Closing Entry',
-							// 				r.message,
-							// 				'Custom X Reading',
-							// 				'Amesco Drug Corporation',
-							// 				'en' || frappe.boot.lang
-							// 			);
-
-							// 			passwordDialog.hide();
-							// 			frappe.show_alert({
-							// 				message: __(`Success ${ r.message}`),
-							// 				indicator: 'green'
-							// 			});
-
-							// 			  // Reload the page after 3 seconds
-							// 			  setTimeout(function(){
-							// 				location.reload();
-							// 			}, 3000);
-
-							// 			//frappe.set_route("Form", "POS Closing Entry", r.message);
-							// 		} else {
-							// 			frappe.show_alert({
-							// 				message: __('Failed to create POS Closing Entry'),
-							// 				indicator: 'red'
-							// 			});
-							// 		}
-							// 	}
-							// });
-
-
-
 							if (!this.$components_wrapper.is(":visible")) return;
 
 							let voucher = frappe.model.get_new_doc("POS Closing Entry");
