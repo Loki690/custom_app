@@ -290,16 +290,8 @@ def export_pos_invoices_as_txt():
         file_path = get_files_path('POS_Invoices.txt')
         with open(file_path, 'w') as file:
             file.write(content)
+
         return file_path
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), _("Error exporting POS invoices as text file"))
         frappe.throw(_("An error occurred while exporting POS invoices: {0}").format(str(e)))
-    
-def validate(doc, method):
-    # Check if the document is a return and the customer is set to 'Cash'
-    if doc.return_against and doc.customer == 'Cash':
-        frappe.throw(frappe._("Please change the customer from 'Cash' to the actual customer's name before saving."))
-    
-    # Check if the customer field is empty
-    if not doc.customer:  # Check if the customer field is empty or None
-        frappe.throw(frappe._("Customer cannot be empty. Please specify the actual customer's name before saving."))

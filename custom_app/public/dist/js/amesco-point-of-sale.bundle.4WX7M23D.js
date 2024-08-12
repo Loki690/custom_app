@@ -512,6 +512,7 @@
       });
       this.highlighted_row_index = -1;
       this.highlight_row(this.highlighted_row_index);
+      console.log("Rendered Items: ", items);
     }
     get_item_html(item) {
       const me = this;
@@ -1396,8 +1397,8 @@
             frappe.call({
               method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
               args: { password },
-              callback: (r2) => {
-                if (r2.message && r2.message.name) {
+              callback: (r) => {
+                if (r.message && r.message.name) {
                   this.events.edit_cart();
                   this.toggle_checkout_btn(true);
                   this.passwordDialog.hide();
@@ -1437,8 +1438,8 @@
               frappe.call({
                 method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
                 args: { password, role },
-                callback: (r2) => {
-                  if (r2.message) {
+                callback: (r) => {
+                  if (r.message) {
                     this.is_oic_authenticated = true;
                     this.show_discount_control();
                     passwordDialog.hide();
@@ -1684,9 +1685,9 @@
               frappe.call({
                 method: "erpnext.accounts.doctype.loyalty_program.loyalty_program.get_loyalty_program_details_with_points",
                 args: { customer, loyalty_program, silent: true },
-                callback: (r2) => {
-                  const { loyalty_points, conversion_factor } = r2.message;
-                  if (!r2.exc) {
+                callback: (r) => {
+                  const { loyalty_points, conversion_factor } = r.message;
+                  if (!r.exc) {
                     this.customer_info = __spreadProps(__spreadValues({}, message), {
                       customer,
                       loyalty_points,
@@ -2423,8 +2424,8 @@
               customer: current_customer,
               value: this.value
             },
-            callback: (r2) => {
-              if (!r2.exc) {
+            callback: (r) => {
+              if (!r.exc) {
                 me.customer_info[this.df.fieldname] = this.value;
                 frappe.show_alert({
                   message: __("Customer contact updated successfully."),
@@ -2691,7 +2692,7 @@
         if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
           this.$form_container.find(`.${fieldname}-control input`).on("focus", function() {
             if (!me.is_oic_authenticated) {
-              me.oic_authentication(fieldname, item);
+              me.oic_authentication(fieldname);
             }
           });
         }
@@ -2705,9 +2706,8 @@
       const amount = item.rate * conversion_factor;
       this.$item_price.html(format_currency(amount, this.currency));
     }
-    oic_authentication(fieldname, item) {
+    oic_authentication(fieldname) {
       const me = this;
-      const doc = me.events.get_frm();
       const passwordDialog = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
@@ -2724,16 +2724,15 @@
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
             args: { password },
-            callback: (r2) => {
-              if (r2.message) {
-                if (r2.message.name) {
+            callback: (r) => {
+              if (r.message) {
+                if (r.message.name) {
                   frappe.show_alert({
                     message: __("Verified"),
                     indicator: "green"
                   });
                   passwordDialog.hide();
                   me.enable_discount_input(fieldname);
-                  me.set_discount_log(doc, item);
                   me.is_oic_authenticated = true;
                 } else {
                   frappe.show_alert({
@@ -2752,13 +2751,6 @@
         }
       });
       passwordDialog.show();
-    }
-    set_discount_log(doc, item) {
-      let current_discount_log = doc.doc.custom_manual_dicsount || "";
-      let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}
-`;
-      let updated_discount_log = current_discount_log + discount_log;
-      doc.set_value("custom_manual_dicsount", updated_discount_log);
     }
     enable_discount_input(fieldname) {
       this.$form_container.find(`.${fieldname}-control input`).prop("disabled", false);
@@ -2918,11 +2910,11 @@
           filters: { name: ["in", selected_serial_nos] },
           fields: ["batch_no", "name"]
         });
-        const batch_serial_map = serials_with_batch_no.reduce((acc, r2) => {
-          if (!acc[r2.batch_no]) {
-            acc[r2.batch_no] = [];
+        const batch_serial_map = serials_with_batch_no.reduce((acc, r) => {
+          if (!acc[r.batch_no]) {
+            acc[r.batch_no] = [];
           }
-          acc[r2.batch_no] = [...acc[r2.batch_no], r2.name];
+          acc[r.batch_no] = [...acc[r.batch_no], r.name];
           return acc;
         }, {});
         const batch_no = Object.keys(batch_serial_map)[0];
@@ -2970,11 +2962,11 @@
         let frm = this.events.get_frm();
         let item_row = this.item_row;
         item_row.type_of_transaction = "Outward";
-        new erpnext.SerialBatchPackageSelector(frm, item_row, (r2) => {
-          if (r2) {
+        new erpnext.SerialBatchPackageSelector(frm, item_row, (r) => {
+          if (r) {
             frappe.model.set_value(item_row.doctype, item_row.name, {
-              serial_and_batch_bundle: r2.name,
-              qty: Math.abs(r2.total_qty)
+              serial_and_batch_bundle: r.name,
+              qty: Math.abs(r.total_qty)
             });
           }
         });
@@ -3152,6 +3144,7 @@
         $(`.bank-type`).hide();
         $(`.qr-reference-number`).hide();
         $(`.customer`).hide();
+        $(`.charge-invoice-number`).hide();
         $(`.po-number`).hide();
         $(`.representative`).hide();
         $(`.id-number`).hide();
@@ -3206,7 +3199,7 @@
             mode_clicked.find(".check-date").css("display", "flex");
             mode_clicked.find(".save-button").css("display", "flex");
             mode_clicked.find(".discard-button").css("display", "flex");
-          } else if (mode === "2306") {
+          } else if (mode === "2307g") {
             mode_clicked.find(".actual-gov-one").css("display", "flex");
             mode_clicked.find(".save-button").css("display", "flex");
             mode_clicked.find(".discard-button").css("display", "flex");
@@ -3222,6 +3215,7 @@
             mode_clicked.find(".discard-button").css("display", "flex");
           } else if (mode === "charge") {
             mode_clicked.find(".customer").css("display", "flex");
+            mode_clicked.find(".charge-invoice-number").css("display", "flex");
             mode_clicked.find(".po-number").css("display", "flex");
             mode_clicked.find(".representative").css("display", "flex");
             mode_clicked.find(".id-number").css("display", "flex");
@@ -3437,8 +3431,9 @@
           const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
           const payment_type = p.type;
           const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
+          const displayStyle = p.mode_of_payment === "2307G" && customer_group !== "Government" ? "display: none;" : "";
           let paymentModeHtml = `
-						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px);">
+						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); ${displayStyle}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
 							<span>${p.mode_of_payment}</span>
 							<div class="${mode}-amount pay-amount" style="font-weight: bold; display: flex; justify-content: flex-end; align-items: center;">${amount}</div>
@@ -3519,7 +3514,7 @@
 								</div>
 							`;
               break;
-            case "2306":
+            case "2307G":
               paymentModeHtml += `
 								<div class="${mode} actual-gov-one"></div>
 								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
@@ -3551,6 +3546,7 @@
             case "Charge":
               paymentModeHtml += `
 								<div class="${mode} customer"></div>
+								<div class="${mode} charge-invoice-number"></div>
 								<div class="${mode} po-number"></div>
 								<div class="${mode} representative"></div>
 								<div class="${mode} id-number"></div>
@@ -4304,9 +4300,9 @@
           let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
           let bank_name_control = frappe.ui.form.make_control({
             df: {
-              label: "Check Bank Name",
+              label: "Bank Of Check",
               fieldtype: "Data",
-              placeholder: "Check Bank Name",
+              placeholder: "Bank Of Check",
               reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -4482,12 +4478,12 @@
             });
           });
         }
-        if (p.mode_of_payment === "2306") {
+        if (p.mode_of_payment === "2307G") {
           let check_form_2306 = frappe.ui.form.make_control({
             df: {
-              label: `Expected 2306 Amount`,
+              label: `Expected 2307G Amount`,
               fieldtype: "Currency",
-              placeholder: "Actual 2306",
+              placeholder: "Actual 2307G",
               read_only: 1
             },
             parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
@@ -4865,6 +4861,19 @@
           });
           custom_customer.set_value(existing_custom_customer || selected_customer || "");
           custom_customer.refresh();
+          let existing_charge_invoice_number = frappe.model.get_value(p.doctype, p.name, "custom_charge_invoice_number");
+          let charge_invoice_number = frappe.ui.form.make_control({
+            df: {
+              label: "Charge Invoice Number",
+              fieldtype: "Data",
+              placeholder: "Charge Invoice Number",
+              reqd: true
+            },
+            parent: this.$payment_modes.find(`.${mode}.charge-invoice-number`),
+            render_input: true
+          });
+          charge_invoice_number.set_value(existing_charge_invoice_number || "");
+          charge_invoice_number.refresh();
           let existing_custom_po_number = frappe.model.get_value(p.doctype, p.name, "custom_po_number");
           let custom_po_number = frappe.ui.form.make_control({
             df: {
@@ -4924,11 +4933,12 @@
           save_button2.on("click", function() {
             let amount = me2[`${mode}_control`].get_value();
             let customer = custom_customer.get_value();
+            let charge_invoice_no = charge_invoice_number.get_value();
             let po_number = custom_po_number.get_value();
             let representative = custom_representative.get_value();
             let id_number = custom_id_number.get_value();
             let approved_by = custom_approved_by.get_value();
-            if (!amount || !customer || !po_number || !representative || !id_number) {
+            if (!amount || !customer || !charge_invoice_no || !po_number || !representative || !id_number) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -4952,6 +4962,7 @@
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.model.set_value(p.doctype, p.name, "custom_customer", customer);
+            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", charge_invoice_number);
             frappe.model.set_value(p.doctype, p.name, "custom_po_number", po_number);
             frappe.model.set_value(p.doctype, p.name, "custom_representative", representative);
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", id_number);
@@ -4979,12 +4990,14 @@
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
             custom_customer.set_value("");
+            charge_invoice_number.set_value("");
             custom_po_number.set_value("");
             custom_representative.set_value("");
             custom_id_number.set_value("");
             custom_approved_by.set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", null);
             frappe.model.set_value(p.doctype, p.name, "custom_customer", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_po_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_representative", "");
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", "");
@@ -5012,6 +5025,7 @@
             me2[`${mode}_control`],
             custom_customer,
             custom_po_number,
+            charge_invoice_number,
             custom_representative,
             custom_id_number,
             custom_approved_by
@@ -5721,13 +5735,13 @@
           sender_full_name: frappe.user.full_name(),
           _lang: doc.language
         },
-        callback: (r2) => {
-          if (!r2.exc) {
+        callback: (r) => {
+          if (!r.exc) {
             frappe.utils.play_sound("email");
-            if (r2.message["emails_not_sent_to"]) {
+            if (r.message["emails_not_sent_to"]) {
               frappe.msgprint(
                 __("Email not sent to {0} (unsubscribed / disabled)", [
-                  frappe.utils.escape_html(r2.message["emails_not_sent_to"])
+                  frappe.utils.escape_html(r.message["emails_not_sent_to"])
                 ])
               );
             } else {
@@ -5872,9 +5886,9 @@
       });
     }
     check_opening_entry() {
-      this.fetch_opening_entry().then((r2) => {
-        if (r2.message.length) {
-          this.prepare_app_defaults(r2.message[0]);
+      this.fetch_opening_entry().then((r) => {
+        if (r.message.length) {
+          this.prepare_app_defaults(r.message[0]);
         } else {
           this.create_opening_voucher();
         }
@@ -5917,7 +5931,7 @@
           payments.forEach((pay) => {
             const { mode_of_payment } = pay;
             if (mode_of_payment === "Cash") {
-              const opening_amount = "1500";
+              const opening_amount = "2000";
               dialog2.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
             }
           });
@@ -6067,17 +6081,16 @@
         false,
         "f2"
       );
-      this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
+      this.page.add_menu_item(__("Save as Draft"), this.save_draft.bind(this), false, "f3");
       this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
-      this.page.add_menu_item(__("Z Reading (BIR)"), this.z_reading.bind(this), false, "f5");
-      this.page.add_menu_item(__("DSRS"), this.dsrs_reading.bind(this), false, "f0");
+      this.page.add_menu_item(__("Z Reading"), this.z_reading.bind(this), false, "f5");
       this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
     }
     add_buttons_to_toolbar() {
       const buttons = [
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
         { label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2" },
-        { label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
+        { label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3" },
         { label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C" }
       ];
       $(".page-actions .btn-custom").remove();
@@ -6085,31 +6098,61 @@
         this.page.add_button(btn.label, btn.action, { shortcut: btn.shortcut }).addClass("btn-custom");
       });
     }
-    showPasswordDialog(title, onSuccess) {
-      const passwordDialog = new frappe.ui.Dialog({
-        title: __(title),
+    z_reading() {
+      const me = this;
+      if (this.passwordDialog) {
+        this.passwordDialog.hide();
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      this.passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
-        primary_action_label: __("Authorize"),
-        primary_action: (values) => {
-          let password = values.password;
+        primary_action_label: __("Ok"),
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password },
-            callback: (r2) => {
-              if (r2.message.name) {
+            args: { password, role: "OIC" },
+            callback: (r) => {
+              if (r.message.name) {
                 frappe.show_alert({
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog.hide();
-                onSuccess();
+                this.passwordDialog.hide();
+                if (!this.$components_wrapper.is(":visible"))
+                  return;
+                let voucher = frappe.model.get_new_doc("POS Z Reading");
+                voucher.pos_profile = this.frm.doc.pos_profile;
+                voucher.user = frappe.session.user;
+                voucher.company = this.frm.doc.company;
+                voucher.posting_date = frappe.datetime.now_date();
+                voucher.posting_time = frappe.datetime.now_time();
+                frappe.get_doc("POS Z Reading", voucher.name).save().then(() => {
+                  frappe.show_alert({
+                    message: __("POS Z Reading saved successfully."),
+                    indicator: "green"
+                  });
+                  frappe.set_route("Form", "POS Z Reading", voucher.name);
+                }).catch((e) => {
+                  frappe.show_alert({
+                    message: __("Failed to save POS Z Reading."),
+                    indicator: "red"
+                  });
+                  console.error(e);
+                });
               } else {
                 frappe.show_alert({
                   message: __("Incorrect password or user is not an OIC"),
@@ -6120,34 +6163,15 @@
           });
         }
       });
-      passwordDialog.show();
-    }
-    z_reading() {
-      const onSuccess = () => {
-        if (!this.$components_wrapper.is(":visible"))
-          return;
-        frappe.db.get_doc("POS Profile", this.frm.doc.pos_profile).then((pos_profile) => {
-          let voucher = frappe.model.get_new_doc("POS Z Reading");
-          voucher.pos_profile = this.frm.doc.pos_profile;
-          voucher.date_from = pos_profile.custom_start_operating_date;
-          voucher.date_to = frappe.datetime.now_datetime();
-          frappe.set_route("Form", "POS Z Reading", voucher.name);
-        }).catch((error) => {
-          console.error("Error fetching POS Profile:", error);
-          frappe.msgprint(__("Failed to fetch POS Profile. Please try again."));
-        });
-      };
-      this.showPasswordDialog("OIC Authorization Required for Z Reading", onSuccess);
-    }
-    dsrs_reading() {
-      const onSuccess = () => {
-        if (!this.$components_wrapper.is(":visible"))
-          return;
-        let voucher = frappe.model.get_new_doc("POS Daily Sales Report Summary");
-        voucher.pos_profile = this.frm.doc.pos_profile;
-        frappe.set_route("Form", "POS Daily Sales Report Summary", voucher.name);
-      };
-      this.showPasswordDialog("OIC Authorization Required for DSRS", onSuccess);
+      this.passwordDialog.$wrapper.on("shown.bs.modal", function() {
+        setTimeout(() => {
+          const passwordField = document.getElementById("password_field");
+          if (passwordField) {
+            passwordField.focus();
+          }
+        }, 100);
+      });
+      this.passwordDialog.show();
     }
     cash_voucher() {
       if (!this.$components_wrapper.is(":visible"))
@@ -6177,9 +6201,12 @@
         () => this.item_selector.toggle_component(),
         () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(false),
-        () => frappe.dom.unfreeze(),
-        () => this.item_selector.refresh()
-      ]);
+        () => this.item_selector.load_items_data(),
+        () => frappe.dom.unfreeze()
+      ]).catch((error) => {
+        console.error("An error occurred during add_new_order sequence:", error);
+        frappe.dom.unfreeze();
+      });
     }
     remove_pos_cart_items() {
       localStorage.removeItem("posCartItems");
@@ -6231,88 +6258,132 @@
       });
     }
     save_draft() {
+      if (this.passwordDialog) {
+        this.passwordDialog.hide();
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
       if (!this.$components_wrapper.is(":visible"))
         return;
-      if (this.frm.doc.items.length == 0) {
+      if (this.frm.doc.items.length === 0) {
         frappe.show_alert({
-          message: __("You must add atleast one item to complete the order."),
+          message: __("You must add at least one item to complete the order."),
           indicator: "red"
         });
         frappe.utils.play_sound("error");
         return;
       }
-      const passwordDialog = new frappe.ui.Dialog({
+      this.passwordDialog = new frappe.ui.Dialog({
         title: __("Enter Your Password"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="save_draft" class="form-control" required>
+						</div>
+					`
           }
         ],
         primary_action_label: __("Ok"),
-        primary_action: (values) => {
-          let password = values.password;
+        primary_action: () => {
+          let password = document.getElementById("save_draft").value;
+          let errorOccurred = false;
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
             args: { password },
-            callback: (r2) => {
-              if (r2.message.name) {
-                this.set_pharmacist_assist(this.frm, r2.message.name);
+            callback: (r) => {
+              if (r.message && r.message.name) {
+                this.set_pharmacist_assist(this.frm, r.message.name);
                 this.frm.save(void 0, void 0, void 0, () => {
                   frappe.show_alert({
-                    message: __("There was an error saving the document."),
+                    message: "There was an error saving the document.",
                     indicator: "red"
                   });
                   frappe.utils.play_sound("error");
+                  errorOccurred = true;
                 }).then(() => {
+                  if (errorOccurred)
+                    return;
+                  this.passwordDialog.hide();
+                  this.order_summary.load_summary_of(this.frm.doc, true);
+                  this.order_summary.print_receipt();
+                  localStorage.removeItem("posCartItems");
+                  frappe.show_alert({
+                    message: "Invoice Printed",
+                    indicator: "blue"
+                  });
                   frappe.run_serially([
                     () => frappe.dom.freeze(),
                     () => this.make_new_invoice(),
-                    () => frappe.dom.unfreeze()
+                    () => frappe.dom.unfreeze(),
+                    () => window.location.reload()
                   ]);
-                  passwordDialog.hide();
-                  localStorage.removeItem("posCartItems");
+                }).catch((err) => {
+                  console.error("Unexpected error:", err);
+                  errorOccurred = true;
                 });
               } else {
                 frappe.show_alert({
-                  message: `${r2.message.error}`,
+                  message: "Incorrect password",
                   indicator: "red"
                 });
+                errorOccurred = true;
               }
             }
           });
         }
       });
-      passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
+        setTimeout(() => {
+          const passwordField = document.getElementById("save_draft");
+          if (passwordField) {
+            passwordField.focus();
+          }
+        }, 100);
+      });
+      this.passwordDialog.show();
+    }
+    set_pharmacist_assist(frm, user) {
+      frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_pharmacist_assistant", user);
+      frm.refresh_field("custom_pharmacist_assistant");
     }
     close_pos() {
       const me = this;
-      const passwordDialog = new frappe.ui.Dialog({
+      if (this.passwordDialog) {
+        this.passwordDialog.hide();
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      this.passwordDialog = new frappe.ui.Dialog({
         title: __("Authorization Required OIC"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
-        primary_action_label: __("Authorize"),
-        primary_action: (values) => {
-          let password = values.password;
-          let role = "oic";
+        primary_action_label: __("Ok"),
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
-            callback: (r2) => {
-              if (r2.message) {
+            args: { password },
+            callback: (r) => {
+              if (r.message.name) {
                 frappe.show_alert({
                   message: __("Verified"),
                   indicator: "green"
                 });
-                passwordDialog.hide();
+                this.passwordDialog.hide();
                 if (!this.$components_wrapper.is(":visible"))
                   return;
                 let voucher = frappe.model.get_new_doc("POS Closing Entry");
@@ -6334,7 +6405,15 @@
           });
         }
       });
-      passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
+        setTimeout(() => {
+          const passwordField = document.getElementById("password_field");
+          if (passwordField) {
+            passwordField.focus();
+          }
+        }, 100);
+      });
+      this.passwordDialog.show();
     }
     cash_count() {
       if (!this.$components_wrapper.is(":visible"))
@@ -6346,7 +6425,6 @@
       frappe.set_route("Form", "Cash Count Denomination Entry", voucher.name);
     }
     init_item_selector() {
-      this.selected_uom = "PC";
       this.item_selector = new custom_app.PointOfSale.ItemSelector({
         wrapper: this.$components_wrapper,
         pos_profile: this.pos_profile,
@@ -6358,9 +6436,9 @@
               args: {
                 pos_profile: this.pos_profile
               },
-              callback: (r2) => {
-                if (r2.message) {
-                  const posWarehouse = r2.message;
+              callback: (r) => {
+                if (r.message) {
+                  const posWarehouse = r.message;
                   const selectedWarehouse = localStorage.getItem("selected_warehouse");
                   if (posWarehouse === selectedWarehouse || selectedWarehouse === null) {
                     this.on_cart_update(args);
@@ -6489,6 +6567,7 @@
           },
           submit_invoice: () => {
             let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
+            let errorOccurred = false;
             if (payment_amount < this.frm.doc.grand_total) {
               const insufficientPaymentDialog = new frappe.ui.Dialog({
                 title: __("Insufficient Payment"),
@@ -6505,32 +6584,50 @@
               insufficientPaymentDialog.show();
               return;
             }
-            this.frm.save("Submit").then((r2) => {
-              this.toggle_components(false);
-              this.cart.toggle_component(false);
-              this.order_summary.toggle_component(false);
-              this.remove_pos_cart_items();
-              this.order_summary.load_summary_of(this.frm.doc, true);
-              this.order_summary.print_receipt();
+            this.frm.set_value("base_paid_amount", this.frm.doc.grand_total);
+            this.frm.save(void 0, void 0, void 0, () => {
               frappe.show_alert({
-                indicator: "green",
-                message: __("Order successfully completed")
+                message: "There was an error saving the document.",
+                indicator: "red"
               });
-              let change_amount = payment_amount - this.frm.doc.grand_total;
-              const changeDialog = new frappe.ui.Dialog({
-                title: __("Change Amount"),
-                primary_action_label: __("OK"),
-                primary_action: () => {
-                  window.location.reload();
-                  changeDialog.hide();
-                }
+              frappe.utils.play_sound("error");
+              errorOccurred = true;
+            }).then((r) => {
+              if (errorOccurred)
+                return;
+              this.frm.save("Submit").then((r2) => {
+                this.toggle_components(false);
+                this.cart.toggle_component(false);
+                this.order_summary.toggle_component(false);
+                this.remove_pos_cart_items();
+                this.order_summary.load_summary_of(this.frm.doc, true);
+                this.order_summary.print_receipt();
+                frappe.show_alert({
+                  indicator: "green",
+                  message: __("Order successfully completed")
+                });
+                let change_amount = payment_amount - this.frm.doc.grand_total;
+                const changeDialog = new frappe.ui.Dialog({
+                  title: __("Change Amount"),
+                  primary_action_label: __("OK"),
+                  primary_action: () => {
+                    window.location.reload();
+                    changeDialog.hide();
+                  }
+                });
+                changeDialog.body.innerHTML = `
+								<div style="text-align: center; font-size: 60px; margin: 20px 0;">
+									${format_currency(change_amount)}
+								</div>
+							`;
+                changeDialog.show();
               });
-              changeDialog.body.innerHTML = `
-							<div style="text-align: center; font-size: 60px; margin: 20px 0;">
-								${format_currency(change_amount)}
-							</div>
-						`;
-              changeDialog.show();
+            }).catch((err) => {
+              frappe.show_alert({
+                message: __("An unexpected error occurred while saving the document. Please try again."),
+                indicator: "red"
+              });
+              errorOccurred = true;
             });
           }
         }
@@ -6608,33 +6705,54 @@
       });
     }
     oic_edit_confirm(name) {
-      const passwordDialog = new frappe.ui.Dialog({
-        title: __("Enter OIC Password"),
+      if (this.passwordDialog) {
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      let isAuthorized = false;
+      this.passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
-        primary_action_label: __("Edit Order"),
-        primary_action: (values) => {
-          let password = values.password;
-          let role = "oic";
+        primary_action_label: __("Authorize"),
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
-            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
-            callback: (r2) => {
-              if (r2.message) {
-                this.recent_order_list.toggle_component(false);
-                frappe.run_serially([
-                  () => this.frm.refresh(name),
-                  () => this.cart.load_invoice(),
-                  () => this.item_selector.toggle_component(true),
-                  () => this.toggle_recent_order_list(false)
-                ]);
-                passwordDialog.hide();
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+            args: { password },
+            callback: (r) => {
+              if (r.message) {
+                if (r.message.name) {
+                  isAuthorized = true;
+                  frappe.show_alert({
+                    message: __("Verified"),
+                    indicator: "green"
+                  });
+                  frappe.run_serially([
+                    () => this.frm.refresh(name),
+                    () => this.cart.load_invoice(),
+                    () => this.item_selector.toggle_component(true),
+                    () => this.toggle_recent_order_list(false),
+                    () => this.item_selector.load_items_data()
+                  ]).then(() => {
+                    this.passwordDialog.hide();
+                  });
+                } else {
+                  frappe.show_alert({
+                    message: __("Incorrect password or user is not an OIC"),
+                    indicator: "red"
+                  });
+                }
               } else {
                 frappe.show_alert({
                   message: __("Incorrect password or user is not an OIC"),
@@ -6645,18 +6763,31 @@
           });
         }
       });
-      passwordDialog.show();
-      this.toggle_components(true);
+      this.passwordDialog.$wrapper.on("hidden.bs.modal", () => {
+        if (!isAuthorized) {
+          window.location.reload();
+        }
+      });
+      this.passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
+        setTimeout(() => {
+          document.getElementById("password_field").focus();
+        }, 100);
+      });
     }
     oic_delete_confirm(name) {
       const passwordDialog = new frappe.ui.Dialog({
         title: __("Enter OIC Password"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
         primary_action_label: __("Authenticate"),
@@ -6666,8 +6797,8 @@
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
             args: { password, role },
-            callback: (r2) => {
-              if (r2.message) {
+            callback: (r) => {
+              if (r.message) {
                 frappe.model.delete_doc(this.frm.doc.doctype, name, () => {
                   this.recent_order_list.refresh_list();
                   this.recent_order_list.toggle_component(true);
@@ -6744,9 +6875,9 @@
           source_name: doc.name,
           target_doc: this.frm.doc
         },
-        callback: (r2) => {
-          frappe.model.sync(r2.message);
-          frappe.get_doc(r2.message.doctype, r2.message.name).__run_link_triggers = false;
+        callback: (r) => {
+          frappe.model.sync(r.message);
+          frappe.get_doc(r.message.doctype, r.message.name).__run_link_triggers = false;
           this.set_pos_profile_data().then(() => {
             frappe.dom.unfreeze();
           });
@@ -6940,25 +7071,33 @@
       }
     }
     remove_item_from_cart() {
-      const passwordDialog = new frappe.ui.Dialog({
+      if (this.passwordDialog) {
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      this.passwordDialog = new frappe.ui.Dialog({
         title: __("Enter OIC Password"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
         primary_action_label: __("Ok"),
-        primary_action: (values) => {
-          let password = values.password;
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
-            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
             args: { password },
-            callback: (r2) => {
-              if (r2.message) {
-                if (r2.message.name) {
+            callback: (r) => {
+              if (r.message) {
+                if (r.message.name) {
                   frappe.dom.freeze();
                   const { doctype, name, current_item } = this.item_details;
                   frappe.model.set_value(doctype, name, "qty", 0).then(() => {
@@ -6966,11 +7105,11 @@
                     this.update_cart_html(current_item, true);
                     this.item_details.toggle_item_details_section(null);
                     frappe.dom.unfreeze();
-                    passwordDialog.hide();
+                    this.passwordDialog.hide();
                   }).catch((e) => {
                     console.log(e);
                     frappe.dom.unfreeze();
-                    passwordDialog.hide();
+                    this.passwordDialog.hide();
                   });
                 } else {
                   frappe.show_alert({
@@ -6988,7 +7127,12 @@
           });
         }
       });
-      passwordDialog.show();
+      this.passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", function() {
+        setTimeout(() => {
+          document.getElementById("password_field").focus();
+        }, 100);
+      });
     }
     async save_and_checkout() {
       if (this.frm.is_dirty()) {
@@ -7003,4 +7147,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.N5YOKTZJ.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.4WX7M23D.js.map

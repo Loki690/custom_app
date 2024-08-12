@@ -174,7 +174,7 @@ custom_app.PointOfSale.ItemSelector = class {
         this.highlight_row(this.highlighted_row_index);
     
         // Log the items to the console for debugging
-        // console.log("Rendered Items: ", items);
+        console.log("Rendered Items: ", items);
     }
 
     get_item_html(item) {

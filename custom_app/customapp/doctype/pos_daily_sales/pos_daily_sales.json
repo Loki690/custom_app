@@ -1,13 +1,12 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "DSRS-.########",
+ "autoname": "DS-.########",
  "creation": "2024-07-18 10:32:04.205955",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "pos_profile",
-  "range",
   "column_break_yfhm",
   "date_from",
   "date_to",
@@ -49,7 +48,7 @@
   "column_break_tmxj",
   "shortover_total",
   "section_break_gkqu",
-  "cancelled_transactions",
+  "cancelled_trasactions",
   "amended_from"
  ],
  "fields": [
@@ -66,8 +65,7 @@
   {
    "fieldname": "date_from",
    "fieldtype": "Datetime",
-   "label": "Date From",
-   "read_only_depends_on": "eval:frappe.user_roles.includes('Cashier') && !frappe.user_roles.includes('System Manager')"
+   "label": "Date From"
   },
   {
    "fieldname": "date_to",
@@ -180,7 +178,7 @@
    "fieldtype": "Link",
    "label": "Amended From",
    "no_copy": 1,
-   "options": "POS Daily Sales Report Summary",
+   "options": "POS Daily Sales",
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
@@ -239,8 +237,7 @@
    "fieldtype": "Table",
    "hidden": 1,
    "label": "Confirmed Transaction",
-   "options": "Z Confirmed Trasaction",
-   "print_hide": 1
+   "options": "Z Confirmed Trasaction"
   },
   {
    "fieldname": "change_amount",
@@ -256,43 +253,34 @@
    "fieldname": "invoice_from",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "Invoice From",
-   "print_hide": 1
+   "label": "Invoice From"
   },
   {
    "fieldname": "invoice_to",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "Invoice To",
-   "print_hide": 1
+   "label": "Invoice To"
+  },
+  {
+   "fieldname": "cancelled_trasactions",
+   "fieldtype": "Table",
+   "label": "Cancelled Trasactions",
+   "options": "Z Cancelled Transaction"
   },
   {
    "fieldname": "sales_total",
    "fieldtype": "Currency",
    "hidden": 1,
    "label": "Sales Total"
-  },
-  {
-   "default": "Today",
-   "fieldname": "range",
-   "fieldtype": "Select",
-   "label": "Range",
-   "options": "\nToday\nWeek\nMonth"
-  },
-  {
-   "fieldname": "cancelled_transactions",
-   "fieldtype": "Table",
-   "label": "Return Transactions",
-   "options": "Z Cancelled Transaction"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-08-07 16:30:30.430549",
+ "modified": "2024-07-18 11:16:38.101856",
  "modified_by": "Administrator",
  "module": "customapp",
- "name": "POS Daily Sales Report Summary",
+ "name": "POS Daily Sales",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
