@@ -288,77 +288,31 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 
-
-
-	z_reading() {
-		const me = this;
-	
-		// Cleanup any existing password dialog
-		if (this.passwordDialog) {
-			this.passwordDialog.hide();
-			this.passwordDialog.$wrapper.remove();
-			delete this.passwordDialog;
-		}
-	
-		// Show password dialog for OIC authentication
-		this.passwordDialog = new frappe.ui.Dialog({
-			title: __('Authorization Required OIC'),
+	showPasswordDialog(title, onSuccess) {
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __(title),
 			fields: [
 				{
-					fieldtype: 'HTML',
-					fieldname: 'password_html',
-					options: `
-						<div class="form-group">
-							<label for="password_field">${__('Password')}</label>
-							<input type="password" id="password_field" class="form-control" required>
-						</div>
-					`
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
 				}
 			],
-
-			primary_action_label: __('Ok'),
-			primary_action: () => {
-				// Retrieve the password value from the HTML field
-				let password = document.getElementById('password_field').value;
-	
+			primary_action_label: __('Authorize'),
+			primary_action: (values) => {
+				let password = values.password;
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: "OIC" }, // Add role if needed
+					args: { password: password},
 					callback: (r) => {
 						if (r.message.name) {
-							// OIC authentication successful
-
 							frappe.show_alert({
 								message: __('Verified'),
 								indicator: 'green'
 							});
-
-							this.passwordDialog.hide();
-	
-							// Create and save a new POS Z Reading document
-							if (!this.$components_wrapper.is(":visible")) return;
-	
-							let voucher = frappe.model.get_new_doc("POS Z Reading");
-							voucher.pos_profile = this.frm.doc.pos_profile;
-							voucher.user = frappe.session.user;
-							voucher.company = this.frm.doc.company;
-							voucher.posting_date = frappe.datetime.now_date();
-							voucher.posting_time = frappe.datetime.now_time();
-	
-							// Save the POS Z Reading document
-							frappe.get_doc("POS Z Reading", voucher.name).save().then(() => {
-								frappe.show_alert({
-									message: __("POS Z Reading saved successfully."),
-									indicator: 'green'
-								});
-								frappe.set_route("Form", "POS Z Reading", voucher.name);
-							}).catch((e) => {
-								frappe.show_alert({
-									message: __("Failed to save POS Z Reading."),
-									indicator: 'red'
-								});
-								console.error(e);
-							});
+							passwordDialog.hide();
+							onSuccess();
 						} else {
 							frappe.show_alert({
 								message: __('Incorrect password or user is not an OIC'),
@@ -369,18 +323,132 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
-		// Ensure the password field gains focus every time the dialog is opened
-		this.passwordDialog.$wrapper.on('shown.bs.modal', function () {
-			setTimeout(() => {
-				const passwordField = document.getElementById('password_field');
-				if (passwordField) {
-					passwordField.focus();
-				}
-			}, 100); // Slight delay to ensure field is rendered before focusing
-		});
-		// Show the dialog
-		this.passwordDialog.show();
+
+		passwordDialog.show();
 	}
+
+	z_reading() {
+		const onSuccess = () => {
+			if (!this.$components_wrapper.is(":visible")) return;
+			frappe.db.get_doc('POS Profile', this.frm.doc.pos_profile)
+			.then(pos_profile => {
+				let voucher = frappe.model.get_new_doc("POS Z Reading");
+				voucher.pos_profile = this.frm.doc.pos_profile;
+				voucher.date_from = pos_profile.custom_start_operating_date;
+				voucher.date_to = frappe.datetime.now_datetime();
+				frappe.set_route("Form", "POS Z Reading", voucher.name);
+			})
+			.catch(error => {
+				console.error("Error fetching POS Profile:", error);
+				frappe.msgprint(__('Failed to fetch POS Profile. Please try again.'));
+			});
+		};
+
+		this.showPasswordDialog('OIC Authorization Required for Z Reading', onSuccess);
+	}
+
+	dsrs_reading() {
+		const onSuccess = () => {
+			if (!this.$components_wrapper.is(":visible")) return;
+			let voucher = frappe.model.get_new_doc("POS Daily Sales Report Summary");
+			voucher.pos_profile = this.frm.doc.pos_profile;
+			frappe.set_route("Form", "POS Daily Sales Report Summary", voucher.name);
+		};
+
+		this.showPasswordDialog('OIC Authorization Required for DSRS', onSuccess);
+	}
+
+	// z_reading() {
+	// 	const me = this;
+	
+	// 	// Cleanup any existing password dialog
+	// 	if (this.passwordDialog) {
+	// 		this.passwordDialog.hide();
+	// 		this.passwordDialog.$wrapper.remove();
+	// 		delete this.passwordDialog;
+	// 	}
+	
+	// 	// Show password dialog for OIC authentication
+	// 	this.passwordDialog = new frappe.ui.Dialog({
+	// 		title: __('Authorization Required OIC'),
+	// 		fields: [
+	// 			{
+	// 				fieldtype: 'HTML',
+	// 				fieldname: 'password_html',
+	// 				options: `
+	// 					<div class="form-group">
+	// 						<label for="password_field">${__('Password')}</label>
+	// 						<input type="password" id="password_field" class="form-control" required>
+	// 					</div>
+	// 				`
+	// 			}
+	// 		],
+
+	// 		primary_action_label: __('Ok'),
+	// 		primary_action: () => {
+	// 			// Retrieve the password value from the HTML field
+	// 			let password = document.getElementById('password_field').value;
+	
+	// 			frappe.call({
+	// 				method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+	// 				args: { password: password, role: "OIC" }, // Add role if needed
+	// 				callback: (r) => {
+	// 					if (r.message.name) {
+	// 						// OIC authentication successful
+
+	// 						frappe.show_alert({
+	// 							message: __('Verified'),
+	// 							indicator: 'green'
+	// 						});
+
+	// 						this.passwordDialog.hide();
+	
+	// 						// Create and save a new POS Z Reading document
+	// 						if (!this.$components_wrapper.is(":visible")) return;
+	
+	// 						let voucher = frappe.model.get_new_doc("POS Z Reading");
+	// 						voucher.pos_profile = this.frm.doc.pos_profile;
+	// 						voucher.user = frappe.session.user;
+	// 						voucher.company = this.frm.doc.company;
+	// 						voucher.posting_date = frappe.datetime.now_date();
+	// 						voucher.posting_time = frappe.datetime.now_time();
+	
+	// 						// Save the POS Z Reading document
+	// 						frappe.get_doc("POS Z Reading", voucher.name).save().then(() => {
+	// 							frappe.show_alert({
+	// 								message: __("POS Z Reading saved successfully."),
+	// 								indicator: 'green'
+	// 							});
+	// 							frappe.set_route("Form", "POS Z Reading", voucher.name);
+	// 						}).catch((e) => {
+	// 							frappe.show_alert({
+	// 								message: __("Failed to save POS Z Reading."),
+	// 								indicator: 'red'
+	// 							});
+	// 							console.error(e);
+	// 						});
+	// 					} else {
+	// 						frappe.show_alert({
+	// 							message: __('Incorrect password or user is not an OIC'),
+	// 							indicator: 'red'
+	// 						});
+	// 					}
+	// 				}
+	// 			});
+	// 		}
+	// 	});
+	// 	// Ensure the password field gains focus every time the dialog is opened
+	// 	this.passwordDialog.$wrapper.on('shown.bs.modal', function () {
+	// 		setTimeout(() => {
+	// 			const passwordField = document.getElementById('password_field');
+	// 			if (passwordField) {
+	// 				passwordField.focus();
+	// 			}
+	// 		}, 100); // Slight delay to ensure field is rendered before focusing
+	// 	});
+	// 	// Show the dialog
+	// 	this.passwordDialog.show();
+	// }
 	
 
 
