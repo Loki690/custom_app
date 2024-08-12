@@ -6743,6 +6743,7 @@
         $(`.bank-type`).hide();
         $(`.qr-reference-number`).hide();
         $(`.customer`).hide();
+        $(`.charge-invoice-number`).hide();
         $(`.po-number`).hide();
         $(`.representative`).hide();
         $(`.id-number`).hide();
@@ -6797,7 +6798,7 @@
             mode_clicked.find(".check-date").css("display", "flex");
             mode_clicked.find(".save-button").css("display", "flex");
             mode_clicked.find(".discard-button").css("display", "flex");
-          } else if (mode === "2306") {
+          } else if (mode === "2307g") {
             mode_clicked.find(".actual-gov-one").css("display", "flex");
             mode_clicked.find(".save-button").css("display", "flex");
             mode_clicked.find(".discard-button").css("display", "flex");
@@ -6813,6 +6814,7 @@
             mode_clicked.find(".discard-button").css("display", "flex");
           } else if (mode === "charge") {
             mode_clicked.find(".customer").css("display", "flex");
+            mode_clicked.find(".charge-invoice-number").css("display", "flex");
             mode_clicked.find(".po-number").css("display", "flex");
             mode_clicked.find(".representative").css("display", "flex");
             mode_clicked.find(".id-number").css("display", "flex");
@@ -7028,8 +7030,9 @@
           const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
           const payment_type = p.type;
           const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
+          const displayStyle = p.mode_of_payment === "2307G" && customer_group !== "Government" ? "display: none;" : "";
           let paymentModeHtml = `
-						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px);">
+						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); ${displayStyle}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
 							<span>${p.mode_of_payment}</span>
 							<div class="${mode}-amount pay-amount" style="font-weight: bold; display: flex; justify-content: flex-end; align-items: center;">${amount}</div>
@@ -7110,7 +7113,7 @@
 								</div>
 							`;
               break;
-            case "2306":
+            case "2307G":
               paymentModeHtml += `
 								<div class="${mode} actual-gov-one"></div>
 								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
@@ -7142,6 +7145,7 @@
             case "Charge":
               paymentModeHtml += `
 								<div class="${mode} customer"></div>
+								<div class="${mode} charge-invoice-number"></div>
 								<div class="${mode} po-number"></div>
 								<div class="${mode} representative"></div>
 								<div class="${mode} id-number"></div>
@@ -7895,9 +7899,9 @@
           let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
           let bank_name_control = frappe.ui.form.make_control({
             df: {
-              label: "Check Bank Name",
+              label: "Bank Of Check",
               fieldtype: "Data",
-              placeholder: "Check Bank Name",
+              placeholder: "Bank Of Check",
               reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
@@ -8073,12 +8077,12 @@
             });
           });
         }
-        if (p.mode_of_payment === "2306") {
+        if (p.mode_of_payment === "2307G") {
           let check_form_2306 = frappe.ui.form.make_control({
             df: {
-              label: `Expected 2306 Amount`,
+              label: `Expected 2307G Amount`,
               fieldtype: "Currency",
-              placeholder: "Actual 2306",
+              placeholder: "Actual 2307G",
               read_only: 1
             },
             parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
@@ -8456,6 +8460,19 @@
           });
           custom_customer.set_value(existing_custom_customer || selected_customer || "");
           custom_customer.refresh();
+          let existing_charge_invoice_number = frappe.model.get_value(p.doctype, p.name, "custom_charge_invoice_number");
+          let charge_invoice_number = frappe.ui.form.make_control({
+            df: {
+              label: "Charge Invoice Number",
+              fieldtype: "Data",
+              placeholder: "Charge Invoice Number",
+              reqd: true
+            },
+            parent: this.$payment_modes.find(`.${mode}.charge-invoice-number`),
+            render_input: true
+          });
+          charge_invoice_number.set_value(existing_charge_invoice_number || "");
+          charge_invoice_number.refresh();
           let existing_custom_po_number = frappe.model.get_value(p.doctype, p.name, "custom_po_number");
           let custom_po_number = frappe.ui.form.make_control({
             df: {
@@ -8515,11 +8532,12 @@
           save_button2.on("click", function() {
             let amount = me2[`${mode}_control`].get_value();
             let customer = custom_customer.get_value();
+            let charge_invoice_no = charge_invoice_number.get_value();
             let po_number = custom_po_number.get_value();
             let representative = custom_representative.get_value();
             let id_number = custom_id_number.get_value();
             let approved_by = custom_approved_by.get_value();
-            if (!amount || !customer || !po_number || !representative || !id_number) {
+            if (!amount || !customer || !charge_invoice_no || !po_number || !representative || !id_number) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -8543,6 +8561,7 @@
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.model.set_value(p.doctype, p.name, "custom_customer", customer);
+            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", charge_invoice_number);
             frappe.model.set_value(p.doctype, p.name, "custom_po_number", po_number);
             frappe.model.set_value(p.doctype, p.name, "custom_representative", representative);
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", id_number);
@@ -8570,12 +8589,14 @@
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
             custom_customer.set_value("");
+            charge_invoice_number.set_value("");
             custom_po_number.set_value("");
             custom_representative.set_value("");
             custom_id_number.set_value("");
             custom_approved_by.set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", null);
             frappe.model.set_value(p.doctype, p.name, "custom_customer", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_po_number", "");
             frappe.model.set_value(p.doctype, p.name, "custom_representative", "");
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", "");
@@ -8603,6 +8624,7 @@
             me2[`${mode}_control`],
             custom_customer,
             custom_po_number,
+            charge_invoice_number,
             custom_representative,
             custom_id_number,
             custom_approved_by
@@ -10508,4 +10530,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.ANHUF77R.js.map
+//# sourceMappingURL=packing-list.bundle.36C5RM3T.js.map
