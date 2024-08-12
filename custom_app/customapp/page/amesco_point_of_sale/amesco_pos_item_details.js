@@ -206,7 +206,7 @@ custom_app.PointOfSale.ItemDetails = class {
 			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
 				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
-						me.oic_authentication(fieldname);
+						me.oic_authentication(fieldname, item);
 					}
 				});
 			}
@@ -231,8 +231,9 @@ custom_app.PointOfSale.ItemDetails = class {
 
 	// Function to trigger OTP authentication
 		// Function to trigger OTP authentication
-		oic_authentication(fieldname) {
+		oic_authentication(fieldname, item) {
 			const me = this;
+			const doc = me.events.get_frm()
 			// Show password dialog for OIC authentication
 			const passwordDialog = new frappe.ui.Dialog({
 				title: __('Authorization Required OIC'),
@@ -261,10 +262,8 @@ custom_app.PointOfSale.ItemDetails = class {
 									});
 									passwordDialog.hide();
 		
-									// Allow input to discount_percentage field
 									me.enable_discount_input(fieldname);
-		
-									// Set flag indicating OTP authentication
+									me.set_discount_log(doc, item)
 									me.is_oic_authenticated = true;
 		
 					
@@ -289,6 +288,13 @@ custom_app.PointOfSale.ItemDetails = class {
 			passwordDialog.show();
 		}
 	
+		
+	set_discount_log(doc, item) {
+		let current_discount_log = doc.doc.custom_manual_dicsount || '';
+		let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
+		let updated_discount_log = current_discount_log + discount_log;
+		doc.set_value('custom_manual_dicsount', updated_discount_log);
+	}
 
 	// Function to enable input to discount_percentage field after OTP authentication
 	enable_discount_input(fieldname) {

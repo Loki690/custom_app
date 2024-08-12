@@ -67,7 +67,7 @@ custom_app.PointOfSale.Controller = class {
 
 					// Only include "Cash" payment method
 					if (mode_of_payment === "Cash") {
-						const opening_amount = "2000";
+						const opening_amount = "1500";
 						dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
 					}
 				});
@@ -261,9 +261,9 @@ custom_app.PointOfSale.Controller = class {
 		// this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
 		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
-		this.page.add_menu_item(__('Z Reading'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__('Z Reading (BIR)'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__('DSRS'), this.dsrs_reading.bind(this), false, "f0");
 		this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
-
 	}
 
 
@@ -286,6 +286,7 @@ custom_app.PointOfSale.Controller = class {
 			this.page.add_button(btn.label, btn.action, { shortcut: btn.shortcut }).addClass('btn-custom');
 		});
 	}
+
 
 
 
@@ -314,6 +315,7 @@ custom_app.PointOfSale.Controller = class {
 					`
 				}
 			],
+
 			primary_action_label: __('Ok'),
 			primary_action: () => {
 				// Retrieve the password value from the HTML field
@@ -325,10 +327,12 @@ custom_app.PointOfSale.Controller = class {
 					callback: (r) => {
 						if (r.message.name) {
 							// OIC authentication successful
+
 							frappe.show_alert({
 								message: __('Verified'),
 								indicator: 'green'
 							});
+
 							this.passwordDialog.hide();
 	
 							// Create and save a new POS Z Reading document
@@ -356,7 +360,6 @@ custom_app.PointOfSale.Controller = class {
 								console.error(e);
 							});
 						} else {
-							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
 								message: __('Incorrect password or user is not an OIC'),
 								indicator: 'red'
@@ -366,7 +369,6 @@ custom_app.PointOfSale.Controller = class {
 				});
 			}
 		});
-	
 		// Ensure the password field gains focus every time the dialog is opened
 		this.passwordDialog.$wrapper.on('shown.bs.modal', function () {
 			setTimeout(() => {
@@ -376,7 +378,6 @@ custom_app.PointOfSale.Controller = class {
 				}
 			}, 100); // Slight delay to ensure field is rendered before focusing
 		});
-	
 		// Show the dialog
 		this.passwordDialog.show();
 	}
@@ -649,9 +650,8 @@ custom_app.PointOfSale.Controller = class {
 								message: __('Verified'),
 								indicator: 'green'
 							});
-							this.passwordDialog.hide();
-	
-							// Create and open the POS Closing Entry form
+							passwordDialog.hide();
+
 							if (!this.$components_wrapper.is(":visible")) return;
 	
 							let voucher = frappe.model.get_new_doc("POS Closing Entry");
