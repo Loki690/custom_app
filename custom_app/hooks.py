@@ -234,8 +234,8 @@ doc_events = {
         "before_insert": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_insert",
         "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
-        # "validate": "custom_app.customapp.doctype.sample.sample.custom_validate",
-        # "on_submit": "custom_app.customapp.doctype.sample.sample.custom_on_submit"
+        "validate": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.validate",
+        #"on_submit": "custom_app.customapp.utils.amesco_plus_api.api.on_submit_pos_invoice"
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
     },
    'POS Z Reading': {
@@ -249,14 +249,17 @@ doc_events = {
    },
    'POS Closing Entry': {
        'on_submit': 'custom_app.customapp.doctype.cash_count_denomination_entry.cash_count_denomination_entry.on_submit',
-   }
+   },
+#    "User": {
+#         "on_login": "custom_app.customapp.utils.user.force_password_reset"
+#     }
 }
 
-# scheduler_events = {
-#     "hourly": [
-#         "custom_app.customapp.utils.executables.delete.delete_draft_pos_invoices",
-#     ],
-# }
+scheduler_events = {
+    "daily": [
+        "custom_app.customapp.utils.executables.delete.delete_draft_pos_invoices",
+    ],
+}
 
 jenv = {
     'methods': [

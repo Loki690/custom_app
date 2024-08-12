@@ -206,7 +206,7 @@ custom_app.PointOfSale.ItemDetails = class {
 			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
 				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
 					if (!me.is_oic_authenticated) {
-						me.oic_authentication(fieldname);
+						me.oic_authentication(fieldname, item);
 					}
 				});
 			}
@@ -230,55 +230,70 @@ custom_app.PointOfSale.ItemDetails = class {
 	
 
 	// Function to trigger OTP authentication
-	oic_authentication(fieldname) {
-		const me = this;
-
-		// Show password dialog for OIC authentication
-		const passwordDialog = new frappe.ui.Dialog({
-			title: __('Enter OIC Password'),
-			fields: [
-				{
-					fieldname: 'password',
-					fieldtype: 'Password',
-					label: __('Password'),
-					reqd: 1
-				}
-			],
-			primary_action_label: __('Authorize'),
-			primary_action: (values) => {
-				let password = values.password;
-				let role = "oic";
-
-				frappe.call({
-					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
-					callback: (r) => {
-						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
-							frappe.show_alert({
-								message: __('Verified'),
-								indicator: 'green'
-							});
-							passwordDialog.hide();
-
-							// Allow input to discount_percentage field
-							me.enable_discount_input(fieldname);
-
-							// Set flag indicating OTP authentication
-							me.is_oic_authenticated = true;
-						} else {
-							// Show alert for incorrect password or unauthorized user
-							frappe.show_alert({
-								message: __('Incorrect password or not an OIC'),
-								indicator: 'red'
-							});
-						}
+		// Function to trigger OTP authentication
+		oic_authentication(fieldname, item) {
+			const me = this;
+			const doc = me.events.get_frm()
+			// Show password dialog for OIC authentication
+			const passwordDialog = new frappe.ui.Dialog({
+				title: __('Authorization Required OIC'),
+				fields: [
+					{
+						fieldname: 'password',
+						fieldtype: 'Password',
+						label: __('Password'),
+						reqd: 1
 					}
-				});
-			}
-		});
-
-		passwordDialog.show();
+				],
+				primary_action_label: __('Authorize'),
+				primary_action: (values) => {
+					let password = values.password;
+			
+		
+					frappe.call({
+						method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+						args: { password: password},
+						callback: (r) => {
+							if (r.message) {
+								if (r.message.name) {
+									frappe.show_alert({
+										message: __('Verified'),
+										indicator: 'green'
+									});
+									passwordDialog.hide();
+		
+									me.enable_discount_input(fieldname);
+									me.set_discount_log(doc, item)
+									me.is_oic_authenticated = true;
+		
+					
+								} else {
+									frappe.show_alert({
+										message: __('Incorrect password'),
+										indicator: 'red'
+									});
+								}
+							} else {
+								// Show alert for incorrect password or unauthorized user
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
+						}
+					});
+				}
+			});
+		
+			passwordDialog.show();
+		}
+	
+		
+	set_discount_log(doc, item) {
+		let current_discount_log = doc.doc.custom_manual_dicsount || '';
+		let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
+		let updated_discount_log = current_discount_log + discount_log;
+		doc.set_value('custom_manual_dicsount', updated_discount_log);
 	}
 
 	// Function to enable input to discount_percentage field after OTP authentication
@@ -293,9 +308,11 @@ custom_app.PointOfSale.ItemDetails = class {
 			'price_list_rate',
 			"rate",
 			"uom",
-			"custom_expiry_date",
+			// "custom_expiry_date",
 			//"conversion_factor",
 			"discount_percentage",
+			"custom_batch_number",
+			"custom_batch_expiry",
 			"discount_amount", // added field
 			//"custom_item_discount_amount",
 			//"warehouse",

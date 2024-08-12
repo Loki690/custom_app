@@ -13,7 +13,7 @@ from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, ge
 from erpnext.stock.utils import scan_barcode
 from frappe.utils.password import get_decrypted_password
 from frappe.exceptions import AuthenticationError
-from custom_app.customapp.utils.password import check_oic_password, check_password, check_password_without_username
+from custom_app.customapp.utils.password import check_oic_password, check_password, check_password_cashier, check_password_oic, check_password_without_username
 
 import platform
 
@@ -125,6 +125,31 @@ def get_item_uoms(item_code):
     return response
 
 
+# import frappe
+
+# @frappe.whitelist()
+# def get_item_uom_and_batch_details(item_code):
+#     uom_prices = {}
+#     batch_details = []
+
+#     # Fetch UOM prices
+#     item_prices = frappe.get_all('Item Price', filters={'item_code': item_code}, fields=['uom', 'price_list_rate'])
+#     for price in item_prices:
+#         uom_prices[price.uom] = price.price_list_rate
+
+#     # Fetch batch details
+#     batches = frappe.get_all('Batch', filters={'item': item_code}, fields=['name', 'expiry_date'])
+#     for batch in batches:
+#         batch_details.append({
+#             'batch_no': batch.name,  # Assuming the primary key field is 'name'
+#             'expiry_date': batch.expiry_date
+#         })
+
+#     return {
+#         'uom_prices': uom_prices,
+#         'batch_details': batch_details
+#     }
+
 @frappe.whitelist()
 def get_item_uom_prices(item_code):
     uom_prices = {}
@@ -132,7 +157,6 @@ def get_item_uom_prices(item_code):
     for price in item_prices:
         uom_prices[price.uom] = price.price_list_rate
     return {'uom_prices': uom_prices}
-
 
 
 
@@ -519,19 +543,26 @@ def get_user_password():
 # def check_if_match(stored_password_hash, password):
 
 
-@frappe.whitelist()
-def confirm_user_password(password,role):
-    # Check if the provided role is "oic"
+# @frappe.whitelist()
+# def confirm_user_password(password,role):
+#     # Check if the provided role is "oic"
    
-    try:
-        # Check if the entered password matches the stored hashed password
-        if check_oic_password(password, role):
-            return True
-        else:
-            return False
-    except frappe.AuthenticationError:
-        return False
-	
+#     try:
+#         # Check if the entered password matches the stored hashed password
+#         if check_oic_password(password, role):
+#             return True
+#         else:
+#             return False
+#     except frappe.AuthenticationError:
+#         return False
+
+
+@frappe.whitelist()
+def confirm_user_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_oic_password(password)  
 
 @frappe.whitelist()
 def confirm_user_acc_password(password):
@@ -552,7 +583,23 @@ def get_user_details_by_password(password):
     """
     Wrapper function for checking password without requiring a username.
     """
-    return check_password_without_username(password)
+    return check_password_without_username(password)  
+
+@frappe.whitelist()
+def get_cashier_details_by_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_password_cashier(password)
+
+
+@frappe.whitelist()
+def get_oic_details_by_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_password_oic(password)
+
     
 @frappe.whitelist()
 def get_pharmacist_user():
@@ -584,10 +631,11 @@ def get_item_qty_per_warehouse(warehouse, item_code):
 def get_draft_pos_invoice_items(pos_profile, item_code):
     """
     Retrieves all draft POS invoices for the specified POS profile that contain the specified item code.
+    Includes batch details in the response.
     
     :param pos_profile: The POS profile to filter by.
     :param item_code: The item code to search for in the draft POS invoices.
-    :return: A list of draft POS invoices that contain the specified item code and the total quantity of the item.
+    :return: A list of draft POS invoices that contain the specified item code, including batch details, and the total quantity of the item.
     """
     try:
         # Fetch all draft POS invoices for the specified POS profile
@@ -627,6 +675,7 @@ def get_draft_pos_invoice_items(pos_profile, item_code):
         frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
 
 
+
 def get_draft_pos_invoice_item_quantity(pos_profile, item_code, actual_qty):
     """
     Retrieves the total quantity of the specified item code in draft POS invoices for the given POS profile.
@@ -657,5 +706,49 @@ def get_draft_pos_invoice_item_quantity(pos_profile, item_code, actual_qty):
         return actual_qty - total_qty
 
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), frappe._("Error fetching draft POS invoices"))
+        frappe.log_error(frappe.get_traceback(), _("Error fetching draft POS invoices"))
         frappe.throw(frappe._("An error occurred while fetching draft POS invoices: {0}").format(str(e)))
+
+
+
+# @frappe.whitelist()
+# def get_nearest_expiry_batch(item_code):
+#     try:
+#         result = frappe.db.sql("""
+#             SELECT batch_no, expiry_date
+#             FROM `tabSerial and Batch Entry`
+#             WHERE item_code = %s
+#             ORDER BY expiry_date ASC, creation ASC
+#             LIMIT 1
+#         """, (item_code,), as_dict=True)
+        
+#         # Debug logging
+#         frappe.log_error(message=str(result), title="Debug get_nearest_expiry_batch")
+        
+#         if result:
+#             return result[0]
+#         else:
+#             return {"batch_no": None, "expiry_date": None}
+#     except Exception as e:
+#         frappe.log_error(message=str(e), title="Error in get_nearest_expiry_batch")
+#         return {"batch_no": None, "expiry_date": None}
+
+
+# in your custom app file, e.g., custom_app/api.py
+import frappe
+
+@frappe.whitelist()
+def get_fifo_batch(item_code, warehouse):
+    batches = frappe.db.sql("""
+        SELECT name, expiry_date
+        FROM `tabBatch`
+        WHERE item = %s AND (expiry_date IS NULL OR expiry_date > NOW())
+        ORDER BY expiry_date ASC, creation ASC
+        LIMIT 1
+    """, (item_code,), as_dict=True)
+    
+    if batches:
+        return batches[0]
+    else:
+        return None
+

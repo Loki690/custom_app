@@ -67,7 +67,7 @@ custom_app.PointOfSale.Controller = class {
 
 					// Only include "Cash" payment method
 					if (mode_of_payment === "Cash") {
-						const opening_amount = "2000";
+						const opening_amount = "1500";
 						dialog.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
 					}
 				});
@@ -245,20 +245,10 @@ custom_app.PointOfSale.Controller = class {
 
 	}
 
-	proceed_components() {
-
-		this.init_item_selector();
-		this.init_item_details();
-		this.init_item_cart();
-		this.init_payments();
-
-	}
-
-
 	prepare_menu() {
 		this.page.clear_menu();
 
-		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
+		// this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),
@@ -269,23 +259,25 @@ custom_app.PointOfSale.Controller = class {
 
 		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "f3");
 
-		this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
+		// this.page.add_menu_item(__("Cash Count"), this.cash_count.bind(this), false, "f4");
 
 		this.page.add_menu_item(__("Check Encashment"), this.check_encashment.bind(this), false, "f6");
-		this.page.add_menu_item(__('Z Reading'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__('Z Reading (BIR)'), this.z_reading.bind(this), false, "f5");
+		this.page.add_menu_item(__('DSRS'), this.dsrs_reading.bind(this), false, "f0");
 		this.page.add_menu_item(__("Close the POS(X Reading)"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
-
 	}
 
 
 	add_buttons_to_toolbar() {
 		const buttons = [
-			{ label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
-			{ label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2" },
-			{ label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
-			{ label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B" },
-			{ label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X" },
-			{ label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C" }
+
+			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
+			{label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2"},
+			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
+			// {label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
+			// {label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
+			{label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
+
 		];
 
 		// Clear existing buttons to avoid duplication
@@ -298,12 +290,9 @@ custom_app.PointOfSale.Controller = class {
 
 
 
-	z_reading() {
-
-		const me = this;
-		// Show password dialog for OIC authentication
+	showPasswordDialog(title, onSuccess) {
 		const passwordDialog = new frappe.ui.Dialog({
-			title: __('Authorization Required OIC'),
+			title: __(title),
 			fields: [
 				{
 					fieldname: 'password',
@@ -315,28 +304,18 @@ custom_app.PointOfSale.Controller = class {
 			primary_action_label: __('Authorize'),
 			primary_action: (values) => {
 				let password = values.password;
-				let role = "oic";
-
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
+					args: { password: password},
 					callback: (r) => {
-						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
+						if (r.message.name) {
 							frappe.show_alert({
 								message: __('Verified'),
 								indicator: 'green'
 							});
 							passwordDialog.hide();
-
-
-							if (!this.$components_wrapper.is(":visible")) return;
-							let voucher = frappe.model.get_new_doc("POS Z Reading");
-							voucher.pos_profile = this.frm.doc.pos_profile;
-							frappe.set_route("Form", "POS Z Reading", voucher.name);
-
+							onSuccess();
 						} else {
-							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
 								message: __('Incorrect password or user is not an OIC'),
 								indicator: 'red'
@@ -348,7 +327,37 @@ custom_app.PointOfSale.Controller = class {
 		});
 
 		passwordDialog.show();
+	}
 
+	z_reading() {
+		const onSuccess = () => {
+			if (!this.$components_wrapper.is(":visible")) return;
+			frappe.db.get_doc('POS Profile', this.frm.doc.pos_profile)
+			.then(pos_profile => {
+				let voucher = frappe.model.get_new_doc("POS Z Reading");
+				voucher.pos_profile = this.frm.doc.pos_profile;
+				voucher.date_from = pos_profile.custom_start_operating_date;
+				voucher.date_to = frappe.datetime.now_datetime();
+				frappe.set_route("Form", "POS Z Reading", voucher.name);
+			})
+			.catch(error => {
+				console.error("Error fetching POS Profile:", error);
+				frappe.msgprint(__('Failed to fetch POS Profile. Please try again.'));
+			});
+		};
+
+		this.showPasswordDialog('OIC Authorization Required for Z Reading', onSuccess);
+	}
+
+	dsrs_reading() {
+		const onSuccess = () => {
+			if (!this.$components_wrapper.is(":visible")) return;
+			let voucher = frappe.model.get_new_doc("POS Daily Sales Report Summary");
+			voucher.pos_profile = this.frm.doc.pos_profile;
+			frappe.set_route("Form", "POS Daily Sales Report Summary", voucher.name);
+		};
+
+		this.showPasswordDialog('OIC Authorization Required for DSRS', onSuccess);
 	}
 
 
@@ -546,53 +555,6 @@ custom_app.PointOfSale.Controller = class {
 								indicator: 'green'
 							});
 							passwordDialog.hide();
-
-							// if (!this.$components_wrapper.is(":visible")) return;
-
-							// frappe.call({
-							// 	method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.create_and_submit_pos_closing_entry",
-							// 	args: {
-							// 		cashier: frappe.session.user,
-							// 		pos_profile: this.frm.doc.pos_profile,
-							// 		company: this.frm.doc.company,
-							// 		pos_opening_entry_id: this.pos_opening,
-							// 		posting_date: frappe.datetime.now_date(),
-							// 		posting_time: frappe.datetime.now_time()
-							// 	},
-							// 	callback: function(r) {
-							// 		if (r.message) {
-
-							// 			frappe.utils.print(
-							// 				'POS Closing Entry',
-							// 				r.message,
-							// 				'Custom X Reading',
-							// 				'Amesco Drug Corporation',
-							// 				'en' || frappe.boot.lang
-							// 			);
-
-							// 			passwordDialog.hide();
-							// 			frappe.show_alert({
-							// 				message: __(`Success ${ r.message}`),
-							// 				indicator: 'green'
-							// 			});
-
-							// 			  // Reload the page after 3 seconds
-							// 			  setTimeout(function(){
-							// 				location.reload();
-							// 			}, 3000);
-
-							// 			//frappe.set_route("Form", "POS Closing Entry", r.message);
-							// 		} else {
-							// 			frappe.show_alert({
-							// 				message: __('Failed to create POS Closing Entry'),
-							// 				indicator: 'red'
-							// 			});
-							// 		}
-							// 	}
-							// });
-
-
-
 							if (!this.$components_wrapper.is(":visible")) return;
 
 							let voucher = frappe.model.get_new_doc("POS Closing Entry");
@@ -631,6 +593,7 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	init_item_selector() {
+		this.selected_uom = "PC";
 		this.item_selector = new custom_app.PointOfSale.ItemSelector({
 			wrapper: this.$components_wrapper,
 			pos_profile: this.pos_profile,
@@ -1364,8 +1327,63 @@ custom_app.PointOfSale.Controller = class {
 		}
 	}
 
+	// remove_item_from_cart() {
+	// 	//Authenticate OIC to Remove
+	// 	const passwordDialog = new frappe.ui.Dialog({
+	// 		title: __('Enter OIC Password'),
+	// 		fields: [
+	// 			{
+	// 				fieldname: 'password',
+	// 				fieldtype: 'Password',
+	// 				label: __('Password'),
+	// 				reqd: 1
+	// 			}
+	// 		],
+	// 		primary_action_label: __('Remove'),
+	// 		primary_action: (values) => {
+	// 			let password = values.password;
+	// 			let role = "oic";
+	
+	// 			frappe.call({
+	// 				method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
+	// 				args: { password: password, role: role },
+	// 				callback: (r) => {
+	// 					if (r.message) {
+	// 						// Password authenticated, proceed with item removal
+	// 						frappe.dom.freeze();
+	// 						const { doctype, name, current_item } = this.item_details;
+	
+	// 						frappe.model
+	// 							.set_value(doctype, name, "qty", 0)
+	// 							.then(() => {
+	// 								frappe.model.clear_doc(doctype, name);
+	// 								this.update_cart_html(current_item, true);
+	// 								this.item_details.toggle_item_details_section(null);
+	// 								frappe.dom.unfreeze();
+	// 								passwordDialog.hide();
+	// 							})
+	// 							.catch((e) => {
+	// 								console.log(e);
+	// 								frappe.dom.unfreeze();
+	// 								passwordDialog.hide();
+	// 							});
+	// 					} else {
+	// 						frappe.show_alert({
+	// 							message: __('Incorrect password or user is not an OIC'),
+	// 							indicator: 'red'
+	// 						});
+	// 					}
+	// 				}
+	// 			});
+	// 		}
+	// 	});
+	
+	// 	passwordDialog.show();
+	// }
+	
+
 	remove_item_from_cart() {
-		//Authenticate OIC to Remove
+
 		const passwordDialog = new frappe.ui.Dialog({
 			title: __('Enter OIC Password'),
 			fields: [
@@ -1376,45 +1394,49 @@ custom_app.PointOfSale.Controller = class {
 					reqd: 1
 				}
 			],
-			primary_action_label: __('Remove'),
+			primary_action_label: __('Ok'),
 			primary_action: (values) => {
-				let password = values.password;
-				let role = "oic";
 
-				frappe.call({
+                let password = values.password;
+                frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
-					callback: (r) => {
-						if (r.message) {
-							// Password authenticated, proceed with item removal
-							frappe.dom.freeze();
-							const { doctype, name, current_item } = this.item_details;
-
-							frappe.model
-								.set_value(doctype, name, "qty", 0)
-								.then(() => {
-									frappe.model.clear_doc(doctype, name);
-									this.update_cart_html(current_item, true);
-									this.item_details.toggle_item_details_section(null);
-									frappe.dom.unfreeze();
-									passwordDialog.hide();
-								})
-								.catch((e) => {
-									console.log(e);
-									frappe.dom.unfreeze();
-									passwordDialog.hide();
-								});
-						} else {
-							frappe.show_alert({
-								message: __('Incorrect password or user is not an OIC'),
-								indicator: 'red'
-							});
-						}
-					}
-				});
-			}
-		});
-
+                    args: { password: password },
+                    callback: (r) => {
+                        if (r.message) {
+                            if(r.message.name) {
+								frappe.dom.freeze();
+								const { doctype, name, current_item } = this.item_details;
+		
+								frappe.model
+									.set_value(doctype, name, "qty", 0)
+									.then(() => {
+										frappe.model.clear_doc(doctype, name);
+										this.update_cart_html(current_item, true);
+										this.item_details.toggle_item_details_section(null);
+										frappe.dom.unfreeze();
+										passwordDialog.hide();
+									})
+									.catch((e) => {
+										console.log(e);
+										frappe.dom.unfreeze();
+										passwordDialog.hide();
+									});
+                            }else{
+                                frappe.show_alert({
+                                    message: ('Incorrect password'),
+                                    indicator: 'red'
+                                });
+                            }
+                        } else {
+                            frappe.show_alert({
+                                message: ('Incorrect password'),
+                                indicator: 'red'
+                            });
+                        }
+                    }
+                });
+            }
+		})
 		passwordDialog.show();
 	}
 
@@ -1422,7 +1444,7 @@ custom_app.PointOfSale.Controller = class {
 	async save_and_checkout() {
 		if (this.frm.is_dirty()) {
 			let save_error = false;
-			await this.frm.save(null, null, null, () => (save_error = true));
+			// await this.frm.save(null, null, null, () => (save_error = true));
 			// only move to payment section if save is successful
 			!save_error && this.payment.checkout();
 			// show checkout button on error

@@ -177,6 +177,11 @@ custom_app.PointOfSale.ItemSelector = class {
         let indicator_color;
         let qty_to_display = actual_qty;
     
+        if (uom !== 'PC') {
+            return '';
+        }
+
+
         if (item.is_stock_item) {
             indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
     

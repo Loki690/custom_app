@@ -218,34 +218,36 @@ custom_app.PointOfSale.ItemDetails = class {
 			primary_action_label: __('Authorize'),
 			primary_action: (values) => {
 				let password = values.password;
-				let role = "oic";
+
+		
 	
 				frappe.call({
 					method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
-					args: { password: password, role: role },
+					args: { password: password },
 					callback: (r) => {
 						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
-							frappe.show_alert({
-								message: __('Verified'),
-								indicator: 'green'
-							});
-							passwordDialog.hide();
-	
-							// Allow input to discount_percentage field
+
+							console.log('User: ', r.message)
 							
-							me.enable_discount_input(fieldname);
-							  // Get the current value of custom_manual_discount
-							let current_discount_log = doc.doc.custom_manual_dicsount || '';
-							// Append new log information
-							let discount_log = `${item.item_code} - Sample User - ${frappe.datetime.now_datetime()}\n`;
-							let updated_discount_log = current_discount_log + discount_log;
+							if (r.message.name) {
+								frappe.show_alert({
+									message: __('Verified'),
+									indicator: 'green'
+								});
+								passwordDialog.hide();
+	
+								me.enable_discount_input(fieldname);
+								me.set_discount_log(doc, item)
+								me.is_oic_authenticated = true;
+	
+							} else {
+								frappe.show_alert({
+									message: __('Incorrect password or user is not an OIC'),
+									indicator: 'red'
+								});
+							}
 
-							// Set the updated value
-							doc.set_value('custom_manual_dicsount', updated_discount_log);
-
-							// Set flag indicating OTP authentication
-							me.is_oic_authenticated = true;
+				
 						} else {
 							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
@@ -257,9 +259,17 @@ custom_app.PointOfSale.ItemDetails = class {
 				});
 			}
 		});
+
+	
 		passwordDialog.show();
 	}
 
+	set_discount_log(doc, item) {
+		let current_discount_log = doc.doc.custom_manual_dicsount || '';
+		let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
+		let updated_discount_log = current_discount_log + discount_log;
+		doc.set_value('custom_manual_dicsount', updated_discount_log);
+	}
 
 	// Function to enable input to discount_percentage field after OTP authentication
 	enable_discount_input(fieldname) {
@@ -273,13 +283,22 @@ custom_app.PointOfSale.ItemDetails = class {
 			'price_list_rate',
 			"rate",
 			"uom",
+			// "custom_expiry_date",
+			//"conversion_factor",
 			"discount_percentage",
-			"discount_amount",
+			"custom_batch_number",
+			"custom_batch_expiry",
+			"discount_amount", // added field
+			//"custom_item_discount_amount",
+			//"warehouse",
+			//"actual_qty",
+			//"price_list_rate",
+			// "is_free_item",
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
 			'custom_zero_rated_amount',
-			'custom_discount_auth_by',
+			//"custom_free",
 			"custom_remarks",
 		];
 		if (item.has_serial_no) fields.push("serial_no");

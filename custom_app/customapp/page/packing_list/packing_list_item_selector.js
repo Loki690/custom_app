@@ -86,7 +86,8 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Item Code</th>
                                 <th>Name</th>
                                 <th>Vat Type</th>
-                                <th>Price</th>
+                                <th>Vatin Price</th>
+                                <th>Vatex Price</th>
                                 <th>UOM</th>
                                 <th>QTY</th>
                             </tr>
@@ -112,16 +113,23 @@ custom_app.PointOfSale.ItemSelector = class {
             const res = await frappe.db.get_value("POS Profile", this.pos_profile, "selling_price_list");
             this.price_list = res.message.selling_price_list;
         }
-
-
+    
+        // Set the UOM to PC
         this.selected_uom = "PC";
-        this.item_uom && this.item_uom.set_value("PC");
-
-        this.get_items({}).then(({ message }) => {
-            this.render_item_list(message.items);
-        });
+        if (this.item_uom) {
+            this.item_uom.set_value("PC");
+            this.item_uom.refresh();
+        }
+    
+        // Retrieve and render items immediately after setting the values
+        const { message } = await this.get_items({});
+        this.render_item_list(message.items);
+    
+        // Trigger the filter function to apply the UOM filter
+        this.filter_items({ uom: this.selected_uom });
     }
 
+    
     get_items({ start = 0, page_length = 40, search_term = "" }) {
         const doc = this.events.get_frm().doc;
         const price_list = (doc && doc.selling_price_list) || this.price_list;
@@ -196,6 +204,9 @@ custom_app.PointOfSale.ItemSelector = class {
             indicator_color = "";
             qty_to_display = "";
         }
+        const tax_rate = 0.12;
+		const no_vat = price_list_rate / (1 + tax_rate);
+
 
         const item_description = description ? description : "Description not available";
 
@@ -209,6 +220,7 @@ custom_app.PointOfSale.ItemSelector = class {
             <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency( custom_is_vatable == 0 ? price_list_rate : no_vat, item.currency) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
             <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
@@ -827,14 +839,13 @@ custom_app.PointOfSale.ItemSelector = class {
 
 
         frappe.ui.keys.on("enter", (e) => {
-
-            if (e.ctrlKey) return; // Skip handling if Shift + Enter is pressed
-
+            if (e.ctrlKey) return; // Skip handling if Ctrl + Enter is pressed
+        
             const selector_is_visible = this.$component.is(":visible");
             const dialog_is_open = document.querySelector(".modal.show");
-
+        
             if (!selector_is_visible || this.search_field.get_value() === "") return;
-
+        
             if (this.items.length == 1) {
                 this.$items_container.find(".item-wrapper").click();
                 frappe.utils.play_sound("submit");
@@ -848,7 +859,7 @@ custom_app.PointOfSale.ItemSelector = class {
                 this.barcode_scanned = false;
                 this.set_search_value("");
             }
-
+        
             if (dialog_is_open && document.activeElement.tagName === "SELECT") {
                 // Trigger action to add the selected item to the cart
                 this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
@@ -866,6 +877,7 @@ custom_app.PointOfSale.ItemSelector = class {
                 this.search_field.set_focus();
             }
         });
+        
 
     }
 

@@ -1159,7 +1159,8 @@ custom_app.PointOfSale.ItemCart = class {
 			</div> 
 
 			<div class="item-vat mx-3">
-				<strong>${format_currency( item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.rate :  customer_group === "Senior Citizen" || customer_group === "PWD" ? no_vat : item_data.rate, currency)}</strong>
+			<!--	<strong>${format_currency( item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.rate :  customer_group === "Senior Citizen" || customer_group === "PWD" ? no_vat : item_data.rate, currency)}</strong> -->
+			<strong>${format_currency(item_data.price_list_rate)}</strong>
 			</div>
 			<div class="item-discount mx-3">
 				<strong>${(item_data.discount_percentage)}%</strong>

@@ -110,9 +110,13 @@ custom_app.PointOfSale.PastOrderList = class {
 			parent: this.$component.find(".status-field"),
 			render_input: true,
 		});
-		this.search_field.toggle_label(false);
+		this.search_field.toggle_label(true);
 		this.status_field.toggle_label(false);
 		this.status_field.set_value("Draft");
+
+		setTimeout(() => {
+			this.search_field.$input.focus();
+		}, 100);
 	}
 
 	refresh_list() {
