@@ -16,7 +16,7 @@ custom_app.PointOfSale.PastOrderList = class {
 		this.wrapper.append(
 			`<section class="past-order-list">
 				<div class="filter-section">
-					<div class="label">${__("Recent Orders")}</div>
+					<div class="label">${__("Pending Orders")} <span class="invoice-count ml-3 badge rounded-pill bg-danger text-white"></span> </div>
 					<div class="search-field"></div>
 					<div class="status-field"></div>
 				</div>
@@ -26,6 +26,7 @@ custom_app.PointOfSale.PastOrderList = class {
 
 		this.$component = this.wrapper.find(".past-order-list");
 		this.$invoices_container = this.$component.find(".invoices-container");
+		this.$invoice_count = this.$component.find(".invoice-count");
 	}
 
 	bind_events() {
@@ -109,9 +110,13 @@ custom_app.PointOfSale.PastOrderList = class {
 			parent: this.$component.find(".status-field"),
 			render_input: true,
 		});
-		this.search_field.toggle_label(false);
+		this.search_field.toggle_label(true);
 		this.status_field.toggle_label(false);
 		this.status_field.set_value("Draft");
+
+		setTimeout(() => {
+			this.search_field.$input.focus();
+		}, 100);
 	}
 
 	refresh_list() {
@@ -121,8 +126,6 @@ custom_app.PointOfSale.PastOrderList = class {
 		const status = this.status_field.get_value();
 		const pos_profile = this.events.pos_profile();
 		const source_warehouse = this.events.source_warehouse();
-
-
 
 		this.$invoices_container.html("");
 
@@ -136,6 +139,8 @@ custom_app.PointOfSale.PastOrderList = class {
 					const invoice_html = this.get_invoice_html(invoice);
 					this.$invoices_container.append(invoice_html);
 				});
+			
+				this.$invoice_count.text(response.message.length);
 			},
 		});
 	}

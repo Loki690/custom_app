@@ -80,7 +80,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		const { status } = doc;
 		let indicator_color = "";
 		 // Determine the 'Sold by' value based on the status
-		const sold_by = status === "Draft" ? 'Amesco Drug Corporation' : doc.owner;
+		const sold_by = status === "Draft" ? doc.custom_pa_name : doc.custom_cashier_name;
 
 		["Paid", "Consolidated"].includes(status) && (indicator_color = "green");
 		status === "Draft" && (indicator_color = "red");
@@ -89,7 +89,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		return `<div class="left-section">
 					<div class="customer-name">${doc.customer}</div>
 					<div class="customer-email">${this.customer_email}</div>
-					<div class="cashier">${__("Amesco Drug Corporation")}</div>
+					<div class="cashier"> Take by:  ${__(sold_by)}</div>
 				</div>
 				<div class="right-section">
 					<div class="paid-amount">${format_currency(doc.grand_total, doc.currency)}</div>
@@ -276,6 +276,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			this.doc.letter_head,
 			this.doc.language || frappe.boot.lang
 		);
+		
 	}
 
 	attach_shortcuts() {
@@ -375,6 +376,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			}
 		});
 		this.$summary_btns.children().last().removeClass("mr-4");
+		
 	}
 
 	toggle_summary_placeholder(show) {
@@ -393,10 +395,10 @@ custom_app.PointOfSale.PastOrderSummary = class {
 
 		// added print reciept button 
 		return [
-			{ condition: this.doc.docstatus === 0, visible_btns: ["Print Receipt", "Edit Order", "Delete Order"] },
+			{ condition: this.doc.docstatus === 0, visible_btns: ["Edit Order"] },
 			{
 				condition: !this.doc.is_return && this.doc.docstatus === 1,
-				visible_btns: ["Print Receipt", "Email Receipt", "Return"],
+				visible_btns: ["Print Receipt", "Email Receipt", "Return"],	
 			},
 			{
 				condition: this.doc.is_return && this.doc.docstatus === 1,
@@ -496,10 +498,10 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		const discount_dom = this.get_discount_html(doc);
 		const grand_total_dom = this.get_grand_total_html(doc);
 		this.$totals_container.append(net_total_dom);
-		this.$totals_container.append(vatable_sale_dom);
-		this.$totals_container.append(vat_exempt_dom);
-		this.$totals_container.append(zero_rated_dom);
-		this.$totals_container.append(vat_amount_dom);
+		// this.$totals_container.append(vatable_sale_dom);
+		// this.$totals_container.append(vat_exempt_dom);
+		// this.$totals_container.append(zero_rated_dom);
+		// this.$totals_container.append(vat_amount_dom);
 		this.$totals_container.append(taxes_dom);
 		this.$totals_container.append(discount_dom);
 		this.$totals_container.append(grand_total_dom);

@@ -5,7 +5,6 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "branch",
   "pos_profile",
   "column_break_yykv",
   "date",
@@ -22,6 +21,7 @@
   "table_szcm",
   "section_break_ssio",
   "oic",
+  "printed",
   "column_break_kwsp",
   "bank_personnel",
   "amended_from"
@@ -43,15 +43,6 @@
    "read_only": 1
   },
   {
-   "bold": 1,
-   "fetch_from": "pos_profile.warehouse",
-   "fieldname": "branch",
-   "fieldtype": "Link",
-   "label": "Branch",
-   "options": "Warehouse",
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_prab",
    "fieldtype": "Section Break"
   },
@@ -70,8 +61,9 @@
   {
    "bold": 1,
    "fieldname": "deposit_to",
-   "fieldtype": "Data",
-   "label": "Deposit To"
+   "fieldtype": "Link",
+   "label": "Deposit To",
+   "options": "Bank"
   },
   {
    "fieldname": "column_break_kutn",
@@ -150,12 +142,18 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "printed",
+   "fieldtype": "Check",
+   "label": "Printed"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-06-27 17:31:18.755874",
+ "modified": "2024-08-08 10:16:47.521238",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Deposit Acknowledgement",

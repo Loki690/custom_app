@@ -71,9 +71,11 @@ custom_app.PointOfSale.PastOrderSummary = class {
 
 	get_upper_section_html(doc) {
 
-		console.log("Paid Amount",doc)
+		// console.log("Paid Amount",doc)
 		const { status } = doc;
 		let indicator_color = "";
+
+		const sold_by = status === "Draft" ? doc.custom_pa_name : doc.custom_cashier_name;
 
 		["Paid", "Consolidated"].includes(status) && (indicator_color = "green");
 		status === "Draft" && (indicator_color = "red");
@@ -82,7 +84,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		return `<div class="left-section">
 					<div class="customer-name">${doc.customer}</div>
 					<div class="customer-email">${this.customer_email}</div>
-					<div class="cashier">${__("Sold by")}: ${doc.owner}</div>
+					<div class="cashier"> Take by:  ${__(sold_by)}</div>
 				</div>
 				<div class="right-section">
 					<div class="paid-amount">${format_currency(doc.grand_total, doc.currency)}</div>
@@ -407,7 +409,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 			return [{ condition: true, visible_btns: ["Print Receipt", "Email Receipt", "New Order"] }];
 
 		return [
-			{ condition: this.doc.docstatus === 0, visible_btns: ["Edit Order", "Delete Order", "Proceed Order"] },
+			{ condition: this.doc.docstatus === 0, visible_btns: ["Edit Order", "Proceed Order"] },
 			{
 				condition: !this.doc.is_return && this.doc.docstatus === 1,
 				visible_btns: ["Print Receipt", "Email Receipt", "Return"],

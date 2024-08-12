@@ -16,6 +16,8 @@ from erpnext.stock.utils import scan_barcode
 #from frappe.utils.password import check_oic_password, check_password
 from custom_app.customapp.utils.password import check_oic_password, check_password
 
+from custom_app.customapp.doctype.cash_count_denomination_entry.cash_count_denomination_entry import create_cash_count_denomination_entry
+
 
 def search_by_term(search_term, warehouse, price_list):
 	result = search_for_serial_or_batch_or_barcode_number(search_term) or {}
@@ -94,6 +96,9 @@ def search_by_term(search_term, warehouse, price_list):
 		)
 
 	return {"items": [item]}
+
+
+
 
 
 @frappe.whitelist()
@@ -241,6 +246,17 @@ def get_item_uoms(item_code):
 
 
 @frappe.whitelist()
+def get_item_uom_prices(item_code):
+    uom_prices = {}
+    item_prices = frappe.get_all('Item Price', filters={'item_code': item_code}, fields=['uom', 'price_list_rate'])
+    for price in item_prices:
+        uom_prices[price.uom] = price.price_list_rate
+    return {'uom_prices': uom_prices}
+
+
+
+
+@frappe.whitelist()
 def search_for_serial_or_batch_or_barcode_number(search_value: str) -> dict[str, str | None]:
 	# return scan_barcode(search_value)
 	try: 
@@ -326,6 +342,18 @@ def get_shift_count(pos_profile):
     return count
 
 @frappe.whitelist()
+def get_pos_profile_shift(pos_profile):
+    try:
+        # Retrieve the POS Profile document
+        pos_profile_doc = frappe.get_doc("POS Profile", pos_profile)
+        return pos_profile_doc.custom_set_max_shift
+    except frappe.DoesNotExistError:
+        frappe.throw(_("POS Profile '{0}' does not exist").format(pos_profile))
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Error fetching POS Profile')
+        frappe.throw(_("An error occurred while fetching the POS Profile: {0}").format(str(e)))
+
+@frappe.whitelist()
 def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 	balance_details = json.loads(balance_details)
 
@@ -347,7 +375,7 @@ def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 
 
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, limit=20):
+def get_past_order_list(search_term, status, pos_profile, limit=10000):
 	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
@@ -439,17 +467,11 @@ def get_pos_profile_data(pos_profile):
 
 
 @frappe.whitelist()
-def confirm_user_password(password,role):
-    # Check if the provided role is "oic"
-   
-    try:
-        # Check if the entered password matches the stored hashed password
-        if check_oic_password(password, role):
-            return True
-        else:
-            return False
-    except frappe.AuthenticationError:
-        return False
+def confirm_user_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_oic_password(password)  
 	
 
 
@@ -487,3 +509,52 @@ def get_pos_closing_details(parent):
         frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
+
+
+@frappe.whitelist()
+def get_pos_warehouse(pos_profile):
+    warehouse = frappe.db.get_value("POS Profile", pos_profile, "warehouse")
+    return warehouse
+@frappe.whitelist()
+def create_and_submit_pos_closing_entry(cashier, pos_profile, company, pos_opening_entry_id, posting_date, posting_time):
+    """
+    Create and submit a new POS Closing Entry document.
+
+    Args:
+        cashier (str): The user creating the entry
+        pos_profile (str): The POS profile
+        company (str): The company name
+        pos_opening_entry_id (str): The ID of the POS opening entry
+
+    Returns:
+        str: The name of the submitted document
+    """
+    try:
+        # Create a new POS Closing Entry document
+        voucher = frappe.new_doc("POS Closing Entry")
+        voucher.pos_profile = pos_profile
+        voucher.user = cashier
+        voucher.company = company
+        voucher.pos_opening_entry = pos_opening_entry_id
+        voucher.period_end_date = frappe.utils.now_datetime()
+        voucher.posting_date = posting_date
+        voucher.posting_time = posting_time
+        
+        # Insert and submit the document
+        voucher.insert()
+        # add time to submit
+        #
+        voucher.submit()
+
+        # Commit the transaction to save changes
+        frappe.db.commit()        
+        # user the create_cash_count_denomination_entry here import
+        create_cash_count_denomination_entry(cashier, pos_profile, voucher.pos_opening_entry)
+        return voucher.name
+
+    except frappe.exceptions.ValidationError as e:
+        frappe.throw(frappe._("Validation Error: {0}").format(str(e)))
+
+    except Exception as e:
+        frappe.throw(frappe._("An error occurred while creating the document: {0}").format(str(e)))
+    

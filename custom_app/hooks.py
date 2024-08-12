@@ -232,23 +232,42 @@ app_license = "mit"
 doc_events = {
     "POS Invoice": {
         "before_insert": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_insert",
-        # "validate": "custom_app.customapp.doctype.sample.sample.custom_validate",
-        # "on_submit": "custom_app.customapp.doctype.sample.sample.custom_on_submit"
         "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
+        "validate": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.validate",
+        #"on_submit": "custom_app.customapp.utils.amesco_plus_api.api.on_submit_pos_invoice"
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
     },
    'POS Z Reading': {
         'on_submit': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.on_submit'
-    }
+    },
+#    'POS Opening Entry' : {
+#        "validate":"custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.pos_opening_validation",
+#    },
+   'Amesco Gift Certificate':{
+       "before_insert": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.before_save",
+   },
+   'POS Closing Entry': {
+       'on_submit': 'custom_app.customapp.doctype.cash_count_denomination_entry.cash_count_denomination_entry.on_submit',
+   },
+#    "User": {
+#         "on_login": "custom_app.customapp.utils.user.force_password_reset"
+#     }
 }
 
-# your_app/hooks.py
+scheduler_events = {
+    "daily": [
+        "custom_app.customapp.utils.executables.delete.delete_draft_pos_invoices",
+    ],
+}
+
 jenv = {
     'methods': [
         'custom_format_datetime=custom_app.customapp.utils.custom_format_datetime'
     ]
 }
 
-
-
+app_include_js = [
+    # "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.js",
+    #  "/assets/custom_app/js/contact_address_quick_entry.bundle.js"
+]
