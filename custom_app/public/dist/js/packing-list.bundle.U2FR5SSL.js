@@ -6330,8 +6330,8 @@
       let current_discount_log = doc.doc.custom_manual_dicsount || "";
       let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}
 `;
-      let updated_discount_log = current_discount_log + discount_log;
-      doc.set_value("custom_manual_dicsount", updated_discount_log);
+      let updated_discount_log2 = current_discount_log + discount_log;
+      doc.set_value("custom_manual_dicsount", updated_discount_log2);
     }
     enable_discount_input(fieldname) {
       this.$form_container.find(`.${fieldname}-control input`).prop("disabled", false);
@@ -6731,6 +6731,8 @@
         $(`.approved-by`).hide();
         $(`.gift-code`).hide();
         $(`.button-code`).hide();
+        $(`.amesco-code`).hide();
+        $(`.button-amesco-plus`).hide();
         $(`.save-button`).hide();
         $(`.discard-button`).hide();
         $(`.cash-button`).hide();
@@ -6800,6 +6802,9 @@
             mode_clicked.find(".gift-code").css("display", "flex");
             mode_clicked.find(".button-code").css("display", "flex");
             mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "amesco_plus") {
+            mode_clicked.find(".amesco-code").css("display", "flex");
+            mode_clicked.find(".button-amesco-plus").css("display", "flex");
           }
           me.selected_mode && me.selected_mode.$input.get();
           me.auto_set_remaining_amount();
@@ -7137,6 +7142,12 @@
 									<div class="${mode} discard-button"></div>
 								</div>
 						   `;
+              break;
+            case "Amesco Plus":
+              paymentModeHtml += `
+							<div class="${mode} amesco-code"></div>
+							<div class="${mode} button-amesco-plus mt-2" ></div>
+							   `;
               break;
           }
           paymentModeHtml += `
@@ -8314,6 +8325,75 @@
             });
           });
         }
+        if (p.mode_of_payment === "Amesco Plus") {
+          let button = frappe.ui.form.make_control({
+            df: {
+              label: "Scan",
+              fieldtype: "Button",
+              btn_size: "sm",
+              click: function() {
+                console.log("Click");
+                new frappe.ui.Scanner({
+                  dialog: true,
+                  multiple: false,
+                  on_scan(data) {
+                    let scannedData = data.decodedText.split(",");
+                    console.log("scannedData", scannedData);
+                    let voucher_code = scannedData[0];
+                    let user_id = scannedData[1];
+                    let email = scannedData[4];
+                    let amesco_points = scannedData[2];
+                    let details_dialog = new frappe.ui.Dialog({
+                      title: __("Scanned Amesco Plus User"),
+                      fields: [
+                        {
+                          label: "Voucher Code",
+                          fieldname: "voucher_code",
+                          fieldtype: "Data",
+                          read_only: 1,
+                          default: voucher_code
+                        },
+                        {
+                          label: "User ID",
+                          fieldname: "user_id",
+                          fieldtype: "Data",
+                          read_only: 1,
+                          default: user_id
+                        },
+                        {
+                          label: "Email",
+                          fieldname: "email",
+                          fieldtype: "Data",
+                          read_only: 1,
+                          default: email
+                        },
+                        {
+                          label: "Redeem Points",
+                          fieldname: "points",
+                          fieldtype: "Data",
+                          read_only: 1,
+                          default: amesco_points
+                        }
+                      ],
+                      primary_action_label: __("Ok"),
+                      primary_action: function() {
+                        frappe.model.set_value(p.doctype, p.name, "custom_am_voucher_code", voucher_code);
+                        frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
+                        frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
+                        frappe.model.set_value(p.doctype, p.name, "amount", flt(amesco_points));
+                        details_dialog.hide();
+                      }
+                    });
+                    details_dialog.show();
+                  }
+                });
+              }
+            },
+            parent: this.$payment_modes.find(`.${mode}.button-amesco-plus`)[0],
+            render_input: true
+          });
+          button.refresh();
+        }
         this[`${mode}_control`].set_value(p.amount);
       });
       this.render_loyalty_points_payment_mode();
@@ -9172,6 +9252,7 @@
       const buttons = [
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
         { label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2" },
+        { label: __("Amesco Plus Member"), action: this.amesco_plus_scan.bind(this), shortcut: "f2" },
         { label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3" },
         { label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4" },
         { label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5" }
@@ -9200,6 +9281,61 @@
         () => this.toggle_recent_order_list(true),
         () => frappe.dom.unfreeze()
       ]);
+    }
+    amesco_plus_scan() {
+      const me = this;
+      const doc = me.frm;
+      new frappe.ui.Scanner({
+        dialog: true,
+        multiple: false,
+        on_scan(data) {
+          let scannedData = data.decodedText.split(",");
+          let user_id = scannedData[0];
+          let userName = scannedData[2];
+          let email = scannedData[3];
+          let points = scannedData[4];
+          doc.set_value("custom_ameso_user", email);
+          doc.set_value("custom_amesco_user_id", user_id);
+          let userDetailsDialog = new frappe.ui.Dialog({
+            title: __("Scanned User Details"),
+            fields: [
+              {
+                label: "Name",
+                fieldname: "user_name",
+                fieldtype: "Data",
+                read_only: 1,
+                default: userName
+              },
+              {
+                label: "Email",
+                fieldname: "email",
+                fieldtype: "Data",
+                read_only: 1,
+                default: email
+              },
+              {
+                label: "Points",
+                fieldname: "points",
+                fieldtype: "Data",
+                read_only: 1,
+                default: points
+              }
+            ],
+            primary_action_label: __("Close"),
+            primary_action: function() {
+              userDetailsDialog.hide();
+            }
+          });
+          userDetailsDialog.show();
+        }
+      });
+    }
+    set_discount_log(doc, user, email) {
+      doc.set_value("custom_ameso_user", updated_discount_log);
+      doc.set_value("custom_manual_dicsount", updated_discount_log);
+    }
+    handle_scanned_barcode(barcode) {
+      console.log("Scanned Barcode:", barcode);
     }
     show_branch_selection_dialog() {
       const selectedWarehouse = localStorage.getItem("selected_warehouse") || "";
@@ -10009,4 +10145,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.LQOWQSAG.js.map
+//# sourceMappingURL=packing-list.bundle.U2FR5SSL.js.map

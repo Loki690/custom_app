@@ -5513,7 +5513,7 @@
           payments.forEach((pay) => {
             const { mode_of_payment } = pay;
             if (mode_of_payment === "Cash") {
-              const opening_amount = "2000";
+              const opening_amount = "1500";
               dialog2.fields_dict.balance_details.df.data.push({ mode_of_payment, opening_amount });
             }
           });
@@ -6599,4 +6599,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.RAMAATX5.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.5CZEJ2SO.js.map
