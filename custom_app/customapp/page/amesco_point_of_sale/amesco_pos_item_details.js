@@ -311,9 +311,9 @@ custom_app.PointOfSale.ItemDetails = class {
 			// "custom_expiry_date",
 			//"conversion_factor",
 			"discount_percentage",
+			"discount_amount", 
 			"custom_batch_number",
 			"custom_batch_expiry",
-			"discount_amount", // added field
 			//"custom_item_discount_amount",
 			//"warehouse",
 			//"actual_qty",

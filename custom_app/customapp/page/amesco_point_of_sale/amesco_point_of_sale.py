@@ -246,6 +246,17 @@ def get_item_uoms(item_code):
 
 
 @frappe.whitelist()
+def get_item_uom_prices(item_code):
+    uom_prices = {}
+    item_prices = frappe.get_all('Item Price', filters={'item_code': item_code}, fields=['uom', 'price_list_rate'])
+    for price in item_prices:
+        uom_prices[price.uom] = price.price_list_rate
+    return {'uom_prices': uom_prices}
+
+
+
+
+@frappe.whitelist()
 def search_for_serial_or_batch_or_barcode_number(search_value: str) -> dict[str, str | None]:
 	# return scan_barcode(search_value)
 	try: 
