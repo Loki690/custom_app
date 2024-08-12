@@ -16,13 +16,13 @@ def on_submit(doc, method):
     It creates a 'Cash Count Denomination Entry' record.
     """
     try:
-        create_cash_count_denomination_entry(doc.user, doc.pos_profile, doc.pos_opening_entry, doc.name)
+        create_cash_count_denomination_entry(doc.user, doc.pos_profile, doc.pos_opening_entry, doc.name, doc.custom_shift, doc)
     except frappe.exceptions.ValidationError as e:
         frappe.throw(frappe._("Validation Error: {0}").format(str(e)))
     except Exception as e:
         frappe.throw(frappe._("An error occurred during on_submit: {0}").format(str(e)))
 
-def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry_id, pos_closing_entry_id):
+def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry_id, pos_closing_entry_id, shift, doc):
 
     try:
     
@@ -31,6 +31,13 @@ def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry
         new_entry.custom_pos_profile = pos_profile
         new_entry.custom_pos_opening_entry_id = pos_opening_entry_id
         new_entry.custom_pos_closing_entry_id = pos_closing_entry_id
+        new_entry.custom_shift = shift
+        new_entry.custom_cash_sales = doc.custom_cash_sales
+        new_entry.custom_check_sales = doc.custom_check_sales
+        new_entry.custom_total_cashcheck_sales = doc.custom_total_cash_and_check_sales
+        new_entry.custom_cash_check_voucher = doc.custom_cash_and_check_voucher
+        new_entry.custom_sales_return = doc.custom_sales_return
+        
         default_denominations = [
             {"amount": 1000, "name": "1000 PESOS"},
             {"amount": 500, "name": "500 PESOS"},
@@ -75,3 +82,24 @@ def validate_cashier_password(user, password):
     Function to validate the cashier's password.
     """
     return confirm_user_acc_user_password(user, password)
+
+
+@frappe.whitelist()
+def get_pos_closing_invoices(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'Invoice Reference', 
+            filters={'parent': parent},
+            fields=['name', 'parent', 
+                    'custom_invoice_series', 
+                    'grand_total', 
+                    'posting_date']
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_pos_closing_invoices Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
