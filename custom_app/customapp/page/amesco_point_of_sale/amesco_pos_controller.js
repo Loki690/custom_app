@@ -274,6 +274,7 @@ custom_app.PointOfSale.Controller = class {
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
 			{label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
+			{ label: __("Amesco Plus Member"), action: this.amesco_plus_scan.bind(this), shortcut: "f4" },
 			// {label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
 			// {label: __("Cash Voucher"), action: this.cash_voucher.bind(this), shortcut: "Ctrl+X"},
 			{label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C"}
@@ -413,6 +414,82 @@ custom_app.PointOfSale.Controller = class {
 
 		]);
 	}
+
+	amesco_plus_scan() {
+
+		const me = this
+		const doc = me.frm
+		
+		new frappe.ui.Scanner({
+			dialog: true, // open camera scanner in a dialog
+			multiple: false, // stop after scanning one value
+			on_scan(data) {
+				// Assuming the scanned data is comma-separated
+				let scannedData = data.decodedText.split(',');
+				// Extracting fields from the scanned data
+				let user_id = scannedData[0];
+				let userName = scannedData[2];
+				let email = scannedData[3];
+				let points = scannedData[4];
+
+				doc.set_value('custom_ameso_user', email);
+				doc.set_value('custom_amesco_user_id', user_id);
+
+				// Creating a dialog to display the extracted data
+				let userDetailsDialog = new frappe.ui.Dialog({
+					title: __('Scanned User Details'),
+					fields: [
+						{
+							label: 'Name',
+							fieldname: 'user_name',
+							fieldtype: 'Data',
+							read_only: 1,
+							default: userName
+						},
+						{
+							label: 'Email',
+							fieldname: 'email',
+							fieldtype: 'Data',
+							read_only: 1,
+							default: email
+						},
+						{
+							label: 'Points',
+							fieldname: 'points',
+							fieldtype: 'Data',
+							read_only: 1,
+							default: points
+						}
+					],
+					primary_action_label: __('Close'),
+					primary_action: function() {
+						userDetailsDialog.hide();
+					}
+				});
+	
+				// Show the dialog with user details
+				userDetailsDialog.show();
+			}
+		})
+	}
+
+
+	set_discount_log(doc, user, email) {
+		doc.set_value('custom_ameso_user', updated_discount_log);
+		doc.set_value('custom_manual_dicsount', updated_discount_log);
+	}
+	
+	
+	
+	// Define the handle_scanned_barcode function
+	handle_scanned_barcode(barcode) {
+		// Logic to handle the scanned barcode
+		console.log("Scanned Barcode:", barcode);
+		// Add your barcode handling logic here
+	}
+
+
+
 
 
 	open_form_view() {

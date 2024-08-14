@@ -205,27 +205,35 @@ custom_app.PointOfSale.ItemSelector = class {
 
     get_item_html(item) {
         const me = this;
-    
+
+        const defaulf_uom = "PC"
+
+
         const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
 
+        // console.log("Actual QTY ", qty_to_display)
 
         if (item.is_stock_item) {
             indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
-    
-            if (Math.round(qty_to_display) > 999) {
-                qty_to_display = Math.round(qty_to_display) / 1000;
-                qty_to_display = qty_to_display.toFixed(1) + "K";
-            }
+
+            // if (Math.round(qty_to_display) > 999) {
+            //     qty_to_display = Math.round(qty_to_display) / 1000;
+            //     qty_to_display = qty_to_display.toFixed(1) + "K";
+            // }
+
         } else {
             indicator_color = "";
             qty_to_display = "";
         }
-    
+        const tax_rate = 0.12;
+		const no_vat = price_list_rate / (1 + tax_rate);
+
+
         const item_description = description ? description : "Description not available";
-    
+
         return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
         onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
         onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
@@ -236,6 +244,7 @@ custom_app.PointOfSale.ItemSelector = class {
             <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency( custom_is_vatable == 0 ? price_list_rate : no_vat, item.currency) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
             <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
