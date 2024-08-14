@@ -82,3 +82,24 @@ def validate_cashier_password(user, password):
     Function to validate the cashier's password.
     """
     return confirm_user_acc_user_password(user, password)
+
+
+@frappe.whitelist()
+def get_pos_closing_invoices(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'Invoice Reference', 
+            filters={'parent': parent},
+            fields=['name', 'parent', 
+                    'custom_invoice_series', 
+                    'grand_total', 
+                    'posting_date']
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_pos_closing_invoices Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
