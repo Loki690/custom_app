@@ -485,10 +485,27 @@
     }
     get_items({ start = 0, page_length = 40, search_term = "" }) {
       const doc = this.events.get_frm().doc;
-      const price_list = doc && doc.selling_price_list || this.price_list;
-      let { item_group, pos_profile } = this;
-      !item_group && (item_group = this.parent_item_group);
+      const price_list = doc && doc.selling_price_list || this.price_list || "default_price_list";
+      let item_group = doc && doc.item_group || this.item_group || "default_item_group";
       const selected_warehouse = localStorage.getItem("selected_warehouse");
+      if (!price_list) {
+        console.error("Price list is required but missing.");
+        frappe.msgprint({
+          title: __("Error"),
+          message: __("Price list is required but missing."),
+          indicator: "red"
+        });
+        return Promise.reject(new Error("Price list is required but missing."));
+      }
+      if (!item_group) {
+        console.error("Item group is required but missing.");
+        frappe.msgprint({
+          title: __("Error"),
+          message: __("Item group is required but missing."),
+          indicator: "red"
+        });
+        return Promise.reject(new Error("Item group is required but missing."));
+      }
       return frappe.call({
         method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_items",
         freeze: true,
@@ -498,7 +515,7 @@
           price_list,
           item_group,
           search_term,
-          pos_profile,
+          pos_profile: this.pos_profile,
           selected_warehouse
         }
       });
@@ -7025,4 +7042,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.FZWKHQZV.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.SQVAJHBZ.js.map

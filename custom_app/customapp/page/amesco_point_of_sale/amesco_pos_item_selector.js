@@ -129,29 +129,52 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     get_items({ start = 0, page_length = 40, search_term = "" }) {
-		const doc = this.events.get_frm().doc;
-		const price_list = (doc && doc.selling_price_list) || this.price_list;
-		let { item_group, pos_profile } = this;
-
-		!item_group && (item_group = this.parent_item_group);
-
-		// Get the selected warehouse from local storage
-		const selected_warehouse = localStorage.getItem('selected_warehouse');
-
-		return frappe.call({
-			method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_items",
-			freeze: true,
-			args: {
-				start,
-				page_length,
-				price_list,
-				item_group,
-				search_term,
-				pos_profile,
-				selected_warehouse  // Include selected warehouse in the request
-			},
-		});
-	}
+        const doc = this.events.get_frm().doc;
+    
+        // Use fallback default values
+        const price_list = (doc && doc.selling_price_list) || this.price_list || 'default_price_list'; // Adjust default value as needed
+        let item_group = (doc && doc.item_group) || this.item_group || 'default_item_group'; // Adjust default value as needed
+    
+        // Get the selected warehouse from local storage
+        const selected_warehouse = localStorage.getItem('selected_warehouse');
+    
+        // Validate item_group and price_list to ensure they are not empty
+        if (!price_list) {
+            console.error("Price list is required but missing.");
+            // Optionally: Show a message to the user without triggering a popup
+            frappe.msgprint({
+                title: __('Error'),
+                message: __('Price list is required but missing.'),
+                indicator: 'red'
+            });
+            return Promise.reject(new Error("Price list is required but missing."));
+        }
+    
+        if (!item_group) {
+            console.error("Item group is required but missing.");
+            // Optionally: Show a message to the user without triggering a popup
+            frappe.msgprint({
+                title: __('Error'),
+                message: __('Item group is required but missing.'),
+                indicator: 'red'
+            });
+            return Promise.reject(new Error("Item group is required but missing."));
+        }
+        // Make the API call with the validated parameters
+        return frappe.call({
+            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_items",
+            freeze: true,
+            args: {
+                start,
+                page_length,
+                price_list,
+                item_group,
+                search_term,
+                pos_profile: this.pos_profile,
+                selected_warehouse
+            },
+        });
+    }
 
    	//Camille
        render_item_list(items) {

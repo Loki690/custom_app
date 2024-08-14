@@ -7197,6 +7197,7 @@
       payments.forEach((p) => {
         const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
         const me = this;
+        const frm = this.events.get_frm();
         this[`${mode}_control`] = frappe.ui.form.make_control({
           df: {
             label: "Amount",
@@ -8657,8 +8658,6 @@
           });
         }
         if (p.mode_of_payment === "Gift Certificate") {
-          let code_field = [];
-          let codes = [];
           let code_input = frappe.ui.form.make_control({
             df: {
               fieldtype: "Data",
@@ -8671,18 +8670,22 @@
           code_input.refresh();
           let button = frappe.ui.form.make_control({
             df: {
-              label: "Fetch",
+              label: "Add Gift Code",
               fieldtype: "Button",
               btn_size: "sm",
               click: function() {
                 let code_value = code_input.get_value();
                 if (code_value) {
-                  if (code_value) {
-                    frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
-                      frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
+                  frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
+                    if (gift_cert.is_used !== 1) {
+                      let current_amount = flt(frappe.model.get_value(p.doctype, p.name, "amount"));
+                      frappe.model.set_value(p.doctype, p.name, "amount", current_amount + flt(gift_cert.amount));
+                      frm.add_child("custom_gift_cert_used", {
+                        code: code_value
+                      });
                       const dialog2 = frappe.msgprint({
                         title: __("Success"),
-                        message: __("Gift Certificate payment details have been saved."),
+                        message: __("Gift Certificate code added successfully."),
                         indicator: "green",
                         primary_action: {
                           label: __("OK"),
@@ -8699,21 +8702,26 @@
                       dialog2.$wrapper.on("hidden.bs.modal", function() {
                         $(document).off("keydown");
                       });
-                    }).catch((error) => {
-                      console.error("Error retrieving gift certificate:", error);
+                      code_input.set_value("");
+                    } else {
                       frappe.msgprint({
                         title: __("Error"),
                         indicator: "red",
-                        message: __("Invalid Gift Code. Please check the code and try again.")
+                        message: __("Gift Code Already Used. Please check the code and try again.")
                       });
+                    }
+                  }).catch((error) => {
+                    frappe.msgprint({
+                      title: __("Error"),
+                      indicator: "red",
+                      message: __("Invalid Gift Code. Please check the code and try again.")
                     });
-                  }
-                  code_field.push(code_value);
+                  });
                 } else {
                   frappe.msgprint({
                     title: __("Error"),
                     indicator: "red",
-                    message: __("Please enter a gift code before clicking Fetch.")
+                    message: __("Please enter a gift code before clicking Add Gift Code.")
                   });
                 }
               }
@@ -10674,4 +10682,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.XDFCWQKC.js.map
+//# sourceMappingURL=packing-list.bundle.YWYOUQJK.js.map
