@@ -160,6 +160,7 @@ custom_app.PointOfSale.ItemSelector = class {
             });
             return Promise.reject(new Error("Item group is required but missing."));
         }
+
         // Make the API call with the validated parameters
         return frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_items",
@@ -175,6 +176,8 @@ custom_app.PointOfSale.ItemSelector = class {
             },
         });
     }
+
+
 
    	//Camille
        render_item_list(items) {
@@ -823,7 +826,7 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$clear_search_btn.toggle(Boolean(this.search_field.$input.val()));
         });
 
-        this.$component.on("keydown", (e) => {
+         this.$component.on("keydown", (e) => {
             const key = e.which || e.keyCode;
             switch (key) {
                 case 38: // up arrow
@@ -839,7 +842,7 @@ custom_app.PointOfSale.ItemSelector = class {
                     this.navigate_down();
                     this.focus_next_field();
                     break;
-                case 13: // enter
+                case 32: // enter
                     e.preventDefault();
                     this.select_highlighted_item();
                     break;
@@ -954,6 +957,13 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     select_highlighted_item() {
+        // Ensure highlighted_row_index is valid
+        if (this.highlighted_row_index === -1) {
+            // Create and show a popup dialog
+            return;
+        }
+    
+        // Proceed to select the highlighted item
         const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
         if (highlightedItem.length) {
             highlightedItem.click(); // Simulate click action

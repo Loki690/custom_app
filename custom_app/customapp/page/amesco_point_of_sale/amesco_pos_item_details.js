@@ -371,6 +371,7 @@ custom_app.PointOfSale.ItemDetails = class {
 
 
 		if (this.rate_control) {
+			
 			const frm = me.events.get_frm();
 			// Remove any existing onchange handler to avoid multiple handlers being attached
 			this.rate_control.df.onchange = null;
@@ -391,21 +392,26 @@ custom_app.PointOfSale.ItemDetails = class {
 					}, 200); // Adjust the debounce time as needed
 				}
 			};
-		
 			
 
-			
-				if (frm.doc.customer_group === 'Senior Citizen') {
-					return;
-				} else {
-					this.rate_control.df.read_only = !this.allow_rate_change;
-					this.rate_control.refresh();
-				}
+			if (frm.doc.customer_group === 'Senior Citizen') {
+				return;
+			} else {
+				this.rate_control.df.read_only = !this.allow_rate_change;
+				this.rate_control.refresh();
+			}
 			
 			// this.rate_control.df.read_only = !this.allow_rate_change;
 			// this.rate_control.refresh();
 		}
 		// Ensure frm.doc is checked for existence before accessing it
+		
+		
+		// if (this.discount_percentage_control && !this.allow_discount_change) {
+		// 	this.discount_percentage_control.df.read_only = 1;
+		// 	this.discount_percentage_control.refresh();
+		// }
+
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
 			const frm = me.events.get_frm();
 			if (frm.doc.customer_group === 'Senior Citizen'|| frm.doc.customer_group === 'PWD' ) {
@@ -417,7 +423,6 @@ custom_app.PointOfSale.ItemDetails = class {
 				}
 			}
 		}
-
 		
 		if (this.warehouse_control) {
 			this.warehouse_control.df.reqd = 1;

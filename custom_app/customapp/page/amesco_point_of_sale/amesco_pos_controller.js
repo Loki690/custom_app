@@ -549,6 +549,7 @@ custom_app.PointOfSale.Controller = class {
 								message: __('Verified'),
 								indicator: 'green'
 							});
+
 							passwordDialog.hide();
 							if (!this.$components_wrapper.is(":visible")) return;
 

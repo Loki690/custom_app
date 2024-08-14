@@ -1080,7 +1080,7 @@ custom_app.PointOfSale.Payment = class {
 
 				discard_button.on('click', function() {
 					// Clear all the fields
-					me[`${mode}_control`].set_value('');
+					this[`${mode}_control`].set_value(0);
 					bank_name_control.set_value('');
 					name_on_card_control.set_value('');
 					card_type_control.set_value('');
@@ -1088,9 +1088,9 @@ custom_app.PointOfSale.Payment = class {
 					expiry_date_control.set_value('');
 					custom_approval_code_control.set_value('');
 		
-				
+			
 					// Set values in the model to null or empty string
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_name",'');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_type", '');
@@ -1292,12 +1292,12 @@ custom_app.PointOfSale.Payment = class {
 				// Attach event listener to the discard button
 				discard_button.on('click', function() {
 					// Clear all the fields
-					me[`${mode}_control`].set_value('');
+					this[`${mode}_control`].set_value(0);
 					phone_number_control.set_value('');
 					epayment_reference_number_controller.set_value('');
-				
+			
 					// Set values in the model to null or empty string
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", '');
 					frappe.model.set_value(p.doctype, p.name, "reference_no", '');
 			
@@ -1552,7 +1552,7 @@ custom_app.PointOfSale.Payment = class {
 				// Attach event listener to the discard button
 				discard_button.on('click', function() {
 					// Clear all the fields
-					me[`${mode}_control`].set_value('');
+					me[`${mode}_control`].set_value(0);
 					bank_name_control.set_value('');
 					name_on_card_control.set_value('');
 					card_number_control.set_value('');
@@ -1560,7 +1560,7 @@ custom_app.PointOfSale.Payment = class {
 					custom_approval_code_control.set_value('');
 			
 					// Set values in the model to null or empty string
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_number", '');
@@ -1818,7 +1818,7 @@ custom_app.PointOfSale.Payment = class {
 
 
 				discard_button.on('click', function() {
-					me[`${mode}_control`].set_value('');
+					me[`${mode}_control`].set_value(0);
 					bank_name_control.set_value('');
 					check_name_control.set_value('');
 					check_number_control.set_value('');
@@ -1826,7 +1826,7 @@ custom_app.PointOfSale.Payment = class {
 					// let reference_no = reference_no_control.get_value();
 
 
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_check_number", '');
@@ -1975,7 +1975,7 @@ custom_app.PointOfSale.Payment = class {
 
 				discard_button.on('click', function() {
 					me[`${mode}_control`].set_value('');
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
@@ -2108,7 +2108,7 @@ custom_app.PointOfSale.Payment = class {
 
 				discard_button.on('click', function() {
 					me[`${mode}_control`].set_value('');
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
@@ -2335,14 +2335,14 @@ custom_app.PointOfSale.Payment = class {
 
 
 				discard_button.on('click', function() {
-					me[`${mode}_control`].set_value('');
+					me[`${mode}_control`].set_value(0);
 					custom_payment_type.set_value('');
 					custom_bank_type.set_value('');
 					custom_qr_reference_number.set_value('');
 					// let reference_no = reference_no_control.get_value();
 
 
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_payment_type", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_type", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", '');
@@ -2573,7 +2573,7 @@ custom_app.PointOfSale.Payment = class {
 
 
 				discard_button.on('click', function() {
-					me[`${mode}_control`].set_value('');
+					me[`${mode}_control`].set_value(0);
 					custom_customer.set_value('');
 					charge_invoice_number.set_value('');
 					custom_po_number.set_value('');
@@ -2583,7 +2583,7 @@ custom_app.PointOfSale.Payment = class {
 					// let reference_no = reference_no_control.get_value();
 
 
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_customer", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number",  '');
 					frappe.model.set_value(p.doctype, p.name, "custom_po_number",  '');
