@@ -4036,7 +4036,7 @@
       this.render_item_list(message.items);
       this.filter_items({ uom: this.selected_uom });
     }
-    get_items({ start = 0, page_length = 20, search_term = "" }) {
+    get_items({ start = 0, page_length = 40, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list;
       let { item_group, pos_profile } = this;
@@ -4563,7 +4563,7 @@
             this.navigate_down();
             this.focus_next_field();
             break;
-          case 13:
+          case 32:
             e.preventDefault();
             this.select_highlighted_item();
             break;
@@ -4669,6 +4669,14 @@
       }
     }
     select_highlighted_item() {
+      if (this.highlighted_row_index === -1) {
+        frappe.msgprint({
+          title: __("No Item Highlighted"),
+          indicator: "orange",
+          message: __("Please select an item to highlight before proceeding.")
+        });
+        return;
+      }
       const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
       if (highlightedItem.length) {
         highlightedItem.click();
@@ -8580,7 +8588,7 @@
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
             frappe.model.set_value(p.doctype, p.name, "custom_customer", customer);
-            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", charge_invoice_number);
+            frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", charge_invoice_no);
             frappe.model.set_value(p.doctype, p.name, "custom_po_number", po_number);
             frappe.model.set_value(p.doctype, p.name, "custom_representative", representative);
             frappe.model.set_value(p.doctype, p.name, "custom_id_number", id_number);
@@ -10674,4 +10682,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.4SAIPIVT.js.map
+//# sourceMappingURL=packing-list.bundle.IJMCLMHJ.js.map
