@@ -25,7 +25,6 @@ def on_submit(doc, method):
 def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry_id, pos_closing_entry_id, shift, doc):
 
     try:
-    
         new_entry = frappe.new_doc('Cash Count Denomination Entry')
         new_entry.custom_cashier = cashier
         new_entry.custom_pos_profile = pos_profile
@@ -60,13 +59,8 @@ def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry
             child.custom_denomination_name = denomination['name']
         # Insert the new document into the database
         new_entry.insert()
+        frappe.db.commit()    
         
-        # Commit the transaction to save changes
-        frappe.db.commit()
-        
-        # Return the name of the new document
-        # return new_entry.name
-    
     except frappe.exceptions.ValidationError as e:
         frappe.throw(frappe._("Validation Error: {0}").format(str(e)))
 

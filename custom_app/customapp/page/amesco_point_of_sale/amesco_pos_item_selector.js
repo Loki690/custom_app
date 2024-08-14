@@ -160,7 +160,7 @@ custom_app.PointOfSale.ItemSelector = class {
             });
             return Promise.reject(new Error("Item group is required but missing."));
         }
-    
+
         // Make the API call with the validated parameters
         return frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_items",
@@ -176,7 +176,8 @@ custom_app.PointOfSale.ItemSelector = class {
             },
         });
     }
-    
+
+
 
    	//Camille
        render_item_list(items) {

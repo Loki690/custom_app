@@ -287,7 +287,6 @@ custom_app.PointOfSale.Controller = class {
 			this.page.add_button(btn.label, btn.action, { shortcut: btn.shortcut }).addClass('btn-custom');
 		});
 	}
- 
 	showPasswordDialog(title, onSuccess) {
 		const passwordDialog = new frappe.ui.Dialog({
 			title: __(title),
@@ -500,7 +499,7 @@ custom_app.PointOfSale.Controller = class {
 										() => frappe.dom.freeze(),
 										() => this.make_new_invoice(),
 										() => frappe.dom.unfreeze(),
-
+										
 									]);
 
 									passwordDialog.hide();
