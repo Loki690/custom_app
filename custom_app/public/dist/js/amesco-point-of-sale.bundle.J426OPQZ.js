@@ -1017,7 +1017,7 @@
             this.navigate_down();
             this.focus_next_field();
             break;
-          case 13:
+          case 32:
             e.preventDefault();
             this.select_highlighted_item();
             break;
@@ -1104,6 +1104,9 @@
       }
     }
     select_highlighted_item() {
+      if (this.highlighted_row_index === -1) {
+        return;
+      }
       const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
       if (highlightedItem.length) {
         highlightedItem.click();
@@ -7146,4 +7149,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.GDWEBRK5.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.J426OPQZ.js.map
