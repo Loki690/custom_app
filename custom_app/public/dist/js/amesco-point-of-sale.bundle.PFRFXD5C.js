@@ -6834,33 +6834,54 @@
       });
     }
     oic_edit_confirm(name) {
-      const passwordDialog = new frappe.ui.Dialog({
-        title: __("Enter OIC Password"),
+      if (this.passwordDialog) {
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      let isAuthorized = false;
+      this.passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
-        primary_action_label: __("Edit Order"),
-        primary_action: (values) => {
-          let password = values.password;
-          let role = "oic";
+        primary_action_label: __("Authorize"),
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
-            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+            args: { password },
             callback: (r2) => {
               if (r2.message) {
-                this.recent_order_list.toggle_component(false);
-                frappe.run_serially([
-                  () => this.frm.refresh(name),
-                  () => this.cart.load_invoice(),
-                  () => this.item_selector.toggle_component(true),
-                  () => this.toggle_recent_order_list(false)
-                ]);
-                passwordDialog.hide();
+                if (r2.message.name) {
+                  isAuthorized = true;
+                  frappe.show_alert({
+                    message: __("Verified"),
+                    indicator: "green"
+                  });
+                  frappe.run_serially([
+                    () => this.frm.refresh(name),
+                    () => this.cart.load_invoice(),
+                    () => this.item_selector.toggle_component(true),
+                    () => this.toggle_recent_order_list(false),
+                    () => this.item_selector.load_items_data()
+                  ]).then(() => {
+                    this.passwordDialog.hide();
+                  });
+                } else {
+                  frappe.show_alert({
+                    message: __("Incorrect password or user is not an OIC"),
+                    indicator: "red"
+                  });
+                }
               } else {
                 frappe.show_alert({
                   message: __("Incorrect password or user is not an OIC"),
@@ -6871,8 +6892,17 @@
           });
         }
       });
-      passwordDialog.show();
-      this.toggle_components(true);
+      this.passwordDialog.$wrapper.on("hidden.bs.modal", () => {
+        if (!isAuthorized) {
+          window.location.reload();
+        }
+      });
+      this.passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
+        setTimeout(() => {
+          document.getElementById("password_field").focus();
+        }, 100);
+      });
     }
     oic_delete_confirm(name) {
       const passwordDialog = new frappe.ui.Dialog({
@@ -7229,4 +7259,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.RDFXEHSG.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.PFRFXD5C.js.map
