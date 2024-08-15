@@ -1,6 +1,7 @@
 import frappe
 import requests
 
+from custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate import update_gift_cert_code
 @frappe.whitelist()
 def get_ai_response():
     url = 'https://amesco-files.loyaltynow.ph/api/MemberPoint'
@@ -96,7 +97,7 @@ def on_submit(doc, method):
     # Loop through each item in the POS Invoice
     if doc.custom_amesco_user_id and doc.custom_ameso_user and doc.is_return == 0: 
         for item in doc.items:
-            # Prepare the data to be sent to the API for each item
+              
             data = {
                 "UserId": doc.custom_amesco_user_id, 
                 "Points": item.custom_amesco_plus_points,
@@ -112,16 +113,15 @@ def on_submit(doc, method):
             # Post the data to the external API for the current item
             # response = post_member_points(data)
             post_member_points(data)
-            # Log success for each item
-            # frappe.msgprint(msg=f"Member Points for item {item.item_code} posted successfully. Response: {response}", title="Success")
+            frappe.msgprint(msg=f"Member Points for item {item.item_code} posted successfully.", title="Success")
             
     redeem_data = {}
     for payment in doc.payments:
         if payment.mode_of_payment == 'Amesco Plus':
             redeem_data = {
-                    "userId": 219,  
+                    "userId": payment.custom_am_plus_user_id,  
                     "usedpoints": payment.amount,  
-                    "user": 'uuser12000@gmail.com',
+                    "user": payment.custom_am_plus_user_email,
                     "trailLog": payment.custom_am_voucher_code,  
                     "storeBranch": doc.set_warehouse,  
                     "transactionId": payment.name,  
@@ -134,17 +134,16 @@ def on_submit(doc, method):
                 # frappe.msgprint(msg=f"Redemption failed: 'Amesco Plus' {payment.mode_of_payment} payment mode must have a valid amount and voucher code.", title="Error")
             break  # Exit the loop once Amesco Plus is found
     
-    if doc.is_return == 1:
-        for item in doc.items:
-            data = {
-            # Add any required fields here
-            "remarks": "Item returned due to XYZ reason"
-            }
-            return_member_item(doc.custom_amesco_user_id, item.pos_invoice_item)
-            frappe.msgprint(msg=f"Member Points return successfully. Response", title="Success")
-       
-      
+    # if doc.is_return == 1:
+    #     for item in doc.items:
+    #         data = {
+    #         # Add any required fields here
+    #         "remarks": "Item returned due to XYZ reason"
+    #         }
+    #         return_member_item(doc.custom_amesco_user_id, item.pos_invoice_item)
+    #         frappe.msgprint(msg=f"Member Points return successfully. Response", title="Success")
 
 # Link the script to the POS Invoice's on_submit event
 def on_submit_pos_invoice(doc, method):
     on_submit(doc, method)
+    update_gift_cert_code(doc, method)

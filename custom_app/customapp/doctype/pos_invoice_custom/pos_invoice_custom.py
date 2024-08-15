@@ -47,15 +47,27 @@ def set_custom_ex_total(doc):
 def before_save(doc, method):
     if not doc.name:
         doc.name = make_autoname(doc.naming_series)
-    # Set the barcode to the document name
-    #doc.barcode = doc.name
     
     if not doc.custom_pharmacist_assistant:
         doc.custom_pharmacist_assistant = frappe.session.user
         doc.custom_pa_name = get_user_full_name(doc.custom_pharmacist_assistant)
     
     doc.custom_barcode = doc.name
-
+    # amesco plus calculation for credit card
+    for item in doc.items:
+        if item.discount_amount > 0:
+            item.custom_amesco_plus_points = 0
+        else:
+            amount = item.amount
+            amesco_points = 0
+            for payment in doc.payments:
+                if payment.mode_of_payment == "Credit Card":
+                    if payment.amount > 0:
+                        amesco_points = (amount / 200) * 0.75
+                    else:
+                        amesco_points = item.custom_amesco_plus_points
+            if amesco_points:
+                item.custom_amesco_plus_points = amesco_points
 
 def before_submit(doc, method):
     doc.custom_invoice_series = set_new_custom_naming_series(doc)
