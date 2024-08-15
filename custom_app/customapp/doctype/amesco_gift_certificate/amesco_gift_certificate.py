@@ -26,4 +26,3 @@ def update_gift_cert_code(doc, method):
                     gift_cert_doc.cashier = doc.custom_cashier_name
                     gift_cert_doc.save()
                     frappe.msgprint(f"Gift Certificate {gift_code.code} has been marked as used.")
-                            
