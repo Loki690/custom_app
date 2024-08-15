@@ -409,7 +409,7 @@ def get_past_order_list(search_term, status, pos_profile, limit=1000):
             'pos_profile': pos_profile, 
             "status": status},
 			fields=fields,
-			order_by="posting_time asc", 
+			order_by="posting_time desc", 
 			page_length=limit,
 		)
 		invoices_by_name = frappe.db.get_all(
@@ -426,7 +426,7 @@ def get_past_order_list(search_term, status, pos_profile, limit=1000):
 		invoice_list = frappe.db.get_all(
 			"POS Invoice", filters={"status": status, 
                            'pos_profile': pos_profile
-                           }, fields=fields, order_by="posting_time asc",   page_length=limit
+                           }, fields=fields, order_by="posting_time desc",   page_length=limit
 		)
 		
 	return invoice_list
