@@ -5003,8 +5003,8 @@
             frappe.call({
               method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
               args: { password },
-              callback: (r2) => {
-                if (r2.message && r2.message.name) {
+              callback: (r) => {
+                if (r.message && r.message.name) {
                   this.events.edit_cart();
                   this.toggle_checkout_btn(true);
                   this.passwordDialog.hide();
@@ -5044,8 +5044,8 @@
               frappe.call({
                 method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
                 args: { password, role },
-                callback: (r2) => {
-                  if (r2.message) {
+                callback: (r) => {
+                  if (r.message) {
                     this.is_oic_authenticated = true;
                     this.show_discount_control();
                     passwordDialog.hide();
@@ -5296,9 +5296,9 @@
               frappe.call({
                 method: "erpnext.accounts.doctype.loyalty_program.loyalty_program.get_loyalty_program_details_with_points",
                 args: { customer, loyalty_program, silent: true },
-                callback: (r2) => {
-                  const { loyalty_points, conversion_factor } = r2.message;
-                  if (!r2.exc) {
+                callback: (r) => {
+                  const { loyalty_points, conversion_factor } = r.message;
+                  if (!r.exc) {
                     this.customer_info = __spreadProps(__spreadValues({}, message), {
                       customer,
                       loyalty_points,
@@ -6051,8 +6051,8 @@
               customer: current_customer,
               value: this.value
             },
-            callback: (r2) => {
-              if (!r2.exc) {
+            callback: (r) => {
+              if (!r.exc) {
                 me.customer_info[this.df.fieldname] = this.value;
                 frappe.show_alert({
                   message: __("Customer contact updated successfully."),
@@ -6330,17 +6330,17 @@
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
             args: { password },
-            callback: (r2) => {
-              if (r2.message) {
-                console.log("User: ", r2.message);
-                if (r2.message.name) {
+            callback: (r) => {
+              if (r.message) {
+                console.log("User: ", r.message);
+                if (r.message.name) {
                   frappe.show_alert({
                     message: __("Verified"),
                     indicator: "green"
                   });
                   passwordDialog.hide();
                   me.enable_discount_input(fieldname);
-                  me.set_discount_log(doc, item);
+                  me.set_discount_log(doc, item, r);
                   me.is_oic_authenticated = true;
                 } else {
                   frappe.show_alert({
@@ -6360,7 +6360,7 @@
       });
       passwordDialog.show();
     }
-    set_discount_log(doc, item) {
+    set_discount_log(doc, item, r) {
       let current_discount_log = doc.doc.custom_manual_dicsount || "";
       let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}
 `;
@@ -6525,11 +6525,11 @@
           filters: { name: ["in", selected_serial_nos] },
           fields: ["batch_no", "name"]
         });
-        const batch_serial_map = serials_with_batch_no.reduce((acc, r2) => {
-          if (!acc[r2.batch_no]) {
-            acc[r2.batch_no] = [];
+        const batch_serial_map = serials_with_batch_no.reduce((acc, r) => {
+          if (!acc[r.batch_no]) {
+            acc[r.batch_no] = [];
           }
-          acc[r2.batch_no] = [...acc[r2.batch_no], r2.name];
+          acc[r.batch_no] = [...acc[r.batch_no], r.name];
           return acc;
         }, {});
         const batch_no = Object.keys(batch_serial_map)[0];
@@ -6577,11 +6577,11 @@
         let frm = this.events.get_frm();
         let item_row = this.item_row;
         item_row.type_of_transaction = "Outward";
-        new erpnext.SerialBatchPackageSelector(frm, item_row, (r2) => {
-          if (r2) {
+        new erpnext.SerialBatchPackageSelector(frm, item_row, (r) => {
+          if (r) {
             frappe.model.set_value(item_row.doctype, item_row.name, {
-              serial_and_batch_bundle: r2.name,
-              qty: Math.abs(r2.total_qty)
+              serial_and_batch_bundle: r.name,
+              qty: Math.abs(r.total_qty)
             });
           }
         });
@@ -9483,13 +9483,13 @@
           sender_full_name: frappe.user.full_name(),
           _lang: doc.language
         },
-        callback: (r2) => {
-          if (!r2.exc) {
+        callback: (r) => {
+          if (!r.exc) {
             frappe.utils.play_sound("email");
-            if (r2.message["emails_not_sent_to"]) {
+            if (r.message["emails_not_sent_to"]) {
               frappe.msgprint(
                 __("Email not sent to {0} (unsubscribed / disabled)", [
-                  frappe.utils.escape_html(r2.message["emails_not_sent_to"])
+                  frappe.utils.escape_html(r.message["emails_not_sent_to"])
                 ])
               );
             } else {
@@ -9883,9 +9883,9 @@
           page_len: 100,
           filters: {}
         },
-        callback: function(r2) {
-          if (r2.message) {
-            const warehouses = r2.message.map((warehouse) => warehouse[0]);
+        callback: function(r) {
+          if (r.message) {
+            const warehouses = r.message.map((warehouse) => warehouse[0]);
             warehouseField.df.options = [...warehouses];
             warehouseField.refresh();
           }
@@ -9962,10 +9962,10 @@
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
             args: { password },
-            callback: (r2) => {
-              if (r2.message && r2.message.name) {
-                this.set_pharmacist_assist(this.frm, r2.message.name);
-                console.log("USER DATA", r2.message);
+            callback: (r) => {
+              if (r.message && r.message.name) {
+                this.set_pharmacist_assist(this.frm, r.message.name);
+                console.log("USER DATA", r.message);
                 this.frm.save(void 0, void 0, void 0, () => {
                   frappe.show_alert({
                     message: "There was an error saving the document.",
@@ -10055,9 +10055,9 @@
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
             args: { password },
-            callback: (r2) => {
-              if (r2.message && r2.message.name) {
-                this.set_pharmacist_assist(this.frm, r2.message.name);
+            callback: (r) => {
+              if (r.message && r.message.name) {
+                this.set_pharmacist_assist(this.frm, r.message.name);
                 this.frm.save(void 0, void 0, void 0, () => {
                   frappe.show_alert({
                     message: "There was an error saving the document.",
@@ -10136,9 +10136,9 @@
               args: {
                 pos_profile: this.pos_profile
               },
-              callback: (r2) => {
-                if (r2.message) {
-                  const posWarehouse = r2.message;
+              callback: (r) => {
+                if (r.message) {
+                  const posWarehouse = r.message;
                   const selectedWarehouse = localStorage.getItem("selected_warehouse");
                   if (posWarehouse === selectedWarehouse || selectedWarehouse === null) {
                     this.on_cart_update(args);
@@ -10265,13 +10265,13 @@
             }
           },
           submit_invoice: () => {
-            this.frm.savesubmit().then((r2) => {
+            this.frm.savesubmit().then((r) => {
               this.toggle_components(false);
               this.order_summary.toggle_component(true);
               this.order_summary.load_summary_of(this.frm.doc, true);
               frappe.show_alert({
                 indicator: "green",
-                message: __("POS invoice {0} created succesfully", [r2.doc.name])
+                message: __("POS invoice {0} created succesfully", [r.doc.name])
               });
             });
           },
@@ -10357,9 +10357,9 @@
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
             args: { password },
-            callback: (r2) => {
-              if (r2.message) {
-                if (r2.message.name) {
+            callback: (r) => {
+              if (r.message) {
+                if (r.message.name) {
                   isAuthorized = true;
                   frappe.show_alert({
                     message: __("Verified"),
@@ -10458,9 +10458,9 @@
           source_name: doc.name,
           target_doc: this.frm.doc
         },
-        callback: (r2) => {
-          frappe.model.sync(r2.message);
-          frappe.get_doc(r2.message.doctype, r2.message.name).__run_link_triggers = false;
+        callback: (r) => {
+          frappe.model.sync(r.message);
+          frappe.get_doc(r.message.doctype, r.message.name).__run_link_triggers = false;
           this.set_pos_profile_data().then(() => {
             frappe.dom.unfreeze();
           });
@@ -10678,9 +10678,9 @@
           frappe.call({
             method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
             args: { password },
-            callback: (r2) => {
-              if (r2.message) {
-                if (r2.message.name) {
+            callback: (r) => {
+              if (r.message) {
+                if (r.message.name) {
                   frappe.dom.freeze();
                   const { doctype, name, current_item } = this.item_details;
                   frappe.model.set_value(doctype, name, "qty", 0).then(() => {
@@ -10730,4 +10730,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.22GKZGLY.js.map
+//# sourceMappingURL=packing-list.bundle.7LG3TQA5.js.map
