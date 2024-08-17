@@ -228,8 +228,6 @@ custom_app.PointOfSale.ItemDetails = class {
 		this.$item_price.html(format_currency(amount, this.currency));
 	}
 	
-
-	// Function to trigger OTP authentication
 		// Function to trigger OTP authentication
 		oic_authentication(fieldname, item) {
 			const me = this;
@@ -287,6 +285,9 @@ custom_app.PointOfSale.ItemDetails = class {
 		
 			passwordDialog.show();
 		}
+
+		
+	
 	
 		
 	set_discount_log(doc, item, r) {
@@ -295,6 +296,7 @@ custom_app.PointOfSale.ItemDetails = class {
 		let updated_discount_log = current_discount_log + discount_log;
 		doc.set_value('custom_manual_dicsount', updated_discount_log);
 	}
+
 
 	// Function to enable input to discount_percentage field after OTP authentication
 	enable_discount_input(fieldname) {

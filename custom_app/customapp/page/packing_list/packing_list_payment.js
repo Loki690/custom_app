@@ -242,7 +242,8 @@ custom_app.PointOfSale.Payment = class {
 				} else if (mode === "amesco_plus") {
 					mode_clicked.find(".amesco-code").css("display", "flex");
 					mode_clicked.find(".button-amesco-plus").css("display", "flex");
-				}
+					mode_clicked.find(".discard-button").css("display", "flex");
+				} 
 				focusAndHighlightAmountField(mode_clicked);
 				// me.selected_mode = me[`${mode}_control`];
 				me.selected_mode && me.selected_mode.$input.get();
@@ -638,7 +639,11 @@ custom_app.PointOfSale.Payment = class {
 					case "Amesco Plus":
 						paymentModeHtml += `
 							<div class="${mode} amesco-code"></div>
-							<div class="${mode} button-amesco-plus mt-2" ></div>
+							<div class="${mode} button-row" style="display: flex; gap: 3px; align-items: center;">
+								<div class="${mode} button-amesco-plus mt-2" ></div>
+								<div class="${mode} discard-button"></div>
+							</div>	
+							
 							   `;
 						break;
 				}
@@ -2736,7 +2741,7 @@ custom_app.PointOfSale.Payment = class {
 				discard_button.on('click', function () {
 					me[`${mode}_control`].set_value('');
 					// let reference_no = reference_no_control.get_value()
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 
 					const dialog = frappe.msgprint({
@@ -2865,6 +2870,55 @@ custom_app.PointOfSale.Payment = class {
 					render_input: true
 				});
 				button.refresh();
+
+				let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
+				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+				const me = this;
+				// Attach an event listener to the save button
+
+				discard_button.on('click', function() {
+					me[`${mode}_control`].set_value('');
+					// let reference_no = reference_no_control.get_value()
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
+					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
+			
+					const dialog = frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
+
+
+					$(document).on('keydown', function(e) {
+						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+							dialog.get_primary_btn().trigger('click');
+						}
+					});
+	
+					// Remove event listener when dialog is closed
+					dialog.$wrapper.on('hidden.bs.modal', function () {
+						$(document).off('keydown');
+					});
+				});
+				const controls = [
+					me[`${mode}_control`],
+				];
+				controls.forEach(control => {
+					control.$input && control.$input.keypress(function (e) {
+						if (e.which === 13) { // Enter key pressed
+							save_button.click();
+						}
+					});
+				});
+
+
+
 			}
 			// this[`${mode}_control`].toggle_label(true);
 			this[`${mode}_control`].set_value(p.amount);
