@@ -227,7 +227,7 @@ custom_app.PointOfSale.ItemDetails = class {
 					callback: (r) => {
 						if (r.message) {
 
-							console.log('User: ', r.message)
+							// console.log('User: ', r.message)
 							
 							if (r.message.name) {
 								frappe.show_alert({
@@ -237,7 +237,7 @@ custom_app.PointOfSale.ItemDetails = class {
 								passwordDialog.hide();
 	
 								me.enable_discount_input(fieldname);
-								me.set_discount_log(doc, item)
+								me.set_discount_log(doc, item, r)
 								me.is_oic_authenticated = true;
 	
 							} else {
@@ -259,12 +259,10 @@ custom_app.PointOfSale.ItemDetails = class {
 				});
 			}
 		});
-
-	
 		passwordDialog.show();
 	}
 
-	set_discount_log(doc, item) {
+	set_discount_log(doc, item, r) {
 		let current_discount_log = doc.doc.custom_manual_dicsount || '';
 		let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
 		let updated_discount_log = current_discount_log + discount_log;
@@ -283,22 +281,14 @@ custom_app.PointOfSale.ItemDetails = class {
 			'price_list_rate',
 			"rate",
 			"uom",
-			// "custom_expiry_date",
-			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", 
 			"custom_batch_number",
 			"custom_batch_expiry",
-			//"custom_item_discount_amount",
-			//"warehouse",
-			//"actual_qty",
-			//"price_list_rate",
-			// "is_free_item",
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
 			'custom_zero_rated_amount',
-			//"custom_free",
 			"custom_remarks",
 		];
 		if (item.has_serial_no) fields.push("serial_no");

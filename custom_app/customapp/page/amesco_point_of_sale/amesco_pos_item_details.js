@@ -263,7 +263,7 @@ custom_app.PointOfSale.ItemDetails = class {
 									passwordDialog.hide();
 		
 									me.enable_discount_input(fieldname);
-									me.set_discount_log(doc, item)
+									me.set_discount_log(doc, item, r)
 									me.is_oic_authenticated = true;
 		
 					
@@ -289,7 +289,7 @@ custom_app.PointOfSale.ItemDetails = class {
 		}
 	
 		
-	set_discount_log(doc, item) {
+	set_discount_log(doc, item, r) {
 		let current_discount_log = doc.doc.custom_manual_dicsount || '';
 		let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
 		let updated_discount_log = current_discount_log + discount_log;
