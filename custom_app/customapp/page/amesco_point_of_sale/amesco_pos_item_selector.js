@@ -15,17 +15,10 @@ custom_app.PointOfSale.ItemSelector = class {
         this.load_items_data();
         this.make_search_bar();
         this.bind_events();
-		//Highlight
         this.attach_shortcuts();
 		this.inject_css(); 
-        // this.filter_items()
-
-        
     }
-
-
 	//For highlight items 
-
 	inject_css() {
 		const css = `
 			.highlight {
