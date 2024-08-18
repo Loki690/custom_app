@@ -1,6 +1,5 @@
 import frappe
 import requests
-
 from custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate import update_gift_cert_code
 @frappe.whitelist()
 def get_ai_response():
@@ -14,7 +13,6 @@ def get_ai_response():
         frappe.throw(str(e))
 
 import json
-from frappe.model.document import Document
 from datetime import datetime
 
 def post_member_points(data):

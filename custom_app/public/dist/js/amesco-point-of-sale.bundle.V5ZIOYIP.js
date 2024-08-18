@@ -532,20 +532,19 @@
     }
     get_item_html(item) {
       const me = this;
+      const defaulf_uom = "PC";
       const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
       if (item.is_stock_item) {
         indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
-        if (Math.round(qty_to_display) > 999) {
-          qty_to_display = Math.round(qty_to_display) / 1e3;
-          qty_to_display = qty_to_display.toFixed(1) + "K";
-        }
       } else {
         indicator_color = "";
         qty_to_display = "";
       }
+      const tax_rate = 0.12;
+      const no_vat = price_list_rate / (1 + tax_rate);
       const item_description = description ? description : "Description not available";
       return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
         onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
@@ -557,6 +556,7 @@
             <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency(custom_is_vatable == 0 ? price_list_rate : no_vat, item.currency) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
             <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
@@ -2777,8 +2777,8 @@
       let current_discount_log = doc.doc.custom_manual_dicsount || "";
       let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}
 `;
-      let updated_discount_log = current_discount_log + discount_log;
-      doc.set_value("custom_manual_dicsount", updated_discount_log);
+      let updated_discount_log2 = current_discount_log + discount_log;
+      doc.set_value("custom_manual_dicsount", updated_discount_log2);
     }
     enable_discount_input(fieldname) {
       this.$form_container.find(`.${fieldname}-control input`).prop("disabled", false);
@@ -3179,6 +3179,8 @@
         $(`.approved-by`).hide();
         $(`.gift-code`).hide();
         $(`.button-code`).hide();
+        $(`.amesco-code`).hide();
+        $(`.button-amesco-plus`).hide();
         $(`.save-button`).hide();
         $(`.discard-button`).hide();
         $(`.cash-button`).hide();
@@ -3253,6 +3255,10 @@
           } else if (mode === "gift_certificate") {
             mode_clicked.find(".gift-code").css("display", "flex");
             mode_clicked.find(".button-code").css("display", "flex");
+            mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "amesco_plus") {
+            mode_clicked.find(".amesco-code").css("display", "flex");
+            mode_clicked.find(".button-amesco-plus").css("display", "flex");
             mode_clicked.find(".discard-button").css("display", "flex");
           }
           focusAndHighlightAmountField(mode_clicked);
@@ -3598,7 +3604,11 @@
             case "Amesco Plus":
               paymentModeHtml += `
 							<div class="${mode} amesco-code"></div>
-							<div class="${mode} button-amesco-plus mt-2" ></div>
+							<div class="${mode} button-row" style="display: flex; gap: 3px; align-items: center;">
+								<div class="${mode} button-amesco-plus mt-2" ></div>
+								<div class="${mode} discard-button"></div>
+							</div>	
+							
 							   `;
               break;
           }
@@ -3613,6 +3623,7 @@
       payments.forEach((p) => {
         const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
         const me = this;
+        const frm = this.events.get_frm();
         this[`${mode}_control`] = frappe.ui.form.make_control({
           df: {
             label: "Amount",
@@ -5073,8 +5084,6 @@
           });
         }
         if (p.mode_of_payment === "Gift Certificate") {
-          let code_field = [];
-          let codes = [];
           let code_input = frappe.ui.form.make_control({
             df: {
               fieldtype: "Data",
@@ -5087,18 +5096,22 @@
           code_input.refresh();
           let button = frappe.ui.form.make_control({
             df: {
-              label: "Fetch",
+              label: "Add Gift Code",
               fieldtype: "Button",
               btn_size: "sm",
               click: function() {
                 let code_value = code_input.get_value();
                 if (code_value) {
-                  if (code_value) {
-                    frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
-                      frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
+                  frappe.db.get_doc("Amesco Gift Certificate", code_value).then((gift_cert) => {
+                    if (gift_cert.is_used !== 1) {
+                      let current_amount = flt(frappe.model.get_value(p.doctype, p.name, "amount"));
+                      frappe.model.set_value(p.doctype, p.name, "amount", current_amount + flt(gift_cert.amount));
+                      frm.add_child("custom_gift_cert_used", {
+                        code: code_value
+                      });
                       const dialog2 = frappe.msgprint({
                         title: __("Success"),
-                        message: __("Gift Certificate payment details have been saved."),
+                        message: __("Gift Certificate code added successfully."),
                         indicator: "green",
                         primary_action: {
                           label: __("OK"),
@@ -5115,21 +5128,26 @@
                       dialog2.$wrapper.on("hidden.bs.modal", function() {
                         $(document).off("keydown");
                       });
-                    }).catch((error) => {
-                      console.error("Error retrieving gift certificate:", error);
+                      code_input.set_value("");
+                    } else {
                       frappe.msgprint({
                         title: __("Error"),
                         indicator: "red",
-                        message: __("Invalid Gift Code. Please check the code and try again.")
+                        message: __("Gift Code Already Used. Please check the code and try again.")
                       });
+                    }
+                  }).catch((error) => {
+                    frappe.msgprint({
+                      title: __("Error"),
+                      indicator: "red",
+                      message: __("Invalid Gift Code. Please check the code and try again.")
                     });
-                  }
-                  code_field.push(code_value);
+                  });
                 } else {
                   frappe.msgprint({
                     title: __("Error"),
                     indicator: "red",
-                    message: __("Please enter a gift code before clicking Fetch.")
+                    message: __("Please enter a gift code before clicking Add Gift Code.")
                   });
                 }
               }
@@ -5143,7 +5161,7 @@
           const me2 = this;
           discard_button.on("click", function() {
             me2[`${mode}_control`].set_value("");
-            frappe.model.set_value(p.doctype, p.name, "amount", null);
+            frappe.model.set_value(p.doctype, p.name, "amount", 0);
             const dialog2 = frappe.msgprint({
               message: __("Payment details have been discarded."),
               indicator: "blue",
@@ -5242,6 +5260,41 @@
             render_input: true
           });
           button.refresh();
+          let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
+          this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+          const me2 = this;
+          discard_button.on("click", function() {
+            me2[`${mode}_control`].set_value("");
+            frappe.model.set_value(p.doctype, p.name, "amount", 0);
+            const dialog2 = frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
+            });
+          });
+          const controls = [
+            me2[`${mode}_control`]
+          ];
+          controls.forEach((control) => {
+            control.$input && control.$input.keypress(function(e) {
+              if (e.which === 13) {
+                save_button.click();
+              }
+            });
+          });
         }
         this[`${mode}_control`].set_value(p.amount);
       });
@@ -6195,6 +6248,7 @@
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
         { label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2" },
         { label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3" },
+        { label: __("Amesco Plus Member"), action: this.amesco_plus_scan.bind(this), shortcut: "f4" },
         { label: __("Close the POS(X Reading)"), action: this.close_pos.bind(this), shortcut: "Shift+Ctrl+C" }
       ];
       $(".page-actions .btn-custom").remove();
@@ -6313,6 +6367,61 @@
         () => window.location.reload(),
         () => frappe.dom.unfreeze()
       ]);
+    }
+    amesco_plus_scan() {
+      const me = this;
+      const doc = me.frm;
+      new frappe.ui.Scanner({
+        dialog: true,
+        multiple: false,
+        on_scan(data) {
+          let scannedData = data.decodedText.split(",");
+          let user_id = scannedData[0];
+          let userName = scannedData[2];
+          let email = scannedData[3];
+          let points = scannedData[4];
+          doc.set_value("custom_ameso_user", email);
+          doc.set_value("custom_amesco_user_id", user_id);
+          let userDetailsDialog = new frappe.ui.Dialog({
+            title: __("Scanned User Details"),
+            fields: [
+              {
+                label: "Name",
+                fieldname: "user_name",
+                fieldtype: "Data",
+                read_only: 1,
+                default: userName
+              },
+              {
+                label: "Email",
+                fieldname: "email",
+                fieldtype: "Data",
+                read_only: 1,
+                default: email
+              },
+              {
+                label: "Points",
+                fieldname: "points",
+                fieldtype: "Data",
+                read_only: 1,
+                default: points
+              }
+            ],
+            primary_action_label: __("Close"),
+            primary_action: function() {
+              userDetailsDialog.hide();
+            }
+          });
+          userDetailsDialog.show();
+        }
+      });
+    }
+    set_discount_log(doc, user, email) {
+      doc.set_value("custom_ameso_user", updated_discount_log);
+      doc.set_value("custom_manual_dicsount", updated_discount_log);
+    }
+    handle_scanned_barcode(barcode) {
+      console.log("Scanned Barcode:", barcode);
     }
     open_form_view() {
       frappe.model.sync(this.frm.doc);
@@ -6725,33 +6834,54 @@
       });
     }
     oic_edit_confirm(name) {
-      const passwordDialog = new frappe.ui.Dialog({
-        title: __("Enter OIC Password"),
+      if (this.passwordDialog) {
+        this.passwordDialog.$wrapper.remove();
+        delete this.passwordDialog;
+      }
+      let isAuthorized = false;
+      this.passwordDialog = new frappe.ui.Dialog({
+        title: __("Authorization Required OIC"),
         fields: [
           {
-            fieldname: "password",
-            fieldtype: "Password",
-            label: __("Password"),
-            reqd: 1
+            fieldtype: "HTML",
+            fieldname: "password_html",
+            options: `
+						<div class="form-group">
+							<label for="password_field">${__("Password")}</label>
+							<input type="password" id="password_field" class="form-control" required>
+						</div>
+					`
           }
         ],
-        primary_action_label: __("Edit Order"),
-        primary_action: (values) => {
-          let password = values.password;
-          let role = "oic";
+        primary_action_label: __("Authorize"),
+        primary_action: () => {
+          let password = document.getElementById("password_field").value;
           frappe.call({
-            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
+            method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
+            args: { password },
             callback: (r) => {
               if (r.message) {
-                this.recent_order_list.toggle_component(false);
-                frappe.run_serially([
-                  () => this.frm.refresh(name),
-                  () => this.cart.load_invoice(),
-                  () => this.item_selector.toggle_component(true),
-                  () => this.toggle_recent_order_list(false)
-                ]);
-                passwordDialog.hide();
+                if (r.message.name) {
+                  isAuthorized = true;
+                  frappe.show_alert({
+                    message: __("Verified"),
+                    indicator: "green"
+                  });
+                  frappe.run_serially([
+                    () => this.frm.refresh(name),
+                    () => this.cart.load_invoice(),
+                    () => this.item_selector.toggle_component(true),
+                    () => this.toggle_recent_order_list(false),
+                    () => this.item_selector.load_items_data()
+                  ]).then(() => {
+                    this.passwordDialog.hide();
+                  });
+                } else {
+                  frappe.show_alert({
+                    message: __("Incorrect password or user is not an OIC"),
+                    indicator: "red"
+                  });
+                }
               } else {
                 frappe.show_alert({
                   message: __("Incorrect password or user is not an OIC"),
@@ -6762,8 +6892,17 @@
           });
         }
       });
-      passwordDialog.show();
-      this.toggle_components(true);
+      this.passwordDialog.$wrapper.on("hidden.bs.modal", () => {
+        if (!isAuthorized) {
+          window.location.reload();
+        }
+      });
+      this.passwordDialog.show();
+      this.passwordDialog.$wrapper.on("shown.bs.modal", () => {
+        setTimeout(() => {
+          document.getElementById("password_field").focus();
+        }, 100);
+      });
     }
     oic_delete_confirm(name) {
       const passwordDialog = new frappe.ui.Dialog({
@@ -7120,4 +7259,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.IENIC7N4.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.V5ZIOYIP.js.map
