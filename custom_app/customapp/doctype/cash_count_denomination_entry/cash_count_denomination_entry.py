@@ -36,6 +36,9 @@ def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry
         new_entry.custom_total_cashcheck_sales = doc.custom_total_cash_and_check_sales
         new_entry.custom_cash_check_voucher = doc.custom_cash_and_check_voucher
         new_entry.custom_sales_return = doc.custom_sales_return
+        new_entry.custom_card_sales = doc.custom_card_sales
+        new_entry.custom_qr_sales = doc.custom_qr_sales
+    
         
         default_denominations = [
             {"amount": 1000, "name": "1000 PESOS"},
