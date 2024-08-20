@@ -6749,6 +6749,11 @@
                 primary_action: () => {
                   window.location.reload();
                   changeDialog.hide();
+                },
+                secondary_action_label: __("New Order"),
+                secondary_action: () => {
+                  this.add_new_order();
+                  changeDialog.hide();
                 }
               });
               changeDialog.body.innerHTML = `
@@ -7259,4 +7264,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.V5ZIOYIP.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.RFSJZDMC.js.map
