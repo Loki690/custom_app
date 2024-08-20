@@ -1,17 +1,6 @@
 import frappe
 import requests
 from custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate import update_gift_cert_code
-@frappe.whitelist()
-def get_ai_response():
-    url = 'https://amesco-files.loyaltynow.ph/api/MemberPoint'
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        data = response.json()
-        return data
-    except requests.exceptions.RequestException as e:
-        frappe.throw(str(e))
-
 import json
 from datetime import datetime
 
@@ -64,8 +53,6 @@ def redeem_member_transaction(data):
         
 def return_member_item(user_id, trans_id):
     # Construct the URL with userId and transId
-    
-    
     url = f'https://amesco-files.loyaltynow.ph/api/MemberPoint/returnitem/{user_id}/{trans_id}'
     headers = {'Content-Type': 'application/json'}
 
@@ -95,7 +82,6 @@ def on_submit(doc, method):
     # Loop through each item in the POS Invoice
     if doc.custom_amesco_user_id and doc.custom_ameso_user and doc.is_return == 0: 
         for item in doc.items:
-              
             data = {
                 "UserId": doc.custom_amesco_user_id, 
                 "Points": item.custom_amesco_plus_points,

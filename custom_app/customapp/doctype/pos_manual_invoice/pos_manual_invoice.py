@@ -3,7 +3,8 @@
 
 # import frappe
 from frappe.model.document import Document
-
-
 class POSManualInvoice(Document):
-	pass
+    pass
+
+    def test(self):
+        print('This is Manual invoice')

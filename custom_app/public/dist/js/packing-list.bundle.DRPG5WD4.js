@@ -4004,7 +4004,7 @@
                                 <th>Item Code</th>
                                 <th>Name</th>
                                 <th>Vat Type</th>
-                                <th>Vatin Price</th>
+                                <th>Price</th>
                                 <th>Vatex Price</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
@@ -10742,4 +10742,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.W5QQY4YZ.js.map
+//# sourceMappingURL=packing-list.bundle.DRPG5WD4.js.map

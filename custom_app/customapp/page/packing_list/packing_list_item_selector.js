@@ -86,7 +86,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Item Code</th>
                                 <th>Name</th>
                                 <th>Vat Type</th>
-                                <th>Vatin Price</th>
+                                <th>Price</th>
                                 <th>Vatex Price</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
