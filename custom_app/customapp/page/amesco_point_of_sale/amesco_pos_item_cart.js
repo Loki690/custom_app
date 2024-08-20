@@ -624,7 +624,7 @@ custom_app.PointOfSale.ItemCart = class {
 		if (customer) {
 			return new Promise((resolve) => {
 				frappe.db
-					.get_value("Customer", customer, ["email_id", "mobile_no" , "image", "loyalty_program",
+					.get_value("Customer", customer, ["email_id", "customer_name", "mobile_no" , "image", "loyalty_program",
 					"custom_osca_id", "custom_pwd_id"])
 					.then(({ message }) => {
 						const { loyalty_program } = message;
@@ -746,7 +746,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_customer_section() {
 		const me = this;
-		const { customer, email_id = "", mobile_no = "", image } = this.customer_info || {};
+		const { customer, email_id = "", mobile_no = "", image, customer_name = ""} = this.customer_info || {};
 
 		if (customer) {
 			this.$customer_section.html(
@@ -754,7 +754,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="customer-display">
 						${this.get_customer_image()}
 						<div class="customer-name-desc">
-							<div class="customer-name">${customer}</div>
+							<div class="customer-name">${customer} - ${customer_name} </div>
 							${get_customer_description()}
 						</div>
 						<div class="reset-customer-btn" data-customer="${escape(customer)}">

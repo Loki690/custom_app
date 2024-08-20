@@ -882,6 +882,14 @@ custom_app.PointOfSale.Controller = class {
 								// this.remove_pos_cart_items();
 								window.location.reload();
 								changeDialog.hide();
+							},
+
+							secondary_action_label: __('New Order'), // Label for the new button
+							secondary_action: () => {
+								// Logic for the "New Order" button
+								this.add_new_order();
+								changeDialog.hide();
+								// Implement your logic here, such as redirecting to a new order page or resetting the form
 							}
 						});
 						// Add custom HTML with large text for the change amount
