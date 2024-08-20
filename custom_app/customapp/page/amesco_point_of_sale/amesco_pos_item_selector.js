@@ -15,17 +15,10 @@ custom_app.PointOfSale.ItemSelector = class {
         this.load_items_data();
         this.make_search_bar();
         this.bind_events();
-		//Highlight
         this.attach_shortcuts();
 		this.inject_css(); 
-        // this.filter_items()
-
-        
     }
-
-
 	//For highlight items 
-
 	inject_css() {
 		const css = `
 			.highlight {
@@ -86,6 +79,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
+                                <th>Vatex Price</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
                             </tr>
@@ -128,30 +122,56 @@ custom_app.PointOfSale.ItemSelector = class {
 
     }
 
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
-		const doc = this.events.get_frm().doc;
-		const price_list = (doc && doc.selling_price_list) || this.price_list;
-		let { item_group, pos_profile } = this;
+    get_items({ start = 0, page_length = 20, search_term = "" }) {
+        const doc = this.events.get_frm().doc;
+    
+        // Use fallback default values
+        const price_list = (doc && doc.selling_price_list) || this.price_list || 'default_price_list'; // Adjust default value as needed
+        let item_group = (doc && doc.item_group) || this.item_group || 'default_item_group'; // Adjust default value as needed
+    
+        // Get the selected warehouse from local storage
+        const selected_warehouse = localStorage.getItem('selected_warehouse');
+    
+        // Validate item_group and price_list to ensure they are not empty
+        if (!price_list) {
+            console.error("Price list is required but missing.");
+            // Optionally: Show a message to the user without triggering a popup
+            frappe.msgprint({
+                title: __('Error'),
+                message: __('Price list is required but missing.'),
+                indicator: 'red'
+            });
+            return Promise.reject(new Error("Price list is required but missing."));
+        }
+    
+        if (!item_group) {
+            console.error("Item group is required but missing.");
+            // Optionally: Show a message to the user without triggering a popup
+            frappe.msgprint({
+                title: __('Error'),
+                message: __('Item group is required but missing.'),
+                indicator: 'red'
+            });
+            return Promise.reject(new Error("Item group is required but missing."));
+        }
 
-		!item_group && (item_group = this.parent_item_group);
+        // Make the API call with the validated parameters
+        return frappe.call({
+            method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_items",
+            freeze: true,
+            args: {
+                start,
+                page_length,
+                price_list,
+                item_group,
+                search_term,
+                pos_profile: this.pos_profile,
+                selected_warehouse
+            },
+        });
+    }
 
-		// Get the selected warehouse from local storage
-		const selected_warehouse = localStorage.getItem('selected_warehouse');
 
-		return frappe.call({
-			method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_items",
-			freeze: true,
-			args: {
-				start,
-				page_length,
-				price_list,
-				item_group,
-				search_term,
-				pos_profile,
-				selected_warehouse  // Include selected warehouse in the request
-			},
-		});
-	}
 
    	//Camille
        render_item_list(items) {
@@ -179,27 +199,35 @@ custom_app.PointOfSale.ItemSelector = class {
 
     get_item_html(item) {
         const me = this;
-    
+
+        const defaulf_uom = "PC"
+
+
         const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
 
+        // console.log("Actual QTY ", qty_to_display)
 
         if (item.is_stock_item) {
             indicator_color = actual_qty > 10 ? "green" : actual_qty <= 0 ? "red" : "orange";
-    
-            if (Math.round(qty_to_display) > 999) {
-                qty_to_display = Math.round(qty_to_display) / 1000;
-                qty_to_display = qty_to_display.toFixed(1) + "K";
-            }
+
+            // if (Math.round(qty_to_display) > 999) {
+            //     qty_to_display = Math.round(qty_to_display) / 1000;
+            //     qty_to_display = qty_to_display.toFixed(1) + "K";
+            // }
+
         } else {
             indicator_color = "";
             qty_to_display = "";
         }
-    
+        const tax_rate = 0.12;
+		const no_vat = price_list_rate / (1 + tax_rate);
+
+
         const item_description = description ? description : "Description not available";
-    
+
         return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
         onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
         onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
@@ -210,6 +238,7 @@ custom_app.PointOfSale.ItemSelector = class {
             <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
+            <td class="item-rate" style=" width: 12%;">${format_currency( custom_is_vatable == 0 ? price_list_rate : no_vat, item.currency) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
             <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
@@ -800,7 +829,7 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$clear_search_btn.toggle(Boolean(this.search_field.$input.val()));
         });
 
-        this.$component.on("keydown", (e) => {
+         this.$component.on("keydown", (e) => {
             const key = e.which || e.keyCode;
             switch (key) {
                 case 38: // up arrow
@@ -816,7 +845,7 @@ custom_app.PointOfSale.ItemSelector = class {
                     this.navigate_down();
                     this.focus_next_field();
                     break;
-                case 13: // enter
+                case 32: // enter
                     e.preventDefault();
                     this.select_highlighted_item();
                     break;
@@ -931,6 +960,13 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     select_highlighted_item() {
+        // Ensure highlighted_row_index is valid
+        if (this.highlighted_row_index === -1) {
+            // Create and show a popup dialog
+            return;
+        }
+    
+        // Proceed to select the highlighted item
         const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
         if (highlightedItem.length) {
             highlightedItem.click(); // Simulate click action

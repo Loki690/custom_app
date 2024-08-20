@@ -228,8 +228,6 @@ custom_app.PointOfSale.ItemDetails = class {
 		this.$item_price.html(format_currency(amount, this.currency));
 	}
 	
-
-	// Function to trigger OTP authentication
 		// Function to trigger OTP authentication
 		oic_authentication(fieldname, item) {
 			const me = this;
@@ -263,7 +261,7 @@ custom_app.PointOfSale.ItemDetails = class {
 									passwordDialog.hide();
 		
 									me.enable_discount_input(fieldname);
-									me.set_discount_log(doc, item)
+									me.set_discount_log(doc, item, r)
 									me.is_oic_authenticated = true;
 		
 					
@@ -287,14 +285,18 @@ custom_app.PointOfSale.ItemDetails = class {
 		
 			passwordDialog.show();
 		}
+
+		
+	
 	
 		
-	set_discount_log(doc, item) {
+	set_discount_log(doc, item, r) {
 		let current_discount_log = doc.doc.custom_manual_dicsount || '';
 		let discount_log = `${item.item_code} - ${r.message.full_name} - ${frappe.datetime.now_datetime()}\n`;
 		let updated_discount_log = current_discount_log + discount_log;
 		doc.set_value('custom_manual_dicsount', updated_discount_log);
 	}
+
 
 	// Function to enable input to discount_percentage field after OTP authentication
 	enable_discount_input(fieldname) {
@@ -371,6 +373,7 @@ custom_app.PointOfSale.ItemDetails = class {
 
 
 		if (this.rate_control) {
+			
 			const frm = me.events.get_frm();
 			// Remove any existing onchange handler to avoid multiple handlers being attached
 			this.rate_control.df.onchange = null;
@@ -391,21 +394,26 @@ custom_app.PointOfSale.ItemDetails = class {
 					}, 200); // Adjust the debounce time as needed
 				}
 			};
-		
 			
 
-			
-				if (frm.doc.customer_group === 'Senior Citizen') {
-					return;
-				} else {
-					this.rate_control.df.read_only = !this.allow_rate_change;
-					this.rate_control.refresh();
-				}
+			if (frm.doc.customer_group === 'Senior Citizen') {
+				return;
+			} else {
+				this.rate_control.df.read_only = !this.allow_rate_change;
+				this.rate_control.refresh();
+			}
 			
 			// this.rate_control.df.read_only = !this.allow_rate_change;
 			// this.rate_control.refresh();
 		}
 		// Ensure frm.doc is checked for existence before accessing it
+		
+		
+		// if (this.discount_percentage_control && !this.allow_discount_change) {
+		// 	this.discount_percentage_control.df.read_only = 1;
+		// 	this.discount_percentage_control.refresh();
+		// }
+
 		if (me.events && me.events.get_frm() && me.events.get_frm().doc) {
 			const frm = me.events.get_frm();
 			if (frm.doc.customer_group === 'Senior Citizen'|| frm.doc.customer_group === 'PWD' ) {
@@ -417,7 +425,6 @@ custom_app.PointOfSale.ItemDetails = class {
 				}
 			}
 		}
-
 		
 		if (this.warehouse_control) {
 			this.warehouse_control.df.reqd = 1;

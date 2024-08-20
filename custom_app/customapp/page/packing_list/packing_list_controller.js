@@ -140,8 +140,8 @@ custom_app.PointOfSale.Controller = class {
 		const buttons = [
 			{ label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
 			{ label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2" },
-			{ label: __("Amesco Plus Member"), action: this.amesco_plus_scan.bind(this), shortcut: "f2" },
 			{ label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3" },
+			{ label: __("Amesco Plus Member"), action: this.amesco_plus_scan.bind(this)},
 			{ label: __("Branch Item Lookup (F4)"), action: this.show_branch_selection_dialog.bind(this), shortcut: "f4" },
 			{ label: __("Change POS Profile (F5)"), action: this.select_pos_profile.bind(this), shortcut: "f5" },
 		];

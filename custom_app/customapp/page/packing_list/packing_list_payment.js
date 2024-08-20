@@ -115,7 +115,7 @@ custom_app.PointOfSale.Payment = class {
 			}, 100);
 		}
 	}
-	
+
 
 	bind_events() {
 		const me = this;
@@ -156,7 +156,7 @@ custom_app.PointOfSale.Payment = class {
 			me.$payment_modes.find(`.pay-amount`).css("display", "inline");
 			me.$payment_modes.find(`.loyalty-amount-name`).hide();
 		}
-	
+
 
 		function focusAndHighlightAmountField(mode_clicked) {
 			const $amountField = mode_clicked.find(".frappe-control.input-max-width[data-fieldtype='Currency'] input");
@@ -168,18 +168,18 @@ custom_app.PointOfSale.Payment = class {
 		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
 			const mode_clicked = $(this);
 			if (!$(e.target).is(mode_clicked)) return;
-	
+
 			const scrollLeft = mode_clicked.offset().left - me.$payment_modes.offset().left + me.$payment_modes.scrollLeft();
 			me.$payment_modes.animate({ scrollLeft });
-	
+
 			const mode = mode_clicked.attr("data-mode");
-	
+
 			// Hide all fields first
 			hideAllFields();
-	
+
 			// Remove highlight from all mode-of-payments
 			$(".mode-of-payment").removeClass("border-primary");
-	
+
 			if (mode_clicked.hasClass("border-primary")) {
 				// Clicked one is selected then unselect it
 				mode_clicked.removeClass("border-primary");
@@ -187,7 +187,7 @@ custom_app.PointOfSale.Payment = class {
 			} else {
 				// Clicked one is not selected then select it
 				mode_clicked.addClass("border-primary");
-	
+
 				// Show relevant fields based on mode
 				mode_clicked.find(".mode-of-payment-control").css("display", "flex");
 				mode_clicked.find(".cash-button").css("display", "flex");
@@ -228,7 +228,7 @@ custom_app.PointOfSale.Payment = class {
 					mode_clicked.find(".discard-button").css("display", "flex");
 				} else if (mode === "charge") {
 					mode_clicked.find(".customer").css("display", "flex");
-					mode_clicked.find(".charge-invoice-number").css("display","flex");
+					mode_clicked.find(".charge-invoice-number").css("display", "flex");
 					mode_clicked.find(".po-number").css("display", "flex");
 					mode_clicked.find(".representative").css("display", "flex");
 					mode_clicked.find(".id-number").css("display", "flex");
@@ -242,6 +242,7 @@ custom_app.PointOfSale.Payment = class {
 				} else if (mode === "amesco_plus") {
 					mode_clicked.find(".amesco-code").css("display", "flex");
 					mode_clicked.find(".button-amesco-plus").css("display", "flex");
+					mode_clicked.find(".discard-button").css("display", "flex");
 				} 
 				focusAndHighlightAmountField(mode_clicked);
 				// me.selected_mode = me[`${mode}_control`];
@@ -249,7 +250,7 @@ custom_app.PointOfSale.Payment = class {
 				me.auto_set_remaining_amount();
 			}
 		});
-	
+
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
 			const target = $(e.target);
@@ -345,7 +346,7 @@ custom_app.PointOfSale.Payment = class {
 			}
 		});
 	}
-	
+
 
 	setup_listener_for_payments() {
 		frappe.realtime.on("process_phone_payment", (data) => {
@@ -479,7 +480,7 @@ custom_app.PointOfSale.Payment = class {
 		}
 	}
 
-	
+
 
 	render_payment_mode_dom() {
 		const doc = this.events.get_frm().doc;
@@ -490,16 +491,16 @@ custom_app.PointOfSale.Payment = class {
 		const allowed_payment_modes = ["2306", "2307"];
 
 		this.$payment_modes.html(
-			
+
 			`<div style="display: flex; flex-wrap: wrap; gap: 16px;">
 				${payments.map((p, i) => {
-					const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
-					const payment_type = p.type;
-					const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
-		
-					const displayStyle = (p.mode_of_payment === "2307G" && customer_group !== "Government") ? 'display: none;' : '';
+				const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+				const payment_type = p.type;
+				const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
 
-					let paymentModeHtml = `
+				const displayStyle = (p.mode_of_payment === "2307G" && customer_group !== "Government") ? 'display: none;' : '';
+
+				let paymentModeHtml = `
 						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); ${displayStyle}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
 							<span>${p.mode_of_payment}</span>
@@ -507,10 +508,10 @@ custom_app.PointOfSale.Payment = class {
 							<div class="${mode} mode-of-payment-control"></div>
 							<div class="${mode} cash-button"></div>
 					`;
-				
-					switch (p.mode_of_payment) {
-						case "GCash":
-							paymentModeHtml += `
+
+				switch (p.mode_of_payment) {
+					case "GCash":
+						paymentModeHtml += `
 								<div class="${mode} mobile-number" style="margin-top:10px;"></div>
 								<div class="${mode} reference-number" style="margin-top:10px;"></div>
 								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
@@ -518,9 +519,9 @@ custom_app.PointOfSale.Payment = class {
 									<div class="${mode} discard-button"></div>
 								</div>
 							`;
-							break;
-						case "Cards":
-							paymentModeHtml += `
+						break;
+					case "Cards":
+						paymentModeHtml += `
 								<div class="${mode} bank-name"></div>
 								<div class="${mode} holder-name"></div>
 								<div class="${mode} card_type_control"></div>
@@ -532,9 +533,9 @@ custom_app.PointOfSale.Payment = class {
 									<div class="${mode} discard-button"></div>
 								</div>
 							`;
-							break;
-						case "Debit Card":
-							paymentModeHtml += `
+						break;
+					case "Debit Card":
+						paymentModeHtml += `
 								<div class="${mode} bank-name"></div>
 								<div class="${mode} holder-name"></div>
 								<div class="${mode} card-number"></div>
@@ -545,9 +546,9 @@ custom_app.PointOfSale.Payment = class {
 									<div class="${mode} discard-button"></div>
 								</div>
 							`;
-							break;
-						case "Credit Card":
-							paymentModeHtml += `
+						break;
+					case "Credit Card":
+						paymentModeHtml += `
 								<div class="${mode} bank-name"></div>
 								<div class="${mode} holder-name"></div>
 								<div class="${mode} card-number"></div>
@@ -559,9 +560,9 @@ custom_app.PointOfSale.Payment = class {
 								</div>
 								
 							`;
-							break;
-						case "PayMaya":
-							paymentModeHtml += `
+						break;
+					case "PayMaya":
+						paymentModeHtml += `
 								<div class="${mode} mobile-number" style="margin-top:10px;"></div>
 								<div class="${mode} reference-number" style="margin-top:10px;"></div>
 								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
@@ -569,9 +570,9 @@ custom_app.PointOfSale.Payment = class {
 									<div class="${mode} discard-button"></div>
 								</div>
 							`;
-							break;
-						case "Cheque":
-							paymentModeHtml += `
+						break;
+					case "Cheque":
+						paymentModeHtml += `
 								<div class="${mode} bank-name"></div>
 								<div class="${mode} check-name"></div>
 								<div class="${mode} check-number"></div>
@@ -581,27 +582,27 @@ custom_app.PointOfSale.Payment = class {
 									<div class="${mode} discard-button"></div>
 								</div>
 							`;
-							break;
-						case "2307G":
-							paymentModeHtml += `
+						break;
+					case "2307G":
+						paymentModeHtml += `
 								<div class="${mode} actual-gov-one"></div>
 								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
 									<div class="${mode} save-button"></div>
 									<div class="${mode} discard-button"></div>
 								</div>
 							`;
-							break;
-						case "2307":
-							paymentModeHtml += `
+						break;
+					case "2307":
+						paymentModeHtml += `
 								<div class="${mode} actual-gov-two"></div>
 								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
 									<div class="${mode} save-button"></div>
 									<div class="${mode} discard-button"></div>
 								</div>
 							`;
-							break;
-						case "QR Payment":
-							paymentModeHtml += `
+						break;
+					case "QR Payment":
+						paymentModeHtml += `
 								<div class="${mode} payment-type"></div>
 								<div class="${mode} bank-type"></div>
 								<div class="${mode} qr-reference-number"></div>
@@ -610,9 +611,9 @@ custom_app.PointOfSale.Payment = class {
 									<div class="${mode} discard-button"></div>
 								</div>
 							`;
-							break;
-						case "Charge":
-							paymentModeHtml += `
+						break;
+					case "Charge":
+						paymentModeHtml += `
 								<div class="${mode} customer"></div>
 								<div class="${mode} charge-invoice-number"></div>
 								<div class="${mode} po-number"></div>
@@ -625,41 +626,46 @@ custom_app.PointOfSale.Payment = class {
 								</div>
 								
 							`;
-							break;
-						case "Gift Certificate":
-							paymentModeHtml += `
+						break;
+					case "Gift Certificate":
+						paymentModeHtml += `
 							  <div class="${mode} gift-code"></div>
 							  <div class="${mode} button-row" style="display: flex; gap: 3px; align-items: center;">
 							  		<div class="${mode} button-code mt-2" ></div>
 									<div class="${mode} discard-button"></div>
 								</div>
 						   `;
-							break;
-						case "Amesco Plus":
-							paymentModeHtml += `
+						break;
+					case "Amesco Plus":
+						paymentModeHtml += `
 							<div class="${mode} amesco-code"></div>
-							<div class="${mode} button-amesco-plus mt-2" ></div>
+							<div class="${mode} button-row" style="display: flex; gap: 3px; align-items: center;">
+								<div class="${mode} button-amesco-plus mt-2" ></div>
+								<div class="${mode} discard-button"></div>
+							</div>	
+							
 							   `;
-								break;
-					}
-		
-					paymentModeHtml += `
+						break;
+				}
+
+				paymentModeHtml += `
 							</div>
 						</div>
 					`;
-		
-					return paymentModeHtml;
-				}).join("")}
+
+				return paymentModeHtml;
+			}).join("")}
 			</div>`
 		);
 
-		
+
 
 		payments.forEach((p) => {
 			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
 			const me = this;
-			
-			
+			const frm = this.events.get_frm()
+
+
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
 					label: "Amount",
@@ -669,12 +675,12 @@ custom_app.PointOfSale.Payment = class {
 					onchange: function () {
 						const current_value = frappe.model.get_value(p.doctype, p.name, "amount");
 						if (current_value != this.value) {
-							frappe.model
-								// .set_value(p.doctype, p.name, "amount", flt(this.value))
-								.then(() => me.update_totals_section());
+							// frappe.model
+							// 	// .set_value(p.doctype, p.name, "amount", flt(this.value))
+							// 	.then(() => me.update_totals_section());
 
 
-							
+
 							const formatted_currency = format_currency(this.value, currency);
 							me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
 						}
@@ -684,7 +690,7 @@ custom_app.PointOfSale.Payment = class {
 				parent: this.$payment_modes.find(`.${mode}.mode-of-payment-control`),
 				render_input: true,
 			});
-		
+
 
 			setTimeout(() => {
 				const $amountField = this.$payment_modes.find(`.${mode}.mode-of-payment-control input[data-fieldname="amount"]`);
@@ -708,20 +714,20 @@ custom_app.PointOfSale.Payment = class {
 								indicator: 'orange',
 								primary_action: {
 									label: __('OK'),
-									action: function() {
+									action: function () {
 										// Close the dialog
 										frappe.msg_dialog.hide();
-										
+
 									}
 								}
 							});
 
-							$(document).on('keydown', function(e) {
+							$(document).on('keydown', function (e) {
 								if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 									dialog.get_primary_btn().trigger('click');
 								}
 							});
-			
+
 							// Remove event listener when dialog is closed
 							dialog.$wrapper.on('hidden.bs.modal', function () {
 								$(document).off('keydown');
@@ -730,44 +736,44 @@ custom_app.PointOfSale.Payment = class {
 
 							return;
 						}
-						
+
 
 
 						frappe.model
-						.set_value(p.doctype, p.name, "amount", flt(amount_value))
-						.then(() => {
-							me.update_totals_section();
-							const formatted_currency = format_currency(amount_value, currency);
-							me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
+							.set_value(p.doctype, p.name, "amount", flt(amount_value))
+							.then(() => {
+								me.update_totals_section();
+								const formatted_currency = format_currency(amount_value, currency);
+								me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
 
-							const dialog = frappe.msgprint({
-								title: __('Success'),
-								message: __('Cash payment details have been saved.'),
-								indicator: 'green',
-								primary_action: {
-									label: __('OK'),
-									action: function() {
-										// Close the dialog
-										frappe.msg_dialog.hide();
+								const dialog = frappe.msgprint({
+									title: __('Success'),
+									message: __('Cash payment details have been saved.'),
+									indicator: 'green',
+									primary_action: {
+										label: __('OK'),
+										action: function () {
+											// Close the dialog
+											frappe.msg_dialog.hide();
+										}
 									}
-								}
-							});
+								});
 
-							// Add event listener for Enter key
-							$(document).on('keydown', function(e) {
-								if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-									dialog.get_primary_btn().trigger('click');
-								}
+								// Add event listener for Enter key
+								$(document).on('keydown', function (e) {
+									if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+										dialog.get_primary_btn().trigger('click');
+									}
+								});
+
+								// Remove event listener when dialog is closed
+								dialog.$wrapper.on('hidden.bs.modal', function () {
+									$(document).off('keydown');
+								});
 							});
-		
-							// Remove event listener when dialog is closed
-							dialog.$wrapper.on('hidden.bs.modal', function () {
-								$(document).off('keydown');
-							});
-						});
 					}
 				});
-			
+
 				// Add discard button
 				const discard_button = $('<button/>', {
 					text: 'Discard',
@@ -777,26 +783,26 @@ custom_app.PointOfSale.Payment = class {
 						frappe.model.set_value(p.doctype, p.name, "amount", 0).then(() => {
 							me.update_totals_section();
 							me.$payment_modes.find(`.${mode}-amount`).html(format_currency(0, currency));
-			
+
 							const dialog = frappe.msgprint({
 								message: __('Cash payment details have been discarded.'),
 								indicator: 'blue',
 								primary_action: {
 									label: __('OK'),
-									action: function() {
+									action: function () {
 										// Close the dialog
 										frappe.msg_dialog.hide();
 									}
 								}
 							});
-			
+
 							// Add event listener for Enter key
-							$(document).on('keydown', function(e) {
+							$(document).on('keydown', function (e) {
 								if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 									dialog.get_primary_btn().trigger('click');
 								}
 							});
-			
+
 							// Remove event listener when dialog is closed
 							dialog.$wrapper.on('hidden.bs.modal', function () {
 								$(document).off('keydown');
@@ -804,13 +810,13 @@ custom_app.PointOfSale.Payment = class {
 						});
 					}
 				});
-			
+
 				// Append the save and discard buttons to the parent container
 				const button_container = $('<div/>', { style: 'display: flex; gap: 5px; align-items: center;' });
 				button_container.append(save_button);
 				button_container.append(discard_button);
 				this.$payment_modes.find(`.${mode}.cash-button`).append(button_container);
-			
+
 				// Add keypress event listener for Enter key to trigger save button click
 				this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).keypress(function (e) {
 					if (e.which === 13) { // Enter key pressed
@@ -818,12 +824,12 @@ custom_app.PointOfSale.Payment = class {
 					}
 				});
 			}
-			
+
 
 			this[`${mode}_control`].set_value(0);
 
 			if (p.mode_of_payment === "Cards") {
-				
+
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
 				// Create the bank_name_control without onchange
 				let bank_name_control = frappe.ui.form.make_control({
@@ -838,10 +844,10 @@ custom_app.PointOfSale.Payment = class {
 				});
 				bank_name_control.set_value(existing_custom_bank_name || '');
 				bank_name_control.refresh();
-			
 
-				const selected_customer = cur_frm.doc.customer;		
-				
+
+				const selected_customer = cur_frm.doc.customer;
+
 				let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
 				let name_on_card_control = frappe.ui.form.make_control({
 					df: {
@@ -855,7 +861,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				name_on_card_control.set_value(existing_custom_card_name || selected_customer || '');
 				name_on_card_control.refresh();
-			
+
 				let existing_custom_card_type = frappe.model.get_value(p.doctype, p.name, "custom_card_type");
 				let card_type_control = frappe.ui.form.make_control({
 					df: {
@@ -889,7 +895,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				card_type_control.set_value(existing_custom_card_type || '');
 				card_type_control.refresh();
-			
+
 				let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
 				let card_number_control = frappe.ui.form.make_control({
 					df: {
@@ -904,7 +910,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				card_number_control.set_value(existing_custom_card_number || '');
 				card_number_control.refresh();
-			
+
 				let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
 				let expiry_date_control = frappe.ui.form.make_control({
 					df: {
@@ -918,7 +924,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				expiry_date_control.set_value(existing_custom_card_expiration_date || '');
 				expiry_date_control.refresh();
-			
+
 				let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
 				let custom_approval_code_control = frappe.ui.form.make_control({
 					df: {
@@ -932,7 +938,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				custom_approval_code_control.set_value(existing_custom_approval_code || '');
 				custom_approval_code_control.refresh();
-			
+
 				// let existing_reference_no = frappe.model.get_value(p.doctype, p.name, "reference_no");
 				// let reference_no_control = frappe.ui.form.make_control({
 				// 	df: {
@@ -946,18 +952,18 @@ custom_app.PointOfSale.Payment = class {
 				// });
 				// reference_no_control.set_value(existing_reference_no || '');
 				// reference_no_control.refresh();
-			
+
 				// Create a save button for all the fields and append it under the reference control
 				let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
 				this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
-			
+
 
 				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
 
 				const me = this;
 				// Attach an event listener to the save button
-				save_button.on('click', function() {
+				save_button.on('click', function () {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
 					let bank_name = bank_name_control.get_value();
 					let card_name = name_on_card_control.get_value();
@@ -966,7 +972,7 @@ custom_app.PointOfSale.Payment = class {
 					let card_expiry_date = expiry_date_control.get_value();
 					let approval_code = custom_approval_code_control.get_value();
 					// let reference_no = reference_no_control.get_value();
-	
+
 					if (!amount || !bank_name || !card_name || !card_type || !card_number || !card_expiry_date || !approval_code) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
@@ -974,19 +980,19 @@ custom_app.PointOfSale.Payment = class {
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
@@ -994,52 +1000,52 @@ custom_app.PointOfSale.Payment = class {
 
 						return;
 					}
-	
+
 					if (!validateLastFourDigits(card_number)) {
-				
+
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('Card number must be exactly 4 digits.'),
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
 						});
-						
+
 						return;
 					}
 
 					const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
-							? doc.grand_total
-							: doc.rounded_total;
-						const currency = doc.currency;
+						? doc.grand_total
+						: doc.rounded_total;
+					const currency = doc.currency;
 
-						if(amount > grand_total){
-							frappe.msgprint({
-								title: __('Validation Warning'),
-								message: __('Amount must not exceed the grand total.'),
-								indicator: 'orange'
-							});
-							return;
+					if (amount > grand_total) {
+						frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('Amount must not exceed the grand total.'),
+							indicator: 'orange'
+						});
+						return;
 
-						}
-						
-	
+					}
+
+
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_name", bank_name);
 					frappe.model.set_value(p.doctype, p.name, "custom_card_name", card_name);
@@ -1048,14 +1054,14 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", card_expiry_date);
 					frappe.model.set_value(p.doctype, p.name, "custom_approval_code", approval_code);
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-	
+
 					const dialog = frappe.msgprint({
 						title: __('Success'),
 						message: __('Card payment details have been saved.'),
 						indicator: 'green',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
@@ -1063,12 +1069,12 @@ custom_app.PointOfSale.Payment = class {
 					});
 
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -1077,39 +1083,39 @@ custom_app.PointOfSale.Payment = class {
 
 				});
 
-				discard_button.on('click', function() {
+				discard_button.on('click', function () {
 					// Clear all the fields
-					me[`${mode}_control`].set_value('');
+					this[`${mode}_control`].set_value(0);
 					bank_name_control.set_value('');
 					name_on_card_control.set_value('');
 					card_type_control.set_value('');
 					card_number_control.set_value('');
 					expiry_date_control.set_value('');
 					custom_approval_code_control.set_value('');
-		
-				
+
+
 					// Set values in the model to null or empty string
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
-					frappe.model.set_value(p.doctype, p.name, "custom_bank_name",'');
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
+					frappe.model.set_value(p.doctype, p.name, "custom_bank_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_type", '');
-					frappe.model.set_value(p.doctype, p.name, "custom_card_number",'');
+					frappe.model.set_value(p.doctype, p.name, "custom_card_number", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_approval_code", '');
-			
+
 					frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 				});
-			
+
 				const controls = [
 					me[`${mode}_control`],
 					bank_name_control,
@@ -1119,7 +1125,7 @@ custom_app.PointOfSale.Payment = class {
 					expiry_date_control,
 					custom_approval_code_control
 				]
-			
+
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -1130,21 +1136,21 @@ custom_app.PointOfSale.Payment = class {
 
 
 
-			
+
 				function validateLastFourDigits(value) {
 					const regex = /^\d{4}$/;
 					return regex.test(value);
 				}
 			}
 
-			if (p.mode_of_payment  === "GCash" || p.mode_of_payment  === 'PayMaya') {
+			if (p.mode_of_payment === "GCash" || p.mode_of_payment === 'PayMaya') {
 				let existing_custom_phone_number = frappe.model.get_value(p.doctype, p.name, "custom_phone_number");
 				let phone_number_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Number',
 						fieldtype: "Data",
 						placeholder: '09876543212',
-				
+
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_phone_number", this.value);
 						// },
@@ -1157,14 +1163,14 @@ custom_app.PointOfSale.Payment = class {
 
 
 
-				let existing_custom_epayment_reference_number= frappe.model.get_value(p.doctype, p.name, "reference_no");
+				let existing_custom_epayment_reference_number = frappe.model.get_value(p.doctype, p.name, "reference_no");
 
-				let epayment_reference_number_controller= frappe.ui.form.make_control({
+				let epayment_reference_number_controller = frappe.ui.form.make_control({
 					df: {
 						label: 'Reference No',
 						fieldtype: "Data",
 						placeholder: 'Reference No.',
-				
+
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
 						// },
@@ -1181,20 +1187,20 @@ custom_app.PointOfSale.Payment = class {
 
 				let save_button = $('<button class="btn btn-primary" style="text-align: right;">save</button>');
 				this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
-			
+
 				// Create discard button
 				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
-			
+
 				const me = this;
-			
+
 				// Attach event listener to the save button
-				save_button.on('click', function() {
+				save_button.on('click', function () {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
 					let phone_number = phone_number_control.get_value();
 					let reference_no = epayment_reference_number_controller.get_value();
-					
-			
+
+
 					if (!amount) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
@@ -1202,123 +1208,123 @@ custom_app.PointOfSale.Payment = class {
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
 						});
 						return;
 					}
-			
+
 					const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
-							? doc.grand_total
-							: doc.rounded_total;
-						const currency = doc.currency;
+						? doc.grand_total
+						: doc.rounded_total;
+					const currency = doc.currency;
 
 
-						if(amount > grand_total){
-						
-							const dialog = frappe.msgprint({
-								title: __('Validation Warning'),
-								message: __('Amount must not exceed the grand total.'),
-								indicator: 'orange',
-								primary_action: {
-									label: __('OK'),
-									action: function() {
-										// Close the dialog
-										frappe.msg_dialog.hide();
-									}
+					if (amount > grand_total) {
+
+						const dialog = frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('Amount must not exceed the grand total.'),
+							indicator: 'orange',
+							primary_action: {
+								label: __('OK'),
+								action: function () {
+									// Close the dialog
+									frappe.msg_dialog.hide();
 								}
-							});
-	
-							$(document).on('keydown', function(e) {
-								if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-									dialog.get_primary_btn().trigger('click');
-								}
-							});
-			
-							// Remove event listener when dialog is closed
-							dialog.$wrapper.on('hidden.bs.modal', function () {
-								$(document).off('keydown');
-							});
-							return;
+							}
+						});
 
-						}
-			
+						$(document).on('keydown', function (e) {
+							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+								dialog.get_primary_btn().trigger('click');
+							}
+						});
+
+						// Remove event listener when dialog is closed
+						dialog.$wrapper.on('hidden.bs.modal', function () {
+							$(document).off('keydown');
+						});
+						return;
+
+					}
+
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
 					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
 					frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-					
-			
+
+
 					const dialog = frappe.msgprint({
 						title: __('Success'),
 						message: __('Payment details have been saved.'),
 						indicator: 'green',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
 					});
 
 				});
-			
+
 				// Attach event listener to the discard button
-				discard_button.on('click', function() {
+				discard_button.on('click', function () {
 					// Clear all the fields
-					me[`${mode}_control`].set_value('');
+					this[`${mode}_control`].set_value(0);
 					phone_number_control.set_value('');
 					epayment_reference_number_controller.set_value('');
-				
+
 					// Set values in the model to null or empty string
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", '');
 					frappe.model.set_value(p.doctype, p.name, "reference_no", '');
-			
+
 					frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 				});
-			
+
 				const controls = [
 					me[`${mode}_control`],
 					phone_number_control,
 					epayment_reference_number_controller,
 				];
-			
+
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -1331,14 +1337,14 @@ custom_app.PointOfSale.Payment = class {
 			}
 
 
-			if (p.mode_of_payment === "Debit Card" || p.mode_of_payment === "Credit Card" ) {
+			if (p.mode_of_payment === "Debit Card" || p.mode_of_payment === "Credit Card") {
 				// Retrieve existing values
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
 				let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
 				let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
 				let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
 				let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
-			
+
 				// Create controls
 				let bank_name_control = frappe.ui.form.make_control({
 					df: {
@@ -1352,10 +1358,10 @@ custom_app.PointOfSale.Payment = class {
 				});
 				bank_name_control.set_value(existing_custom_bank_name || '');
 				bank_name_control.refresh();
-			
 
-				
-				const selected_customer = cur_frm.doc.customer;		
+
+
+				const selected_customer = cur_frm.doc.customer;
 				let name_on_card_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Name on Card',
@@ -1368,7 +1374,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				name_on_card_control.set_value(existing_custom_card_name || selected_customer || '');
 				name_on_card_control.refresh();
-			
+
 				let card_number_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Card Number',
@@ -1382,7 +1388,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				card_number_control.set_value(existing_custom_card_number || '');
 				card_number_control.refresh();
-			
+
 				let expiry_date_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Card Expiration Date',
@@ -1395,7 +1401,7 @@ custom_app.PointOfSale.Payment = class {
 				});
 				expiry_date_control.set_value(existing_custom_card_expiration_date || '');
 				expiry_date_control.refresh();
-			
+
 				let custom_approval_code_control = frappe.ui.form.make_control({
 					df: {
 						label: 'Approval Code',
@@ -1408,28 +1414,28 @@ custom_app.PointOfSale.Payment = class {
 				});
 				custom_approval_code_control.set_value(existing_custom_approval_code || '');
 				custom_approval_code_control.refresh();
-			
 
-			
+
+
 
 				let save_button = $('<button class="btn btn-primary" style="text-align: right;">Save</button>');
 				this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
-			
+
 				// Create discard button
 				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
-			
+
 				const me = this;
-			
+
 				// Attach event listener to the save button
-				save_button.on('click', function() {
+				save_button.on('click', function () {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
 					let bank_name = bank_name_control.get_value();
 					let card_name = name_on_card_control.get_value();
 					let card_number = card_number_control.get_value();
 					let card_expiry_date = expiry_date_control.get_value();
 					let approval_code = custom_approval_code_control.get_value();
-			
+
 					if (!amount || !bank_name || !card_name || !card_number || !card_expiry_date || !approval_code) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
@@ -1437,47 +1443,47 @@ custom_app.PointOfSale.Payment = class {
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
 						});
 						return;
 					}
-			
+
 					if (!validateLastFourDigits(card_number)) {
-					
+
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('Card number must be exactly 4 digits.'),
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
@@ -1487,59 +1493,59 @@ custom_app.PointOfSale.Payment = class {
 
 
 					const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
-							? doc.grand_total
-							: doc.rounded_total;
-						const currency = doc.currency;
+						? doc.grand_total
+						: doc.rounded_total;
+					const currency = doc.currency;
 
 
-						if(amount > grand_total){
-							const dialog = frappe.msgprint({
-								title: __('Validation Warning'),
-								message: __('Amount must not exceed the grand total.'),
-								indicator: 'orange'
-							});
+					if (amount > grand_total) {
+						const dialog = frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('Amount must not exceed the grand total.'),
+							indicator: 'orange'
+						});
 
 
-							$(document).on('keydown', function(e) {
-								if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-									dialog.get_primary_btn().trigger('click');
-								}
-							});
-			
-							// Remove event listener when dialog is closed
-							dialog.$wrapper.on('hidden.bs.modal', function () {
-								$(document).off('keydown');
-							});
-							return;
+						$(document).on('keydown', function (e) {
+							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+								dialog.get_primary_btn().trigger('click');
+							}
+						});
 
-						}
-			
+						// Remove event listener when dialog is closed
+						dialog.$wrapper.on('hidden.bs.modal', function () {
+							$(document).off('keydown');
+						});
+						return;
+
+					}
+
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_name", bank_name);
 					frappe.model.set_value(p.doctype, p.name, "custom_card_name", card_name);
 					frappe.model.set_value(p.doctype, p.name, "custom_card_number", card_number);
 					frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", card_expiry_date);
 					frappe.model.set_value(p.doctype, p.name, "custom_approval_code", approval_code);
-			
+
 					const dialog = frappe.msgprint({
 						title: __('Success'),
 						message: __('Card payment details have been saved.'),
 						indicator: 'green',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -1547,31 +1553,31 @@ custom_app.PointOfSale.Payment = class {
 
 
 				});
-			
+
 				// Attach event listener to the discard button
-				discard_button.on('click', function() {
+				discard_button.on('click', function () {
 					// Clear all the fields
-					me[`${mode}_control`].set_value('');
+					me[`${mode}_control`].set_value(0);
 					bank_name_control.set_value('');
 					name_on_card_control.set_value('');
 					card_number_control.set_value('');
 					expiry_date_control.set_value('');
 					custom_approval_code_control.set_value('');
-			
+
 					// Set values in the model to null or empty string
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_number", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_approval_code", '');
-			
+
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
@@ -1579,19 +1585,19 @@ custom_app.PointOfSale.Payment = class {
 					});
 
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
 					});
 
 				});
-			
+
 				function validateLastFourDigits(value) {
 					const regex = /^\d{4}$/;
 					return regex.test(value);
@@ -1605,7 +1611,7 @@ custom_app.PointOfSale.Payment = class {
 					expiry_date_control,
 					custom_approval_code_control
 				];
-			
+
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -1613,11 +1619,11 @@ custom_app.PointOfSale.Payment = class {
 						}
 					});
 				});
-				
-			}
-			
 
-			if (p.mode_of_payment === "Cheque" || p.mode_of_payment  === 'Government') {
+			}
+
+
+			if (p.mode_of_payment === "Cheque" || p.mode_of_payment === 'Government') {
 
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_check_bank_name");
 
@@ -1661,7 +1667,7 @@ custom_app.PointOfSale.Payment = class {
 				// Set the existing value and refresh the control
 				check_name_control.set_value(existing_custom_check_name || selected_customer || '');
 				check_name_control.refresh();
-				
+
 
 				let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
 				let check_number_control = frappe.ui.form.make_control({
@@ -1705,17 +1711,17 @@ custom_app.PointOfSale.Payment = class {
 
 				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
-			
+
 				const me = this;
 				// Attach an event listener to the save button
-				save_button.on('click', function() {
+				save_button.on('click', function () {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
 					let bank_name = bank_name_control.get_value();
-					let check_name = check_name_control .get_value();
+					let check_name = check_name_control.get_value();
 					let check_number = check_number_control.get_value();
 					let check_date = check_date_control.get_value();
 					// let reference_no = reference_no_control.get_value();
-	
+
 					if (!amount || !bank_name || !check_name || !check_number || !check_date) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
@@ -1723,60 +1729,60 @@ custom_app.PointOfSale.Payment = class {
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
 						});
 						return;
 					}
-	
+
 					const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
-							? doc.grand_total
-							: doc.rounded_total;
-						const currency = doc.currency;
+						? doc.grand_total
+						: doc.rounded_total;
+					const currency = doc.currency;
 
-						
-						if(amount > grand_total){
-						
-							const dialog = frappe.msgprint({
-								title: __('Validation Warning'),
-								message: __('Amount must not exceed the grand total.'),
-								indicator: 'orange',
-								primary_action: {
-									label: __('OK'),
-									action: function() {
-										// Close the dialog
-										frappe.msg_dialog.hide();
-									}
-								}
-							});
-	
-							$(document).on('keydown', function(e) {
-								if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-									dialog.get_primary_btn().trigger('click');
-								}
-							});
-			
-							// Remove event listener when dialog is closed
-							dialog.$wrapper.on('hidden.bs.modal', function () {
-								$(document).off('keydown');
-							});
-							return;
 
-						}
+					if (amount > grand_total) {
+
+						const dialog = frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('Amount must not exceed the grand total.'),
+							indicator: 'orange',
+							primary_action: {
+								label: __('OK'),
+								action: function () {
+									// Close the dialog
+									frappe.msg_dialog.hide();
+								}
+							}
+						});
+
+						$(document).on('keydown', function (e) {
+							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+								dialog.get_primary_btn().trigger('click');
+							}
+						});
+
+						// Remove event listener when dialog is closed
+						dialog.$wrapper.on('hidden.bs.modal', function () {
+							$(document).off('keydown');
+						});
+						return;
+
+					}
 
 
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
@@ -1787,7 +1793,7 @@ custom_app.PointOfSale.Payment = class {
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 
 
-		
+
 
 					const dialog = frappe.msgprint({
 						title: __('Success'),
@@ -1795,19 +1801,19 @@ custom_app.PointOfSale.Payment = class {
 						indicator: 'green',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -1816,8 +1822,8 @@ custom_app.PointOfSale.Payment = class {
 				});
 
 
-				discard_button.on('click', function() {
-					me[`${mode}_control`].set_value('');
+				discard_button.on('click', function () {
+					me[`${mode}_control`].set_value(0);
 					bank_name_control.set_value('');
 					check_name_control.set_value('');
 					check_number_control.set_value('');
@@ -1825,31 +1831,31 @@ custom_app.PointOfSale.Payment = class {
 					// let reference_no = reference_no_control.get_value();
 
 
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_check_number", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_check_date", '');
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-			
+
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -1865,7 +1871,7 @@ custom_app.PointOfSale.Payment = class {
 					check_number_control,
 					check_date_control,
 				];
-			
+
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -1875,12 +1881,12 @@ custom_app.PointOfSale.Payment = class {
 				});
 
 
-			} 
+			}
 
 			if (p.mode_of_payment === "2307G") {
 				// console.log('Form 2306 Expected: ', doc.custom_2306);
-			
-				
+
+
 				let check_form_2306 = frappe.ui.form.make_control({
 					df: {
 						label: `Expected 2307G Amount`,
@@ -1891,47 +1897,47 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.actual-gov-one`),
 					render_input: true,
 				});
-			
+
 				// Set the latest value of doc.custom_2306 directly
 				let latest_form_2306_value = doc.custom_2306;
 				frappe.model.set_value(p.doctype, p.name, "custom_form_2306", latest_form_2306_value);
-			
+
 				// Set the existing value and refresh the control
 				check_form_2306.set_value(latest_form_2306_value || '');
 				check_form_2306.refresh();
 
-			
+
 				let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
 				this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
 
 				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
-			
+
 				const me = this;
 				// Attach an event listener to the save button
-				save_button.on('click', function() {
+				save_button.on('click', function () {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
-	
-					if (!amount ) {
+
+					if (!amount) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
@@ -1939,17 +1945,17 @@ custom_app.PointOfSale.Payment = class {
 						return;
 					}
 
-					
+
 
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-			
+
 					const dialog = frappe.msgprint({
 						title: __('Success'),
 						message: __('Payment details have been saved.'),
 						indicator: 'green',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
@@ -1957,12 +1963,12 @@ custom_app.PointOfSale.Payment = class {
 					});
 
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -1972,28 +1978,28 @@ custom_app.PointOfSale.Payment = class {
 				});
 
 
-				discard_button.on('click', function() {
+				discard_button.on('click', function () {
 					me[`${mode}_control`].set_value('');
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -2005,7 +2011,7 @@ custom_app.PointOfSale.Payment = class {
 				const controls = [
 					me[`${mode}_control`],
 				];
-			
+
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -2019,7 +2025,7 @@ custom_app.PointOfSale.Payment = class {
 
 			if (p.mode_of_payment === "2307") {
 
-				
+
 				let check_form_2307 = frappe.ui.form.make_control({
 					df: {
 						label: `Expected 2307 Amount`,
@@ -2044,32 +2050,32 @@ custom_app.PointOfSale.Payment = class {
 
 				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
-			
+
 				const me = this;
 				// Attach an event listener to the save button
-				save_button.on('click', function() {
+				save_button.on('click', function () {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
-	
-					if (!amount ) {
+
+					if (!amount) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
@@ -2085,19 +2091,19 @@ custom_app.PointOfSale.Payment = class {
 						indicator: 'green',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -2105,28 +2111,28 @@ custom_app.PointOfSale.Payment = class {
 				});
 
 
-				discard_button.on('click', function() {
+				discard_button.on('click', function () {
 					me[`${mode}_control`].set_value('');
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -2137,7 +2143,7 @@ custom_app.PointOfSale.Payment = class {
 				const controls = [
 					me[`${mode}_control`],
 				];
-			
+
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -2210,7 +2216,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data",
 						placeholder: 'Reference # or Confirmation Code',
 						reqd: true
-					
+
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
 						// },
@@ -2227,37 +2233,37 @@ custom_app.PointOfSale.Payment = class {
 
 				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
-			
+
 				const me = this;
 				// Attach an event listener to the save button
-				save_button.on('click', function() {
+				save_button.on('click', function () {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
 					let payment_type = custom_payment_type.get_value();
 					let bank_type = custom_bank_type.get_value();
 					let qr_reference_number = custom_qr_reference_number.get_value();
-		
+
 					// let reference_no = reference_no_control.get_value();
-	
-					if (!amount || !payment_type || !bank_type || !qr_reference_number ) {
+
+					if (!amount || !payment_type || !bank_type || !qr_reference_number) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
@@ -2267,65 +2273,65 @@ custom_app.PointOfSale.Payment = class {
 
 
 					const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
-							? doc.grand_total
-							: doc.rounded_total;
-						const currency = doc.currency;
-						
-						if(amount > grand_total){
-					
-							const dialog = frappe.msgprint({
-								title: __('Validation Warning'),
-								message: __('Amount must not exceed the grand total.'),
-								indicator: 'orange',
-								primary_action: {
-									label: __('OK'),
-									action: function() {
-										// Close the dialog
-										frappe.msg_dialog.hide();
-									}
-								}
-							});
-	
-							$(document).on('keydown', function(e) {
-								if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-									dialog.get_primary_btn().trigger('click');
-								}
-							});
-			
-							// Remove event listener when dialog is closed
-							dialog.$wrapper.on('hidden.bs.modal', function () {
-								$(document).off('keydown');
-							});
-							return;
+						? doc.grand_total
+						: doc.rounded_total;
+					const currency = doc.currency;
 
-						}
-	
+					if (amount > grand_total) {
+
+						const dialog = frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('Amount must not exceed the grand total.'),
+							indicator: 'orange',
+							primary_action: {
+								label: __('OK'),
+								action: function () {
+									// Close the dialog
+									frappe.msg_dialog.hide();
+								}
+							}
+						});
+
+						$(document).on('keydown', function (e) {
+							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+								dialog.get_primary_btn().trigger('click');
+							}
+						});
+
+						// Remove event listener when dialog is closed
+						dialog.$wrapper.on('hidden.bs.modal', function () {
+							$(document).off('keydown');
+						});
+						return;
+
+					}
+
 
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
 					frappe.model.set_value(p.doctype, p.name, "custom_payment_type", payment_type);
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_type", bank_type);
 					frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", qr_reference_number);
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-	
+
 					const dialog = frappe.msgprint({
 						title: __('Success'),
 						message: __('Payment details have been saved.'),
 						indicator: 'green',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -2333,38 +2339,38 @@ custom_app.PointOfSale.Payment = class {
 				});
 
 
-				discard_button.on('click', function() {
-					me[`${mode}_control`].set_value('');
+				discard_button.on('click', function () {
+					me[`${mode}_control`].set_value(0);
 					custom_payment_type.set_value('');
 					custom_bank_type.set_value('');
 					custom_qr_reference_number.set_value('');
 					// let reference_no = reference_no_control.get_value();
 
 
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_payment_type", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_type", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", '');
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-			
+
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -2378,7 +2384,7 @@ custom_app.PointOfSale.Payment = class {
 					custom_bank_type,
 					custom_qr_reference_number,
 				];
-			
+
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -2392,7 +2398,7 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
-	
+
 			if (p.mode_of_payment === "Charge") {
 				const selected_customer = cur_frm.doc.customer;
 
@@ -2409,15 +2415,15 @@ custom_app.PointOfSale.Payment = class {
 				});
 				custom_customer.set_value(existing_custom_customer || selected_customer || ''); // Set to selected customer if existing value is empty
 				custom_customer.refresh();
-			
-			
+
+
 				let existing_charge_invoice_number = frappe.model.get_value(p.doctype, p.name, "custom_charge_invoice_number");
 				let charge_invoice_number = frappe.ui.form.make_control({
 					df: {
 						label: 'Charge Invoice Number',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'Charge Invoice Number',
-						reqd:true
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.charge-invoice-number`),
 					render_input: true,
@@ -2432,52 +2438,52 @@ custom_app.PointOfSale.Payment = class {
 						label: 'PO Number',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'PO Number',
-						reqd:true
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.po-number`),
 					render_input: true,
 				});
 				custom_po_number.set_value(existing_custom_po_number || '');
 				custom_po_number.refresh();
-			
+
 				let existing_custom_representative = frappe.model.get_value(p.doctype, p.name, "custom_representative");
 				let custom_representative = frappe.ui.form.make_control({
 					df: {
 						label: 'Representative',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'Representative',
-						reqd:true
-	
+						reqd: true
+
 					},
 					parent: this.$payment_modes.find(`.${mode}.representative`),
 					render_input: true,
 				});
 				custom_representative.set_value(existing_custom_representative || '');
 				custom_representative.refresh();
-			
+
 				let existing_custom_id_number = frappe.model.get_value(p.doctype, p.name, "custom_id_number");
 				let custom_id_number = frappe.ui.form.make_control({
 					df: {
 						label: 'ID Number',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'ID Number',
-						reqd:true
-					
+						reqd: true
+
 					},
 					parent: this.$payment_modes.find(`.${mode}.id-number`),
 					render_input: true,
 				});
 				custom_id_number.set_value(existing_custom_id_number || '');
 				custom_id_number.refresh();
-			
+
 				let existing_custom_approved_by = frappe.model.get_value(p.doctype, p.name, "custom_approved_by");
 				let custom_approved_by = frappe.ui.form.make_control({
 					df: {
 						label: 'Approved By',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'Approver name',
-					
-						
+
+
 					},
 					parent: this.$payment_modes.find(`.${mode}.approved-by`),
 					render_input: true,
@@ -2485,54 +2491,54 @@ custom_app.PointOfSale.Payment = class {
 				custom_approved_by.set_value(existing_custom_approved_by || '');
 				custom_approved_by.refresh();
 
-				
+
 
 				let save_button = $(`<button class="btn btn-primary"style="text-align: right;"">Save</button>`);
 				this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
 
 				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
-			
+
 				const me = this;
 				// Attach an event listener to the save button
-				save_button.on('click', function() {
+				save_button.on('click', function () {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
 					let customer = custom_customer.get_value();
 					let charge_invoice_no = charge_invoice_number.get_value();
 					let po_number = custom_po_number.get_value();
 					let representative = custom_representative.get_value();
 					let id_number = custom_id_number.get_value();
-					let approved_by = custom_approved_by.get_value();	
+					let approved_by = custom_approved_by.get_value();
 
 					// let reference_no = reference_no_control.get_value();
-	
-					if (!amount || !customer || !charge_invoice_no || !po_number || !representative || !id_number ) {
+
+					if (!amount || !customer || !charge_invoice_no || !po_number || !representative || !id_number) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
 							indicator: 'orange',
 							primary_action: {
 								label: __('OK'),
-								action: function() {
+								action: function () {
 									// Close the dialog
 									frappe.msg_dialog.hide();
 								}
 							}
 						});
 
-						$(document).on('keydown', function(e) {
+						$(document).on('keydown', function (e) {
 							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 								dialog.get_primary_btn().trigger('click');
 							}
 						});
-		
+
 						// Remove event listener when dialog is closed
 						dialog.$wrapper.on('hidden.bs.modal', function () {
 							$(document).off('keydown');
 						});
 						return;
 					}
-	
+
 
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
 					frappe.model.set_value(p.doctype, p.name, "custom_customer", customer);
@@ -2542,14 +2548,14 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "custom_id_number", id_number);
 					frappe.model.set_value(p.doctype, p.name, "custom_approved_by", approved_by);
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-	
+
 					const dialog = frappe.msgprint({
 						title: __('Success'),
 						message: __('Payment details have been saved.'),
 						indicator: 'green',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
@@ -2557,12 +2563,12 @@ custom_app.PointOfSale.Payment = class {
 					});
 
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -2571,8 +2577,8 @@ custom_app.PointOfSale.Payment = class {
 				});
 
 
-				discard_button.on('click', function() {
-					me[`${mode}_control`].set_value('');
+				discard_button.on('click', function () {
+					me[`${mode}_control`].set_value(0);
 					custom_customer.set_value('');
 					charge_invoice_number.set_value('');
 					custom_po_number.set_value('');
@@ -2582,33 +2588,33 @@ custom_app.PointOfSale.Payment = class {
 					// let reference_no = reference_no_control.get_value();
 
 
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					frappe.model.set_value(p.doctype, p.name, "custom_customer", '');
-					frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number",  '');
-					frappe.model.set_value(p.doctype, p.name, "custom_po_number",  '');
+					frappe.model.set_value(p.doctype, p.name, "custom_charge_invoice_number", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_po_number", '');
 					frappe.model.set_value(p.doctype, p.name, "custom_representative", '');
-					frappe.model.set_value(p.doctype, p.name, "custom_id_number",  '');
-					frappe.model.set_value(p.doctype, p.name, "custom_approved_by",  '');
+					frappe.model.set_value(p.doctype, p.name, "custom_id_number", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_approved_by", '');
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-			
+
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -2625,7 +2631,7 @@ custom_app.PointOfSale.Payment = class {
 					custom_id_number,
 					custom_approved_by,
 				];
-			
+
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -2636,11 +2642,7 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
-
 			if (p.mode_of_payment === "Gift Certificate") {
-
-				let code_field = [];
-				let codes = []
 
 				// Create input field
 				let code_input = frappe.ui.form.make_control({
@@ -2658,61 +2660,73 @@ custom_app.PointOfSale.Payment = class {
 				// Create button
 				let button = frappe.ui.form.make_control({
 					df: {
-						label: 'Fetch',
+						label: 'Add Gift Code',
 						fieldtype: 'Button',
 						btn_size: 'sm', // xs, sm, lg
 						click: function () {
 							let code_value = code_input.get_value();
 							if (code_value) {
-								if(code_value) {
-									frappe.db.get_doc("Amesco Gift Certificate", code_value)
+								frappe.db.get_doc("Amesco Gift Certificate", code_value)
 									.then(gift_cert => {
-										frappe.model.set_value(p.doctype, p.name, "amount", flt(gift_cert.amount));
-									
+										// Add the gift amount to the existing payment amount
+										if (gift_cert.is_used !== 1) {
+											let current_amount = flt(frappe.model.get_value(p.doctype, p.name, "amount"));
+											frappe.model.set_value(p.doctype, p.name, "amount", current_amount + flt(gift_cert.amount));
 
-										const dialog = frappe.msgprint({
-											title: __('Success'),
-											message: __('Gift Certificate payment details have been saved.'),
-											indicator: 'green',
-											primary_action: {
-												label: __('OK'),
-												action: function() {
-													frappe.msg_dialog.hide();
+											// Push the gift code and its amount to the codes array
+											frm.add_child("custom_gift_cert_used", {
+												code: code_value,
+											});
+
+											const dialog = frappe.msgprint({
+												title: __('Success'),
+												message: __('Gift Certificate code added successfully.'),
+												indicator: 'green',
+												primary_action: {
+													label: __('OK'),
+													action: function () {
+														frappe.msg_dialog.hide();
+													}
 												}
-											}
-										});
+											});
 
-										$(document).on('keydown', function(e) {
-											if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-												dialog.get_primary_btn().trigger('click');
-											}
-										});
-						
-										// Remove event listener when dialog is closed
-										dialog.$wrapper.on('hidden.bs.modal', function () {
-											$(document).off('keydown');
-										});
+											$(document).on('keydown', function (e) {
+												if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+													dialog.get_primary_btn().trigger('click');
+												}
+											});
 
+											// Remove event listener when dialog is closed
+											dialog.$wrapper.on('hidden.bs.modal', function () {
+												$(document).off('keydown');
+											});
+
+											// Clear input field for the next gift code
+											code_input.set_value('');
+
+										} else {
+											frappe.msgprint({
+												title: __('Error'),
+												indicator: 'red',
+												message: __('Gift Code Already Used. Please check the code and try again.')
+											});
+										}
 									})
 									.catch(error => {
-										console.error("Error retrieving gift certificate:", error);
 										frappe.msgprint({
 											title: __('Error'),
 											indicator: 'red',
 											message: __('Invalid Gift Code. Please check the code and try again.')
 										});
 									});
-								}
-								code_field.push(code_value);
 							} else {
 								frappe.msgprint({
 									title: __('Error'),
 									indicator: 'red',
-									message: __('Please enter a gift code before clicking Fetch.')
+									message: __('Please enter a gift code before clicking Add Gift Code.')
 								});
 							}
 						}
-						
 					},
 					parent: this.$payment_modes.find(`.${mode}.button-code`)[0], // Ensure correct parent DOM element
 					render_input: true
@@ -2724,18 +2738,18 @@ custom_app.PointOfSale.Payment = class {
 				const me = this;
 				// Attach an event listener to the save button
 
-				discard_button.on('click', function() {
+				discard_button.on('click', function () {
 					me[`${mode}_control`].set_value('');
 					// let reference_no = reference_no_control.get_value()
-					frappe.model.set_value(p.doctype, p.name, "amount", null);
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
 					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-			
+
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
-							action: function() {
+							action: function () {
 								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
@@ -2743,12 +2757,12 @@ custom_app.PointOfSale.Payment = class {
 					});
 
 
-					$(document).on('keydown', function(e) {
+					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
+
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
@@ -2773,7 +2787,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: 'Button',
 						btn_size: 'sm', // xs, sm, lg
 						click: function () {
-							console.log('Click');
+							// console.log('Click');
 							new frappe.ui.Scanner({
 								dialog: true, // open camera scanner in a dialog
 								multiple: false, // stop after scanning one value
@@ -2782,63 +2796,129 @@ custom_app.PointOfSale.Payment = class {
 									let scannedData = data.decodedText.split(',');
 									console.log("scannedData", scannedData);
 									// Extracting fields from the scanned data
-									let voucher_code = scannedData[0];
+									let voucher_code = scannedData[0]; //'AVQR8105441319'
 									let user_id = scannedData[1];
 									// let date = scannedData[3];
 									let email = scannedData[4];
 									let amesco_points = scannedData[2];
 
-									let details_dialog = new frappe.ui.Dialog({
-										title: __('Scanned Amesco Plus User'),
-										fields: [
-											{
-												label: 'Voucher Code',
-												fieldname: 'voucher_code',
-												fieldtype: 'Data',
-												read_only: 1,
-												default: voucher_code
-											},
-											{
-												label: 'User ID',
-												fieldname: 'user_id',
-												fieldtype: 'Data',
-												read_only: 1,
-												default: user_id
-											},
-											{
-												label: 'Email',
-												fieldname: 'email',
-												fieldtype: 'Data',
-												read_only: 1,
-												default: email
-											},
-											{
-												label: 'Redeem Points',
-												fieldname: 'points',
-												fieldtype: 'Data',
-												read_only: 1,
-												default: amesco_points
+									frappe.call({
+										method: "custom_app.customapp.doctype.used_ameco_plus_code.used_ameco_plus_code.check_used_amesco_plus_code",
+										args: {
+											code: voucher_code
+										},
+										callback: function(response) {
+											if (response.message) {
+												frappe.msgprint(__('Amesco Plus voucher is already used.'));
+											} else {
+												let details_dialog = new frappe.ui.Dialog({
+												title: __('Scanned Amesco Plus User'),
+												fields: [
+													{
+														label: 'Voucher Code',
+														fieldname: 'voucher_code',
+														fieldtype: 'Data',
+														read_only: 1,
+														default: voucher_code
+													},
+													{
+														label: 'User ID',
+														fieldname: 'user_id',
+														fieldtype: 'Data',
+														read_only: 1,
+														default: user_id
+													},
+													{
+														label: 'Email',
+														fieldname: 'email',
+														fieldtype: 'Data',
+														read_only: 1,
+														default: email
+													},
+													{
+														label: 'Redeem Points',
+														fieldname: 'points',
+														fieldtype: 'Data',
+														read_only: 1,
+														default: amesco_points
+													}
+												],
+												primary_action_label: __('Ok'),
+												primary_action: function () {
+													frappe.model.set_value(p.doctype, p.name, "custom_am_voucher_code", voucher_code);
+													frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
+													frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
+													frappe.model.set_value(p.doctype, p.name, "amount", flt(amesco_points));
+													frm.add_child("custom_ameco_plus_code_used", {
+														code: voucher_code,
+													});
+													details_dialog.hide();
+												}
+											});
+											details_dialog.show();
 											}
-										],
-										primary_action_label: __('Ok'),
-										primary_action: function() {
-											frappe.model.set_value(p.doctype, p.name, "custom_am_voucher_code", voucher_code);
-											frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
-											frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
-											frappe.model.set_value(p.doctype, p.name, "amount", flt(amesco_points));
-											details_dialog.hide();
 										}
 									});
-									details_dialog.show();
+
+									
 								}
 							})
 						}
-						
+
 					},
 					parent: this.$payment_modes.find(`.${mode}.button-amesco-plus`)[0],
 					render_input: true
 				});
 				button.refresh();
+
+				let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
+				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+				const me = this;
+				// Attach an event listener to the save button
+
+				discard_button.on('click', function() {
+					me[`${mode}_control`].set_value('');
+					// let reference_no = reference_no_control.get_value()
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
+					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
+			
+					const dialog = frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function() {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
+
+
+					$(document).on('keydown', function(e) {
+						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+							dialog.get_primary_btn().trigger('click');
+						}
+					});
+	
+					// Remove event listener when dialog is closed
+					dialog.$wrapper.on('hidden.bs.modal', function () {
+						$(document).off('keydown');
+					});
+				});
+				const controls = [
+					me[`${mode}_control`],
+				];
+				controls.forEach(control => {
+					control.$input && control.$input.keypress(function (e) {
+						if (e.which === 13) { // Enter key pressed
+							save_button.click();
+						}
+					});
+				});
+
+
+
 			}
 			// this[`${mode}_control`].toggle_label(true);
 			this[`${mode}_control`].set_value(p.amount);
@@ -2862,7 +2942,7 @@ custom_app.PointOfSale.Payment = class {
 		});
 	}
 
-attach_cash_shortcuts(doc) {
+	attach_cash_shortcuts(doc) {
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
 			? doc.grand_total
 			: doc.rounded_total;
@@ -2886,20 +2966,20 @@ attach_cash_shortcuts(doc) {
 	get_cash_shortcuts(grand_total) {
 		let steps = [1, 5, 10];
 		const digits = String(Math.round(grand_total)).length;
-	
+
 		steps = steps.map((x) => x * 10 ** (digits - 2));
-	
+
 		const get_nearest = (amount, x) => {
 			let nearest_x = Math.ceil(amount / x) * x;
 			return nearest_x === amount ? nearest_x + x : nearest_x;
 		};
-	
+
 		let shortcuts = steps.reduce((finalArr, x) => {
 			let nearest_x = get_nearest(grand_total, x);
 			nearest_x = finalArr.indexOf(nearest_x) != -1 ? nearest_x + x : nearest_x;
 			return [...finalArr, nearest_x];
 		}, []);
-	
+
 		// Add 500 and 1000 if grand total is above 100
 		if (grand_total > 100) {
 			if (!shortcuts.includes(500)) {
@@ -2909,10 +2989,10 @@ attach_cash_shortcuts(doc) {
 				shortcuts.push(1000);
 			}
 		}
-	
+
 		// Sort shortcuts in ascending order
 		shortcuts.sort((a, b) => a - b);
-	
+
 		return shortcuts;
 	}
 
@@ -3035,7 +3115,7 @@ attach_cash_shortcuts(doc) {
 			</div>`
 		);
 
-		
+
 	}
 
 	toggle_component(show) {

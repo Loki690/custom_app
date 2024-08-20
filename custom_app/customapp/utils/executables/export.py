@@ -135,13 +135,25 @@ def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse=Non
 
             # Append the invoice content
             content = warehouse_contents[invoice_warehouse]
+            company_country = frappe.db.get_value("Company", invoice.company, "country")
+            tax_id = frappe.db.get_value("Company", invoice.company, "tax_id")
+            customer_osca_id = frappe.db.get_value("Customer", invoice.customer, 'custom_osca_id')
+            customer_custom_pwd_id = frappe.db.get_value("Customer", invoice.customer, 'custom_osca_id')
+            customer_id = customer_osca_id or customer_custom_pwd_id or ''
+            
+            content += f"{invoice.company}\n"
+            content += f"VAT REG. TIN: {invoice.custom_vat_reg_tin }\n"
+            content += f"{invoice.address_display }\n"
+            content += f"{invoice.contact_mobile }\n"
+            content += f"MIN:{invoice.custom_min},SN:{invoice.custom_sn}\n"
+            
             content += f"Status: {invoice.status}\n"
             content += f"Branch: {invoice.set_warehouse}\n"
             content += f"POS Profile: {invoice.pos_profile}\n"
             content += f"POS Invoice: {invoice.custom_invoice_series}\n"
             content += f"Date: {invoice.posting_date}\n"
             content += f"Sold To: {invoice.customer}\n"
-            content += f"ID: \n"  # Placeholder for ID field
+            content += f"OSCA/PWD ID: {customer_id} \n"  # Placeholder for ID field
             content += f"Address: \n"  # Placeholder for Address field
             content += f"TIN#: \n"  # Placeholder for TIN# field
             content += f"Business Type: {invoice.customer_group}\n"
@@ -150,7 +162,7 @@ def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse=Non
             content += f"Points Earned: \n"  # Placeholder for Points Earned field
             content += f"Redeemed Points: \n"  # Placeholder for Redeemed Points field
             content += f"Total Points: \n"  # Placeholder for Total Points field
-            content += "PARTICULARS\n\n"
+            content += "PARTICULARS\n"
 
             content += "Items:\n"
             for item in invoice.items:
@@ -176,7 +188,19 @@ def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse=Non
             content += f"Clerk: {invoice.custom_pa_name}\n"
             content += f"Cashier: {invoice.custom_cashier_name}\n"
             content += f"Printed: {format_datetime(invoice.creation)}\n"
-            content += "\n---\n\n"
+            content += "THIS SERVES AS YOUR OFFICIAL RECEIPT"
+            content += "Defective or Damaged items may be returned within 7 days. \nBring this receipt. Conditions Apply.\n"
+            content += f"{invoice.company}\n"
+            content += f"{company_country}\n"
+            content += f"VAT REG. TIN: {tax_id}\n"
+            content += f"Corner R Magsaysay Ave. & D. Suazo St. Davao City\n"
+            content += f"ACCR.NO:{invoice.custom_accr}, Validity:2014-04-03 to 2025-07-31\n"
+            content += f"PTU:{invoice.custom_ptu}\n"
+            
+            if invoice.custom_printed_no != 0:
+                content += f"REPRINTED: { invoice.custom_printed_no }\n"
+            content += "\n-----------------------------------------------------\n\n"
+          
 
             # Update the warehouse's content
             warehouse_contents[invoice_warehouse] = content

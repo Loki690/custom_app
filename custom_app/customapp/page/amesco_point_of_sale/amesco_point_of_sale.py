@@ -102,118 +102,126 @@ def search_by_term(search_term, warehouse, price_list):
 
 
 @frappe.whitelist()
-def get_items(start, page_length, price_list, item_group, pos_profile, search_term=""):
-	warehouse, hide_unavailable_items = frappe.db.get_value(
-		"POS Profile", pos_profile, ["warehouse", "hide_unavailable_items"]
-	)
+def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None):
+    # Fetch selected warehouse from the request or POS Profile
+    if selected_warehouse:
+        warehouse = selected_warehouse
+        hide_unavailable_items = frappe.db.get_value(
+            "POS Profile", pos_profile, "hide_unavailable_items"
+        )
+    else:
+        warehouse, hide_unavailable_items = frappe.db.get_value(
+            "POS Profile", pos_profile, ["warehouse", "hide_unavailable_items"]
+        )
 
-	result = []
+    result = []
 
-	if search_term:
-		result = search_by_term(search_term, warehouse, price_list) or []
-		if result:
-			return result
+    if search_term:
+        result = search_by_term(search_term, warehouse, price_list) or []
+        if result:
+            return result
 
-	if not frappe.db.exists("Item Group", item_group):
-		item_group = get_root_of("Item Group")
+    if not frappe.db.exists("Item Group", item_group):
+        item_group = get_root_of("Item Group")
 
-	condition = get_conditions(search_term)
-	condition += get_item_group_condition(pos_profile)
+    condition = get_conditions(search_term)
+    condition += get_item_group_condition(pos_profile)
 
-	lft, rgt = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"])
+    lft, rgt = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"])
 
-	bin_join_selection, bin_join_condition = "", ""
-	if hide_unavailable_items:
-		bin_join_selection = ", `tabBin` bin"
-		bin_join_condition = (
-			"AND bin.warehouse = %(warehouse)s AND bin.item_code = item.name AND bin.actual_qty > 0"
-		)
+    bin_join_selection, bin_join_condition = "", ""
+    if hide_unavailable_items:
+        bin_join_selection = ", `tabBin` bin"
+        bin_join_condition = (
+            "AND bin.warehouse = %(warehouse)s AND bin.item_code = item.name AND bin.actual_qty > 0"
+        )
 
-	items_data = frappe.db.sql(
-		"""
-		 SELECT
+    items_data = frappe.db.sql(
+        """
+        SELECT
             item.name AS item_code,
             item.item_name,
             item.description,
-			item.custom_is_vatable,
+            item.custom_is_vatable,
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
-            MAX(batch.name) as batch_number,
+            MAX(batch.name) as batch_no,
             MAX(batch.expiry_date) AS latest_expiry_date
         FROM
-			`tabItem` item
-		LEFT JOIN
-			`tabBatch` batch ON batch.item = item.name
-		{bin_join_selection}
-		WHERE
-			item.disabled = 0
-			AND item.has_variants = 0
-			AND item.is_sales_item = 1
-			AND item.is_fixed_asset = 0
-			AND item.item_group IN (SELECT name FROM `tabItem Group` WHERE lft >= {lft} AND rgt <= {rgt})
-			AND {condition}
-			{bin_join_condition}
-		GROUP BY
-			item.name, item.item_name, item.description, item.stock_uom, item.image, item.is_stock_item
-		ORDER BY
-			item.name ASC
-		LIMIT
-			{page_length} OFFSET {start}
-		""".format(
-			start=cint(start),
-			page_length=cint(page_length),
-			lft=cint(lft),
-			rgt=cint(rgt),
-			condition=condition,
-			bin_join_selection=bin_join_selection,
-			bin_join_condition=bin_join_condition,
-		),
-		{"warehouse": warehouse},
-		as_dict=1,
-	)
+            `tabItem` item
+        LEFT JOIN
+            `tabBatch` batch ON batch.item = item.name
+        {bin_join_selection}
+        WHERE
+            item.disabled = 0
+            AND item.has_variants = 0
+            AND item.is_sales_item = 1
+            AND item.is_fixed_asset = 0
+            AND item.item_group IN (SELECT name FROM `tabItem Group` WHERE lft >= {lft} AND rgt <= {rgt})
+            AND {condition}
+            {bin_join_condition}
+        GROUP BY
+            item.name, item.item_name, item.description, item.stock_uom, item.image, item.is_stock_item
+        ORDER BY
+            item.item_name ASC
+        LIMIT
+            {page_length} OFFSET {start}
+        """.format(
+            start=cint(start),
+            page_length=cint(page_length),
+            lft=cint(lft),
+            rgt=cint(rgt),
+            condition=condition,
+            bin_join_selection=bin_join_selection,
+            bin_join_condition=bin_join_condition,
+        ),
+        {"warehouse": warehouse},
+        as_dict=1,
+    )
 
-	# return (empty) list if there are no results
-	if not items_data:
-		return result
+    # Return an empty list if there are no results
+    if not items_data:
+        return result
 
-	for item in items_data:
-		uoms = frappe.get_doc("Item", item.item_code).get("uoms", [])
+    for item in items_data:
+        uoms = frappe.get_doc("Item", item.item_code).get("uoms", [])
 
-		item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
-		item.uom = item.stock_uom
+        item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
+        #item.actual_qty = get_draft_pos_invoice_item_quantity(pos_profile, item.item_code, item.actual_qty)
+        item.uom = item.stock_uom
 
-		item_price = frappe.get_all(
-			"Item Price",
-			fields=["price_list_rate", "currency", "uom", "batch_no"],
-			filters={
-				"price_list": price_list,
-				"item_code": item.item_code,
-				"selling": True,
-			},
-		)
+        item_price = frappe.get_all(
+            "Item Price",
+            fields=["price_list_rate", "currency", "uom", "batch_no"],
+            filters={
+                "price_list": price_list,
+                "item_code": item.item_code,
+                "selling": True,
+            },
+        )
 
-		if not item_price:
-			result.append(item)
+        if not item_price:
+            result.append(item)
 
-		for price in item_price:
-			uom = next(filter(lambda x: x.uom == price.uom, uoms), {})
+        for price in item_price:
+            uom = next(filter(lambda x: x.uom == price.uom, uoms), {})
 
-			if price.uom != item.stock_uom and uom and uom.conversion_factor:
-				item.actual_qty = item.actual_qty // uom.conversion_factor
+            if price.uom != item.stock_uom and uom and uom.conversion_factor:
+                item.actual_qty = item.actual_qty // uom.conversion_factor
 
-			result.append(
-				{
-					**item,
-					"price_list_rate": price.get("price_list_rate"),
-					"currency": price.get("currency"),
-					"uom": price.uom or item.uom,
-					"batch_no": price.batch_no,
-				}
-			)
-		
+            result.append(
+                {
+                    **item,
+                    "price_list_rate": price.get("price_list_rate"),
+                    "currency": price.get("currency"),
+                    "uom": price.uom or item.uom,
+                    "batch_no": price.batch_no,
+                }
+            )
+            # Add latest_expiry_date to the item
 
-	return {"items": result}
+    return {"items": result}
 
 
 import frappe
@@ -384,7 +392,7 @@ def get_past_order_list(search_term, status, pos_profile, limit=10000):
 			"POS Invoice",
 			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
 			fields=fields,
-			order_by="posting_time asc", 
+			order_by="posting_time desc", 
 			page_length=limit,
 		)
 		invoices_by_name = frappe.db.get_all(
@@ -397,7 +405,7 @@ def get_past_order_list(search_term, status, pos_profile, limit=10000):
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
 		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time asc",   page_length=limit
+			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time desc",   page_length=limit
 		)
 		
 	return invoice_list

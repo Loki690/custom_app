@@ -86,7 +86,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Item Code</th>
                                 <th>Name</th>
                                 <th>Vat Type</th>
-                                <th>Vatin Price</th>
+                                <th>Price</th>
                                 <th>Vatex Price</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
@@ -130,7 +130,7 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     
-    get_items({ start = 0, page_length = 20, search_term = "" }) {
+    get_items({ start = 0, page_length = 40, search_term = "" }) {
         const doc = this.events.get_frm().doc;
         const price_list = (doc && doc.selling_price_list) || this.price_list;
         let { item_group, pos_profile } = this;
@@ -812,7 +812,7 @@ custom_app.PointOfSale.ItemSelector = class {
                     this.navigate_down();
                     this.focus_next_field();
                     break;
-                case 13: // enter
+                case 32: // enter
                     e.preventDefault();
                     this.select_highlighted_item();
                     break;
@@ -870,7 +870,9 @@ custom_app.PointOfSale.ItemSelector = class {
                 this.barcode_scanned = false;
                 this.set_search_value("");
             }
-        
+
+            
+
             if (dialog_is_open && document.activeElement.tagName === "SELECT") {
                 // Trigger action to add the selected item to the cart
                 this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
@@ -952,11 +954,24 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     select_highlighted_item() {
+        // Ensure highlighted_row_index is valid
+        if (this.highlighted_row_index === -1) {
+            // Create and show a popup dialog
+            frappe.msgprint({
+                title: __("No Item Highlighted"),
+                indicator: "orange",
+                message: __("Please select an item to highlight before proceeding.")
+            });
+            return;
+        }
+    
+        // Proceed to select the highlighted item
         const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
         if (highlightedItem.length) {
             highlightedItem.click(); // Simulate click action
         }
     }
+    
     
 
 

@@ -119,3 +119,27 @@ def get_cash_transactions(parent):
         frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
+
+
+
+
+@frappe.whitelist()
+def get_return_invoices(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'Sales Invoice Payment',
+            filters={
+                'parent': parent,
+               'amount': ['<', 0]
+                # Add filter for amount not equal to 0
+                     
+            },
+            fields=['name', 'parent', 'mode_of_payment', 'amount']  # Specify the fields you want to fetch
+        )
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_cash_transactions( Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag

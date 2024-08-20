@@ -235,8 +235,9 @@ doc_events = {
         "before_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_submit",
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
         "validate": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.validate",
-        #"on_submit": "custom_app.customapp.utils.amesco_plus_api.api.on_submit_pos_invoice"
+        "on_submit": "custom_app.customapp.utils.amesco_plus_api.api.on_submit_pos_invoice",
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
+        # "on_submit": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.update_gift_cert_code"
     },
    'POS Z Reading': {
         'on_submit': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.on_submit'
