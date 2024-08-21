@@ -859,7 +859,17 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.holder-name`),
 					render_input: true,
 				});
-				name_on_card_control.set_value(existing_custom_card_name || selected_customer || '');
+
+
+				frappe.db.get_value('Customer', selected_customer, 'customer_name')
+					.then(r => {
+						const result = r.message.customer_name; // Extract the customer_name from the result
+						name_on_card_control.set_value(existing_custom_card_name || selected_customer || '');
+					})
+					.catch(error => {
+						console.error('Error fetching customer name:', error);
+					});
+
 				name_on_card_control.refresh();
 
 				let existing_custom_card_type = frappe.model.get_value(p.doctype, p.name, "custom_card_type");
@@ -1369,10 +1379,21 @@ custom_app.PointOfSale.Payment = class {
 						placeholder: 'Card name holder',
 						reqd: true
 					},
-					parent: this.$payment_modes.find(`.${mode}.holder-name`),
+					parent: this.$payment_modes.find(`.${mode}.holder-name`), // Ensure mode is defined and correct
 					render_input: true,
 				});
-				name_on_card_control.set_value(existing_custom_card_name || selected_customer || '');
+
+				// Fetch the customer name and set it to the control when available
+				frappe.db.get_value('Customer', selected_customer, 'customer_name')
+					.then(r => {
+						const result = r.message.customer_name; // Extract the customer_name from the result
+						name_on_card_control.set_value(existing_custom_card_name || result || '');
+					})
+					.catch(error => {
+						console.error('Error fetching customer name:', error);
+					});
+
+				// Refresh the control to render it properly
 				name_on_card_control.refresh();
 
 				let card_number_control = frappe.ui.form.make_control({
@@ -1665,7 +1686,15 @@ custom_app.PointOfSale.Payment = class {
 					render_input: true,
 				});
 				// Set the existing value and refresh the control
-				check_name_control.set_value(existing_custom_check_name || selected_customer || '');
+				frappe.db.get_value('Customer', selected_customer, 'customer_name')
+					.then(r => {
+						const result = r.message.customer_name; // Extract the customer_name from the result
+						check_name_control.set_value(existing_custom_check_name || selected_customer || '');
+					})
+					.catch(error => {
+						console.error('Error fetching customer name:', error);
+					});
+		
 				check_name_control.refresh();
 
 
@@ -2413,7 +2442,17 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.customer`), // Use [0] to select the DOM element
 					render_input: true,
 				});
-				custom_customer.set_value(existing_custom_customer || selected_customer || ''); // Set to selected customer if existing value is empty
+
+				
+				frappe.db.get_value('Customer', selected_customer, 'customer_name')
+					.then(r => {
+						const result = r.message.customer_name; // Extract the customer_name from the result
+						custom_customer.set_value(existing_custom_customer || selected_customer || ''); 
+					})
+					.catch(error => {
+						console.error('Error fetching customer name:', error);
+					});
+
 				custom_customer.refresh();
 
 
