@@ -7359,7 +7359,12 @@
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
           });
-          name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+          frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
+            const result = r.message.customer_name;
+            name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+          }).catch((error) => {
+            console.error("Error fetching customer name:", error);
+          });
           name_on_card_control.refresh();
           let existing_custom_card_type = frappe.model.get_value(p.doctype, p.name, "custom_card_type");
           let card_type_control = frappe.ui.form.make_control({
@@ -7740,7 +7745,12 @@
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
           });
-          name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+          frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
+            const result = r.message.customer_name;
+            name_on_card_control.set_value(existing_custom_card_name || result || "");
+          }).catch((error) => {
+            console.error("Error fetching customer name:", error);
+          });
           name_on_card_control.refresh();
           let card_number_control = frappe.ui.form.make_control({
             df: {
@@ -7953,7 +7963,12 @@
             parent: this.$payment_modes.find(`.${mode}.check-name`),
             render_input: true
           });
-          check_name_control.set_value(existing_custom_check_name || selected_customer || "");
+          frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
+            const result = r.message.customer_name;
+            check_name_control.set_value(existing_custom_check_name || selected_customer || "");
+          }).catch((error) => {
+            console.error("Error fetching customer name:", error);
+          });
           check_name_control.refresh();
           let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
           let check_number_control = frappe.ui.form.make_control({
@@ -8490,7 +8505,12 @@
             parent: this.$payment_modes.find(`.${mode}.customer`),
             render_input: true
           });
-          custom_customer.set_value(existing_custom_customer || selected_customer || "");
+          frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
+            const result = r.message.customer_name;
+            custom_customer.set_value(existing_custom_customer || selected_customer || "");
+          }).catch((error) => {
+            console.error("Error fetching customer name:", error);
+          });
           custom_customer.refresh();
           let existing_charge_invoice_number = frappe.model.get_value(p.doctype, p.name, "custom_charge_invoice_number");
           let charge_invoice_number = frappe.ui.form.make_control({
@@ -10743,4 +10763,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.W3WEGSUZ.js.map
+//# sourceMappingURL=packing-list.bundle.YLQLKFVZ.js.map
