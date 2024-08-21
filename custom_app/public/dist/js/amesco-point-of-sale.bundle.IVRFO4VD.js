@@ -453,6 +453,7 @@
                                 <th>Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
+                                <th>Vatex Price</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
                             </tr>
@@ -483,7 +484,7 @@
       this.render_item_list(message.items);
       this.filter_items({ uom: this.selected_uom });
     }
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
+    get_items({ start = 0, page_length = 20, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list || "default_price_list";
       let item_group = doc && doc.item_group || this.item_group || "default_item_group";
@@ -6349,8 +6350,7 @@
         () => this.item_selector.toggle_component(),
         () => this.item_details.toggle_item_details_section(),
         () => this.toggle_recent_order_list(false),
-        () => frappe.dom.unfreeze(),
-        () => this.item_selector.refresh()
+        () => frappe.dom.unfreeze()
       ]);
     }
     remove_pos_cart_items() {
@@ -7265,4 +7265,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.B4QEWS3A.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.IVRFO4VD.js.map
