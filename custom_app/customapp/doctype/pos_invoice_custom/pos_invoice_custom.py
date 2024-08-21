@@ -6,12 +6,6 @@ from frappe.utils import now_datetime
 
 def before_insert(doc, method):
     set_custom_naming_series(doc)
-    # if not doc.custom_pl_series:
-    #     doc.custom_pl_series = generate_pl_series(doc)
-    # set_custom_ex_total(doc)
-    # Set the barcode field to the value of custom_pl_series
-    # doc.barcode = doc.custom_pl_series
-    # doc.custom_cashier = frappe.session.user
 
 def generate_pl_series(doc):
     pos_profile = doc.pos_profile
@@ -47,27 +41,28 @@ def set_custom_ex_total(doc):
 def before_save(doc, method):
     if not doc.name:
         doc.name = make_autoname(doc.naming_series)
-    
+        
     if not doc.custom_pharmacist_assistant:
         doc.custom_pharmacist_assistant = frappe.session.user
         doc.custom_pa_name = get_user_full_name(doc.custom_pharmacist_assistant)
-    
+        
     doc.custom_barcode = doc.name
-    # amesco plus calculation for credit card
+    excluded_customer_groups = ['Senior Citizen', 'PWD', 'Government', 'Corporate']
     for item in doc.items:
-        if item.discount_amount > 0:
+        if item.discount_amount > 0 or doc.customer_group in excluded_customer_groups:
             item.custom_amesco_plus_points = 0
         else:
-            amount = item.amount
-            amesco_points = 0
-            for payment in doc.payments:
-                if payment.mode_of_payment == "Credit Card":
-                    if payment.amount > 0:
-                        amesco_points = (amount / 200) * 0.75
-                    else:
-                        amesco_points = item.custom_amesco_plus_points
+            # Calculate Amesco Plus points if payment mode is 'Credit Card'
+            amesco_points = calculate_amesco_plus_points(item.amount, doc.payments)
             if amesco_points:
                 item.custom_amesco_plus_points = amesco_points
+                
+def calculate_amesco_plus_points(amount, payments):
+    """Calculate Amesco Plus points based on the payment method and amount."""
+    for payment in payments:
+        if payment.mode_of_payment == "Credit Card" and payment.amount > 0:
+            return (amount / 200) * 0.75
+    return 0
 
 def before_submit(doc, method):
     doc.custom_invoice_series = set_new_custom_naming_series(doc)

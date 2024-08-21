@@ -7,7 +7,6 @@
  "engine": "InnoDB",
  "field_order": [
   "pos_profile",
-  "range",
   "column_break_yfhm",
   "date_from",
   "date_to",
@@ -153,19 +152,12 @@
    "fieldtype": "Table",
    "label": "Pending Transaction",
    "options": "Z Pending Transaction"
-  },
-  {
-   "default": "From Beginning",
-   "fieldname": "range",
-   "fieldtype": "Select",
-   "label": "Range",
-   "options": "\nFrom Beginning\nToday\nWeek\nMonth"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-07-18 11:32:12.737716",
+ "modified": "2024-08-21 08:11:51.140612",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Z Reading",
@@ -181,6 +173,43 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Officer-in-Charge",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Cashier",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Area Operations Manager",
    "share": 1,
    "submit": 1,
    "write": 1
