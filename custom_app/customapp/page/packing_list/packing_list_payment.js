@@ -504,9 +504,10 @@ custom_app.PointOfSale.Payment = class {
 						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); ${displayStyle}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
 							<span>${p.mode_of_payment}</span>
-							<div class="${mode}-amount pay-amount" style="font-weight: bold; display: flex; justify-content: flex-end; align-items: center;">${amount}</div>
+							<div class="${mode}-amount pay-amount" style="font-weight: bold; justify-content: space-between; align-items: end;">${amount}</div>
 							<div class="${mode} mode-of-payment-control"></div>
 							<div class="${mode} cash-button"></div>
+							
 					`;
 
 				switch (p.mode_of_payment) {
