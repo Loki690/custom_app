@@ -453,7 +453,7 @@
                                 <th>Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
-                                <th>Vatex Price</th>
+                                <th>No Vat</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
                             </tr>
@@ -3472,9 +3472,10 @@
 						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); ${displayStyle}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
 							<span>${p.mode_of_payment}</span>
-							<div class="${mode}-amount pay-amount" style="font-weight: bold; display: flex; justify-content: flex-end; align-items: center;">${amount}</div>
+							<div class="${mode}-amount pay-amount" style="font-weight: bold; justify-content: space-between; align-items: end;">${amount}</div>
 							<div class="${mode} mode-of-payment-control"></div>
 							<div class="${mode} cash-button"></div>
+							
 					`;
           switch (p.mode_of_payment) {
             case "GCash":
@@ -3635,7 +3636,6 @@
             onchange: function() {
               const current_value = frappe.model.get_value(p.doctype, p.name, "amount");
               if (current_value != this.value) {
-                frappe.model.then(() => me.update_totals_section());
                 const formatted_currency = format_currency(this.value, currency);
                 me.$payment_modes.find(`.${mode}-amount`).html(formatted_currency);
               }
@@ -3775,7 +3775,12 @@
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
           });
-          name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+          frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
+            const result = r.message.customer_name;
+            name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+          }).catch((error) => {
+            console.error("Error fetching customer name:", error);
+          });
           name_on_card_control.refresh();
           let existing_custom_card_type = frappe.model.get_value(p.doctype, p.name, "custom_card_type");
           let card_type_control = frappe.ui.form.make_control({
@@ -4156,7 +4161,12 @@
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
           });
-          name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+          frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
+            const result = r.message.customer_name;
+            name_on_card_control.set_value(existing_custom_card_name || result || "");
+          }).catch((error) => {
+            console.error("Error fetching customer name:", error);
+          });
           name_on_card_control.refresh();
           let card_number_control = frappe.ui.form.make_control({
             df: {
@@ -4369,7 +4379,12 @@
             parent: this.$payment_modes.find(`.${mode}.check-name`),
             render_input: true
           });
-          check_name_control.set_value(existing_custom_check_name || selected_customer || "");
+          frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
+            const result = r.message.customer_name;
+            check_name_control.set_value(existing_custom_check_name || selected_customer || "");
+          }).catch((error) => {
+            console.error("Error fetching customer name:", error);
+          });
           check_name_control.refresh();
           let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
           let check_number_control = frappe.ui.form.make_control({
@@ -4906,7 +4921,12 @@
             parent: this.$payment_modes.find(`.${mode}.customer`),
             render_input: true
           });
-          custom_customer.set_value(existing_custom_customer || selected_customer || "");
+          frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
+            const result = r.message.customer_name;
+            custom_customer.set_value(existing_custom_customer || selected_customer || "");
+          }).catch((error) => {
+            console.error("Error fetching customer name:", error);
+          });
           custom_customer.refresh();
           let existing_charge_invoice_number = frappe.model.get_value(p.doctype, p.name, "custom_charge_invoice_number");
           let charge_invoice_number = frappe.ui.form.make_control({
@@ -5201,7 +5221,6 @@
               fieldtype: "Button",
               btn_size: "sm",
               click: function() {
-                console.log("Click");
                 new frappe.ui.Scanner({
                   dialog: true,
                   multiple: false,
@@ -5212,48 +5231,63 @@
                     let user_id = scannedData[1];
                     let email = scannedData[4];
                     let amesco_points = scannedData[2];
-                    let details_dialog = new frappe.ui.Dialog({
-                      title: __("Scanned Amesco Plus User"),
-                      fields: [
-                        {
-                          label: "Voucher Code",
-                          fieldname: "voucher_code",
-                          fieldtype: "Data",
-                          read_only: 1,
-                          default: voucher_code
-                        },
-                        {
-                          label: "User ID",
-                          fieldname: "user_id",
-                          fieldtype: "Data",
-                          read_only: 1,
-                          default: user_id
-                        },
-                        {
-                          label: "Email",
-                          fieldname: "email",
-                          fieldtype: "Data",
-                          read_only: 1,
-                          default: email
-                        },
-                        {
-                          label: "Redeem Points",
-                          fieldname: "points",
-                          fieldtype: "Data",
-                          read_only: 1,
-                          default: amesco_points
+                    frappe.call({
+                      method: "custom_app.customapp.doctype.used_ameco_plus_code.used_ameco_plus_code.check_used_amesco_plus_code",
+                      args: {
+                        code: voucher_code
+                      },
+                      callback: function(response) {
+                        if (response.message) {
+                          frappe.msgprint(__("Amesco Plus voucher is already used."));
+                        } else {
+                          let details_dialog = new frappe.ui.Dialog({
+                            title: __("Scanned Amesco Plus User"),
+                            fields: [
+                              {
+                                label: "Voucher Code",
+                                fieldname: "voucher_code",
+                                fieldtype: "Data",
+                                read_only: 1,
+                                default: voucher_code
+                              },
+                              {
+                                label: "User ID",
+                                fieldname: "user_id",
+                                fieldtype: "Data",
+                                read_only: 1,
+                                default: user_id
+                              },
+                              {
+                                label: "Email",
+                                fieldname: "email",
+                                fieldtype: "Data",
+                                read_only: 1,
+                                default: email
+                              },
+                              {
+                                label: "Redeem Points",
+                                fieldname: "points",
+                                fieldtype: "Data",
+                                read_only: 1,
+                                default: amesco_points
+                              }
+                            ],
+                            primary_action_label: __("Ok"),
+                            primary_action: function() {
+                              frappe.model.set_value(p.doctype, p.name, "custom_am_voucher_code", voucher_code);
+                              frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
+                              frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
+                              frappe.model.set_value(p.doctype, p.name, "amount", flt(amesco_points));
+                              frm.add_child("custom_ameco_plus_code_used", {
+                                code: voucher_code
+                              });
+                              details_dialog.hide();
+                            }
+                          });
+                          details_dialog.show();
                         }
-                      ],
-                      primary_action_label: __("Ok"),
-                      primary_action: function() {
-                        frappe.model.set_value(p.doctype, p.name, "custom_am_voucher_code", voucher_code);
-                        frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
-                        frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
-                        frappe.model.set_value(p.doctype, p.name, "amount", flt(amesco_points));
-                        details_dialog.hide();
                       }
                     });
-                    details_dialog.show();
                   }
                 });
               }
@@ -6318,6 +6352,7 @@
           return;
         let voucher = frappe.model.get_new_doc("POS Daily Sales Report Summary");
         voucher.pos_profile = this.frm.doc.pos_profile;
+        voucher.custom_date_created = frappe.datetime.now_datetime();
         frappe.set_route("Form", "POS Daily Sales Report Summary", voucher.name);
       };
       this.showPasswordDialog("OIC Authorization Required for DSRS", onSuccess);
@@ -7265,4 +7300,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.IVRFO4VD.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.BYEBJC6E.js.map
