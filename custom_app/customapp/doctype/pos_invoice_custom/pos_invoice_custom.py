@@ -33,7 +33,6 @@ def set_custom_ex_total(doc):
     
     if doc.custom_ex_total:
         doc.grand_total = doc.custom_ex_total
-        #doc.total = doc.custom_ex_total
     else:
         doc.grand_total = 00
     
@@ -59,10 +58,16 @@ def before_save(doc, method):
                 
 def calculate_amesco_plus_points(amount, payments):
     """Calculate Amesco Plus points based on the payment method and amount."""
+    
+    # Check if the payment mode is 'Credit Card' and the amount is greater than 0
+    mode_of_payment = ["Credit Card", "Wire Transfer", "Bank Draft", "Debit Card", "Cards"]
     for payment in payments:
         if payment.mode_of_payment == "Credit Card" and payment.amount > 0:
             return (amount / 200) * 0.75
-    return 0
+        elif payment.mode_of_payment == "Charge" and payment.amount > 0:
+            return 0
+    # Return the default value if the payment mode is not in the specified list
+    return (amount / 200)
 
 def before_submit(doc, method):
     doc.custom_invoice_series = set_new_custom_naming_series(doc)
@@ -70,7 +75,6 @@ def before_submit(doc, method):
     doc.custom_cashier_name = get_user_full_name(frappe.session.user)  # Set the user's full name
     doc.custom_date_time_posted = now_datetime()  # Set the current date and time
     doc.custom_is_printed = '1'
-    
     
 def get_user_full_name(user):
     user_doc = frappe.get_doc("User", user)
