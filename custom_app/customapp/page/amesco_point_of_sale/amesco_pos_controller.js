@@ -352,6 +352,7 @@ custom_app.PointOfSale.Controller = class {
 			if (!this.$components_wrapper.is(":visible")) return;
 			let voucher = frappe.model.get_new_doc("POS Daily Sales Report Summary");
 			voucher.pos_profile = this.frm.doc.pos_profile;
+			voucher.custom_date_created = frappe.datetime.now_datetime();
 			frappe.set_route("Form", "POS Daily Sales Report Summary", voucher.name);
 		};
 
