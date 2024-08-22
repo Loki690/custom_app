@@ -430,7 +430,7 @@
     prepare_dom() {
       const selectedWarehouse = localStorage.getItem("selected_warehouse");
       this.wrapper.append(
-        `<section class="items-selector" style="margin-top:1.3rem;">
+        `<section class="items-selector" style="margin-top:0rem;">
                 <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
                     <div class="label" style="flex: 1;">
                         ${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
@@ -1206,7 +1206,7 @@
       this.attach_shortcuts();
     }
     prepare_dom() {
-      this.wrapper.append(`<section class="customer-cart-container"></section>`);
+      this.wrapper.append(`<section class="customer-cart-container" style:"margin-top: 1rem;"></section>`);
       this.$component = this.wrapper.find(".customer-cart-container");
     }
     init_child_components() {
@@ -3380,14 +3380,10 @@
       }
     }
     attach_shortcuts() {
-      const ctrl_label = frappe.utils.is_mac() ? "\u2318" : "Ctrl";
-      this.$component.find(".submit-order-btn").attr("title", `${ctrl_label}+Enter`);
-      frappe.ui.keys.on("ctrl+enter", () => {
-        const payment_is_visible = this.$component.is(":visible");
-        const active_mode = this.$payment_modes.find(".border-primary");
-        if (payment_is_visible && active_mode.length) {
-          this.$component.find(".submit-order-btn").click();
-        }
+      const shift_label = frappe.utils.is_mac() ? "\u2318" : "Shift";
+      this.$component.find(".submit-order-btn").attr("title", `${shift_label}+Enter`);
+      frappe.ui.keys.on("shift+enter", () => {
+        this.$component.find(".submit-order-btn").click();
       });
       frappe.ui.keys.add_shortcut({
         shortcut: "tab",
@@ -3723,8 +3719,8 @@
                   }
                 });
                 $(document).on("keydown", function(e) {
-                  if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
-                    dialog2.get_primary_btn().trigger("click");
+                  if (e.which === 46 && dialog2.$wrapper.is(":visible")) {
+                    dialog2.get_secondary_btn().trigger("click");
                   }
                 });
                 dialog2.$wrapper.on("hidden.bs.modal", function() {
@@ -5178,7 +5174,7 @@
             render_input: true
           });
           button.refresh();
-          let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
+          let discard_button = $('<button class="btn btn-secondary">Discard</button>');
           this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
           const me2 = this;
           discard_button.on("click", function() {
@@ -5203,15 +5199,10 @@
               $(document).off("keydown");
             });
           });
-          const controls = [
-            me2[`${mode}_control`]
-          ];
-          controls.forEach((control) => {
-            control.$input && control.$input.keypress(function(e) {
-              if (e.which === 13) {
-                save_button.click();
-              }
-            });
+          code_input.$input && code_input.$input.keypress(function(e) {
+            if (e.which === 13) {
+              button.$input.trigger("click");
+            }
           });
         }
         if (p.mode_of_payment === "Amesco Plus") {
@@ -7300,4 +7291,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.5WEQIFHR.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.MW7MGE3M.js.map

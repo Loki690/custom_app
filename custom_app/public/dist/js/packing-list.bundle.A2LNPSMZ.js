@@ -6965,14 +6965,10 @@
       }
     }
     attach_shortcuts() {
-      const ctrl_label = frappe.utils.is_mac() ? "\u2318" : "Ctrl";
-      this.$component.find(".submit-order-btn").attr("title", `${ctrl_label}+Enter`);
-      frappe.ui.keys.on("ctrl+enter", () => {
-        const payment_is_visible = this.$component.is(":visible");
-        const active_mode = this.$payment_modes.find(".border-primary");
-        if (payment_is_visible && active_mode.length) {
-          this.$component.find(".submit-order-btn").click();
-        }
+      const shift_label = frappe.utils.is_mac() ? "\u2318" : "Shift";
+      this.$component.find(".submit-order-btn").attr("title", `${shift_label}+Enter`);
+      frappe.ui.keys.on("shift+enter", () => {
+        this.$component.find(".submit-order-btn").click();
       });
       frappe.ui.keys.add_shortcut({
         shortcut: "tab",
@@ -7056,11 +7052,11 @@
           let paymentModeHtml = `
 						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); ${displayStyle}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
-							<span>${p.mode_of_payment}</span>
-							<div class="${mode}-amount pay-amount" style="font-weight: bold; justify-content: space-between; align-items: end;">${amount}</div>
+							 ${p.mode_of_payment}
+							<span style="display: inline-block; width: 100px; /* Adjust width as needed */"></span> <!-- Invisible space -->
+							<div class="${mode}-amount pay-amount" style="font-weight: bold;">${amount}</div>
 							<div class="${mode} mode-of-payment-control"></div>
 							<div class="${mode} cash-button"></div>
-							
 					`;
           switch (p.mode_of_payment) {
             case "GCash":
@@ -8763,7 +8759,7 @@
             render_input: true
           });
           button.refresh();
-          let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
+          let discard_button = $('<button class="btn btn-secondary">Discard</button>');
           this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
           const me2 = this;
           discard_button.on("click", function() {
@@ -8788,15 +8784,10 @@
               $(document).off("keydown");
             });
           });
-          const controls = [
-            me2[`${mode}_control`]
-          ];
-          controls.forEach((control) => {
-            control.$input && control.$input.keypress(function(e) {
-              if (e.which === 13) {
-                save_button.click();
-              }
-            });
+          code_input.$input && code_input.$input.keypress(function(e) {
+            if (e.which === 13) {
+              button.$input.trigger("click");
+            }
           });
         }
         if (p.mode_of_payment === "Amesco Plus") {
@@ -10764,4 +10755,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.OOLRQEO7.js.map
+//# sourceMappingURL=packing-list.bundle.A2LNPSMZ.js.map

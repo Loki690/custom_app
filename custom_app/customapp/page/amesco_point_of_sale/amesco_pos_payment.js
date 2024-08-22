@@ -386,16 +386,12 @@ custom_app.PointOfSale.Payment = class {
 	}
 	
 	attach_shortcuts() {
-		const ctrl_label = frappe.utils.is_mac() ? "⌘" : "Ctrl";
-		this.$component.find(".submit-order-btn").attr("title", `${ctrl_label}+Enter`);
+		const shift_label = frappe.utils.is_mac() ? "⌘" : "Shift";
+		this.$component.find(".submit-order-btn").attr("title", `${shift_label}+Enter`);
 	
 		// Ctrl + Enter shortcut for submitting the order
-		frappe.ui.keys.on("ctrl+enter", () => {
-			const payment_is_visible = this.$component.is(":visible");
-			const active_mode = this.$payment_modes.find(".border-primary");
-			if (payment_is_visible && active_mode.length) {
-				this.$component.find(".submit-order-btn").click();
-			}
+		frappe.ui.keys.on("shift+enter", () => {
+			this.$component.find(".submit-order-btn").click();
 		});
 	
 		// Tab key shortcut for switching between payment modes
@@ -795,8 +791,8 @@ custom_app.PointOfSale.Payment = class {
 
 							// Add event listener for Enter key
 							$(document).on('keydown', function (e) {
-								if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-									dialog.get_primary_btn().trigger('click');
+								if (e.which === 46 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+									dialog.get_secondary_btn().trigger('click');
 								}
 							});
 
@@ -820,6 +816,8 @@ custom_app.PointOfSale.Payment = class {
 						save_button.click();
 					}
 				});
+
+				
 			}
 
 
@@ -2678,7 +2676,7 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
-			if (p.mode_of_payment === "Gift Certificate") {
+				if (p.mode_of_payment === "Gift Certificate") {
 
 				// Create input field
 				let code_input = frappe.ui.form.make_control({
@@ -2690,9 +2688,9 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.gift-code`)[0],
 					render_input: true
 				});
-
+			
 				code_input.refresh();
-
+			
 				// Create button
 				let button = frappe.ui.form.make_control({
 					df: {
@@ -2708,12 +2706,12 @@ custom_app.PointOfSale.Payment = class {
 										if (gift_cert.is_used !== 1) {
 											let current_amount = flt(frappe.model.get_value(p.doctype, p.name, "amount"));
 											frappe.model.set_value(p.doctype, p.name, "amount", current_amount + flt(gift_cert.amount));
-
+			
 											// Push the gift code and its amount to the codes array
 											frm.add_child("custom_gift_cert_used", {
 												code: code_value,
 											});
-
+			
 											const dialog = frappe.msgprint({
 												title: __('Success'),
 												message: __('Gift Certificate code added successfully.'),
@@ -2725,21 +2723,21 @@ custom_app.PointOfSale.Payment = class {
 													}
 												}
 											});
-
+			
 											$(document).on('keydown', function (e) {
 												if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 													dialog.get_primary_btn().trigger('click');
 												}
 											});
-
+			
 											// Remove event listener when dialog is closed
 											dialog.$wrapper.on('hidden.bs.modal', function () {
 												$(document).off('keydown');
 											});
-
+			
 											// Clear input field for the next gift code
 											code_input.set_value('');
-
+			
 										} else {
 											frappe.msgprint({
 												title: __('Error'),
@@ -2767,52 +2765,48 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.button-code`)[0], // Ensure correct parent DOM element
 					render_input: true
 				});
-
+			
 				button.refresh();
-				let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
+			
+				// Create discard button
+				let discard_button = $('<button class="btn btn-secondary">Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+			
 				const me = this;
-				// Attach an event listener to the save button
-
+			
+				// Attach an event listener to the discard button
 				discard_button.on('click', function () {
 					me[`${mode}_control`].set_value('');
-					// let reference_no = reference_no_control.get_value()
 					frappe.model.set_value(p.doctype, p.name, "amount", 0);
-					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-
+			
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
 							action: function () {
-								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
-
-
+			
 					$(document).on('keydown', function (e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-
+			
 					// Remove event listener when dialog is closed
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
 					});
 				});
-				const controls = [
-					me[`${mode}_control`],
-				];
-				controls.forEach(control => {
-					control.$input && control.$input.keypress(function (e) {
-						if (e.which === 13) { // Enter key pressed
-							save_button.click();
-						}
-					});
+			
+				// Attach keypress event to the code input field
+				code_input.$input && code_input.$input.keypress(function (e) {
+					if (e.which === 13) { // Enter key pressed
+						button.$input.trigger('click'); // Trigger the button click
+					}
 				});
 			}
 
