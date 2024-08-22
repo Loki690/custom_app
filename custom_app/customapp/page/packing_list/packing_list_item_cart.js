@@ -19,10 +19,11 @@ custom_app.PointOfSale.ItemCart = class {
 	} 
 
 	prepare_dom() {
-		this.wrapper.append(`<section class="customer-cart-container"></section>`);
+		this.wrapper.append(`<section class="customer-cart-container" style:"margin-top: 1rem;"></section>`);
 
 		this.$component = this.wrapper.find(".customer-cart-container");
 	}
+
 
 	init_child_components() {
 		this.init_customer_selector();
@@ -890,24 +891,22 @@ custom_app.PointOfSale.ItemCart = class {
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
 		// console.log(frm.doc);
+		
 		this.render_vatable_sales(frm.doc.custom_vatable_sales);
 		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
 		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
 		// this.render_vat(frm.doc.custom_vat_amount)
 		// this.render_ex_total(frm.doc.custom_ex_total)
 		this.render_net_total(frm.doc.net_total);
-		
 		this.render_total_item_qty(frm.doc.items);
 
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.grand_total
 			: frm.doc.rounded_total;
-
-	
+			
 		this.render_grand_total(grand_total);
-		// this.render_taxes(frm.doc.taxes);
+		this.render_taxes(frm.doc.taxes);
 		this.render_total_vat(frm.doc.total_taxes_and_charges);
-
 	}
 
 	render_net_total(value) {
@@ -984,10 +983,8 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".total-vat-container")
 			.html(`
-				<div style="display: flex; align-items: center; width: 100%;">
-					<span style="flex: 1;">
-						${__("VAT 12%")}:
-					</span>
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Total VAT")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);

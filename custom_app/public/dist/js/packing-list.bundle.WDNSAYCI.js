@@ -4759,7 +4759,7 @@
       this.attach_shortcuts();
     }
     prepare_dom() {
-      this.wrapper.append(`<section class="customer-cart-container"></section>`);
+      this.wrapper.append(`<section class="customer-cart-container" style:"margin-top: 1rem;"></section>`);
       this.$component = this.wrapper.find(".customer-cart-container");
     }
     init_child_components() {
@@ -5493,6 +5493,7 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
+      this.render_taxes(frm.doc.taxes);
       this.render_total_vat(frm.doc.total_taxes_and_charges);
     }
     render_net_total(value) {
@@ -5548,10 +5549,8 @@
     render_total_vat(value) {
       const currency = this.events.get_frm().doc.currency;
       this.$totals_section.find(".total-vat-container").html(`
-				<div style="display: flex; align-items: center; width: 100%;">
-					<span style="flex: 1;">
-						${__("VAT 12%")}:
-					</span>
+				<div style="display: flex; justify-content: space-between;">
+					<span style="flex: 1;">${__("Total VAT")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
 			`);
@@ -6649,7 +6648,7 @@
     }
     prepare_dom() {
       this.wrapper.append(
-        `<section class="payment-container">
+        `<section class="payment-container" style="display: flex;margin-top: 1.4rem;">
 				<div class="fields-numpad-container">
 					<div class="fields-section">
 						<div class="section-label payment-section">${__("Payment Method")}</div>
@@ -7053,7 +7052,6 @@
 						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); ${displayStyle}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
 							 ${p.mode_of_payment}
-							<span style="display: inline-block; width: 100px; /* Adjust width as needed */"></span> <!-- Invisible space -->
 							<div class="${mode}-amount pay-amount" style="font-weight: bold;">${amount}</div>
 							<div class="${mode} mode-of-payment-control"></div>
 							<div class="${mode} cash-button"></div>
@@ -7321,6 +7319,11 @@
           this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).keypress(function(e) {
             if (e.which === 13) {
               save_button2.click();
+            }
+          });
+          this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).keypress(function(e) {
+            if (e.which === 8) {
+              discard_button.click();
             }
           });
         }
@@ -10755,4 +10758,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.A2LNPSMZ.js.map
+//# sourceMappingURL=packing-list.bundle.WDNSAYCI.js.map

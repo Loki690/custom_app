@@ -15,7 +15,7 @@ custom_app.PointOfSale.Payment = class {
 
 	prepare_dom() {
 		this.wrapper.append(
-			`<section class="payment-container">
+			`<section class="payment-container" style="display: flex;margin-top: 1.4rem;">
 				<div class="fields-numpad-container">
 					<div class="fields-section">
 						<div class="section-label payment-section">${__("Payment Method")}</div>
@@ -503,7 +503,6 @@ custom_app.PointOfSale.Payment = class {
 						<div class="payment-mode-wrapper" style="flex: 0 0 calc(50% - 16px); min-width: calc(50% - 16px); ${displayStyle}">
 						<div class="mode-of-payment" data-mode="${mode}" data-payment-type="${payment_type}" style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); background-color: #fff;">
 							 ${p.mode_of_payment}
-							<span style="display: inline-block; width: 100px; /* Adjust width as needed */"></span> <!-- Invisible space -->
 							<div class="${mode}-amount pay-amount" style="font-weight: bold;">${amount}</div>
 							<div class="${mode} mode-of-payment-control"></div>
 							<div class="${mode} cash-button"></div>
@@ -821,6 +820,12 @@ custom_app.PointOfSale.Payment = class {
 				this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).keypress(function (e) {
 					if (e.which === 13) { // Enter key pressed
 						save_button.click();
+					}
+				});
+
+				this.$payment_modes.find(`.${mode}.mode-of-payment-control input`).keypress(function (e) {
+					if (e.which === 8) { // Enter key pressed
+						discard_button.click();
 					}
 				});
 			}
