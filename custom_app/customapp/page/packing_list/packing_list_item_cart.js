@@ -905,7 +905,7 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		this.render_taxes(frm.doc.taxes);
+		// this.render_taxes(frm.doc.taxes);
 		this.render_total_vat(frm.doc.total_taxes_and_charges);
 	}
 
