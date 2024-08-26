@@ -6564,12 +6564,11 @@
         primary_action_label: __("Authorize"),
         primary_action: (values) => {
           let password = values.password;
-          let role = "oic";
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
+            args: { password },
             callback: (r) => {
-              if (r.message) {
+              if (!r.message.error) {
                 frappe.show_alert({
                   message: __("Verified"),
                   indicator: "green"
@@ -6588,7 +6587,7 @@
                 frappe.set_route("Form", "POS Closing Entry", voucher.name);
               } else {
                 frappe.show_alert({
-                  message: __("Incorrect password or user is not an OIC"),
+                  message: __("Incorrect password or user"),
                   indicator: "red"
                 });
               }
@@ -7300,4 +7299,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.BYEBJC6E.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.F2R4MUPP.js.map

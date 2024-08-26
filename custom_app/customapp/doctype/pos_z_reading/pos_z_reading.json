@@ -7,6 +7,10 @@
  "engine": "InnoDB",
  "field_order": [
   "pos_profile",
+  "tin",
+  "min",
+  "sn",
+  "branch",
   "column_break_yfhm",
   "date_from",
   "date_to",
@@ -152,12 +156,42 @@
    "fieldtype": "Table",
    "label": "Pending Transaction",
    "options": "Z Pending Transaction"
+  },
+  {
+   "fetch_from": "pos_profile.custom_vat_reg_tin",
+   "fieldname": "tin",
+   "fieldtype": "Data",
+   "label": "TIN",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "pos_profile.custom_min",
+   "fieldname": "min",
+   "fieldtype": "Link",
+   "label": "MIN",
+   "options": "MIN",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "pos_profile.custom_sn",
+   "fieldname": "sn",
+   "fieldtype": "Link",
+   "label": "SN",
+   "options": "SN",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "pos_profile.warehouse",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-08-21 08:11:51.140612",
+ "modified": "2024-08-25 21:24:56.170838",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Z Reading",
