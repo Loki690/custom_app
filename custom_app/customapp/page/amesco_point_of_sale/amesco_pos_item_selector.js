@@ -56,7 +56,7 @@ custom_app.PointOfSale.ItemSelector = class {
     prepare_dom() {
         const selectedWarehouse = localStorage.getItem('selected_warehouse');
         this.wrapper.append(
-            `<section class="items-selector" style="margin-top:1.3rem;">
+            `<section class="items-selector" style="margin-top:0rem;">
                 <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
                     <div class="label" style="flex: 1;">
                         ${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
