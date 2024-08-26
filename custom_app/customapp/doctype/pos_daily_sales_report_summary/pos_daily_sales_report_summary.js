@@ -1,8 +1,8 @@
 // Copyright (c) 2024, joncsr and contributors
 // For license information, please see license.txt
 
-// frappe.ui.form.on("POS Daily Sales Report Summary", {
-// 	refresh(frm) {
-
-// 	},
-// });
+frappe.ui.form.on("POS Daily Sales Report Summary", {
+	refresh(frm) {
+        console.log(frm.doc);
+	},
+});
