@@ -4759,7 +4759,7 @@
       this.attach_shortcuts();
     }
     prepare_dom() {
-      this.wrapper.append(`<section class="customer-cart-container" style:"margin-top: 1rem;"></section>`);
+      this.wrapper.append(`<section class="customer-cart-container""></section>`);
       this.$component = this.wrapper.find(".customer-cart-container");
     }
     init_child_components() {
@@ -6648,7 +6648,7 @@
     }
     prepare_dom() {
       this.wrapper.append(
-        `<section class="payment-container" style="display: flex;margin-top: 1.4rem;">
+        `<section class="payment-container">
 				<div class="fields-numpad-container">
 					<div class="fields-section">
 						<div class="section-label payment-section">${__("Payment Method")}</div>
@@ -10758,4 +10758,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.WDNSAYCI.js.map
+//# sourceMappingURL=packing-list.bundle.Z2LFXGXQ.js.map

@@ -15,7 +15,7 @@ custom_app.PointOfSale.Payment = class {
 
 	prepare_dom() {
 		this.wrapper.append(
-			`<section class="payment-container" style="display: flex;margin-top: 1.4rem;">
+			`<section class="payment-container">
 				<div class="fields-numpad-container">
 					<div class="fields-section">
 						<div class="section-label payment-section">${__("Payment Method")}</div>
