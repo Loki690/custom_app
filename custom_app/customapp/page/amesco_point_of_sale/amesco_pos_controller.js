@@ -858,7 +858,19 @@ custom_app.PointOfSale.Controller = class {
 					}
 
 					// Proceed with submitting the invoice if payment is sufficient
-					this.frm.save('Submit').then((r) => {
+					let errorOccurred = false; // Flag to track if an error occurred
+
+					this.frm.save('Submit', undefined, undefined, () => {
+						// Error handling during save
+						frappe.show_alert({
+							message: __("There was an error saving the document."),
+							indicator: "red",
+						});
+						frappe.utils.play_sound("error");
+						errorOccurred = true; // Set error flag
+					}).then(() => {
+						if (errorOccurred) return; // Skip further actions if an error occurred
+
 						this.toggle_components(false);
 						// Customized Layout to toggle off Cart
 						this.cart.toggle_component(false);
@@ -880,11 +892,9 @@ custom_app.PointOfSale.Controller = class {
 							title: __('Change Amount'),
 							primary_action_label: __('OK'),
 							primary_action: () => {
-								// this.remove_pos_cart_items();
 								window.location.reload();
 								changeDialog.hide();
 							},
-
 							secondary_action_label: __('New Order'), // Label for the new button
 							secondary_action: () => {
 								// Logic for the "New Order" button
@@ -893,6 +903,7 @@ custom_app.PointOfSale.Controller = class {
 								// Implement your logic here, such as redirecting to a new order page or resetting the form
 							}
 						});
+
 						// Add custom HTML with large text for the change amount
 						changeDialog.body.innerHTML = `
 							<div style="text-align: center; font-size: 60px; margin: 20px 0;">

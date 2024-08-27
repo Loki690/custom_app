@@ -423,8 +423,6 @@ custom_app.PointOfSale.Payment = class {
 			ignore_inputs: true,
 			page: cur_page.page.page,
 		});
-	
-		
 	}
 	
 
