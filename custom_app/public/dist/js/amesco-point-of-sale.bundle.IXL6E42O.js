@@ -6795,6 +6795,15 @@
 							</div>
 						`;
               changeDialog.show();
+              $(document).on("keydown", function(e) {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  changeDialog.primary_action();
+                } else if (e.key === " ") {
+                  e.preventDefault();
+                  changeDialog.secondary_action();
+                }
+              });
             });
           }
         }
@@ -7297,4 +7306,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.6ZLYS6EL.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.IXL6E42O.js.map

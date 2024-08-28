@@ -866,7 +866,7 @@ custom_app.PointOfSale.Controller = class {
 							message: __("There was an error saving the document."),
 							indicator: "red",
 						});
-						frappe.utils.play_sound("error");
+						frappe.utils.play_sound("error"); 
 						errorOccurred = true; // Set error flag
 					}).then(() => {
 						if (errorOccurred) return; // Skip further actions if an error occurred
@@ -912,6 +912,18 @@ custom_app.PointOfSale.Controller = class {
 						`;
 
 						changeDialog.show();
+
+						$(document).on('keydown', function(e) {
+							if (e.key === 'Enter') {
+								// Trigger primary action (OK button) on Enter key press
+								e.preventDefault();
+								changeDialog.primary_action();
+							} else if (e.key === ' ') {
+								// Trigger secondary action (New Order button) on Space key press
+								e.preventDefault();
+								changeDialog.secondary_action();
+							}
+						});
 					});
 				}
 
