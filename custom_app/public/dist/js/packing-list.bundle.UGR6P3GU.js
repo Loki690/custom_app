@@ -4421,75 +4421,71 @@
                     return;
                   }
                   frappe.call({
-                    method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
+                    method: "custom_app.customapp.page.packing_list.packing_list.get_item_uom_conversion",
                     args: {
-                      pos_profile,
-                      item_code
+                      item_code,
+                      uom_code: selectedUOM3
                     },
                     callback: function(response2) {
                       if (response2.message) {
-                        const { invoices, total_qty } = response2.message;
-                        let item_total_qty = total_qty;
-                        if (item_total_qty + quantity2 > qty) {
-                          let renderInvoicesTable = function(data) {
-                            let tableHtml = '<table class="table table-bordered">';
-                            tableHtml += "<thead><tr>";
-                            tableHtml += "<th>ID</th>";
-                            tableHtml += "<th>Quantity</th>";
-                            tableHtml += "</tr></thead>";
-                            tableHtml += "<tbody>";
-                            data.forEach((row) => {
-                              tableHtml += "<tr>";
-                              tableHtml += `<td>${row.name}</td>`;
-                              tableHtml += `<td>${row.item_qty}</td>`;
-                              tableHtml += "</tr>";
-                            });
-                            tableHtml += "</tbody>";
-                            tableHtml += "</table>";
-                            return tableHtml;
-                          };
-                          const formatted_invoices = invoices.map((invoice) => {
-                            const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
-                            return {
-                              name: invoice.name,
-                              customer: invoice.customer,
-                              item_qty
-                            };
-                          });
-                          const invoice_dialog = new frappe.ui.Dialog({
-                            title: "Items ordered by other customers",
-                            fields: [
-                              {
-                                fieldtype: "HTML",
-                                fieldname: "invoices_table_html",
-                                options: renderInvoicesTable(formatted_invoices)
-                              }
-                            ],
-                            primary_action_label: __("Ok"),
-                            primary_action: function() {
-                              invoice_dialog.hide();
-                            }
-                          });
-                          invoice_dialog.show();
+                        let conversion_factor = response2.message;
+                        const converted_quantity = quantity2 * conversion_factor;
+                        if (converted_quantity > qty) {
+                          frappe.msgprint(__("Entered Quantity Exceeded"));
                           return;
                         }
-                        me.selectedItem.find(".item-uom").text(selectedUOM3);
-                        const itemCode = unescape(me.selectedItem.attr("data-item-code"));
-                        const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
-                        const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
-                        me.events.item_selected({
-                          field: "qty",
-                          value: "+" + quantity2,
-                          item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM3, quantity: quantity2, rate: totalAmount }
+                        frappe.call({
+                          method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
+                          args: {
+                            pos_profile,
+                            item_code
+                          },
+                          callback: function(response3) {
+                            if (response3.message) {
+                              const { invoices, total_qty } = response3.message;
+                              let item_total_qty = total_qty;
+                              if (item_total_qty + quantity2 > qty) {
+                                const formatted_invoices = invoices.map((invoice) => ({
+                                  name: invoice.name,
+                                  item_qty: invoice.items.reduce((total, item) => total + item.qty, 0)
+                                }));
+                                const invoice_dialog = new frappe.ui.Dialog({
+                                  title: "Items ordered by other customers",
+                                  fields: [
+                                    {
+                                      fieldtype: "HTML",
+                                      fieldname: "invoices_table_html",
+                                      options: renderInvoicesTable(formatted_invoices)
+                                    }
+                                  ],
+                                  primary_action_label: __("Ok"),
+                                  primary_action: function() {
+                                    invoice_dialog.hide();
+                                  }
+                                });
+                                invoice_dialog.show();
+                                return;
+                              }
+                              me.selectedItem.find(".item-uom").text(selectedUOM3);
+                              const itemCode = unescape(me.selectedItem.attr("data-item-code"));
+                              const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
+                              const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+                              me.events.item_selected({
+                                field: "qty",
+                                value: "+" + quantity2,
+                                item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM3, quantity: quantity2, rate: totalAmount }
+                              });
+                              me.search_field.set_focus();
+                              dialog2.hide();
+                            }
+                          },
+                          error: function(error) {
+                            console.error("Error fetching draft POS invoices:", error);
+                          }
                         });
-                        me.search_field.set_focus();
-                        dialog2.hide();
                       } else {
-                        console.log("No matching draft POS invoices found.");
+                        frappe.msgprint(__("Failed to fetch UOM conversion factor."));
                       }
-                    },
-                    error: function(error) {
-                      console.error("Error fetching draft POS invoices:", error);
                     }
                   });
                 }
@@ -10758,4 +10754,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.Z2LFXGXQ.js.map
+//# sourceMappingURL=packing-list.bundle.UGR6P3GU.js.map

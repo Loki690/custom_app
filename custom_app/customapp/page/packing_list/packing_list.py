@@ -159,6 +159,35 @@ def get_item_uom_prices(item_code):
     return {'uom_prices': uom_prices}
 
 
+import frappe
+from frappe import _
+
+@frappe.whitelist()
+def get_item_uom_conversion(item_code, uom_code):
+    """
+    Fetches the UOM conversion factor for a specific item and UOM code.
+
+    Args:
+        item_code (str): The Item code.
+        uom_code (str): The UOM code to fetch the conversion factor for.
+
+    Returns:
+        float: The conversion factor for the given UOM code and Item.
+    """
+    # Fetch the UOM Conversion Detail for the given Item and UOM
+    conversion_detail = frappe.get_value(
+        'UOM Conversion Detail',
+        {'parent': item_code, 'uom': uom_code},
+        'conversion_factor'
+    )
+
+    # Check if a conversion factor was found
+    if not conversion_detail:
+        frappe.throw(_("No UOM conversion factor found for UOM code {0} and Item {1}.").format(uom_code, item_code))
+
+    return conversion_detail
+
+
 
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None):
