@@ -857,7 +857,7 @@ custom_app.PointOfSale.Payment = class {
 				frappe.db.get_value('Customer', selected_customer, 'customer_name')
 					.then(r => {
 						const result = r.message.customer_name; // Extract the customer_name from the result
-						name_on_card_control.set_value(existing_custom_card_name || selected_customer || '');
+						name_on_card_control.set_value(existing_custom_card_name || result || '');
 					})
 					.catch(error => {
 						console.error('Error fetching customer name:', error);
@@ -2424,6 +2424,9 @@ custom_app.PointOfSale.Payment = class {
 			if (p.mode_of_payment === "Charge") {
 				const selected_customer = cur_frm.doc.customer;
 
+
+
+				
 				let existing_custom_customer = frappe.model.get_value(p.doctype, p.name, "custom_customer");
 				let custom_customer = frappe.ui.form.make_control({
 					df: {
@@ -2440,7 +2443,7 @@ custom_app.PointOfSale.Payment = class {
 				frappe.db.get_value('Customer', selected_customer, 'customer_name')
 					.then(r => {
 						const result = r.message.customer_name; // Extract the customer_name from the result
-						custom_customer.set_value(existing_custom_customer || selected_customer || ''); 
+						custom_customer.set_value(existing_custom_customer || result || ''); 
 					})
 					.catch(error => {
 						console.error('Error fetching customer name:', error);

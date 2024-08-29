@@ -7356,7 +7356,7 @@
           });
           frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
             const result = r.message.customer_name;
-            name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+            name_on_card_control.set_value(existing_custom_card_name || result || "");
           }).catch((error) => {
             console.error("Error fetching customer name:", error);
           });
@@ -8502,7 +8502,7 @@
           });
           frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
             const result = r.message.customer_name;
-            custom_customer.set_value(existing_custom_customer || selected_customer || "");
+            custom_customer.set_value(existing_custom_customer || result || "");
           }).catch((error) => {
             console.error("Error fetching customer name:", error);
           });
@@ -10753,4 +10753,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.MTY7I3TM.js.map
+//# sourceMappingURL=packing-list.bundle.ZVZMZGVY.js.map
