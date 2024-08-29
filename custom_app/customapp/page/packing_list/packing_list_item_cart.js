@@ -19,7 +19,7 @@ custom_app.PointOfSale.ItemCart = class {
 	} 
 
 	prepare_dom() {
-		this.wrapper.append(`<section class="customer-cart-container" style:"margin-top: 1rem;"></section>`);
+		this.wrapper.append(`<section class="customer-cart-container""></section>`);
 
 		this.$component = this.wrapper.find(".customer-cart-container");
 	}
