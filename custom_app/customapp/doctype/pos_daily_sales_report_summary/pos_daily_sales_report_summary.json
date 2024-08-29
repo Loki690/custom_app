@@ -1,13 +1,16 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "DSRS-.########",
+ "autoname": "DSRS-.YYYY.-.MM.-.######",
  "creation": "2024-07-18 10:32:04.205955",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "pos_profile",
   "range",
+  "tin",
+  "min",
+  "sn",
   "column_break_yfhm",
   "date_from",
   "date_to",
@@ -26,6 +29,7 @@
   "invoice_to",
   "confirmed_transactions",
   "confirmed_transaction_total",
+  "confirmed_transaction_item_total",
   "section_break_wpvr",
   "pending_transaction",
   "section_break_dzex",
@@ -50,7 +54,9 @@
   "shortover_total",
   "section_break_gkqu",
   "cancelled_transactions",
-  "amended_from"
+  "amended_from",
+  "other_discounts_section",
+  "discounts_table"
  ],
  "fields": [
   {
@@ -276,6 +282,7 @@
    "default": "Today",
    "fieldname": "range",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Range",
    "options": "\nToday\nWeek\nMonth"
   },
@@ -284,12 +291,49 @@
    "fieldtype": "Table",
    "label": "Return Transactions",
    "options": "Z Cancelled Transaction"
+  },
+  {
+   "fetch_from": "pos_profile.custom_vat_reg_tin",
+   "fieldname": "tin",
+   "fieldtype": "Data",
+   "label": "TIN"
+  },
+  {
+   "fetch_from": "pos_profile.custom_min",
+   "fieldname": "min",
+   "fieldtype": "Link",
+   "label": "MIN",
+   "options": "MIN"
+  },
+  {
+   "fetch_from": "pos_profile.custom_sn",
+   "fieldname": "sn",
+   "fieldtype": "Link",
+   "label": "SN",
+   "options": "SN"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "other_discounts_section",
+   "fieldtype": "Section Break",
+   "label": "Other Discounts"
+  },
+  {
+   "fieldname": "discounts_table",
+   "fieldtype": "Table",
+   "label": "Discounts",
+   "options": "DSRS DISC"
+  },
+  {
+   "fieldname": "confirmed_transaction_item_total",
+   "fieldtype": "Data",
+   "label": "Confirmed Transaction Item Total"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-08-20 09:27:14.133076",
+ "modified": "2024-08-27 00:29:12.017962",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Daily Sales Report Summary",

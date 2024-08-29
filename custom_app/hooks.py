@@ -240,7 +240,8 @@ doc_events = {
         # "on_submit": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.update_gift_cert_code"
     },
    'POS Z Reading': {
-        'on_submit': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.on_submit'
+        'on_submit': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.on_submit',
+        'before_insert': 'custom_app.customapp.doctype.pos_z_reading.pos_z_reading.before_insert'
     },
 #    'POS Opening Entry' : {
 #        "validate":"custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.pos_opening_validation",
@@ -254,9 +255,12 @@ doc_events = {
 #    "User": {
 #         "on_login": "custom_app.customapp.utils.user.force_password_reset"
 #     }
+    'POS Daily Sales Report Summary': {
+        'before_insert': 'custom_app.customapp.doctype.pos_daily_sales_report_summary.pos_daily_sales_report_summary.before_insert'
+    }
 }
 
-scheduler_events = {
+scheduler_events = { 
     "daily": [
         "custom_app.customapp.utils.executables.delete.delete_draft_pos_invoices",
     ],
