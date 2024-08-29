@@ -6778,14 +6778,9 @@
               let change_amount = payment_amount - this.frm.doc.grand_total;
               const changeDialog = new frappe.ui.Dialog({
                 title: __("Change Amount"),
-                primary_action_label: __("OK"),
+                primary_action_label: __("OK (Press Enter)"),
                 primary_action: () => {
                   window.location.reload();
-                  changeDialog.hide();
-                },
-                secondary_action_label: __("New Order"),
-                secondary_action: () => {
-                  this.add_new_order();
                   changeDialog.hide();
                 }
               });
@@ -6795,6 +6790,12 @@
 							</div>
 						`;
               changeDialog.show();
+              $(document).on("keydown", function(e) {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  changeDialog.primary_action();
+                }
+              });
             });
           }
         }
@@ -7297,4 +7298,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.6ZLYS6EL.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.TT6I2NAL.js.map

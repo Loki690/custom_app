@@ -866,7 +866,7 @@ custom_app.PointOfSale.Controller = class {
 							message: __("There was an error saving the document."),
 							indicator: "red",
 						});
-						frappe.utils.play_sound("error");
+						frappe.utils.play_sound("error"); 
 						errorOccurred = true; // Set error flag
 					}).then(() => {
 						if (errorOccurred) return; // Skip further actions if an error occurred
@@ -890,18 +890,13 @@ custom_app.PointOfSale.Controller = class {
 						// Show change in a dialog
 						const changeDialog = new frappe.ui.Dialog({
 							title: __('Change Amount'),
-							primary_action_label: __('OK'),
+							primary_action_label: __('OK (Press Enter)'),
 							primary_action: () => {
 								window.location.reload();
 								changeDialog.hide();
 							},
-							secondary_action_label: __('New Order'), // Label for the new button
-							secondary_action: () => {
-								// Logic for the "New Order" button
-								this.add_new_order();
-								changeDialog.hide();
-								// Implement your logic here, such as redirecting to a new order page or resetting the form
-							}
+						
+
 						});
 
 						// Add custom HTML with large text for the change amount
@@ -912,6 +907,15 @@ custom_app.PointOfSale.Controller = class {
 						`;
 
 						changeDialog.show();
+
+						$(document).on('keydown', function(e) {
+							if (e.key === 'Enter') {
+								// Trigger primary action (OK button) on Enter key press
+								e.preventDefault();
+								changeDialog.primary_action();
+							} 
+						});
+						
 					});
 				}
 
