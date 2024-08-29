@@ -79,7 +79,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
-                                <th>Vatex Price</th>
+                                <th>No Vat</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
                             </tr>
@@ -122,7 +122,7 @@ custom_app.PointOfSale.ItemSelector = class {
 
     }
 
-    get_items({ start = 0, page_length = 20, search_term = "" }) {
+    get_items({ start = 0, page_length = 40, search_term = "" }) {
         const doc = this.events.get_frm().doc;
     
         // Use fallback default values

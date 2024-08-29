@@ -1,47 +1,42 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2024-06-10 09:07:49.697804",
+ "creation": "2024-08-26 22:30:00.513326",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "payment_type",
+  "discount_name",
   "count",
-  "column_break_ejom",
   "amount"
  ],
  "fields": [
   {
-   "fieldname": "payment_type",
+   "fieldname": "discount_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Payment Type"
+   "label": "Discount Name"
   },
   {
-   "fieldname": "column_break_ejom",
-   "fieldtype": "Column Break"
+   "fieldname": "count",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Count"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Amount"
-  },
-  {
-   "fieldname": "count",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Count"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-08-27 01:58:51.022183",
+ "modified": "2024-08-26 22:30:59.035346",
  "modified_by": "Administrator",
  "module": "customapp",
- "name": "Z Payment Details",
+ "name": "DSRS DISC",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",

@@ -97,6 +97,6 @@ def get_pos_closing_invoices(parent):
         return records
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), 'get_pos_closing_invoices Error')
-        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+        frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag

@@ -7,24 +7,31 @@
  "engine": "InnoDB",
  "field_order": [
   "pos_profile",
+  "tin",
+  "min",
+  "sn",
+  "branch",
   "column_break_yfhm",
   "date_from",
   "date_to",
   "section_break_qyz7",
   "sales_details",
   "sales_details_total",
+  "net_sales",
   "section_break_nznb",
   "payment_details",
   "payment_details_total",
   "section_break_ahmo",
   "confirmed_transaction",
   "confirmed_transaction_total",
+  "confirmed_transaction_item_total",
   "section_break_wpvr",
   "pending_transaction",
   "section_break_dzex",
   "clerk_sales",
   "section_break_fczr",
   "column_break_glwo",
+  "accumulated_sales",
   "column_break_adyb",
   "clerk_sales_no_of_transaction_total",
   "column_break_zlon",
@@ -152,12 +159,58 @@
    "fieldtype": "Table",
    "label": "Pending Transaction",
    "options": "Z Pending Transaction"
+  },
+  {
+   "fetch_from": "pos_profile.custom_vat_reg_tin",
+   "fieldname": "tin",
+   "fieldtype": "Data",
+   "label": "TIN",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "pos_profile.custom_min",
+   "fieldname": "min",
+   "fieldtype": "Link",
+   "label": "MIN",
+   "options": "MIN",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "pos_profile.custom_sn",
+   "fieldname": "sn",
+   "fieldtype": "Link",
+   "label": "SN",
+   "options": "SN",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "pos_profile.warehouse",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "confirmed_transaction_item_total",
+   "fieldtype": "Data",
+   "label": "Confirmed Transaction Item Total"
+  },
+  {
+   "fieldname": "net_sales",
+   "fieldtype": "Currency",
+   "label": "Net Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accumulated_sales",
+   "fieldtype": "Currency",
+   "label": "Accumulated Sales"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-08-21 08:11:51.140612",
+ "modified": "2024-08-27 16:46:33.279903",
  "modified_by": "Administrator",
  "module": "customapp",
  "name": "POS Z Reading",

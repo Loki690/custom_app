@@ -615,22 +615,21 @@ custom_app.PointOfSale.Controller = class {
 			primary_action_label: __('Authorize'),
 			primary_action: (values) => {
 				let password = values.password;
-				let role = "oic";
 
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
+					args: { password: password },
 					callback: (r) => {
-						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
+						if (!r.message.error) {
+							// Password is correct and user has the allowed roles
 							frappe.show_alert({
 								message: __('Verified'),
 								indicator: 'green'
 							});
-
+				
 							passwordDialog.hide();
 							if (!this.$components_wrapper.is(":visible")) return;
-
+				
 							let voucher = frappe.model.get_new_doc("POS Closing Entry");
 							voucher.pos_profile = this.frm.doc.pos_profile;
 							voucher.user = frappe.session.user;
@@ -643,12 +642,13 @@ custom_app.PointOfSale.Controller = class {
 						} else {
 							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
-								message: __('Incorrect password or user is not an OIC'),
+								message: __('Incorrect password or user'),
 								indicator: 'red'
 							});
 						}
 					}
 				});
+				
 			}
 		});
 
@@ -879,11 +879,7 @@ custom_app.PointOfSale.Controller = class {
 						this.order_summary.load_summary_of(this.frm.doc, true);
 						this.order_summary.print_receipt();
 
-						frappe.show_alert({
-							indicator: "green",
-							message: __("Order successfully completed"),
-						});
-
+					
 						// Calculate the change
 						let change_amount = payment_amount - this.frm.doc.grand_total;
 

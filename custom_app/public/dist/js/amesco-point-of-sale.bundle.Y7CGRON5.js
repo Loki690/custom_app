@@ -453,7 +453,7 @@
                                 <th>Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
-                                <th>Vatex Price</th>
+                                <th>No Vat</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
                             </tr>
@@ -484,7 +484,7 @@
       this.render_item_list(message.items);
       this.filter_items({ uom: this.selected_uom });
     }
-    get_items({ start = 0, page_length = 20, search_term = "" }) {
+    get_items({ start = 0, page_length = 40, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list || "default_price_list";
       let item_group = doc && doc.item_group || this.item_group || "default_item_group";
@@ -1898,7 +1898,6 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
       this.render_total_vat(frm.doc.total_taxes_and_charges);
     }
     render_net_total(value) {
@@ -3769,7 +3768,7 @@
           });
           frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
             const result = r.message.customer_name;
-            name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+            name_on_card_control.set_value(existing_custom_card_name || result || "");
           }).catch((error) => {
             console.error("Error fetching customer name:", error);
           });
@@ -4915,7 +4914,7 @@
           });
           frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
             const result = r.message.customer_name;
-            custom_customer.set_value(existing_custom_customer || selected_customer || "");
+            custom_customer.set_value(existing_custom_customer || result || "");
           }).catch((error) => {
             console.error("Error fetching customer name:", error);
           });
@@ -6551,12 +6550,11 @@
         primary_action_label: __("Authorize"),
         primary_action: (values) => {
           let password = values.password;
-          let role = "oic";
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
+            args: { password },
             callback: (r) => {
-              if (r.message) {
+              if (!r.message.error) {
                 frappe.show_alert({
                   message: __("Verified"),
                   indicator: "green"
@@ -6575,7 +6573,7 @@
                 frappe.set_route("Form", "POS Closing Entry", voucher.name);
               } else {
                 frappe.show_alert({
-                  message: __("Incorrect password or user is not an OIC"),
+                  message: __("Incorrect password or user"),
                   indicator: "red"
                 });
               }
@@ -6771,21 +6769,12 @@
               this.remove_pos_cart_items();
               this.order_summary.load_summary_of(this.frm.doc, true);
               this.order_summary.print_receipt();
-              frappe.show_alert({
-                indicator: "green",
-                message: __("Order successfully completed")
-              });
               let change_amount = payment_amount - this.frm.doc.grand_total;
               const changeDialog = new frappe.ui.Dialog({
                 title: __("Change Amount"),
-                primary_action_label: __("OK"),
+                primary_action_label: __("OK (Press Enter)"),
                 primary_action: () => {
                   window.location.reload();
-                  changeDialog.hide();
-                },
-                secondary_action_label: __("New Order"),
-                secondary_action: () => {
-                  this.add_new_order();
                   changeDialog.hide();
                 }
               });
@@ -6799,9 +6788,6 @@
                 if (e.key === "Enter") {
                   e.preventDefault();
                   changeDialog.primary_action();
-                } else if (e.key === " ") {
-                  e.preventDefault();
-                  changeDialog.secondary_action();
                 }
               });
             });
@@ -7306,4 +7292,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.QCPWTVUS.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.Y7CGRON5.js.map

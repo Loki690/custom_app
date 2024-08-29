@@ -4005,7 +4005,7 @@
                                 <th>Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
-                                <th>Vatex Price</th>
+                                <th>No Vat</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
                             </tr>
@@ -5489,7 +5489,6 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
       this.render_total_vat(frm.doc.total_taxes_and_charges);
     }
     render_net_total(value) {
@@ -5670,7 +5669,7 @@
 			</div> 
 
 			<div class="item-vat mx-3">
-			<!--	<strong>${format_currency(item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.rate : customer_group === "Senior Citizen" || customer_group === "PWD" ? no_vat : item_data.rate, currency)}</strong> -->
+			<!--	<strong>${format_currency(item_data.pricing_rules === '[\n "PRLE-0005330"\n]' ? item_data.rate : customer_group === "Senior Citizen" || customer_group === "PWD" ? no_vat : item_data.rate, currency)}</strong> -->
 			<strong>${format_currency(item_data.price_list_rate)}</strong>
 			</div>
 			<div class="item-discount mx-3">
@@ -7357,7 +7356,7 @@
           });
           frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
             const result = r.message.customer_name;
-            name_on_card_control.set_value(existing_custom_card_name || selected_customer || "");
+            name_on_card_control.set_value(existing_custom_card_name || result || "");
           }).catch((error) => {
             console.error("Error fetching customer name:", error);
           });
@@ -8503,7 +8502,7 @@
           });
           frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
             const result = r.message.customer_name;
-            custom_customer.set_value(existing_custom_customer || selected_customer || "");
+            custom_customer.set_value(existing_custom_customer || result || "");
           }).catch((error) => {
             console.error("Error fetching customer name:", error);
           });
@@ -10754,4 +10753,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.UGR6P3GU.js.map
+//# sourceMappingURL=packing-list.bundle.ZVZMZGVY.js.map
