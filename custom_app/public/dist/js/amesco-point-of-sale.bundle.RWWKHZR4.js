@@ -6769,10 +6769,6 @@
               this.remove_pos_cart_items();
               this.order_summary.load_summary_of(this.frm.doc, true);
               this.order_summary.print_receipt();
-              frappe.show_alert({
-                indicator: "green",
-                message: __("Order successfully completed")
-              });
               let change_amount = payment_amount - this.frm.doc.grand_total;
               const changeDialog = new frappe.ui.Dialog({
                 title: __("Change Amount"),
@@ -7296,4 +7292,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.GP2CPXET.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.RWWKHZR4.js.map
