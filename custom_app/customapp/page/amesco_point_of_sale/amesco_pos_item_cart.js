@@ -19,7 +19,7 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 	prepare_dom() {
-		this.wrapper.append(`<section class="customer-cart-container"></section>`);
+		this.wrapper.append(`<section class="customer-cart-container" style:"margin-top: 1rem;"></section>`);
 
 		this.$component = this.wrapper.find(".customer-cart-container");
 	}
@@ -862,7 +862,7 @@ custom_app.PointOfSale.ItemCart = class {
 			: frm.doc.rounded_total;
 			
 		this.render_grand_total(grand_total);
-		this.render_taxes(frm.doc.taxes);
+		// this.render_taxes(frm.doc.taxes);
 		this.render_total_vat(frm.doc.total_taxes_and_charges);
 	}
 
@@ -1168,7 +1168,7 @@ custom_app.PointOfSale.ItemCart = class {
 						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
 							<div class="item-rate">${format_currency(
-								item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.amount : 
+								item_data.pricing_rules === '[\n "PRLE-0005330"\n]' ? item_data.amount : 
 								(item_data.pricing_rules === "" ? item_data.amount : 
 									(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount)
 								), currency

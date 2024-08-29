@@ -615,22 +615,21 @@ custom_app.PointOfSale.Controller = class {
 			primary_action_label: __('Authorize'),
 			primary_action: (values) => {
 				let password = values.password;
-				let role = "oic";
 
 				frappe.call({
 					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-					args: { password: password, role: role },
+					args: { password: password },
 					callback: (r) => {
-						if (r.message) {
-							// OIC authentication successful, proceed with discount edit
+						if (!r.message.error) {
+							// Password is correct and user has the allowed roles
 							frappe.show_alert({
 								message: __('Verified'),
 								indicator: 'green'
 							});
-
+				
 							passwordDialog.hide();
 							if (!this.$components_wrapper.is(":visible")) return;
-
+				
 							let voucher = frappe.model.get_new_doc("POS Closing Entry");
 							voucher.pos_profile = this.frm.doc.pos_profile;
 							voucher.user = frappe.session.user;
@@ -643,12 +642,13 @@ custom_app.PointOfSale.Controller = class {
 						} else {
 							// Show alert for incorrect password or unauthorized user
 							frappe.show_alert({
-								message: __('Incorrect password or user is not an OIC'),
+								message: __('Incorrect password or user'),
 								indicator: 'red'
 							});
 						}
 					}
 				});
+				
 			}
 		});
 
@@ -858,7 +858,19 @@ custom_app.PointOfSale.Controller = class {
 					}
 
 					// Proceed with submitting the invoice if payment is sufficient
-					this.frm.save('Submit').then((r) => {
+					let errorOccurred = false; // Flag to track if an error occurred
+
+					this.frm.save('Submit', undefined, undefined, () => {
+						// Error handling during save
+						frappe.show_alert({
+							message: __("There was an error saving the document."),
+							indicator: "red",
+						});
+						frappe.utils.play_sound("error"); 
+						errorOccurred = true; // Set error flag
+					}).then(() => {
+						if (errorOccurred) return; // Skip further actions if an error occurred
+
 						this.toggle_components(false);
 						// Customized Layout to toggle off Cart
 						this.cart.toggle_component(false);
@@ -878,21 +890,15 @@ custom_app.PointOfSale.Controller = class {
 						// Show change in a dialog
 						const changeDialog = new frappe.ui.Dialog({
 							title: __('Change Amount'),
-							primary_action_label: __('OK'),
+							primary_action_label: __('OK (Press Enter)'),
 							primary_action: () => {
-								// this.remove_pos_cart_items();
 								window.location.reload();
 								changeDialog.hide();
 							},
+						
 
-							secondary_action_label: __('New Order'), // Label for the new button
-							secondary_action: () => {
-								// Logic for the "New Order" button
-								this.add_new_order();
-								changeDialog.hide();
-								// Implement your logic here, such as redirecting to a new order page or resetting the form
-							}
 						});
+
 						// Add custom HTML with large text for the change amount
 						changeDialog.body.innerHTML = `
 							<div style="text-align: center; font-size: 60px; margin: 20px 0;">
@@ -901,6 +907,15 @@ custom_app.PointOfSale.Controller = class {
 						`;
 
 						changeDialog.show();
+
+						$(document).on('keydown', function(e) {
+							if (e.key === 'Enter') {
+								// Trigger primary action (OK button) on Enter key press
+								e.preventDefault();
+								changeDialog.primary_action();
+							} 
+						});
+						
 					});
 				}
 
