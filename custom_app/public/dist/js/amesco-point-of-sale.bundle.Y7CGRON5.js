@@ -484,7 +484,7 @@
       this.render_item_list(message.items);
       this.filter_items({ uom: this.selected_uom });
     }
-    get_items({ start = 0, page_length = 20, search_term = "" }) {
+    get_items({ start = 0, page_length = 40, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list || "default_price_list";
       let item_group = doc && doc.item_group || this.item_group || "default_item_group";
@@ -7292,4 +7292,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.RWWKHZR4.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.Y7CGRON5.js.map
