@@ -453,7 +453,7 @@
                                 <th>Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
-                                <th>Vatex Price</th>
+                                <th>No Vat</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
                             </tr>
@@ -1898,7 +1898,6 @@
       this.render_total_item_qty(frm.doc.items);
       const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? frm.doc.grand_total : frm.doc.rounded_total;
       this.render_grand_total(grand_total);
-      this.render_taxes(frm.doc.taxes);
       this.render_total_vat(frm.doc.total_taxes_and_charges);
     }
     render_net_total(value) {
@@ -6551,12 +6550,11 @@
         primary_action_label: __("Authorize"),
         primary_action: (values) => {
           let password = values.password;
-          let role = "oic";
           frappe.call({
             method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_user_password",
-            args: { password, role },
+            args: { password },
             callback: (r) => {
-              if (r.message) {
+              if (!r.message.error) {
                 frappe.show_alert({
                   message: __("Verified"),
                   indicator: "green"
@@ -6575,7 +6573,7 @@
                 frappe.set_route("Form", "POS Closing Entry", voucher.name);
               } else {
                 frappe.show_alert({
-                  message: __("Incorrect password or user is not an OIC"),
+                  message: __("Incorrect password or user"),
                   indicator: "red"
                 });
               }
@@ -6778,14 +6776,9 @@
               let change_amount = payment_amount - this.frm.doc.grand_total;
               const changeDialog = new frappe.ui.Dialog({
                 title: __("Change Amount"),
-                primary_action_label: __("OK"),
+                primary_action_label: __("OK (Press Enter)"),
                 primary_action: () => {
                   window.location.reload();
-                  changeDialog.hide();
-                },
-                secondary_action_label: __("New Order"),
-                secondary_action: () => {
-                  this.add_new_order();
                   changeDialog.hide();
                 }
               });
@@ -6799,9 +6792,6 @@
                 if (e.key === "Enter") {
                   e.preventDefault();
                   changeDialog.primary_action();
-                } else if (e.key === " ") {
-                  e.preventDefault();
-                  changeDialog.secondary_action();
                 }
               });
             });
@@ -7306,4 +7296,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.QCPWTVUS.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.QCGISKDQ.js.map
