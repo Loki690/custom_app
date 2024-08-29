@@ -890,18 +890,13 @@ custom_app.PointOfSale.Controller = class {
 						// Show change in a dialog
 						const changeDialog = new frappe.ui.Dialog({
 							title: __('Change Amount'),
-							primary_action_label: __('OK'),
+							primary_action_label: __('OK (Press Enter)'),
 							primary_action: () => {
 								window.location.reload();
 								changeDialog.hide();
 							},
-							secondary_action_label: __('New Order'), // Label for the new button
-							secondary_action: () => {
-								// Logic for the "New Order" button
-								this.add_new_order();
-								changeDialog.hide();
-								// Implement your logic here, such as redirecting to a new order page or resetting the form
-							}
+						
+
 						});
 
 						// Add custom HTML with large text for the change amount
@@ -918,12 +913,9 @@ custom_app.PointOfSale.Controller = class {
 								// Trigger primary action (OK button) on Enter key press
 								e.preventDefault();
 								changeDialog.primary_action();
-							} else if (e.key === ' ') {
-								// Trigger secondary action (New Order button) on Space key press
-								e.preventDefault();
-								changeDialog.secondary_action();
-							}
+							} 
 						});
+						
 					});
 				}
 
