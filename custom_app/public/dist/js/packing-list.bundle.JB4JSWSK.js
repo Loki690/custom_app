@@ -5662,15 +5662,16 @@
 				</div>
 				${get_description_html()}
 			</div>
-      
+			
 			<div class="item-vat mx-3">
 				<strong>${getVatType(item_data)}</strong>
 			</div> 
-
-
+			
+			<div class="item-vat mx-3">
+				<strong>${format_currency(item_data.rate, currency)}</strong>
 			</div>
 			<div class="item-discount mx-3">
-				<strong>${item_data.discount_percentage}%</strong>
+				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
 			${get_rate_discount_html(customer_group)}`
       );
@@ -10753,4 +10754,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.5CTDTHJ5.js.map
+//# sourceMappingURL=packing-list.bundle.JB4JSWSK.js.map
