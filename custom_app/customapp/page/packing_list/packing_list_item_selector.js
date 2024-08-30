@@ -87,7 +87,6 @@ custom_app.PointOfSale.ItemSelector = class {
                                 <th>Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
-                                <th>No Vat</th>
                                 <th>UOM</th>
                                 <th>QOH</th>
                             </tr>
@@ -220,7 +219,6 @@ custom_app.PointOfSale.ItemSelector = class {
             <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
             <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-            <td class="item-rate" style=" width: 12%;">${format_currency( custom_is_vatable == 0 ? price_list_rate : no_vat, item.currency) || 0}</td>
             <td class="item-uom" style=" width: 10%;">${uom}</td>
             <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
@@ -346,7 +344,6 @@ custom_app.PointOfSale.ItemSelector = class {
                     if (oEvent.key !== undefined && oEvent.key !== "") {
                         return oEvent.key;
                     }
-
                     var sDecoded = String.fromCharCode(iCode);
                     switch (oEvent.shiftKey) {
                         case false:
@@ -586,7 +583,6 @@ custom_app.PointOfSale.ItemSelector = class {
                                     },
                                 }
 
-
                             ],
                             primary_action_label: __("Ok"),
                             primary_action: function () {
@@ -798,7 +794,7 @@ custom_app.PointOfSale.ItemSelector = class {
                     this.navigate_down();
                     this.focus_next_field();
                     break;
-                case 32: // enter
+                case 32: //
                     e.preventDefault();
                     this.select_highlighted_item();
                     break;
@@ -940,9 +936,11 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     select_highlighted_item() {
+        // Check if a click action is already in progress
+        if (this.isClicking) return;
+    
         // Ensure highlighted_row_index is valid
         if (this.highlighted_row_index === -1) {
-            // Create and show a popup dialog
             frappe.msgprint({
                 title: __("No Item Highlighted"),
                 indicator: "orange",
@@ -951,12 +949,21 @@ custom_app.PointOfSale.ItemSelector = class {
             return;
         }
     
+        // Set the isClicking flag to true to indicate that a click action is in progress
+        this.isClicking = true;
+    
         // Proceed to select the highlighted item
         const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
         if (highlightedItem.length) {
             highlightedItem.click(); // Simulate click action
         }
+    
+        // Reset the isClicking flag after a short delay to allow for the click action to complete
+        setTimeout(() => {
+            this.isClicking = false;
+        }, 1000); // Adjust the delay (in milliseconds) as needed
     }
+    
     
     
 

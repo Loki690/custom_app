@@ -391,7 +391,12 @@ custom_app.PointOfSale.Payment = class {
 	
 		// Ctrl + Enter shortcut for submitting the order
 		frappe.ui.keys.on("shift+enter", () => {
-			this.$component.find(".submit-order-btn").click();
+			const paymentMethodVisible = this.$component.find(".payment-section").is(":visible");
+	
+			// Only trigger the click if the payment method section is visible
+			if (paymentMethodVisible) {
+				this.$component.find(".submit-order-btn").click();
+			}
 		});
 	
 		// Tab key shortcut for switching between payment modes
