@@ -36,6 +36,7 @@ custom_app.PointOfSale.Controller = class {
 				in_list_view: 1,
 				label: "Mode of Payment",
 				options: "Mode of Payment",
+				read_only: 1, 
 				reqd: 1,
 			},
 			{
@@ -43,6 +44,7 @@ custom_app.PointOfSale.Controller = class {
 				fieldtype: "Currency",
 				in_list_view: 1,
 				label: "Opening Amount",
+				read_only: 1, 
 				options: "company:company_currency",
 				change: function () {
 					dialog.fields_dict.balance_details.df.data.some((d) => {
@@ -129,6 +131,7 @@ custom_app.PointOfSale.Controller = class {
 					reqd: 1,
 					data: [],
 					fields: table_fields,
+					read_only: 1,
 				},
 			],
 			primary_action: async function ({ company, pos_profile, balance_details }) {
