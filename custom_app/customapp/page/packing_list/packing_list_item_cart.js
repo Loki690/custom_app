@@ -1169,8 +1169,9 @@ custom_app.PointOfSale.ItemCart = class {
 			</div> 
 			
 			<div class="item-vat mx-3">
-				<strong>${format_currency(item_data.rate, currency)}</strong>
+				<strong>${format_currency(item_data.price_list_rate, currency)}</strong>
 			</div>
+			
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>

@@ -82,7 +82,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 		status === "Return" && (indicator_color = "grey");
 
 		return `<div class="left-section">
-					<div class="customer-name">${doc.customer}</div>
+					<div class="customer-name">${doc.customer_name}</div>
 					<div class="customer-email">${this.customer_email}</div>
 					<div class="cashier"> Take by:  ${__(sold_by)}</div>
 				</div>
