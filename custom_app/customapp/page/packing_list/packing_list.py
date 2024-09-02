@@ -229,7 +229,9 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         SELECT
             item.name AS item_code,
             item.item_name,
+            item.custom_generic_name,
             item.description,
+            item.item_group,
             item.custom_is_vatable,
             item.stock_uom,
             item.image AS item_image,
@@ -428,7 +430,7 @@ def serial_number():
 
 @frappe.whitelist()
 def get_past_order_list(search_term, status, pos_profile, limit=1000):
-	fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
+	fields = ["name", "customer_name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
 	invoice_list = []
 
 	if search_term and status:
