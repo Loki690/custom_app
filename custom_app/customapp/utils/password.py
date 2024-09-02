@@ -244,6 +244,41 @@ def check_oic_password(pwd, doctype="User", fieldname="password"):
         return {"error": "Invalid password or no matching roles"}
     except Exception as e:
         return {"error": str(e)}
+    
+    
+def check_system_manager_password(pwd, doctype="User", fieldname="password"):
+    """
+    Checks if the given password matches any user's password.
+    If it matches, return the user's details if they have the allowed roles.
+    """
+    try:
+        # Fetch all user documents
+        all_users = frappe.get_all("User", fields=["name", "email", "full_name", "enabled"])
+
+        for user in all_users:
+            # Check if the entered password matches the stored hashed password
+            try:
+                if check_password(user["name"], pwd):
+                    user_doc = frappe.get_doc("User", user["name"])
+                    user_roles = [d.role for d in user_doc.get("roles")]
+                    
+                    allowed_roles = ['System Manager']
+                    
+                    # Check if user has any of the allowed roles
+                    if any(role in allowed_roles for role in user_roles):
+                        return {
+                            "name": user_doc.name,
+                            "email": user_doc.email,
+                            "full_name": user_doc.full_name,
+                            "roles": user_roles,
+                            "enabled": user_doc.enabled,
+                        }
+            except AuthenticationError:
+                continue
+
+        return {"error": "Invalid password or no matching roles"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 	
