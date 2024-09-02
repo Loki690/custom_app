@@ -14,7 +14,7 @@ from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availabil
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
 #from frappe.utils.password import check_oic_password, check_password
-from custom_app.customapp.utils.password import check_oic_password, check_password
+from custom_app.customapp.utils.password import check_oic_password, check_password, check_system_manager_password
 
 from custom_app.customapp.doctype.cash_count_denomination_entry.cash_count_denomination_entry import create_cash_count_denomination_entry
 
@@ -482,6 +482,13 @@ def confirm_user_password(password):
     Wrapper function for checking password without requiring a username.
     """
     return check_oic_password(password)  
+
+@frappe.whitelist()
+def confirm_system_manager_password(password):
+    """
+    Wrapper function for checking password without requiring a username.
+    """
+    return check_system_manager_password(password)  
 	
 
 
