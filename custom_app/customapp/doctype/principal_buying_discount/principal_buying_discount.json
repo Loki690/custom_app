@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-04-02 16:51:16.717006",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "supplier_name",
+  "discount_type",
+  "discount",
+  "valid_from",
+  "valid_up_to",
+  "pricing_rule_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "supplier_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "discount_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Discount Type"
+  },
+  {
+   "fieldname": "discount",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Discount"
+  },
+  {
+   "fieldname": "valid_from",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Valid From "
+  },
+  {
+   "fieldname": "valid_up_to",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Valid Up to"
+  },
+  {
+   "fieldname": "pricing_rule_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Pricing Rule Name",
+   "options": "Pricing Rule"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-09-03 14:00:31.903034",
+ "modified_by": "Administrator",
+ "module": "customapp",
+ "name": "Principal Buying Discount",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
