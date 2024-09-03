@@ -3347,6 +3347,14 @@
               return false;
             }
             switch (payment_method) {
+              case "Cash":
+                const cash_missing_fields = validate_fields(["amount"], p);
+                if (cash_missing_fields.length) {
+                  show_validation_warning(__("The following fields are required for Charge payment: {0}", [cash_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
               case "Charge":
                 const missing_fields = validate_fields(["amount", "custom_customer", "custom_charge_invoice_number", "custom_po_number", "custom_representative", "custom_id_number"], p);
                 if (missing_fields.length) {
@@ -7423,4 +7431,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.UV3YPKOF.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.UII6WV5K.js.map
