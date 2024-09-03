@@ -4003,6 +4003,7 @@
                             <tr>
                                 <th>Item Code</th>
                                 <th>Name</th>
+                                <th>Generic Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
                                 <th>UOM</th>
@@ -4067,8 +4068,7 @@
     }
     get_item_html(item) {
       const me = this;
-      const defaulf_uom = "PC";
-      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
+      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable, custom_generic_name, item_group } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
@@ -4087,12 +4087,13 @@
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}" data-qty="${qty_to_display}">
-            <td class="item-code" style=" width: 15%;">${item_code}</td> 
-            <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
-            <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
-            <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-            <td class="item-uom" style=" width: 10%;">${uom}</td>
-            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
+            <td class="item-code" style=" width: 1rem;">${item_code}</td> 
+             <td class="item-name" style="width: 15rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-name" style="width: 8rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${custom_generic_name ? custom_generic_name : ""}</td>
+            <td class="item-vat" style=" width: 10%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate" style=" width:8%;">${format_currency(price_list_rate, item.currency)}</td>
+            <td class="item-uom" style=" width: 5%;">${uom}</td>
+            <td class="item-qty" style=" width: 8%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
     }
     handle_broken_image($img) {
@@ -4543,6 +4544,7 @@
       });
       this.$component.on("keydown", (e) => {
         const key = e.which || e.keyCode;
+        const isCtrlPressed = e.ctrlKey;
         switch (key) {
           case 38:
             e.preventDefault();
@@ -4557,9 +4559,13 @@
             this.navigate_down();
             this.focus_next_field();
             break;
-          case 32:
-            e.preventDefault();
-            this.select_highlighted_item();
+          case 13:
+            if (isCtrlPressed) {
+              break;
+            } else {
+              e.preventDefault();
+              this.select_highlighted_item();
+            }
             break;
         }
       });
@@ -5662,15 +5668,17 @@
 				</div>
 				${get_description_html()}
 			</div>
-      
+			
 			<div class="item-vat mx-3">
 				<strong>${getVatType(item_data)}</strong>
 			</div> 
-
-
+			
+			<div class="item-vat mx-3">
+				<strong>${format_currency(item_data.price_list_rate, currency)}</strong>
 			</div>
+			
 			<div class="item-discount mx-3">
-				<strong>${item_data.discount_percentage}%</strong>
+				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
 			${get_rate_discount_html(customer_group)}`
       );
@@ -5717,7 +5725,7 @@
 						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
 							<div class="item-rate">${format_currency(
-            item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.amount : item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount,
+            item_data.pricing_rules === '[\n "PRLE-0005330"\n]' ? item_data.amount : item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount,
             currency
           )}</div>
 						</div>
@@ -7589,7 +7597,8 @@
             df: {
               label: "Reference No",
               fieldtype: "Data",
-              placeholder: "Reference No."
+              placeholder: "Reference No.",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.reference-number`),
             render_input: true,
@@ -7606,7 +7615,7 @@
             let amount = me2[`${mode}_control`].get_value();
             let phone_number = phone_number_control.get_value();
             let reference_no = epayment_reference_number_controller.get_value();
-            if (!amount) {
+            if (!amount || !reference_no) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -7653,7 +7662,6 @@
               return;
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
             frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
             const dialog2 = frappe.msgprint({
               title: __("Success"),
@@ -7680,7 +7688,6 @@
             phone_number_control.set_value("");
             epayment_reference_number_controller.set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", 0);
-            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", "");
             frappe.model.set_value(p.doctype, p.name, "reference_no", "");
             frappe.msgprint({
               message: __("Payment details have been discarded."),
@@ -7776,8 +7783,7 @@
             df: {
               label: "Approval Code",
               fieldtype: "Data",
-              placeholder: "Approval Code",
-              reqd: true
+              placeholder: "Approval Code"
             },
             parent: this.$payment_modes.find(`.${mode}.approval-code`),
             render_input: true
@@ -7796,7 +7802,7 @@
             let card_number = card_number_control.get_value();
             let card_expiry_date = expiry_date_control.get_value();
             let approval_code = custom_approval_code_control.get_value();
-            if (!amount || !bank_name || !card_name || !card_number || !card_expiry_date || !approval_code) {
+            if (!amount || !bank_name || !card_name || !card_number || !card_expiry_date) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -7960,7 +7966,7 @@
           });
           frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
             const result = r.message.customer_name;
-            check_name_control.set_value(existing_custom_check_name || selected_customer || "");
+            check_name_control.set_value(existing_custom_check_name || result || "");
           }).catch((error) => {
             console.error("Error fetching customer name:", error);
           });
@@ -8357,8 +8363,7 @@
             df: {
               label: `Confirmation Code`,
               fieldtype: "Data",
-              placeholder: "Reference # or Confirmation Code",
-              reqd: true
+              placeholder: "Reference # or Confirmation Code"
             },
             parent: this.$payment_modes.find(`.${mode}.qr-reference-number`),
             render_input: true
@@ -8375,7 +8380,7 @@
             let payment_type = custom_payment_type.get_value();
             let bank_type = custom_bank_type.get_value();
             let qr_reference_number = custom_qr_reference_number.get_value();
-            if (!amount || !payment_type || !bank_type || !qr_reference_number) {
+            if (!amount || !payment_type || !bank_type) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -8512,8 +8517,7 @@
             df: {
               label: "Charge Invoice Number",
               fieldtype: "Data",
-              placeholder: "Charge Invoice Number",
-              reqd: true
+              placeholder: "Charge Invoice Number"
             },
             parent: this.$payment_modes.find(`.${mode}.charge-invoice-number`),
             render_input: true
@@ -8584,7 +8588,7 @@
             let representative = custom_representative.get_value();
             let id_number = custom_id_number.get_value();
             let approved_by = custom_approved_by.get_value();
-            if (!amount || !customer || !charge_invoice_no || !po_number || !representative || !id_number) {
+            if (!amount || !customer || !po_number || !representative || !id_number) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -9213,7 +9217,7 @@
 						<svg class="mr-2" width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
 						</svg>
-						${frappe.ellipsis(invoice.customer, 20)}
+						${frappe.ellipsis(invoice.customer_name, 20)}
 					</div>
 				</div>
 				<div class="invoice-total-status">
@@ -9306,7 +9310,7 @@
       status === "Draft" && (indicator_color = "red");
       status === "Return" && (indicator_color = "grey");
       return `<div class="left-section">
-					<div class="customer-name">${doc.customer}</div>
+					<div class="customer-name">${doc.customer_name}</div>
 					<div class="customer-email">${this.customer_email}</div>
 					<div class="cashier"> Take by:  ${__(sold_by)}</div>
 				</div>
@@ -10753,4 +10757,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.WI4KVGJH.js.map
+//# sourceMappingURL=packing-list.bundle.V6NGURC6.js.map

@@ -451,6 +451,7 @@
                             <tr>
                                 <th>Item Code</th>
                                 <th>Name</th>
+                                <th>Generic Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
                                 <th>UOM</th>
@@ -532,8 +533,7 @@
     }
     get_item_html(item) {
       const me = this;
-      const defaulf_uom = "PC";
-      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
+      const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable, custom_generic_name, item_group } = item;
       const precision2 = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
       let indicator_color;
       let qty_to_display = actual_qty;
@@ -552,12 +552,13 @@
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}" data-qty="${qty_to_display}">
-            <td class="item-code" style=" width: 15%;">${item_code}</td> 
-            <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
-            <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
-            <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision2) || 0}</td>
-            <td class="item-uom" style=" width: 10%;">${uom}</td>
-            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
+            <td class="item-code" style=" width: 1rem;">${item_code}</td> 
+             <td class="item-name" style="width: 15rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-name" style="width: 8rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${custom_generic_name ? custom_generic_name : ""}</td>
+            <td class="item-vat" style=" width: 10%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate" style=" width:8%;">${format_currency(price_list_rate, item.currency)}</td>
+            <td class="item-uom" style=" width: 5%;">${uom}</td>
+            <td class="item-qty" style=" width: 8%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
     }
     handle_broken_image($img) {
@@ -1014,6 +1015,7 @@
       });
       this.$component.on("keydown", (e) => {
         const key = e.which || e.keyCode;
+        const isCtrlPressed = e.ctrlKey;
         switch (key) {
           case 38:
             e.preventDefault();
@@ -1028,9 +1030,13 @@
             this.navigate_down();
             this.focus_next_field();
             break;
-          case 32:
-            e.preventDefault();
-            this.select_highlighted_item();
+          case 13:
+            if (isCtrlPressed) {
+              break;
+            } else {
+              e.preventDefault();
+              this.select_highlighted_item();
+            }
             break;
         }
       });
@@ -2069,8 +2075,9 @@
 			</div> 
 			
 			<div class="item-vat mx-3">
-				<strong>${format_currency(item_data.rate, currency)}</strong>
+				<strong>${format_currency(item_data.price_list_rate, currency)}</strong>
 			</div>
+			
 			<div class="item-discount mx-3">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
@@ -2119,7 +2126,7 @@
 						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
 							<div class="item-rate">${format_currency(
-            item_data.pricing_rules === '[\n "PRLE-0002"\n]' ? item_data.amount : item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount,
+            item_data.pricing_rules === '[\n "PRLE-0005330"\n]' ? item_data.amount : item_data.pricing_rules === "" ? item_data.amount : item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount,
             currency
           )}</div>
 						</div>
@@ -3315,13 +3322,157 @@
         const paid_amount = doc.paid_amount;
         const items = doc.items;
         if (paid_amount == 0 || !items.length) {
-          const message = items.length ? __("You cannot submit the order without payment.") : __("You cannot submit empty order.");
+          const message = items.length ? __("You cannot submit the order without payment.") : __("You cannot submit an empty order.");
           frappe.show_alert({ message, indicator: "orange" });
           frappe.utils.play_sound("error");
           return;
         }
+        if (!validate_payment_methods(doc)) {
+          return;
+        }
         this.events.submit_invoice();
       });
+      function validate_payment_methods(doc) {
+        let has_error = false;
+        doc.payments.forEach((p) => {
+          const payment_method = p.mode_of_payment ? p.mode_of_payment.trim() : null;
+          const amount = p.amount || 0;
+          if (amount > 0) {
+            if (!payment_method) {
+              frappe.show_alert({
+                message: __("No payment method selected."),
+                indicator: "orange"
+              });
+              has_error = true;
+              return false;
+            }
+            switch (payment_method) {
+              case "Cash":
+                const cash_missing_fields = validate_fields(["amount"], p);
+                if (cash_missing_fields.length) {
+                  show_validation_warning(__("The following fields are required for Charge payment: {0}", [cash_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "Gift Certificate":
+              case "Amesco Plus":
+                const gc_missing_fields = validate_fields(["amount"], p);
+                if (gc_missing_fields.length) {
+                  show_validation_warning(__("The following fields are required for Charge payment: {0}", [gc_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "Charge":
+                const missing_fields = validate_fields(["amount", "custom_customer", "custom_charge_invoice_number", "custom_po_number", "custom_representative", "custom_id_number"], p);
+                if (missing_fields.length) {
+                  show_validation_warning(__("The following fields are required for Charge payment: {0}", [missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "Debit Card":
+              case "Credit Card":
+                const debit_missing_fields = validate_fields(["amount", "custom_bank_name", "custom_card_name", "custom_card_number", "custom_card_expiration_date", "custom_approval_code"], p);
+                if (debit_missing_fields.length) {
+                  console.log("Missing fields for Debit payment:", debit_missing_fields);
+                  show_validation_warning(__("The following fields are required for Debit payment: {0}", [debit_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "Cheque":
+              case "Government":
+                const cheque_missing_fields = validate_fields(["amount", "custom_check_bank_name", "custom_name_on_check", "custom_check_number", "custom_check_date"], p);
+                if (cheque_missing_fields.length) {
+                  console.log("Missing fields for Cheque/Government payment:", cheque_missing_fields);
+                  show_validation_warning(__("The following fields are required for Debit payment: {0}", [cheque_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "Cards":
+                const cards_missing_fields = validate_fields(["amount", "custom_bank_name", "custom_card_name", "custom_card_type", "custom_card_number", "custom_card_expiration_date", "custom_approval_code"], p);
+                if (cards_missing_fields.length) {
+                  console.log("Missing fields for Cards payment:", cards_missing_fields);
+                  show_validation_warning(__("The following fields are required for Debit payment: {0}", [cards_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "QR Payment":
+                const qr_missing_fields = validate_fields(["amount", "custom_payment_type", "custom_bank_type"], p);
+                if (qr_missing_fields.length) {
+                  console.log("Missing fields for QR payment:", qr_missing_fields);
+                  show_validation_warning(__("The following fields are required for Debit payment: {0}", [qr_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "GCash":
+              case "PayMaya":
+                const gcash_maya_missing_fields = validate_fields(["amount", "reference_no"], p);
+                if (gcash_maya_missing_fields.length) {
+                  console.log("Missing fields for QR payment:", gcash_maya_missing_fields);
+                  show_validation_warning(__("The following fields are required for Debit payment: {0}", [gcash_maya_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "2307":
+              case "2307G":
+                const gov_missing_fields = validate_fields(["amount"], p);
+                if (gov_missing_fields.length) {
+                  console.log("Missing fields for QR payment:", gov_missing_fields);
+                  show_validation_warning(__("The following fields are required for Debit payment: {0}", [gov_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              default:
+                frappe.show_alert({
+                  message: __("Invalid payment method selected: {0}", [payment_method]),
+                  indicator: "orange"
+                });
+                has_error = true;
+                return false;
+            }
+          }
+        });
+        return !has_error;
+      }
+      function validate_fields(required_fields, payment_entry) {
+        const missing_fields = [];
+        required_fields.forEach((field) => {
+          const value = payment_entry[field] || "";
+          if (!value) {
+            missing_fields.push(field);
+          }
+        });
+        return missing_fields;
+      }
+      function show_validation_warning(message) {
+        const dialog2 = frappe.msgprint({
+          title: __("Validation Warning"),
+          message,
+          indicator: "orange",
+          primary_action: {
+            label: __("OK"),
+            action: function() {
+              frappe.msg_dialog.hide();
+            }
+          }
+        });
+        $(document).on("keydown", function(e) {
+          if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+            dialog2.get_primary_btn().trigger("click");
+          }
+        });
+        dialog2.$wrapper.on("hidden.bs.modal", function() {
+          $(document).off("keydown");
+        });
+      }
       frappe.ui.form.on("POS Invoice", "paid_amount", (frm) => {
         this.update_totals_section(frm.doc);
         const is_cash_shortcuts_invisible = !this.$payment_modes.find(".cash-shortcuts").is(":visible");
@@ -4008,7 +4159,8 @@
             df: {
               label: "Reference No",
               fieldtype: "Data",
-              placeholder: "Reference No."
+              placeholder: "Reference No.",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.reference-number`),
             render_input: true,
@@ -4025,7 +4177,7 @@
             let amount = me2[`${mode}_control`].get_value();
             let phone_number = phone_number_control.get_value();
             let reference_no = epayment_reference_number_controller.get_value();
-            if (!amount) {
+            if (!amount || !reference_no) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -4072,7 +4224,6 @@
               return;
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
             frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
             const dialog2 = frappe.msgprint({
               title: __("Success"),
@@ -4099,7 +4250,6 @@
             phone_number_control.set_value("");
             epayment_reference_number_controller.set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", 0);
-            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", "");
             frappe.model.set_value(p.doctype, p.name, "reference_no", "");
             frappe.msgprint({
               message: __("Payment details have been discarded."),
@@ -4379,7 +4529,7 @@
           });
           frappe.db.get_value("Customer", selected_customer, "customer_name").then((r) => {
             const result = r.message.customer_name;
-            check_name_control.set_value(existing_custom_check_name || selected_customer || "");
+            check_name_control.set_value(existing_custom_check_name || result || "");
           }).catch((error) => {
             console.error("Error fetching customer name:", error);
           });
@@ -4776,8 +4926,7 @@
             df: {
               label: `Confirmation Code`,
               fieldtype: "Data",
-              placeholder: "Reference # or Confirmation Code",
-              reqd: true
+              placeholder: "Reference # or Confirmation Code"
             },
             parent: this.$payment_modes.find(`.${mode}.qr-reference-number`),
             render_input: true
@@ -4794,7 +4943,7 @@
             let payment_type = custom_payment_type.get_value();
             let bank_type = custom_bank_type.get_value();
             let qr_reference_number = custom_qr_reference_number.get_value();
-            if (!amount || !payment_type || !bank_type || !qr_reference_number) {
+            if (!amount || !payment_type || !bank_type) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -5627,7 +5776,7 @@
 						<svg class="mr-2" width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
 						</svg>
-						${frappe.ellipsis(invoice.customer, 20)}
+						${frappe.ellipsis(invoice.customer_name, 20)}
 					</div>
 				</div>
 				<div class="invoice-total-status">
@@ -5715,7 +5864,7 @@
       status === "Draft" && (indicator_color = "red");
       status === "Return" && (indicator_color = "grey");
       return `<div class="left-section">
-					<div class="customer-name">${doc.customer}</div>
+					<div class="customer-name">${doc.customer_name}</div>
 					<div class="customer-email">${this.customer_email}</div>
 					<div class="cashier"> Take by:  ${__(sold_by)}</div>
 				</div>
@@ -7299,4 +7448,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.LDUMRO4S.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.FD2REFKP.js.map

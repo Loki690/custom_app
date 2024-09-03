@@ -302,18 +302,208 @@ custom_app.PointOfSale.Payment = class {
 			const doc = this.events.get_frm().doc;
 			const paid_amount = doc.paid_amount;
 			const items = doc.items;
-
+		
+			// Basic validation for order submission
 			if (paid_amount == 0 || !items.length) {
 				const message = items.length
 					? __("You cannot submit the order without payment.")
-					: __("You cannot submit empty order.");
+					: __("You cannot submit an empty order.");
 				frappe.show_alert({ message, indicator: "orange" });
 				frappe.utils.play_sound("error");
 				return;
 			}
-
+		
+			// Validate fields based on payment method
+			if (!validate_payment_methods(doc)) {
+				return; // Stop submission if validation fails
+			}
+		
+			// If all validations pass, submit the invoice
 			this.events.submit_invoice();
 		});
+		
+		/**
+		 * Function to validate required fields based on the selected payment methods
+		 */
+		function validate_payment_methods(doc) {
+			let has_error = false;
+		
+			// Iterate over payment modes in the payment entry
+			doc.payments.forEach(p => {
+				const payment_method = p.mode_of_payment ? p.mode_of_payment.trim() : null; // Ensure it's defined and trimmed
+				const amount = p.amount || 0; // Get the amount for this payment method
+		
+				// Only validate if the payment method has an amount
+				if (amount > 0) {
+					if (!payment_method) {
+						frappe.show_alert({
+							message: __("No payment method selected."),
+							indicator: "orange",
+						});
+						has_error = true;
+						return false; // Stop validation
+					}
+		
+					// Use switch case to handle validation for each payment method
+					switch (payment_method) {
+
+						case 'Cash':
+							const cash_missing_fields = validate_fields(['amount'], p);
+							if (cash_missing_fields.length) {
+								show_validation_warning(__('The following fields are required for Charge payment: {0}', [cash_missing_fields.join(', ')]));
+								has_error = true;
+								return false; // Stop validation
+							}
+							break;
+
+
+						case 'Gift Certificate':
+						case 'Amesco Plus':
+							const gc_missing_fields = validate_fields(['amount'], p);
+							if (gc_missing_fields.length) {
+									show_validation_warning(__('The following fields are required for Charge payment: {0}', [gc_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+							}
+							break;
+	
+						case 'Charge':
+							const missing_fields = validate_fields(['amount', 'custom_customer', 'custom_charge_invoice_number', 'custom_po_number', 'custom_representative', 'custom_id_number'], p);
+							if (missing_fields.length) {
+								show_validation_warning(__('The following fields are required for Charge payment: {0}', [missing_fields.join(', ')]));
+								has_error = true;
+								return false; // Stop validation
+							}
+							break;
+
+						case 'Debit Card':
+						case 'Credit Card':
+								const debit_missing_fields = validate_fields(['amount', 'custom_bank_name', 'custom_card_name', 'custom_card_number', 'custom_card_expiration_date', 'custom_approval_code'], p);
+								if (debit_missing_fields.length) {
+									console.log('Missing fields for Debit payment:', debit_missing_fields);
+									show_validation_warning(__('The following fields are required for Debit payment: {0}', [debit_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+								}
+								break;
+
+						
+						case  'Cheque':
+						case  'Government':	
+								const cheque_missing_fields = validate_fields(['amount', 'custom_check_bank_name', 'custom_name_on_check', 'custom_check_number', 'custom_check_date'], p);
+								if (cheque_missing_fields.length) {
+									console.log('Missing fields for Cheque/Government payment:', cheque_missing_fields);
+									show_validation_warning(__('The following fields are required for Debit payment: {0}', [cheque_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+								}
+								break;
+
+						case  'Cards':
+								const cards_missing_fields = validate_fields(['amount', 'custom_bank_name', 'custom_card_name', 'custom_card_type', 'custom_card_number', 'custom_card_expiration_date', 'custom_approval_code'], p);
+								if (cards_missing_fields.length) {
+									console.log('Missing fields for Cards payment:', cards_missing_fields);
+									show_validation_warning(__('The following fields are required for Debit payment: {0}', [cards_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+								}
+								break;
+
+						case  'QR Payment':
+								const qr_missing_fields = validate_fields(['amount', 'custom_payment_type', 'custom_bank_type'], p);
+								if (qr_missing_fields.length) {
+									console.log('Missing fields for QR payment:', qr_missing_fields);
+									show_validation_warning(__('The following fields are required for Debit payment: {0}', [qr_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+								}
+								break;
+
+						
+						case  'GCash':
+						case  'PayMaya':
+								const gcash_maya_missing_fields = validate_fields(['amount', 'reference_no'], p);
+								if (gcash_maya_missing_fields.length) {
+									console.log('Missing fields for QR payment:', gcash_maya_missing_fields);
+									show_validation_warning(__('The following fields are required for Debit payment: {0}', [gcash_maya_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+								}
+								break;
+
+						case  '2307':
+						case  '2307G':
+								const gov_missing_fields = validate_fields(['amount'], p);
+								if (gov_missing_fields.length) {
+									console.log('Missing fields for QR payment:', gov_missing_fields);
+									show_validation_warning(__('The following fields are required for Debit payment: {0}', [gov_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+								}
+								break;
+
+		
+						// Add cases for other payment methods as needed
+		
+						default:
+							frappe.show_alert({
+								message: __("Invalid payment method selected: {0}", [payment_method]),
+								indicator: "orange",
+							});
+							has_error = true;
+							return false; // Stop validation
+					}
+				}
+			});
+		
+			return !has_error; // Return true if no error found
+		}
+		
+		/**
+		 * Function to validate required fields and return missing fields
+		 */
+		function validate_fields(required_fields, payment_entry) {
+			const missing_fields = [];
+			
+			required_fields.forEach(field => {
+				const value = payment_entry[field] || '';
+				if (!value) {
+					missing_fields.push(field);
+				}
+			});
+		
+			return missing_fields;
+		}
+		
+		/**
+		 * Function to show validation warning message
+		 */
+		function show_validation_warning(message) {
+			const dialog = frappe.msgprint({
+				title: __('Validation Warning'),
+				message: message,
+				indicator: 'orange',
+				primary_action: {
+					label: __('OK'),
+					action: function () {
+						// Close the dialog
+						frappe.msg_dialog.hide();
+					}
+				}
+			});
+		
+			$(document).on('keydown', function (e) {
+				if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+					dialog.get_primary_btn().trigger('click');
+				}
+			});
+		
+			// Remove event listener when dialog is closed
+			dialog.$wrapper.on('hidden.bs.modal', function () {
+				$(document).off('keydown');
+			});
+		}
+		
 
 		frappe.ui.form.on("POS Invoice", "paid_amount", (frm) => {
 			this.update_totals_section(frm.doc);
@@ -1178,6 +1368,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Reference No',
 						fieldtype: "Data",
 						placeholder: 'Reference No.',
+						reqd: true
 
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
@@ -1209,7 +1400,7 @@ custom_app.PointOfSale.Payment = class {
 					let reference_no = epayment_reference_number_controller.get_value();
 
 
-					if (!amount) {
+					if (!amount || !reference_no) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
@@ -1272,7 +1463,6 @@ custom_app.PointOfSale.Payment = class {
 					}
 
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
 					frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 
 
@@ -1311,7 +1501,6 @@ custom_app.PointOfSale.Payment = class {
 
 					// Set values in the model to null or empty string
 					frappe.model.set_value(p.doctype, p.name, "amount", 0);
-					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", '');
 					frappe.model.set_value(p.doctype, p.name, "reference_no", '');
 
 					frappe.msgprint({
@@ -1687,7 +1876,7 @@ custom_app.PointOfSale.Payment = class {
 				frappe.db.get_value('Customer', selected_customer, 'customer_name')
 					.then(r => {
 						const result = r.message.customer_name; // Extract the customer_name from the result
-						check_name_control.set_value(existing_custom_check_name || selected_customer || '');
+						check_name_control.set_value(existing_custom_check_name || result || '');
 					})
 					.catch(error => {
 						console.error('Error fetching customer name:', error);
@@ -2242,7 +2431,7 @@ custom_app.PointOfSale.Payment = class {
 						label: `Confirmation Code`,
 						fieldtype: "Data",
 						placeholder: 'Reference # or Confirmation Code',
-						reqd: true
+
 
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
@@ -2271,7 +2460,7 @@ custom_app.PointOfSale.Payment = class {
 
 					// let reference_no = reference_no_control.get_value();
 
-					if (!amount || !payment_type || !bank_type || !qr_reference_number) {
+					if (!amount || !payment_type || !bank_type) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),

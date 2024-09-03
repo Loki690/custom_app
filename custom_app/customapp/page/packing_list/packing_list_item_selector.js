@@ -85,6 +85,7 @@ custom_app.PointOfSale.ItemSelector = class {
                             <tr>
                                 <th>Item Code</th>
                                 <th>Name</th>
+                                <th>Generic Name</th>
                                 <th>Vat Type</th>
                                 <th>Price</th>
                                 <th>UOM</th>
@@ -181,10 +182,7 @@ custom_app.PointOfSale.ItemSelector = class {
     get_item_html(item) {
         const me = this;
 
-        const defaulf_uom = "PC"
-
-
-        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable } = item;
+        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable, custom_generic_name, item_group} = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
@@ -215,12 +213,13 @@ custom_app.PointOfSale.ItemSelector = class {
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}" data-qty="${qty_to_display}">
-            <td class="item-code" style=" width: 15%;">${item_code}</td> 
-            <td class="item-name" style="max-width: 300px; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
-            <td class="item-vat" style=" width: 12%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
-            <td class="item-rate" style=" width: 12%;">${format_currency(price_list_rate, item.currency, precision) || 0}</td>
-            <td class="item-uom" style=" width: 10%;">${uom}</td>
-            <td class="item-qty" style=" width: 10%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
+            <td class="item-code" style=" width: 1rem;">${item_code}</td> 
+             <td class="item-name" style="width: 15rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-name" style="width: 8rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${custom_generic_name ? custom_generic_name : ''}</td>
+            <td class="item-vat" style=" width: 10%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
+            <td class="item-rate" style=" width:8%;">${format_currency(price_list_rate, item.currency)}</td>
+            <td class="item-uom" style=" width: 5%;">${uom}</td>
+            <td class="item-qty" style=" width: 8%;"><span class="indicator-pill whitespace-nowrap ${indicator_color}">${actual_qty}</span></td>
         </tr>`;
     }
 
@@ -780,6 +779,7 @@ custom_app.PointOfSale.ItemSelector = class {
 
         this.$component.on("keydown", (e) => {
             const key = e.which || e.keyCode;
+            const isCtrlPressed = e.ctrlKey; 
             switch (key) {
                 case 38: // up arrow
                     e.preventDefault();
@@ -794,9 +794,15 @@ custom_app.PointOfSale.ItemSelector = class {
                     this.navigate_down();
                     this.focus_next_field();
                     break;
-                case 32: //
-                    e.preventDefault();
-                    this.select_highlighted_item();
+                case 13: // enter
+                    if (isCtrlPressed) {
+                        // Handle Ctrl + Enter as a checkout shortcut
+                        break
+                    } else {
+                        // Regular Enter key behavior
+                        e.preventDefault();
+                        this.select_highlighted_item();
+                    }
                     break;
             }
         });
