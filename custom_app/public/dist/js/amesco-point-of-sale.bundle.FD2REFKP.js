@@ -3355,6 +3355,15 @@
                   return false;
                 }
                 break;
+              case "Gift Certificate":
+              case "Amesco Plus":
+                const gc_missing_fields = validate_fields(["amount"], p);
+                if (gc_missing_fields.length) {
+                  show_validation_warning(__("The following fields are required for Charge payment: {0}", [gc_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
               case "Charge":
                 const missing_fields = validate_fields(["amount", "custom_customer", "custom_charge_invoice_number", "custom_po_number", "custom_representative", "custom_id_number"], p);
                 if (missing_fields.length) {
@@ -3393,7 +3402,7 @@
                 }
                 break;
               case "QR Payment":
-                const qr_missing_fields = validate_fields(["amount", "custom_payment_type", "custom_bank_type", "custom_qr_reference_number"], p);
+                const qr_missing_fields = validate_fields(["amount", "custom_payment_type", "custom_bank_type"], p);
                 if (qr_missing_fields.length) {
                   console.log("Missing fields for QR payment:", qr_missing_fields);
                   show_validation_warning(__("The following fields are required for Debit payment: {0}", [qr_missing_fields.join(", ")]));
@@ -3407,6 +3416,16 @@
                 if (gcash_maya_missing_fields.length) {
                   console.log("Missing fields for QR payment:", gcash_maya_missing_fields);
                   show_validation_warning(__("The following fields are required for Debit payment: {0}", [gcash_maya_missing_fields.join(", ")]));
+                  has_error = true;
+                  return false;
+                }
+                break;
+              case "2307":
+              case "2307G":
+                const gov_missing_fields = validate_fields(["amount"], p);
+                if (gov_missing_fields.length) {
+                  console.log("Missing fields for QR payment:", gov_missing_fields);
+                  show_validation_warning(__("The following fields are required for Debit payment: {0}", [gov_missing_fields.join(", ")]));
                   has_error = true;
                   return false;
                 }
@@ -4140,7 +4159,8 @@
             df: {
               label: "Reference No",
               fieldtype: "Data",
-              placeholder: "Reference No."
+              placeholder: "Reference No.",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.reference-number`),
             render_input: true,
@@ -4157,7 +4177,7 @@
             let amount = me2[`${mode}_control`].get_value();
             let phone_number = phone_number_control.get_value();
             let reference_no = epayment_reference_number_controller.get_value();
-            if (!amount) {
+            if (!amount || !reference_no) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -4204,7 +4224,6 @@
               return;
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
             frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
             const dialog2 = frappe.msgprint({
               title: __("Success"),
@@ -4231,7 +4250,6 @@
             phone_number_control.set_value("");
             epayment_reference_number_controller.set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", 0);
-            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", "");
             frappe.model.set_value(p.doctype, p.name, "reference_no", "");
             frappe.msgprint({
               message: __("Payment details have been discarded."),
@@ -4908,8 +4926,7 @@
             df: {
               label: `Confirmation Code`,
               fieldtype: "Data",
-              placeholder: "Reference # or Confirmation Code",
-              reqd: true
+              placeholder: "Reference # or Confirmation Code"
             },
             parent: this.$payment_modes.find(`.${mode}.qr-reference-number`),
             render_input: true
@@ -4926,7 +4943,7 @@
             let payment_type = custom_payment_type.get_value();
             let bank_type = custom_bank_type.get_value();
             let qr_reference_number = custom_qr_reference_number.get_value();
-            if (!amount || !payment_type || !bank_type || !qr_reference_number) {
+            if (!amount || !payment_type || !bank_type) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -7431,4 +7448,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.UII6WV5K.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.FD2REFKP.js.map

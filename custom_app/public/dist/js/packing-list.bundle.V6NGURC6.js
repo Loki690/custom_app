@@ -7342,7 +7342,8 @@
             df: {
               label: "Bank",
               fieldtype: "Data",
-              placeholder: "Bank Name"
+              placeholder: "Bank Name",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
             render_input: true
@@ -7355,7 +7356,8 @@
             df: {
               label: "Name on Card",
               fieldtype: "Data",
-              placeholder: "Card name holder"
+              placeholder: "Card name holder",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
@@ -7392,7 +7394,8 @@
                 { label: "Elo", value: "Elo" },
                 { label: "Mir", value: "Mir" },
                 { label: "Others", value: "Others" }
-              ]
+              ],
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.card_type_control`),
             render_input: true
@@ -7405,7 +7408,8 @@
               label: "Card Number",
               fieldtype: "Data",
               placeholder: "Last 4 digits",
-              maxlength: 4
+              maxlength: 4,
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.card-number`),
             render_input: true
@@ -7417,7 +7421,8 @@
             df: {
               label: "Card Expiration Date",
               fieldtype: "Data",
-              placeholder: "MM/YY"
+              placeholder: "MM/YY",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.expiry-date`),
             render_input: true
@@ -7429,7 +7434,8 @@
             df: {
               label: "Approval Code",
               fieldtype: "Data",
-              placeholder: "Approval Code"
+              placeholder: "Approval Code",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.approval-code`),
             render_input: true
@@ -7449,10 +7455,32 @@
             let card_number = card_number_control.get_value();
             let card_expiry_date = expiry_date_control.get_value();
             let approval_code = custom_approval_code_control.get_value();
-            if (!amount) {
+            if (!amount || !bank_name || !card_name || !card_type || !card_number || !card_expiry_date || !approval_code) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
+              });
+              return;
+            }
+            if (!validateLastFourDigits2(card_number)) {
+              const dialog3 = frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Card number must be exactly 4 digits."),
                 indicator: "orange",
                 primary_action: {
                   label: __("OK"),
@@ -7569,7 +7597,8 @@
             df: {
               label: "Reference No",
               fieldtype: "Data",
-              placeholder: "Reference No."
+              placeholder: "Reference No.",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.reference-number`),
             render_input: true,
@@ -7586,7 +7615,7 @@
             let amount = me2[`${mode}_control`].get_value();
             let phone_number = phone_number_control.get_value();
             let reference_no = epayment_reference_number_controller.get_value();
-            if (!amount) {
+            if (!amount || !reference_no) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -7633,7 +7662,6 @@
               return;
             }
             frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
             frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
             const dialog2 = frappe.msgprint({
               title: __("Success"),
@@ -7660,7 +7688,6 @@
             phone_number_control.set_value("");
             epayment_reference_number_controller.set_value("");
             frappe.model.set_value(p.doctype, p.name, "amount", 0);
-            frappe.model.set_value(p.doctype, p.name, "custom_phone_number", "");
             frappe.model.set_value(p.doctype, p.name, "reference_no", "");
             frappe.msgprint({
               message: __("Payment details have been discarded."),
@@ -7701,7 +7728,8 @@
             df: {
               label: "Bank",
               fieldtype: "Data",
-              placeholder: "Bank Name"
+              placeholder: "Bank Name",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
             render_input: true
@@ -7713,7 +7741,8 @@
             df: {
               label: "Name on Card",
               fieldtype: "Data",
-              placeholder: "Card name holder"
+              placeholder: "Card name holder",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.holder-name`),
             render_input: true
@@ -7730,7 +7759,8 @@
               label: "Card Number",
               fieldtype: "Data",
               placeholder: "Last 4 digits",
-              maxlength: 4
+              maxlength: 4,
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.card-number`),
             render_input: true
@@ -7741,7 +7771,8 @@
             df: {
               label: "Card Expiration Date",
               fieldtype: "Data",
-              placeholder: "MM/YY"
+              placeholder: "MM/YY",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.expiry-date`),
             render_input: true
@@ -7771,10 +7802,32 @@
             let card_number = card_number_control.get_value();
             let card_expiry_date = expiry_date_control.get_value();
             let approval_code = custom_approval_code_control.get_value();
-            if (!amount) {
+            if (!amount || !bank_name || !card_name || !card_number || !card_expiry_date) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
+              });
+              return;
+            }
+            if (!validateLastFourDigits2(card_number)) {
+              const dialog3 = frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Card number must be exactly 4 digits."),
                 indicator: "orange",
                 primary_action: {
                   label: __("OK"),
@@ -7891,7 +7944,8 @@
             df: {
               label: "Bank Of Check",
               fieldtype: "Data",
-              placeholder: "Bank Of Check"
+              placeholder: "Bank Of Check",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-name`),
             render_input: true
@@ -7904,7 +7958,8 @@
             df: {
               label: "Name On Check",
               fieldtype: "Data",
-              placeholder: "Check Name"
+              placeholder: "Check Name",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.check-name`),
             render_input: true
@@ -7921,7 +7976,8 @@
             df: {
               label: "Check Number",
               fieldtype: "Data",
-              placeholder: "Check Number"
+              placeholder: "Check Number",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.check-number`),
             render_input: true
@@ -7934,7 +7990,8 @@
               fieldname: "custom_check_date",
               label: "Check Date",
               fieldtype: "Date",
-              placeholder: "Check Date"
+              placeholder: "Check Date",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.check-date`),
             render_input: true
@@ -7952,7 +8009,7 @@
             let check_name = check_name_control.get_value();
             let check_number = check_number_control.get_value();
             let check_date = check_date_control.get_value();
-            if (!amount) {
+            if (!amount || !bank_name || !check_name || !check_number || !check_date) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -8274,7 +8331,8 @@
                 { label: "Select Payment Type", value: "" },
                 { label: "Standee", value: "Standee" },
                 { label: "Terminal", value: "Terminnal" }
-              ]
+              ],
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.payment-type`),
             render_input: true
@@ -8292,7 +8350,8 @@
                 { label: "MBTC", value: "MBTC" },
                 { label: "MAYA", value: "MAYA" },
                 { label: "BDO", value: "BDO" }
-              ]
+              ],
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.bank-type`),
             render_input: true
@@ -8321,7 +8380,7 @@
             let payment_type = custom_payment_type.get_value();
             let bank_type = custom_bank_type.get_value();
             let qr_reference_number = custom_qr_reference_number.get_value();
-            if (!amount) {
+            if (!amount || !payment_type || !bank_type) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -8470,7 +8529,8 @@
             df: {
               label: "PO Number",
               fieldtype: "Data",
-              placeholder: "PO Number"
+              placeholder: "PO Number",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.po-number`),
             render_input: true
@@ -8482,7 +8542,8 @@
             df: {
               label: "Representative",
               fieldtype: "Data",
-              placeholder: "Representative"
+              placeholder: "Representative",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.representative`),
             render_input: true
@@ -8494,7 +8555,8 @@
             df: {
               label: "ID Number",
               fieldtype: "Data",
-              placeholder: "ID Number"
+              placeholder: "ID Number",
+              reqd: true
             },
             parent: this.$payment_modes.find(`.${mode}.id-number`),
             render_input: true
@@ -8526,7 +8588,7 @@
             let representative = custom_representative.get_value();
             let id_number = custom_id_number.get_value();
             let approved_by = custom_approved_by.get_value();
-            if (!amount || !customer) {
+            if (!amount || !customer || !po_number || !representative || !id_number) {
               const dialog3 = frappe.msgprint({
                 title: __("Validation Warning"),
                 message: __("All fields are required."),
@@ -10695,4 +10757,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.23LZRT2Z.js.map
+//# sourceMappingURL=packing-list.bundle.V6NGURC6.js.map

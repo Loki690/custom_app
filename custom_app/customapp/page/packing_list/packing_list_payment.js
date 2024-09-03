@@ -847,6 +847,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Bank',
 						fieldtype: "Data",
 						placeholder: 'Bank Name',
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.bank-name`),
 					render_input: true,
@@ -863,6 +864,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Name on Card',
 						fieldtype: "Data",
 						placeholder: 'Card name holder',
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.holder-name`),
 					render_input: true,
@@ -906,6 +908,7 @@ custom_app.PointOfSale.Payment = class {
 							{ label: 'Mir', value: 'Mir' },
 							{ label: 'Others', value: 'Others' }
 						],
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.card_type_control`),
 					render_input: true,
@@ -920,6 +923,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data",
 						placeholder: 'Last 4 digits',
 						maxlength: 4,
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.card-number`),
 					render_input: true,
@@ -933,6 +937,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Card Expiration Date',
 						fieldtype: "Data",
 						placeholder: 'MM/YY',
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.expiry-date`),
 					render_input: true,
@@ -946,6 +951,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Approval Code',
 						fieldtype: "Data",
 						placeholder: 'Approval Code',
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.approval-code`),
 					render_input: true,
@@ -987,7 +993,7 @@ custom_app.PointOfSale.Payment = class {
 					let approval_code = custom_approval_code_control.get_value();
 					// let reference_no = reference_no_control.get_value();
 
-					if (!amount) {
+					if (!amount || !bank_name || !card_name || !card_type || !card_number || !card_expiry_date || !approval_code) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
@@ -1015,34 +1021,34 @@ custom_app.PointOfSale.Payment = class {
 						return;
 					}
 
-					// if (!validateLastFourDigits(card_number)) {
+					if (!validateLastFourDigits(card_number)) {
 
-					// 	const dialog = frappe.msgprint({
-					// 		title: __('Validation Warning'),
-					// 		message: __('Card number must be exactly 4 digits.'),
-					// 		indicator: 'orange',
-					// 		primary_action: {
-					// 			label: __('OK'),
-					// 			action: function () {
-					// 				// Close the dialog
-					// 				frappe.msg_dialog.hide();
-					// 			}
-					// 		}
-					// 	});
+						const dialog = frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('Card number must be exactly 4 digits.'),
+							indicator: 'orange',
+							primary_action: {
+								label: __('OK'),
+								action: function () {
+									// Close the dialog
+									frappe.msg_dialog.hide();
+								}
+							}
+						});
 
-					// 	$(document).on('keydown', function (e) {
-					// 		if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-					// 			dialog.get_primary_btn().trigger('click');
-					// 		}
-					// 	});
+						$(document).on('keydown', function (e) {
+							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+								dialog.get_primary_btn().trigger('click');
+							}
+						});
 
-					// 	// Remove event listener when dialog is closed
-					// 	dialog.$wrapper.on('hidden.bs.modal', function () {
-					// 		$(document).off('keydown');
-					// 	});
+						// Remove event listener when dialog is closed
+						dialog.$wrapper.on('hidden.bs.modal', function () {
+							$(document).off('keydown');
+						});
 
-					// 	return;
-					// }
+						return;
+					}
 
 					const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
 						? doc.grand_total
@@ -1150,7 +1156,6 @@ custom_app.PointOfSale.Payment = class {
 
 
 
-
 				function validateLastFourDigits(value) {
 					const regex = /^\d{4}$/;
 					return regex.test(value);
@@ -1158,6 +1163,7 @@ custom_app.PointOfSale.Payment = class {
 			}
 
 			if (p.mode_of_payment === "GCash" || p.mode_of_payment === 'PayMaya') {
+
 				let existing_custom_phone_number = frappe.model.get_value(p.doctype, p.name, "custom_phone_number");
 				let phone_number_control = frappe.ui.form.make_control({
 					df: {
@@ -1184,6 +1190,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Reference No',
 						fieldtype: "Data",
 						placeholder: 'Reference No.',
+						reqd: true
 
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
@@ -1215,7 +1222,7 @@ custom_app.PointOfSale.Payment = class {
 					let reference_no = epayment_reference_number_controller.get_value();
 
 
-					if (!amount) {
+					if (!amount || !reference_no) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
@@ -1278,7 +1285,7 @@ custom_app.PointOfSale.Payment = class {
 					}
 
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
+
 					frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 
 
@@ -1317,7 +1324,6 @@ custom_app.PointOfSale.Payment = class {
 
 					// Set values in the model to null or empty string
 					frappe.model.set_value(p.doctype, p.name, "amount", 0);
-					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", '');
 					frappe.model.set_value(p.doctype, p.name, "reference_no", '');
 
 					frappe.msgprint({
@@ -1365,6 +1371,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Bank',
 						fieldtype: "Data",
 						placeholder: 'Bank Name',
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.bank-name`),
 					render_input: true,
@@ -1380,6 +1387,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Name on Card',
 						fieldtype: "Data",
 						placeholder: 'Card name holder',
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.holder-name`), // Ensure mode is defined and correct
 					render_input: true,
@@ -1404,6 +1412,7 @@ custom_app.PointOfSale.Payment = class {
 						fieldtype: "Data",
 						placeholder: 'Last 4 digits',
 						maxlength: 4,
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.card-number`),
 					render_input: true,
@@ -1416,6 +1425,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Card Expiration Date',
 						fieldtype: "Data",
 						placeholder: 'MM/YY',
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.expiry-date`),
 					render_input: true,
@@ -1456,7 +1466,7 @@ custom_app.PointOfSale.Payment = class {
 					let card_expiry_date = expiry_date_control.get_value();
 					let approval_code = custom_approval_code_control.get_value();
 
-					if (!amount ) {
+					if  (!amount || !bank_name || !card_name || !card_number || !card_expiry_date)  {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
@@ -1483,33 +1493,33 @@ custom_app.PointOfSale.Payment = class {
 						return;
 					}
 
-					// if (!validateLastFourDigits(card_number)) {
+					if (!validateLastFourDigits(card_number)) {
 
-					// 	const dialog = frappe.msgprint({
-					// 		title: __('Validation Warning'),
-					// 		message: __('Card number must be exactly 4 digits.'),
-					// 		indicator: 'orange',
-					// 		primary_action: {
-					// 			label: __('OK'),
-					// 			action: function () {
-					// 				// Close the dialog
-					// 				frappe.msg_dialog.hide();
-					// 			}
-					// 		}
-					// 	});
+						const dialog = frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('Card number must be exactly 4 digits.'),
+							indicator: 'orange',
+							primary_action: {
+								label: __('OK'),
+								action: function () {
+									// Close the dialog
+									frappe.msg_dialog.hide();
+								}
+							}
+						});
 
-					// 	$(document).on('keydown', function (e) {
-					// 		if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
-					// 			dialog.get_primary_btn().trigger('click');
-					// 		}
-					// 	});
+						$(document).on('keydown', function (e) {
+							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+								dialog.get_primary_btn().trigger('click');
+							}
+						});
 
-					// 	// Remove event listener when dialog is closed
-					// 	dialog.$wrapper.on('hidden.bs.modal', function () {
-					// 		$(document).off('keydown');
-					// 	});
-					// 	return;
-					// }
+						// Remove event listener when dialog is closed
+						dialog.$wrapper.on('hidden.bs.modal', function () {
+							$(document).off('keydown');
+						});
+						return;
+					}
 
 
 					const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
@@ -1653,7 +1663,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Bank Of Check',
 						fieldtype: "Data",
 						placeholder: 'Bank Of Check',
-						
+						reqd: true
 
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_check_bank_name", this.value);
@@ -1676,7 +1686,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Name On Check',
 						fieldtype: "Data",
 						placeholder: 'Check Name',
-						
+						reqd: true
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", this.value);
 						// },
@@ -1703,7 +1713,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Check Number',
 						fieldtype: "Data",
 						placeholder: 'Check Number',
-				
+						reqd: true
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_check_number", this.value);
 						// },
@@ -1722,7 +1732,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Check Date',
 						fieldtype: "Date",
 						placeholder: 'Check Date',
-						
+						reqd: true
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_check_date", this.get_value());
 						// }
@@ -1750,7 +1760,7 @@ custom_app.PointOfSale.Payment = class {
 					let check_date = check_date_control.get_value();
 					// let reference_no = reference_no_control.get_value();
 
-					if (!amount) {
+					if (!amount || !bank_name || !check_name || !check_number || !check_date) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
@@ -1910,6 +1920,7 @@ custom_app.PointOfSale.Payment = class {
 
 
 			}
+
 
 			if (p.mode_of_payment === "2307G") {
 				// console.log('Form 2306 Expected: ', doc.custom_2306);
@@ -2196,6 +2207,7 @@ custom_app.PointOfSale.Payment = class {
 							{ label: 'Standee', value: 'Standee' },
 							{ label: 'Terminal', value: 'Terminnal' },
 						],
+						reqd: true
 						// onchange: function () {
 						// 	const value = this.value;
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_payment_type", value);
@@ -2221,6 +2233,7 @@ custom_app.PointOfSale.Payment = class {
 							{ label: 'MAYA', value: 'MAYA' },
 							{ label: 'BDO', value: 'BDO' },
 						],
+						reqd: true
 						// onchange: function () {
 						// 	const value = this.value;
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_bank_type", value);
@@ -2241,6 +2254,8 @@ custom_app.PointOfSale.Payment = class {
 						label: `Confirmation Code`,
 						fieldtype: "Data",
 						placeholder: 'Reference # or Confirmation Code',
+					
+
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
 						// },
@@ -2268,7 +2283,7 @@ custom_app.PointOfSale.Payment = class {
 
 					// let reference_no = reference_no_control.get_value();
 
-					if (!amount) {
+					if (!amount || !payment_type || !bank_type) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
@@ -2422,10 +2437,12 @@ custom_app.PointOfSale.Payment = class {
 
 			}
 
-
 			if (p.mode_of_payment === "Charge") {
 				const selected_customer = cur_frm.doc.customer;
 
+
+
+				
 				let existing_custom_customer = frappe.model.get_value(p.doctype, p.name, "custom_customer");
 				let custom_customer = frappe.ui.form.make_control({
 					df: {
@@ -2471,6 +2488,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'PO Number',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'PO Number',
+						reqd: true
 					},
 					parent: this.$payment_modes.find(`.${mode}.po-number`),
 					render_input: true,
@@ -2484,6 +2502,8 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Representative',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'Representative',
+						reqd: true
+
 					},
 					parent: this.$payment_modes.find(`.${mode}.representative`),
 					render_input: true,
@@ -2497,6 +2517,8 @@ custom_app.PointOfSale.Payment = class {
 						label: 'ID Number',
 						fieldtype: "Data", // Corrected fieldtype
 						placeholder: 'ID Number',
+						reqd: true
+
 					},
 					parent: this.$payment_modes.find(`.${mode}.id-number`),
 					render_input: true,
@@ -2540,7 +2562,7 @@ custom_app.PointOfSale.Payment = class {
 
 					// let reference_no = reference_no_control.get_value();
 
-					if (!amount || !customer) {
+					if (!amount || !customer || !po_number || !representative || !id_number) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
@@ -2667,8 +2689,8 @@ custom_app.PointOfSale.Payment = class {
 						}
 					});
 				});
-
 			}
+
 
 			if (p.mode_of_payment === "Gift Certificate") {
 

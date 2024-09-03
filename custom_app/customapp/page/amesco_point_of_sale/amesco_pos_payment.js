@@ -356,6 +356,17 @@ custom_app.PointOfSale.Payment = class {
 							}
 							break;
 
+
+						case 'Gift Certificate':
+						case 'Amesco Plus':
+							const gc_missing_fields = validate_fields(['amount'], p);
+							if (gc_missing_fields.length) {
+									show_validation_warning(__('The following fields are required for Charge payment: {0}', [gc_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+							}
+							break;
+	
 						case 'Charge':
 							const missing_fields = validate_fields(['amount', 'custom_customer', 'custom_charge_invoice_number', 'custom_po_number', 'custom_representative', 'custom_id_number'], p);
 							if (missing_fields.length) {
@@ -399,7 +410,7 @@ custom_app.PointOfSale.Payment = class {
 								break;
 
 						case  'QR Payment':
-								const qr_missing_fields = validate_fields(['amount', 'custom_payment_type', 'custom_bank_type', 'custom_qr_reference_number'], p);
+								const qr_missing_fields = validate_fields(['amount', 'custom_payment_type', 'custom_bank_type'], p);
 								if (qr_missing_fields.length) {
 									console.log('Missing fields for QR payment:', qr_missing_fields);
 									show_validation_warning(__('The following fields are required for Debit payment: {0}', [qr_missing_fields.join(', ')]));
@@ -415,6 +426,17 @@ custom_app.PointOfSale.Payment = class {
 								if (gcash_maya_missing_fields.length) {
 									console.log('Missing fields for QR payment:', gcash_maya_missing_fields);
 									show_validation_warning(__('The following fields are required for Debit payment: {0}', [gcash_maya_missing_fields.join(', ')]));
+									has_error = true;
+									return false; // Stop validation
+								}
+								break;
+
+						case  '2307':
+						case  '2307G':
+								const gov_missing_fields = validate_fields(['amount'], p);
+								if (gov_missing_fields.length) {
+									console.log('Missing fields for QR payment:', gov_missing_fields);
+									show_validation_warning(__('The following fields are required for Debit payment: {0}', [gov_missing_fields.join(', ')]));
 									has_error = true;
 									return false; // Stop validation
 								}
@@ -1346,6 +1368,7 @@ custom_app.PointOfSale.Payment = class {
 						label: 'Reference No',
 						fieldtype: "Data",
 						placeholder: 'Reference No.',
+						reqd: true
 
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
@@ -1377,7 +1400,7 @@ custom_app.PointOfSale.Payment = class {
 					let reference_no = epayment_reference_number_controller.get_value();
 
 
-					if (!amount) {
+					if (!amount || !reference_no) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
@@ -1440,7 +1463,6 @@ custom_app.PointOfSale.Payment = class {
 					}
 
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
-					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
 					frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 
 
@@ -1479,7 +1501,6 @@ custom_app.PointOfSale.Payment = class {
 
 					// Set values in the model to null or empty string
 					frappe.model.set_value(p.doctype, p.name, "amount", 0);
-					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", '');
 					frappe.model.set_value(p.doctype, p.name, "reference_no", '');
 
 					frappe.msgprint({
@@ -2410,7 +2431,7 @@ custom_app.PointOfSale.Payment = class {
 						label: `Confirmation Code`,
 						fieldtype: "Data",
 						placeholder: 'Reference # or Confirmation Code',
-						reqd: true
+
 
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
@@ -2439,7 +2460,7 @@ custom_app.PointOfSale.Payment = class {
 
 					// let reference_no = reference_no_control.get_value();
 
-					if (!amount || !payment_type || !bank_type || !qr_reference_number) {
+					if (!amount || !payment_type || !bank_type) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),
