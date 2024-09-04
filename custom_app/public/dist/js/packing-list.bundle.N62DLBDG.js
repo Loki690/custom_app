@@ -9982,7 +9982,9 @@
       if (!this.$components_wrapper.is(":visible"))
         return;
       let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
-      if (payment_amount < this.frm.doc.grand_total) {
+      if (parseFloat(payment_amount.toFixed(2)) < this.frm.doc.grand_total) {
+        console.log("grandtotal", this.frm.doc.grand_total);
+        console.log("payment_amount", payment_amount);
         const insufficientPaymentDialog = new frappe.ui.Dialog({
           title: __("Insufficient Payment"),
           primary_action_label: __("OK"),
@@ -10795,4 +10797,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.A7TEIJEA.js.map
+//# sourceMappingURL=packing-list.bundle.N62DLBDG.js.map

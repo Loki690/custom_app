@@ -6929,7 +6929,7 @@
           },
           submit_invoice: () => {
             let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
-            if (payment_amount < this.frm.doc.grand_total) {
+            if (parseFloat(payment_amount.toFixed(2)) < this.frm.doc.grand_total) {
               const insufficientPaymentDialog = new frappe.ui.Dialog({
                 title: __("Insufficient Payment"),
                 primary_action_label: __("OK"),
@@ -7485,4 +7485,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.IJICAEIU.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.ZDSE6UHK.js.map
