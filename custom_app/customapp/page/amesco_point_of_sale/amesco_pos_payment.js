@@ -390,7 +390,7 @@ custom_app.PointOfSale.Payment = class {
 						
 						case  'Cheque':
 						case  'Government':	
-								const cheque_missing_fields = validate_fields(['amount', 'custom_check_bank_name', 'custom_name_on_check', 'custom_check_number', 'custom_check_date'], p);
+								const cheque_missing_fields = validate_fields(['amount', 'custom_check_bank_name', 'custom_name_on_check', 'custom_check_number'], p);
 								if (cheque_missing_fields.length) {
 									console.log('Missing fields for Cheque/Government payment:', cheque_missing_fields);
 									show_validation_warning(__('The following fields are required for Debit payment: {0}', [cheque_missing_fields.join(', ')]));
@@ -1609,6 +1609,16 @@ custom_app.PointOfSale.Payment = class {
 				});
 				expiry_date_control.set_value(existing_custom_card_expiration_date || '');
 				expiry_date_control.refresh();
+
+
+				expiry_date_control.$input.on('input', function () {
+					let value = this.value.replace(/\D/g, ''); // Remove any non-digit characters
+					if (value.length >= 2) {
+						this.value = value.slice(0, 2) + '/' + value.slice(2); // Add '/' after the second digit
+					} else {
+						this.value = value; // Set the value directly if less than 2 digits
+					}
+				});
 
 				let custom_approval_code_control = frappe.ui.form.make_control({
 					df: {

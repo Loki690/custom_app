@@ -47,6 +47,7 @@ custom_app.PointOfSale.ItemSelector = class {
             .custom-quantity-field {
                 width: 200px; /* Adjust the width as needed */
             }
+           
 		`;
 
 		const style = document.createElement('style');
@@ -627,20 +628,27 @@ custom_app.PointOfSale.ItemSelector = class {
                                             frappe.call({
                                                 method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
                                                 args: {
-                                                    pos_profile: pos_profile,
-                                                    item_code: item_code
+                                                    pos_profile: pos_profile,// Replace with your actual pos_profile
+                                                    item_code: item_code // Replace with your actual item_code
                                                 },
                                                 callback: function (response) {
                                                     if (response.message) {
                                                         const { invoices, total_qty } = response.message;
                                                         let item_total_qty = total_qty; // Use the total_qty from the response
-        
+            
+                                                        // console.log("Draft POS Invoices with specified item:", invoices);
+                                                        // console.log(`Total Quantity of Item (${item_code}): ${item_total_qty}`);
+            
                                                         if ((item_total_qty + quantity) > qty) {
-                                                            const formatted_invoices = invoices.map(invoice => ({
-                                                                name: invoice.name,
-                                                                item_qty: invoice.items.reduce((total, item) => total + item.qty, 0)
-                                                            }));
-        
+                                                            const formatted_invoices = invoices.map(invoice => {
+                                                                const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
+                                                                return {
+                                                                    name: invoice.name,
+                                                                    customer: invoice.customer, 
+                                                                    item_qty: item_qty
+                                                                };
+                                                            });
+                                                        
                                                             const invoice_dialog = new frappe.ui.Dialog({
                                                                 title: 'Items ordered by other customers',
                                                                 fields: [
@@ -655,26 +663,66 @@ custom_app.PointOfSale.ItemSelector = class {
                                                                     invoice_dialog.hide();
                                                                 }
                                                             });
-        
+
+                                                            invoice_dialog.$wrapper.on("keydown", (e) => {
+                                                                if (e.key === "Enter") {
+                                                                    e.preventDefault(); // Prevent default action
+                                                                    invoice_dialog.get_primary_btn().trigger("click"); // Trigger the primary action
+                                                                }
+                                                            });
+            
+                                                            function renderInvoicesTable(data) {
+                                                                // Start building the HTML table
+                                                                let tableHtml = '<table class="table table-bordered">';
+                                                                tableHtml += '<thead><tr>';
+                                                                tableHtml += '<th>ID</th>';
+                                                                // tableHtml += '<th>Customer</th>';
+                                                                tableHtml += '<th>Quantity</th>';
+                                                                tableHtml += '</tr></thead>';
+                                                                tableHtml += '<tbody>';
+                                                            
+                                                                // Populate table rows with data
+                                                                data.forEach(row => {
+                                                                    tableHtml += '<tr>';
+                                                                    tableHtml += `<td>${row.name}</td>`;
+                                                                    // tableHtml += `<td>${row.customer}</td>`;
+                                                                    tableHtml += `<td>${row.item_qty}</td>`;
+                                                                    tableHtml += '</tr>';
+                                                                });
+                                                            
+                                                                tableHtml += '</tbody>';
+                                                                tableHtml += '</table>';
+                                                            
+                                                                return tableHtml;
+                                                            }
+                                                        
                                                             invoice_dialog.show();
                                                             return;
                                                         }
-        
-                                                        // Proceed with adding the item to the cart if all conditions are met
+            
+                                                     
+            
+                                                        // Proceed with adding the item to the cart if conditions are not met
                                                         me.selectedItem.find(".item-uom").text(selectedUOM);
-        
+            
                                                         const itemCode = unescape(me.selectedItem.attr("data-item-code"));
                                                         const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
                                                         const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
-        
+            
                                                         me.events.item_selected({
                                                             field: "qty",
                                                             value: "+" + quantity,
                                                             item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
                                                         });
-        
+            
                                                         me.search_field.set_focus();
+            
                                                         dialog.hide();
+            
+            
+                                                        
+                                                    } else {
+                                                        console.log("No matching draft POS invoices found.");
                                                     }
                                                 },
                                                 error: function (error) {

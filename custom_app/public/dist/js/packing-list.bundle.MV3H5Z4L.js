@@ -3968,6 +3968,7 @@
             .custom-quantity-field {
                 width: 200px; /* Adjust the width as needed */
             }
+           
 		`;
       const style = document.createElement("style");
       style.type = "text/css";
@@ -4444,10 +4445,31 @@
                               const { invoices, total_qty } = response3.message;
                               let item_total_qty = total_qty;
                               if (item_total_qty + quantity2 > qty) {
-                                const formatted_invoices = invoices.map((invoice) => ({
-                                  name: invoice.name,
-                                  item_qty: invoice.items.reduce((total, item) => total + item.qty, 0)
-                                }));
+                                let renderInvoicesTable = function(data) {
+                                  let tableHtml = '<table class="table table-bordered">';
+                                  tableHtml += "<thead><tr>";
+                                  tableHtml += "<th>ID</th>";
+                                  tableHtml += "<th>Quantity</th>";
+                                  tableHtml += "</tr></thead>";
+                                  tableHtml += "<tbody>";
+                                  data.forEach((row) => {
+                                    tableHtml += "<tr>";
+                                    tableHtml += `<td>${row.name}</td>`;
+                                    tableHtml += `<td>${row.item_qty}</td>`;
+                                    tableHtml += "</tr>";
+                                  });
+                                  tableHtml += "</tbody>";
+                                  tableHtml += "</table>";
+                                  return tableHtml;
+                                };
+                                const formatted_invoices = invoices.map((invoice) => {
+                                  const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
+                                  return {
+                                    name: invoice.name,
+                                    customer: invoice.customer,
+                                    item_qty
+                                  };
+                                });
                                 const invoice_dialog = new frappe.ui.Dialog({
                                   title: "Items ordered by other customers",
                                   fields: [
@@ -4460,6 +4482,12 @@
                                   primary_action_label: __("Ok"),
                                   primary_action: function() {
                                     invoice_dialog.hide();
+                                  }
+                                });
+                                invoice_dialog.$wrapper.on("keydown", (e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    invoice_dialog.get_primary_btn().trigger("click");
                                   }
                                 });
                                 invoice_dialog.show();
@@ -4476,6 +4504,8 @@
                               });
                               me.search_field.set_focus();
                               dialog2.hide();
+                            } else {
+                              console.log("No matching draft POS invoices found.");
                             }
                           },
                           error: function(error) {
@@ -4765,7 +4795,7 @@
       this.attach_shortcuts();
     }
     prepare_dom() {
-      this.wrapper.append(`<section class="customer-cart-container""></section>`);
+      this.wrapper.append(`<section class="customer-cart-container"></section>`);
       this.$component = this.wrapper.find(".customer-cart-container");
     }
     init_child_components() {
@@ -7779,6 +7809,14 @@
           });
           expiry_date_control.set_value(existing_custom_card_expiration_date || "");
           expiry_date_control.refresh();
+          expiry_date_control.$input.on("input", function() {
+            let value = this.value.replace(/\D/g, "");
+            if (value.length >= 2) {
+              this.value = value.slice(0, 2) + "/" + value.slice(2);
+            } else {
+              this.value = value;
+            }
+          });
           let custom_approval_code_control = frappe.ui.form.make_control({
             df: {
               label: "Approval Code",
@@ -9944,7 +9982,7 @@
       if (!this.$components_wrapper.is(":visible"))
         return;
       let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
-      if (payment_amount < this.frm.doc.grand_total) {
+      if (parseFloat(payment_amount.toFixed(2)) < this.frm.doc.grand_total) {
         const insufficientPaymentDialog = new frappe.ui.Dialog({
           title: __("Insufficient Payment"),
           primary_action_label: __("OK"),
@@ -10757,4 +10795,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.V6NGURC6.js.map
+//# sourceMappingURL=packing-list.bundle.MV3H5Z4L.js.map
