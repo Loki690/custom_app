@@ -1430,8 +1430,19 @@ custom_app.PointOfSale.Payment = class {
 					parent: this.$payment_modes.find(`.${mode}.expiry-date`),
 					render_input: true,
 				});
+				
 				expiry_date_control.set_value(existing_custom_card_expiration_date || '');
 				expiry_date_control.refresh();
+				
+				// Add event listener to automatically insert '/' after two digits
+				expiry_date_control.$input.on('input', function () {
+					let value = this.value.replace(/\D/g, ''); // Remove any non-digit characters
+					if (value.length >= 2) {
+						this.value = value.slice(0, 2) + '/' + value.slice(2); // Add '/' after the second digit
+					} else {
+						this.value = value; // Set the value directly if less than 2 digits
+					}
+				});
 
 				let custom_approval_code_control = frappe.ui.form.make_control({
 					df: {

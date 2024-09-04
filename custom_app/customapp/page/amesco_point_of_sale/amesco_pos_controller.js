@@ -880,7 +880,8 @@ custom_app.PointOfSale.Controller = class {
 					let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
 
 					// Check if payment is sufficient
-					if (payment_amount < this.frm.doc.grand_total) {
+					if (parseFloat(payment_amount.toFixed(2)) < this.frm.doc.grand_total) {
+
 						// Show dialog indicating insufficient payment
 						const insufficientPaymentDialog = new frappe.ui.Dialog({
 							title: __('Insufficient Payment'),
