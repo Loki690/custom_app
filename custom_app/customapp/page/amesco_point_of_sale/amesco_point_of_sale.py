@@ -279,13 +279,14 @@ def search_for_serial_or_batch_or_barcode_number(search_value: str) -> dict[str,
 
 
 def get_conditions(search_term):
-	condition = "("
-	condition += """item.name like {search_term}
-		or item.item_name like {search_term}""".format(search_term=frappe.db.escape("%" + search_term + "%"))
-	condition += add_search_fields_condition(search_term)
-	condition += ")"
+    condition = "("
+    condition += """item.name like {search_term}
+        or item.item_name like {search_term}
+        or item.custom_generic_name like {search_term}""".format(search_term=frappe.db.escape("%" + search_term + "%"))
+    condition += add_search_fields_condition(search_term)
+    condition += ")"
 
-	return condition
+    return condition
 
 
 def add_search_fields_condition(search_term):
