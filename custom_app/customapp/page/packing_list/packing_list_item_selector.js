@@ -241,7 +241,7 @@ custom_app.PointOfSale.ItemSelector = class {
 			df: {
 				label: __("Search"),
 				fieldtype: "Data",
-				placeholder: __("Search by item code, serial number or barcode"),
+				placeholder: __("Search by item code, serial number, barcode, generic name or description"),
 			},
 			parent: this.$component.find(".search-field"),
 			render_input: true,
@@ -279,6 +279,14 @@ custom_app.PointOfSale.ItemSelector = class {
             render_input: true,
         });
 
+
+        this.item_group_field.$input.on('input', () => {
+            let value = this.item_group_field.get_value().trim(); // Get and trim the input value
+            if (!value) {
+                // If the value is empty, call load_items_data
+                this.load_items_data();
+            }
+        });
 
         this.item_uom = frappe.ui.form.make_control({
             df: {

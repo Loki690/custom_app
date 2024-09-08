@@ -120,7 +120,7 @@ def check_password_without_username(pwd, doctype="User", fieldname="password"):
                     user_doc = frappe.get_doc("User", user["name"])
                     user_roles = [d.role for d in user_doc.get("roles")]
                     
-                    allowed_roles = ['Cashier', 'Pharmacist Assistant']
+                    allowed_roles = ['Cashier', 'Pharmacist Assistant', 'Officer-in-Charge', 'System Manager', 'IT Manager ']
                     
                     # Check if user has any of the allowed roles
                     if any(role in allowed_roles for role in user_roles):

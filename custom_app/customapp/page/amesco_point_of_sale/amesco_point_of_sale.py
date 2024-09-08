@@ -255,12 +255,32 @@ def get_item_uoms(item_code):
     return response
 
 
+# @frappe.whitelist()
+# def get_item_uom_prices(item_code):
+#     uom_prices = {}
+#     item_prices = frappe.get_all('Item Price', filters={'item_code': item_code}, fields=['uom', 'price_list_rate', ''])
+#     for price in item_prices:
+#         uom_prices[price.uom] = price.price_list_rate
+#     return {'uom_prices': uom_prices}
+
+
+
+#Only get Standard Selling OUM Price rates
 @frappe.whitelist()
 def get_item_uom_prices(item_code):
     uom_prices = {}
-    item_prices = frappe.get_all('Item Price', filters={'item_code': item_code}, fields=['uom', 'price_list_rate'])
+    
+    # Fetch only the prices from the 'Standard Selling' price list
+    item_prices = frappe.get_all(
+        'Item Price',
+        filters={'item_code': item_code, 'price_list': 'Standard Selling'},
+        fields=['uom', 'price_list_rate']
+    )
+    
+    # Construct the dictionary of UOM and their corresponding prices
     for price in item_prices:
         uom_prices[price.uom] = price.price_list_rate
+
     return {'uom_prices': uom_prices}
 
 
@@ -279,13 +299,14 @@ def search_for_serial_or_batch_or_barcode_number(search_value: str) -> dict[str,
 
 
 def get_conditions(search_term):
-	condition = "("
-	condition += """item.name like {search_term}
-		or item.item_name like {search_term}""".format(search_term=frappe.db.escape("%" + search_term + "%"))
-	condition += add_search_fields_condition(search_term)
-	condition += ")"
+    condition = "("
+    condition += """item.name like {search_term}
+        or item.item_name like {search_term}
+        or item.custom_generic_name like {search_term}""".format(search_term=frappe.db.escape("%" + search_term + "%"))
+    condition += add_search_fields_condition(search_term)
+    condition += ")"
 
-	return condition
+    return condition
 
 
 def add_search_fields_condition(search_term):
