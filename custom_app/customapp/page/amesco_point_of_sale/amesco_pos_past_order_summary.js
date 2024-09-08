@@ -19,7 +19,7 @@ custom_app.PointOfSale.PastOrderSummary = class {
 				<div class="no-summary-placeholder">
 					${__("Select an invoice to load summary data")}
 				</div>
-				<div class="invoice-summary-wrapper">
+				<div class="invoice-summary-wrapper" style="width:50rem !important;">
 					<div class="abs-container">
 						<div class="upper-section"></div>
 						<div class="label">${__("Items")}</div>
@@ -96,22 +96,29 @@ custom_app.PointOfSale.PastOrderSummary = class {
 	get_item_html(doc, item_data) {
 		return `<div class="item-row-wrapper">
 					<div class="item-name">${item_data.item_name}</div>
-					<div class="item-qty">${item_data.qty || 0} ${item_data.uom}</div>
+					<div class="item-qty"></div>
 					<div class="item-rate-disc">${get_rate_discount_html()}</div>
 				</div>`;
-
+	
 		function get_rate_discount_html() {
+			let rate_html = '';
+			let amount_html = `<span class="item-amount" style="padding-left:1rem;">${format_currency(item_data.amount, doc.currency)}</span>`;
+			let qty_html = `<span class="qty" style="padding-left:1rem;">${item_data.qty || 0} ${item_data.uom}</span>`;
+	
 			if (item_data.rate && item_data.price_list_rate && item_data.rate !== item_data.price_list_rate) {
-				return `<span class="item-disc">(${item_data.discount_percentage}% off)</span>
-						<div class="item-rate">${format_currency(item_data.rate, doc.currency)}</div>`;
+				rate_html = `<span class="item-disc">(${item_data.discount_percentage}% off)</span>
+							 <div class="item-rate">${format_currency(item_data.rate, doc.currency)}</div>`;
 			} else {
-				return `<div class="item-rate">${format_currency(
+				rate_html = `<div class="item-rate">${format_currency(
 					item_data.price_list_rate || item_data.rate,
 					doc.currency
 				)}</div>`;
 			}
+	
+			return `${rate_html} ${qty_html} ${amount_html}`;
 		}
 	}
+	
 
 	get_discount_html(doc) {
 		if (doc.discount_amount) {
