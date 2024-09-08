@@ -163,21 +163,21 @@ custom_app.PointOfSale.ItemCart = class {
 				<div class="item-qty-total-label">${__("Total Items")}</div>
 				<div class="item-qty-total-value">0.00</div>
 			</div>
-			<div class="vatable-sales-container mt-2"></div>
-			<div class="vat-exempt-container mt-2"></div>
-			<div class="zero-rated-container mt-2"></div>
+			<div class="vatable-sales-container"></div>
+			<div class="vat-exempt-container"></div>
+			<div class="zero-rated-container"></div>
 			
 			
 			<div class="ex-total-container"></div>
-				<div class="net-total-container">
-				<div class="net-total-label">${__("Sub Total")}</div>
-				<div class="net-total-value">0.00</div>
+				<div class="net-total-container" style="line-height: 0rem; font-size:12px;">
+				<div class="net-total-label">${__("Sub Total:")}</div>
+				<div class="net-total-value" style="font-size:12px;">0.00</div>
 			</div>
 
 		 <div class="taxes-container"></div>
 		 <div class="vat-container"></div>
 		<div class="total-vat-container"></div>
-			<div class="grand-total-container">
+			<div class="grand-total-container" style="line-height: 0rem;">
 				<div>${__("Total")}</div>
 				<div>0.00</div>
 			</div> 
@@ -203,7 +203,7 @@ custom_app.PointOfSale.ItemCart = class {
 				// [4, 5, 6, "Discount"],
 				// [7, 8, 9, "Rate"],
 				// [".", 0, "Delete", "Remove"],
-				["Discount", "Quantity", "Rate", "Remove"],
+				["Discount", "Quantity","", "Remove"],
 			],
 			css_classes: [
 				["", "", "", "col-span-2 remove-btn"],
@@ -667,8 +667,8 @@ custom_app.PointOfSale.ItemCart = class {
 		if (customer) {
 			return new Promise((resolve) => {
 				frappe.db
-					.get_value("Customer", customer, ["email_id", "mobile_no", "customer_name", "image", "loyalty_program",
-						"custom_osca_id", "custom_pwd_id"])
+					.get_value("Customer", customer, ["email_id", "customer_name", "mobile_no" , "image", "loyalty_program",
+						"custom_osca_id", "custom_pwd_id", "customer_group"])
 					.then(({ message }) => {
 						const { loyalty_program } = message;
 						// if loyalty program then fetch loyalty points too
@@ -789,7 +789,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_customer_section() {
 		const me = this;
-		const { customer, email_id = "", mobile_no = "", image , customer_name = "" } = this.customer_info || {};
+		const { customer, email_id = "", mobile_no = "", image, customer_name = "", customer_group = "" } = this.customer_info || {};
 
 		if (customer) {
 			this.$customer_section.html(
@@ -797,7 +797,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="customer-display">
 						${this.get_customer_image()}
 						<div class="customer-name-desc">
-							<div class="customer-name">${customer} - ${customer_name}</div>
+							<div class="customer-name"> ${customer_name} -  ${customer_group} </div>
 							${get_customer_description()}
 						</div>
 					</div>
@@ -908,7 +908,7 @@ custom_app.PointOfSale.ItemCart = class {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".net-total-container")
-			.html(`<div>${__("Sub Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div style="font-size:12px;">${__("Sub Total")}</div> <div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-net-total")
@@ -920,7 +920,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".vatable-sales-container")
 			.html(`
-				<div style="display: flex; align-items: center; width: 100%;">
+				<div style="display: flex; align-items: center; width: 100%; font-size:12px;">
 					<span style="flex: 1;">
 						${__("VATable Sales")}: 
 					</span>
@@ -936,7 +936,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".vat-exempt-container")
 			.html(`
-				<div style="display: flex; align-items: center; width: 100%;">
+				<div style="display: flex; align-items: center; width: 100%; font-size:12px;">
 					<span style="flex: 1;">
 						${__("VAT-Exempt Sales")}: 
 					</span>
@@ -950,7 +950,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".zero-rated-container")
 			.html(`
-				<div style="display: flex; align-items: center; width: 100%;">
+				<div style="display: flex; align-items: center; width: 100%; font-size:12px;">
 					<span style="flex: 1;">
 						${__("Zero Rated Sales")}: 
 					</span>
@@ -964,7 +964,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".vat-container")
 			.html(`
-				<div style="display: flex; align-items: center; width: 100%;">
+				<div style="display: flex; align-items: center; width: 100%; font-size:12px;">
 					<span style="flex: 1;">
 						${__("VAT 12%")}:
 					</span>
@@ -978,7 +978,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".total-vat-container")
 			.html(`
-				<div style="display: flex; justify-content: space-between;">
+				<div style="display: flex; justify-content: space-between; font-size:12px;">
 					<span style="flex: 1;">${__("Total VAT")}: </span>
 					<span style="flex-shrink: 0;">${format_currency(value, currency)}</span>
 				</div>
@@ -990,7 +990,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.$totals_section
 			.find(".ex-total-container")
 			.html(`
-				<div style="display: flex; align-items: center; width: 100%;">
+				<div style="display: flex; align-items: center; width: 100%; font-size:10px;>
 					<span style="flex: 1;">
 						${__("Ex Total")}: 
 					</span>
@@ -1019,7 +1019,7 @@ custom_app.PointOfSale.ItemCart = class {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
 			.find(".grand-total-container")
-			.html(`<div>${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
+			.html(`<div style="font-size:14px;">${__("Total")}</div><div>${format_currency(value, currency)}</div>`);
 
 		this.$numpad_section
 			.find(".numpad-grand-total")
@@ -1149,34 +1149,35 @@ custom_app.PointOfSale.ItemCart = class {
 
 		if (!$item_to_update.length) {
 			this.$cart_items_wrapper.append(
-				`<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}"></div>
-				<div class="separator"></div>`
+				`<div class="cart-item-wrapper" tabindex="0" data-row-name="${escape(item_data.name)}" style="font-size: 12px; padding: 5px;">
+					<div class="separator" style="height: 0.8px; background-color: #e0e0e0; margin: 4px 0;"></div>`
 			);
 			$item_to_update = this.get_cart_item(item_data);
 		}
-
+		
 		$item_to_update.html(
 			`${get_item_image_html()}
-			<div class="item-name-desc">
-				<div class="item-name">
+			<div class="item-name-desc" style="font-size: 10px;">
+				<div class="item-name" style="font-size: 12px;">
 					${item_data.item_name}
 				</div>
 				${get_description_html()}
 			</div>
 			
-			<div class="item-vat mx-3">
+			<div class="item-vat mx-3" style="font-size: 10px;">
 				<strong>${getVatType(item_data)}</strong>
 			</div> 
 			
-			<div class="item-vat mx-3">
+			<div class="item-vat mx-3" style="font-size: 10px;">
 				<strong>${format_currency(item_data.price_list_rate, currency)}</strong>
 			</div>
 			
-			<div class="item-discount mx-3">
+			<div class="item-discount mx-3" style="font-size: 10px;">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
 			${get_rate_discount_html(customer_group)}`
 		);
+		
 
 		set_dynamic_rate_header_width();
 
@@ -1198,16 +1199,15 @@ custom_app.PointOfSale.ItemCart = class {
 
 		function getVatType(item_data) {
 			if (item_data.custom_vat_exempt_amount && item_data.custom_vat_exempt_amount != 0) {
-				return 'VAT-Exempt';
+				return 'VAT-E';
 			} else if (item_data.custom_vatable_amount && item_data.custom_vatable_amount != 0) {
-				return 'VATable';
+				return 'VAT';
 			} else if (item_data.custom_zero_rated_amount && item_data.custom_zero_rated_amount != 0) {
-				return 'Zero Rated';
+				return 'ZR';
 			} else {
 				return 'Unknown';
 			}
 		}
-
 
 		function get_rate_discount_html(customer_group) {
 
@@ -1216,9 +1216,9 @@ custom_app.PointOfSale.ItemCart = class {
 
 				return `
 						<div class="item-qty-rate">
-							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 							<div class="item-rate-amount">
-								<div class="item-rate">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
+								<div class="item-rate" style="font-size:11px;">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
 								
 							</div>
 						</div>`;
@@ -1229,9 +1229,9 @@ custom_app.PointOfSale.ItemCart = class {
 
 				return `
 					<div class="item-qty-rate">
-						<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+						<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
-							<div class="item-rate">${format_currency(
+							<div class="item-rate" style="font-size:11px;">${format_currency(
 								item_data.pricing_rules === '[\n "PRLE-0005330"\n]' ? item_data.amount : 
 								(item_data.pricing_rules === "" ? item_data.amount : 
 									(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount)
@@ -1243,22 +1243,21 @@ custom_app.PointOfSale.ItemCart = class {
 				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 					return `
 						<div class="item-qty-rate">
-							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 							<div class="item-rate-amount">
-								<div class="item-rate">${format_currency(item_data.amount, currency)}</div>
+								<div class="item-rate" style="font-size:11px;">${format_currency(item_data.amount, currency)}</div>
 							</div>
 						</div>`;
 				} else {
 					return `
 						<div class="item-qty-rate">
-							<div class="item-qty"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+							<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 							<div class="item-rate-amount">
-								<div class="item-rate">${format_currency(item_data.rate, currency)}</div>
+								<div class="item-rate" style="font-size:11px;">${format_currency(item_data.rate, currency)}</div>
 							</div>
 						</div>`;
 				}
 			}
-
 		}
 
 		function get_description_html() {
@@ -1274,7 +1273,7 @@ custom_app.PointOfSale.ItemCart = class {
 					}
 				}
 				item_data.description = frappe.ellipsis(item_data.description, 45);
-				return `<div class="item-desc">${item_data.description}</div>`;
+				return `<div class="item-desc" style="font-size:10px;">${item_data.description}</div>`;
 			}
 			return ``;
 		}
