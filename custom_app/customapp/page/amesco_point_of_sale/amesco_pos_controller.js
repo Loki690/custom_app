@@ -288,6 +288,7 @@ custom_app.PointOfSale.Controller = class {
 			this.page.add_button(btn.label, btn.action, { shortcut: btn.shortcut }).addClass('btn-custom');
 		});
 	}
+
 	showPasswordDialog(title, onSuccess) {
 		const passwordDialog = new frappe.ui.Dialog({
 			title: __(title),
@@ -372,12 +373,22 @@ custom_app.PointOfSale.Controller = class {
 
 	//Check Encashment
 	check_encashment() {
-		if (!this.$components_wrapper.is(":visible")) return;
-		let voucher = frappe.model.get_new_doc("Check Encashment Entry")
-		voucher.custom_pos_profile = this.frm.doc.pos_profile;
-		voucher.custom_received_by = frappe.session.user;
-		voucher.custom_opening_entry = this.pos_opening;
-		frappe.set_route("Form", "Check Encashment Entry", voucher.name)
+
+		const onSuccess = () => {
+			if (!this.$components_wrapper.is(":visible")) return;
+
+				let voucher = frappe.model.get_new_doc("Check Encashment Entry")
+				voucher.custom_pos_profile = this.frm.doc.pos_profile;
+				voucher.custom_received_by = frappe.session.user;
+				voucher.custom_opening_entry = this.pos_opening;
+				frappe.set_route("Form", "Check Encashment Entry", voucher.name)
+		
+			.catch(error => {
+				console.error("Error fetching POS Profile:", error);
+				frappe.msgprint(__('Failed to fetch POS Profile. Please try again.'));
+			});
+		};
+		this.showPasswordDialog('OIC Authorization Required for Check Encashment Entry', onSuccess);
 	}
 
 	add_new_order() {

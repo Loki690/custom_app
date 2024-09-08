@@ -302,9 +302,14 @@ custom_app.PointOfSale.Payment = class {
 			const doc = this.events.get_frm().doc;
 			const paid_amount = doc.paid_amount;
 			const items = doc.items;
+			const payments = doc.payments;
 		
-			// Basic validation for order submission
-			if (paid_amount == 0 || !items.length) {
+			const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
+				? doc.grand_total
+				: doc.rounded_total;
+		
+			// Validate that there are items and a non-zero paid amount
+			if (paid_amount === 0 || !items.length) {
 				const message = items.length
 					? __("You cannot submit the order without payment.")
 					: __("You cannot submit an empty order.");
@@ -312,6 +317,21 @@ custom_app.PointOfSale.Payment = class {
 				frappe.utils.play_sound("error");
 				return;
 			}
+		
+		
+			// Check if any non-cash payment exceeds the grand total
+			const total_paid_amount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+			const cash_payment_present = payments.some(p => p.mode_of_payment === 'Cash' && p.amount > 0);
+		
+			if (total_paid_amount > grand_total && !cash_payment_present) {
+				frappe.show_alert({
+					message: __("Paid amount cannot be greater than the grand total for non-cash payments."),
+					indicator: "orange"
+				});
+				frappe.utils.play_sound("error");
+				return;
+			}
+		
 		
 			// Validate fields based on payment method
 			if (!validate_payment_methods(doc)) {
@@ -332,7 +352,8 @@ custom_app.PointOfSale.Payment = class {
 			doc.payments.forEach(p => {
 				const payment_method = p.mode_of_payment ? p.mode_of_payment.trim() : null; // Ensure it's defined and trimmed
 				const amount = p.amount || 0; // Get the amount for this payment method
-		
+				
+
 				// Only validate if the payment method has an amount
 				if (amount > 0) {
 					if (!payment_method) {
@@ -350,7 +371,7 @@ custom_app.PointOfSale.Payment = class {
 						case 'Cash':
 							const cash_missing_fields = validate_fields(['amount'], p);
 							if (cash_missing_fields.length) {
-								show_validation_warning(__('The following fields are required for Charge payment: {0}', [cash_missing_fields.join(', ')]));
+								show_validation_warning(__('The following fields are required for Cash payment: {0}', [cash_missing_fields.join(', ')]));
 								has_error = true;
 								return false; // Stop validation
 							}
@@ -361,7 +382,7 @@ custom_app.PointOfSale.Payment = class {
 						case 'Amesco Plus':
 							const gc_missing_fields = validate_fields(['amount'], p);
 							if (gc_missing_fields.length) {
-									show_validation_warning(__('The following fields are required for Charge payment: {0}', [gc_missing_fields.join(', ')]));
+									show_validation_warning(__('The following fields are required for Amesco Plus payment: {0}', [gc_missing_fields.join(', ')]));
 									has_error = true;
 									return false; // Stop validation
 							}
@@ -381,7 +402,7 @@ custom_app.PointOfSale.Payment = class {
 								const debit_missing_fields = validate_fields(['amount', 'custom_bank_name', 'custom_card_name', 'custom_card_number', 'custom_card_expiration_date', 'custom_approval_code'], p);
 								if (debit_missing_fields.length) {
 									console.log('Missing fields for Debit payment:', debit_missing_fields);
-									show_validation_warning(__('The following fields are required for Debit payment: {0}', [debit_missing_fields.join(', ')]));
+									show_validation_warning(__('The following fields are required for Debit/Credit payment: {0}', [debit_missing_fields.join(', ')]));
 									has_error = true;
 									return false; // Stop validation
 								}
@@ -393,7 +414,7 @@ custom_app.PointOfSale.Payment = class {
 								const cheque_missing_fields = validate_fields(['amount', 'custom_check_bank_name', 'custom_name_on_check', 'custom_check_number'], p);
 								if (cheque_missing_fields.length) {
 									console.log('Missing fields for Cheque/Government payment:', cheque_missing_fields);
-									show_validation_warning(__('The following fields are required for Debit payment: {0}', [cheque_missing_fields.join(', ')]));
+									show_validation_warning(__('The following fields are required for Cheque payment: {0}', [cheque_missing_fields.join(', ')]));
 									has_error = true;
 									return false; // Stop validation
 								}
@@ -403,17 +424,17 @@ custom_app.PointOfSale.Payment = class {
 								const cards_missing_fields = validate_fields(['amount', 'custom_bank_name', 'custom_card_name', 'custom_card_type', 'custom_card_number', 'custom_card_expiration_date', 'custom_approval_code'], p);
 								if (cards_missing_fields.length) {
 									console.log('Missing fields for Cards payment:', cards_missing_fields);
-									show_validation_warning(__('The following fields are required for Debit payment: {0}', [cards_missing_fields.join(', ')]));
+									show_validation_warning(__('The following fields are required for Cards payment: {0}', [cards_missing_fields.join(', ')]));
 									has_error = true;
 									return false; // Stop validation
 								}
 								break;
 
 						case  'QR Payment':
-								const qr_missing_fields = validate_fields(['amount', 'custom_payment_type', 'custom_bank_type'], p);
+								const qr_missing_fields = validate_fields(['amount', 'custom_payment_type', 'custom_bank_type', 'custom_qr_reference_number'], p);
 								if (qr_missing_fields.length) {
 									console.log('Missing fields for QR payment:', qr_missing_fields);
-									show_validation_warning(__('The following fields are required for Debit payment: {0}', [qr_missing_fields.join(', ')]));
+									show_validation_warning(__('The following fields are required for QR payment: {0}', [qr_missing_fields.join(', ')]));
 									has_error = true;
 									return false; // Stop validation
 								}
@@ -425,7 +446,7 @@ custom_app.PointOfSale.Payment = class {
 								const gcash_maya_missing_fields = validate_fields(['amount', 'reference_no'], p);
 								if (gcash_maya_missing_fields.length) {
 									console.log('Missing fields for QR payment:', gcash_maya_missing_fields);
-									show_validation_warning(__('The following fields are required for Debit payment: {0}', [gcash_maya_missing_fields.join(', ')]));
+									show_validation_warning(__('The following fields are required for GCash/PayMaya payment: {0}', [gcash_maya_missing_fields.join(', ')]));
 									has_error = true;
 									return false; // Stop validation
 								}
@@ -436,7 +457,7 @@ custom_app.PointOfSale.Payment = class {
 								const gov_missing_fields = validate_fields(['amount'], p);
 								if (gov_missing_fields.length) {
 									console.log('Missing fields for QR payment:', gov_missing_fields);
-									show_validation_warning(__('The following fields are required for Debit payment: {0}', [gov_missing_fields.join(', ')]));
+									show_validation_warning(__('The following fields are required for 2307/2307G payment: {0}', [gov_missing_fields.join(', ')]));
 									has_error = true;
 									return false; // Stop validation
 								}
@@ -591,7 +612,7 @@ custom_app.PointOfSale.Payment = class {
 	
 		// Tab key shortcut for switching between payment modes
 		frappe.ui.keys.add_shortcut({
-			shortcut: "tab",
+			shortcut: "shift+tab",
 			action: () => {
 				const payment_is_visible = this.$component.is(":visible");
 				let active_mode = this.$payment_modes.find(".border-primary");
@@ -602,6 +623,7 @@ custom_app.PointOfSale.Payment = class {
 				const mode_of_payments = Array.from(this.$payment_modes.find(".mode-of-payment")).map((m) =>
 					$(m).attr("data-mode")
 				);
+
 				const mode_index = mode_of_payments.indexOf(active_mode);
 				const next_mode_index = (mode_index + 1) % mode_of_payments.length;
 				const next_mode_to_be_clicked = this.$payment_modes.find(
@@ -696,17 +718,9 @@ custom_app.PointOfSale.Payment = class {
 					`;
 
 				switch (p.mode_of_payment) {
-					case "GCash":
-						paymentModeHtml += `
-								<div class="${mode} mobile-number" style="margin-top:10px;"></div>
-								<div class="${mode} reference-number" style="margin-top:10px;"></div>
-								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
-									<div class="${mode} save-button"></div>
-									<div class="${mode} discard-button"></div>
-								</div>
-							`;
-						break;
 					case "Cards":
+					case "Debit Card":
+					case "Credit Card":
 						paymentModeHtml += `
 								<div class="${mode} bank-name"></div>
 								<div class="${mode} holder-name"></div>
@@ -720,33 +734,8 @@ custom_app.PointOfSale.Payment = class {
 								</div>
 							`;
 						break;
-					case "Debit Card":
-						paymentModeHtml += `
-								<div class="${mode} bank-name"></div>
-								<div class="${mode} holder-name"></div>
-								<div class="${mode} card-number"></div>
-								<div class="${mode} expiry-date"></div>
-								<div class="${mode} approval-code"></div>
-								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
-									<div class="${mode} save-button"></div>
-									<div class="${mode} discard-button"></div>
-								</div>
-							`;
-						break;
-					case "Credit Card":
-						paymentModeHtml += `
-								<div class="${mode} bank-name"></div>
-								<div class="${mode} holder-name"></div>
-								<div class="${mode} card-number"></div>
-								<div class="${mode} expiry-date"></div>
-								<div class="${mode} approval-code"></div>
-								<div class="${mode} button-row" style="display: flex; gap: 5px; align-items: center;">
-									<div class="${mode} save-button"></div>
-									<div class="${mode} discard-button"></div>
-								</div>
-								
-							`;
-						break;
+
+					case "GCash":
 					case "PayMaya":
 						paymentModeHtml += `
 								<div class="${mode} mobile-number" style="margin-top:10px;"></div>
@@ -1123,6 +1112,16 @@ custom_app.PointOfSale.Payment = class {
 				expiry_date_control.set_value(existing_custom_card_expiration_date || '');
 				expiry_date_control.refresh();
 
+					// Add event listener to automatically insert '/' after two digits
+				expiry_date_control.$input.on('input', function () {
+					let value = this.value.replace(/\D/g, ''); // Remove any non-digit characters
+					if (value.length >= 2) {
+						this.value = value.slice(0, 2) + '/' + value.slice(2); // Add '/' after the second digit
+					} else {
+						this.value = value; // Set the value directly if less than 2 digits
+					}
+				});
+
 				let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
 				let custom_approval_code_control = frappe.ui.form.make_control({
 					df: {
@@ -1463,6 +1462,7 @@ custom_app.PointOfSale.Payment = class {
 					}
 
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", phone_number);
 					frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
 
 
@@ -1493,14 +1493,18 @@ custom_app.PointOfSale.Payment = class {
 				});
 
 				// Attach event listener to the discard button
+		
+
+
 				discard_button.on('click', function () {
 					// Clear all the fields
-					this[`${mode}_control`].set_value(0);
+					me[`${mode}_control`].set_value(0);
 					phone_number_control.set_value('');
 					epayment_reference_number_controller.set_value('');
 
 					// Set values in the model to null or empty string
 					frappe.model.set_value(p.doctype, p.name, "amount", 0);
+					frappe.model.set_value(p.doctype, p.name, "custom_phone_number", '');
 					frappe.model.set_value(p.doctype, p.name, "reference_no", '');
 
 					frappe.msgprint({
@@ -1515,6 +1519,7 @@ custom_app.PointOfSale.Payment = class {
 						}
 					});
 				});
+
 
 				const controls = [
 					me[`${mode}_control`],
@@ -1538,6 +1543,7 @@ custom_app.PointOfSale.Payment = class {
 				// Retrieve existing values
 				let existing_custom_bank_name = frappe.model.get_value(p.doctype, p.name, "custom_bank_name");
 				let existing_custom_card_name = frappe.model.get_value(p.doctype, p.name, "custom_card_name");
+				let existing_custom_card_type = frappe.model.get_value(p.doctype, p.name, "custom_card_type");
 				let existing_custom_card_number = frappe.model.get_value(p.doctype, p.name, "custom_card_number");
 				let existing_custom_card_expiration_date = frappe.model.get_value(p.doctype, p.name, "custom_card_expiration_date");
 				let existing_custom_approval_code = frappe.model.get_value(p.doctype, p.name, "custom_approval_code");
@@ -1582,6 +1588,44 @@ custom_app.PointOfSale.Payment = class {
 
 				// Refresh the control to render it properly
 				name_on_card_control.refresh();
+
+				let card_type_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Card Type',
+						fieldtype: "Select",
+						options: [
+							{ label: 'Select Card Type', value: '' },
+							{ label: 'Visa', value: 'Visa' },
+							{ label: 'Visa Debit', value: 'Visa Debit' },
+							{ label: 'Visa Electron', value: 'Visa Electron' },
+							{ label: 'Credit Card', value: 'Credit Card' },
+							{ label: 'Mastercard', value: 'Mastercard' },
+							{ label: 'Mastercard Debit', value: 'Mastercard Debit' },
+							{ label: 'Maestro', value: 'Maestro' },
+							{ label: 'American Express (Amex)', value: 'American Express (Amex)' },
+							{ label: 'Discover', value: 'Discover' },
+							{ label: 'Diners Club', value: 'Diners Club' },
+							{ label: 'JCB', value: 'JCB' },
+							{ label: 'UnionPay', value: 'UnionPay' },
+							{ label: 'RuPay', value: 'RuPay' },
+							{ label: 'Interac', value: 'Interac' },
+							{ label: 'Carte Bancaire (CB)', value: 'Carte Bancaire (CB)' },
+							{ label: 'Elo', value: 'Elo' },
+							{ label: 'Mir', value: 'Mir' },
+							{ label: 'Others', value: 'Others' }
+						],
+						reqd: true
+					},
+					parent: this.$payment_modes.find(`.${mode}.card_type_control`),
+					render_input: true,
+				});
+				card_type_control.set_value(existing_custom_card_type || '');
+				card_type_control.refresh();	
+
+				
+
+
+
 
 				let card_number_control = frappe.ui.form.make_control({
 					df: {
@@ -1650,6 +1694,7 @@ custom_app.PointOfSale.Payment = class {
 					let amount = me[`${mode}_control`].get_value(); // Get amount value
 					let bank_name = bank_name_control.get_value();
 					let card_name = name_on_card_control.get_value();
+					let card_type = card_type_control.get_value();
 					let card_number = card_number_control.get_value();
 					let card_expiry_date = expiry_date_control.get_value();
 					let approval_code = custom_approval_code_control.get_value();
@@ -1741,6 +1786,7 @@ custom_app.PointOfSale.Payment = class {
 					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
 					frappe.model.set_value(p.doctype, p.name, "custom_bank_name", bank_name);
 					frappe.model.set_value(p.doctype, p.name, "custom_card_name", card_name);
+					frappe.model.set_value(p.doctype, p.name, "custom_card_type", card_type);
 					frappe.model.set_value(p.doctype, p.name, "custom_card_number", card_number);
 					frappe.model.set_value(p.doctype, p.name, "custom_card_expiration_date", card_expiry_date);
 					frappe.model.set_value(p.doctype, p.name, "custom_approval_code", approval_code);
@@ -1848,9 +1894,9 @@ custom_app.PointOfSale.Payment = class {
 				// Create the bank_name_control with the existing value if it exists
 				let bank_name_control = frappe.ui.form.make_control({
 					df: {
-						label: 'Bank Of Check',
+						label: 'Bank Of Cheque',
 						fieldtype: "Data",
-						placeholder: 'Bank Of Check',
+						placeholder: 'Bank Of Cheque',
 						reqd: true
 
 						// onchange: function () {
@@ -1871,9 +1917,9 @@ custom_app.PointOfSale.Payment = class {
 				let existing_custom_check_name = frappe.model.get_value(p.doctype, p.name, "custom_name_on_check");
 				let check_name_control = frappe.ui.form.make_control({
 					df: {
-						label: 'Name On Check',
+						label: 'Name On Cheque',
 						fieldtype: "Data",
-						placeholder: 'Check Name',
+						placeholder: 'Cheque Name',
 						reqd: true
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_name_on_check", this.value);
@@ -1898,9 +1944,9 @@ custom_app.PointOfSale.Payment = class {
 				let existing_custom_check_number = frappe.model.get_value(p.doctype, p.name, "custom_check_number");
 				let check_number_control = frappe.ui.form.make_control({
 					df: {
-						label: 'Check Number',
+						label: 'Cheque Number',
 						fieldtype: "Data",
-						placeholder: 'Check Number',
+						placeholder: 'Cheque Number',
 						reqd: true
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_check_number", this.value);
@@ -1917,9 +1963,9 @@ custom_app.PointOfSale.Payment = class {
 				let check_date_control = frappe.ui.form.make_control({
 					df: {
 						fieldname: 'custom_check_date',
-						label: 'Check Date',
+						label: 'Cheque Date',
 						fieldtype: "Date",
-						placeholder: 'Check Date',
+						placeholder: 'Cheque Date',
 						reqd: true
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_check_date", this.get_value());
@@ -2418,6 +2464,7 @@ custom_app.PointOfSale.Payment = class {
 							{ label: 'SBC', value: 'SBC' },
 							{ label: 'MBTC', value: 'MBTC' },
 							{ label: 'MAYA', value: 'MAYA' },
+							{ label: 'GCASH', value: 'GCASH' },
 							{ label: 'BDO', value: 'BDO' },
 						],
 						reqd: true
@@ -2441,7 +2488,7 @@ custom_app.PointOfSale.Payment = class {
 						label: `Confirmation Code`,
 						fieldtype: "Data",
 						placeholder: 'Reference # or Confirmation Code',
-
+						reqd: true
 
 						// onchange: function () {
 						// 	frappe.model.set_value(p.doctype, p.name, "custom_qr_reference_number", this.value);
@@ -2470,7 +2517,7 @@ custom_app.PointOfSale.Payment = class {
 
 					// let reference_no = reference_no_control.get_value();
 
-					if (!amount || !payment_type || !bank_type) {
+					if (!amount || !payment_type || !bank_type || !qr_reference_number) {
 						const dialog = frappe.msgprint({
 							title: __('Validation Warning'),
 							message: __('All fields are required.'),

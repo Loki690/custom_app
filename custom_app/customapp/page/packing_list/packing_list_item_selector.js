@@ -280,6 +280,14 @@ custom_app.PointOfSale.ItemSelector = class {
         });
 
 
+        this.item_group_field.$input.on('input', () => {
+            let value = this.item_group_field.get_value().trim(); // Get and trim the input value
+            if (!value) {
+                // If the value is empty, call load_items_data
+                this.load_items_data();
+            }
+        });
+
         this.item_uom = frappe.ui.form.make_control({
             df: {
                 label: __("UOM"),
