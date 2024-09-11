@@ -15,7 +15,7 @@ custom_app.PointOfSale.Payment = class {
 
 	prepare_dom() {
 		this.wrapper.append(
-			`<section class="payment-container">
+			`<section class="payment-container" style="grid-column:span 5 / span 5;">
 				<div class="fields-numpad-container">
 					<div class="fields-section">
 						<div class="section-label payment-section">${__("Payment Method")}</div>
@@ -2256,7 +2256,7 @@ custom_app.PointOfSale.Payment = class {
 						options: [
 							{ label: 'Select Payment Type', value: '' },
 							{ label: 'Standee', value: 'Standee' },
-							{ label: 'Terminal', value: 'Terminnal' },
+							{ label: 'Terminal', value: 'Terminal' },
 						],
 						reqd: true
 						// onchange: function () {

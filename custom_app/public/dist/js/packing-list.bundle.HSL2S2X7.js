@@ -3982,7 +3982,7 @@
     prepare_dom() {
       const selectedWarehouse = localStorage.getItem("selected_warehouse");
       this.wrapper.append(
-        `<section class="items-selector" style="margin-top:1.3rem;">
+        `<section class="items-selector" style="margin-top:0.3rem; grid-column: span 5 / span 6;">
 
                 <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
                     <div class="label" style="flex: 1;">
@@ -4014,7 +4014,8 @@
                         <tbody class="items-container"></tbody>
                     </table>
                 </div>
-            </section>`
+            </section>
+            `
       );
       this.$component = this.wrapper.find(".items-selector");
       this.$items_container = this.$component.find(".items-container");
@@ -4768,7 +4769,7 @@
         this.$component.css({
           "opacity": "1",
           "pointer-events": "auto",
-          "grid-column": "span 6 / span 6"
+          "grid-column": "span 5 / span 6"
         });
         this.$component.find(".filter-section").css("grid-template-columns", "repeat(12, minmax(0, 1fr))");
         this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
@@ -4801,7 +4802,7 @@
       this.attach_shortcuts();
     }
     prepare_dom() {
-      this.wrapper.append(`<section class="customer-cart-container"></section>`);
+      this.wrapper.append(`<section class="customer-cart-container" style="margin-top:-1rem; grid-column: span 5/ span 5;"></section>`);
       this.$component = this.wrapper.find(".customer-cart-container");
     }
     init_child_components() {
@@ -6685,7 +6686,7 @@
     }
     prepare_dom() {
       this.wrapper.append(
-        `<section class="payment-container">
+        `<section class="payment-container" style="grid-column:span 5 / span 5;">
 				<div class="fields-numpad-container">
 					<div class="fields-section">
 						<div class="section-label payment-section">${__("Payment Method")}</div>
@@ -8396,7 +8397,7 @@
               options: [
                 { label: "Select Payment Type", value: "" },
                 { label: "Standee", value: "Standee" },
-                { label: "Terminal", value: "Terminnal" }
+                { label: "Terminal", value: "Terminal" }
               ],
               reqd: true
             },
@@ -10828,4 +10829,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.XHFXJLCW.js.map
+//# sourceMappingURL=packing-list.bundle.HSL2S2X7.js.map
