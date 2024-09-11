@@ -2256,7 +2256,7 @@ custom_app.PointOfSale.Payment = class {
 						options: [
 							{ label: 'Select Payment Type', value: '' },
 							{ label: 'Standee', value: 'Standee' },
-							{ label: 'Terminal', value: 'Terminnal' },
+							{ label: 'Terminal', value: 'Terminal' },
 						],
 						reqd: true
 						// onchange: function () {
