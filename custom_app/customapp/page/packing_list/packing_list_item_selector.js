@@ -64,7 +64,7 @@ custom_app.PointOfSale.ItemSelector = class {
     prepare_dom() {
         const selectedWarehouse = localStorage.getItem('selected_warehouse');
         this.wrapper.append(
-            `<section class="items-selector" style="margin-top:1.3rem;">
+            `<section class="items-selector" style="margin-top:0.3rem; grid-column: span 5 / span 6;">
 
                 <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
                     <div class="label" style="flex: 1;">
@@ -96,7 +96,8 @@ custom_app.PointOfSale.ItemSelector = class {
                         <tbody class="items-container"></tbody>
                     </table>
                 </div>
-            </section>`
+            </section>
+            `
         );
     
         this.$component = this.wrapper.find(".items-selector");
@@ -1086,7 +1087,7 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$component.css({
                 "opacity": "1",               // Make the component visible
                 "pointer-events": "auto",     // Make the component interactive
-                "grid-column": "span 6 / span 6"
+                "grid-column": "span 5 / span 6"
             });
 
             this.$component.find(".filter-section")
