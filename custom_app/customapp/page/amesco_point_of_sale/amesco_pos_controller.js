@@ -36,6 +36,7 @@ custom_app.PointOfSale.Controller = class {
 				in_list_view: 1,
 				label: "Mode of Payment",
 				options: "Mode of Payment",
+				read_only: 1, 
 				reqd: 1,
 			},
 			{
@@ -43,6 +44,7 @@ custom_app.PointOfSale.Controller = class {
 				fieldtype: "Currency",
 				in_list_view: 1,
 				label: "Opening Amount",
+				read_only: 1, 
 				options: "company:company_currency",
 				change: function () {
 					dialog.fields_dict.balance_details.df.data.some((d) => {
@@ -129,6 +131,7 @@ custom_app.PointOfSale.Controller = class {
 					reqd: 1,
 					data: [],
 					fields: table_fields,
+					read_only: 1,
 				},
 			],
 			primary_action: async function ({ company, pos_profile, balance_details }) {
@@ -328,6 +331,46 @@ custom_app.PointOfSale.Controller = class {
 		passwordDialog.show();
 	}
 
+
+	showSystemManagerPasswordDialog(title, onSuccess) {
+		const passwordDialog = new frappe.ui.Dialog({
+			title: __(title),
+			fields: [
+				{
+					fieldname: 'password',
+					fieldtype: 'Password',
+					label: __('Password'),
+					reqd: 1
+				}
+			],
+			primary_action_label: __('Authorize'),
+			primary_action: (values) => {
+				let password = values.password;
+				frappe.call({
+					method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.confirm_system_manager_password",
+					args: { password: password},
+					callback: (r) => {
+						if (r.message.name) {
+							frappe.show_alert({
+								message: __('Verified'),
+								indicator: 'green'
+							});
+							passwordDialog.hide();
+							onSuccess();
+						} else {
+							frappe.show_alert({
+								message: __('Incorrect password or user is not an OIC'),
+								indicator: 'red'
+							});
+						}
+					}
+				});
+			}
+		});
+
+		passwordDialog.show();
+	}
+
 	z_reading() {
 		const onSuccess = () => {
 			if (!this.$components_wrapper.is(":visible")) return;
@@ -345,7 +388,7 @@ custom_app.PointOfSale.Controller = class {
 			});
 		};
 
-		this.showPasswordDialog('OIC Authorization Required for Z Reading', onSuccess);
+		this.showSystemManagerPasswordDialog('System Manager Authorization Required for Z Reading', onSuccess);
 	}
 
 	dsrs_reading() {
