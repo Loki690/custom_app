@@ -64,7 +64,7 @@ custom_app.PointOfSale.ItemSelector = class {
     prepare_dom() {
         const selectedWarehouse = localStorage.getItem('selected_warehouse');
         this.wrapper.append(
-            `<section class="items-selector" style="margin-top:0.3rem; grid-column: span 5 / span 6;">
+            `<section class="items-selector" style="margin-top:0.3rem; grid-column: span 4 / span 4;">
 
                 <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
                     <div class="label" style="flex: 1;">
@@ -82,7 +82,7 @@ custom_app.PointOfSale.ItemSelector = class {
                 </div>
                 <div class="table-responsive">
                     <table class="table items-table">
-                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
+                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1; font-size:11px;">
                             <tr>
                                 <th>Item Code</th>
                                 <th>Name</th>
@@ -209,7 +209,7 @@ custom_app.PointOfSale.ItemSelector = class {
 
         const item_description = description ? description : "Description not available";
 
-        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
+        return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd; font-size: 12px;" 
         onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
         onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
@@ -1087,7 +1087,7 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$component.css({
                 "opacity": "1",               // Make the component visible
                 "pointer-events": "auto",     // Make the component interactive
-                "grid-column": "span 5 / span 6"
+                "grid-column": "span 4 / span 4"
             });
 
             this.$component.find(".filter-section")

@@ -430,7 +430,7 @@
     prepare_dom() {
       const selectedWarehouse = localStorage.getItem("selected_warehouse");
       this.wrapper.append(
-        `<section class="items-selector" style="margin-top:0rem; grid-column: span 5 / span 6;">
+        `<section class="items-selector" style="margin-top:0rem; grid-column: span 4 / span 4;">
                 <div class="filter-section" style="display: flex; align-items: center; gap: 10px;">
                     <div class="label" style="flex: 1;">
                         ${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
@@ -447,7 +447,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table items-table">
-                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
+                        <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1; font-size:11px;">
                             <tr>
                                 <th>Item Code</th>
                                 <th>Name</th>
@@ -546,7 +546,7 @@
       const tax_rate = 0.12;
       const no_vat = price_list_rate / (1 + tax_rate);
       const item_description = description ? description : "Description not available";
-      return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd;" 
+      return `<tr class="item-wrapper" style="border-bottom: 1px solid #ddd; font-size: 12px;" 
         onmouseover="this.style.backgroundColor='#0289f7'; this.style.color='white'; this.style.fontWeight='bold';"
         onmouseout="this.style.backgroundColor=''; this.style.color=''; this.style.fontWeight='';"
             data-item-code="${escape(item_code)}" data-serial-no="${escape(serial_no)}"
@@ -1213,7 +1213,7 @@
         this.$component.css({
           "opacity": "1",
           "pointer-events": "auto",
-          "grid-column": "span 5 / span 6"
+          "grid-column": "span 4 / span 4"
         });
         this.$component.find(".filter-section").css("grid-template-columns", "repeat(12, minmax(0, 1fr))");
         this.$component.find(".search-field").css("margin", "0px var(--margin-sm)");
@@ -1246,7 +1246,7 @@
       this.attach_shortcuts();
     }
     prepare_dom() {
-      this.wrapper.append(`<section class="customer-cart-container" style="grid-column: span 5/ span 5; margin-top: 0rem;""></section>`);
+      this.wrapper.append(`<section class="customer-cart-container" style="grid-column: span 6/ span 6; margin-top: 0rem;""></section>`);
       this.$component = this.wrapper.find(".customer-cart-container");
     }
     init_child_components() {
@@ -2616,7 +2616,7 @@
       this.attach_shortcuts();
     }
     prepare_dom() {
-      this.wrapper.append(`<section class="item-details-container"></section>`);
+      this.wrapper.append(`<section class="item-details-container" style="grid-column:span 3 / span 3;"></section>`);
       this.$component = this.wrapper.find(".item-details-container");
     }
     init_child_components() {
@@ -3113,7 +3113,7 @@
     }
     prepare_dom() {
       this.wrapper.append(
-        `<section class="payment-container" style="grid-column:span 5 / span 5;">
+        `<section class="payment-container" style="grid-column:span 4 / span 4;">
 				<div class="fields-numpad-container">
 					<div class="fields-section">
 						<div class="section-label payment-section">${__("Payment Method")}</div>
@@ -7534,4 +7534,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.KZ3DMXOJ.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.VGY2NCCP.js.map
