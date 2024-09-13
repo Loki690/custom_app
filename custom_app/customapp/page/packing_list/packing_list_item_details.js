@@ -18,7 +18,7 @@ custom_app.PointOfSale.ItemDetails = class {
 	}
 
 	prepare_dom() {
-		this.wrapper.append(`<section class="item-details-container"></section>`);
+		this.wrapper.append(`<section class="item-details-container" style="grid-column:span 3 / span 3;"></section>`);
 
 		this.$component = this.wrapper.find(".item-details-container");
 	}
