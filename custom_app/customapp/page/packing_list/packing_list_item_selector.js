@@ -242,7 +242,7 @@ custom_app.PointOfSale.ItemSelector = class {
 			df: {
 				label: __("Search"),
 				fieldtype: "Data",
-				placeholder: __("Search by item code, serial number, barcode, generic name or description"),
+				placeholder: __("Search by item code, serial number or barcode"),
 			},
 			parent: this.$component.find(".search-field"),
 			render_input: true,

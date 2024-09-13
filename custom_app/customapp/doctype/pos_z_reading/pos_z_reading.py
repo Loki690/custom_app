@@ -14,7 +14,7 @@ def on_submit(doc, method):
 def update_pos_profile_last_z_reading(doc):
         pos_profile_doc = frappe.get_doc('POS Profile', doc.pos_profile)
         pos_profile_doc.custom_last_z_reading = doc.date_to
-        pos_profile_doc.custom_old_accumulated_sales = pos_profile_doc.custom_old_accumulated_sales + doc.net_sales
+        pos_profile_doc.custom_old_accumulated_sales = doc.accumulated_sales
         pos_profile_doc.save()
         
         

@@ -308,11 +308,8 @@ def export_pos_invoices_as_txt():
     
 def validate(doc, method):
     # Check if the document is a return and the customer is set to 'Cash'
-    default_company = frappe.defaults.get_defaults().get("company")
-    company_customer_return = frappe.get_value("Company", default_company, "custom_return_customer_exclude")
-    
-    if doc.return_against and doc.customer == company_customer_return:
-        frappe.throw(frappe._("Please change the customer from {0} to the actual customer's name before saving.").format(company_customer_return))
+    if doc.return_against and doc.customer == 'Cash':
+        frappe.throw(frappe._("Please change the customer from 'Cash' to the actual customer's name before saving."))
     
     # Check if the customer field is empty
     if not doc.customer:  # Check if the customer field is empty or None

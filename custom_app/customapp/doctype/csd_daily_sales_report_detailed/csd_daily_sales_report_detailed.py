@@ -22,7 +22,7 @@ def get_sales_invoice_payment(parent):
         return records
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), 'get_sales_invoice_payment Error')
-        frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
         
@@ -32,19 +32,17 @@ def get_sales_invoice_items(parent):
     try:
         records = frappe.get_all(
             'Sales Invoice Item', 
-            filters={
+           filters={
                 'parent': parent,
                 # 'sales_order': ['!=', '']  # Ensure that sales_order is not empty
             },
-            fields=['name', 'parent', 'sales_order'],  # Specify the fields you want to fetch
-            order_by='name asc'  # Sort the results by the 'name' field in ascending order
+            fields=['name', 'parent', 'sales_order']  # Specify the fields you want to fetch
         )
         
         return records
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), 'Error')
-        frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
-
         
