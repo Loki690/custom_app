@@ -76,9 +76,7 @@ custom_app.PointOfSale.ItemSelector = class {
                     <div class="item-group-field" style="flex: 1;">
                         <input type="text" placeholder="Select item group" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
-                    <div class="item-uoms" style="flex: 1;">
-                        <input type="text"  value="PC" placeholder="Select UOM" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-                    </div>
+                  
                 </div>
                 <div class="table-responsive">
                     <table class="table items-table">
@@ -189,6 +187,10 @@ custom_app.PointOfSale.ItemSelector = class {
         let indicator_color;
         let qty_to_display = actual_qty;
 
+        if (uom !== "PC") {
+            return ""; // Skip rendering if UOM is not 'PC'
+        }
+
         // console.log("Actual QTY ", qty_to_display)
 
         if (item.is_stock_item) {
@@ -229,12 +231,13 @@ custom_app.PointOfSale.ItemSelector = class {
         const item_abbr = $($img).attr("alt");
         $($img).parent().replaceWith(`<div class="item-display abbr">${item_abbr}</div>`);
     }
+
     make_search_bar() {
         const me = this;
         const doc = me.events.get_frm().doc;
         this.$component.find(".search-field").html("");
         this.$component.find(".item-group-field").html("");
-        this.$component.find(".item-uoms").html("");
+        // this.$component.find(".item-uoms").html("");
         //branch field
         // this.$component.find(".branch-field").html("");
 
@@ -248,12 +251,10 @@ custom_app.PointOfSale.ItemSelector = class {
 			render_input: true,
 		});
 
+
+
         this.search_field.$input.on('input', () => {
             let value = this.search_field.get_value().trim(); // Get and trim the input value
-            if (!value) {
-                // If the value is empty, call load_items_data
-                this.load_items_data();
-            }
         });
 
         this.item_group_field = frappe.ui.form.make_control({
@@ -283,31 +284,28 @@ custom_app.PointOfSale.ItemSelector = class {
 
         this.item_group_field.$input.on('input', () => {
             let value = this.item_group_field.get_value().trim(); // Get and trim the input value
-            if (!value) {
-                // If the value is empty, call load_items_data
-                this.load_items_data();
-            }
+
         });
 
-        this.item_uom = frappe.ui.form.make_control({
-            df: {
-                label: __("UOM"),
-                fieldtype: "Link",
-                options: "UOM",
-                placeholder: __("Select UOM"),
-                onchange: function () {
-                    me.selected_uom = this.value;
-                    me.filter_items({ uom: me.selected_uom });
-                },
-            },
-            parent: this.$component.find(".item-uoms"),
-            render_input: true,
-        });
+        // this.item_uom = frappe.ui.form.make_control({
+        //     df: {
+        //         label: __("UOM"),
+        //         fieldtype: "Link",
+        //         options: "UOM",
+        //         placeholder: __("Select UOM"),
+        //         onchange: function () {
+        //             me.selected_uom = this.value;
+        //             me.filter_items({ uom: me.selected_uom });
+        //         },
+        //     },
+        //     parent: this.$component.find(".item-uoms"),
+        //     render_input: true,
+        // });
 
         // this.item_uom.set_value("PC");
-        this.item_uom.refresh();
+        // this.item_uom.refresh();
 
-        this.item_uom.toggle_label(false);
+        // this.item_uom.toggle_label(false);
         this.search_field.toggle_label(false);
         this.item_group_field.toggle_label(false);
 
@@ -328,7 +326,7 @@ custom_app.PointOfSale.ItemSelector = class {
 		this.$clear_search_btn.on("click", "a", () => {
 			this.set_search_value("");
 			this.search_field.set_focus();
-            this.load_items_data();
+            // this.load_items_data();
 		});
 	}
 
