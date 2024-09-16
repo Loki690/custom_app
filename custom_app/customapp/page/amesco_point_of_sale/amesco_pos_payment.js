@@ -15,7 +15,7 @@ custom_app.PointOfSale.Payment = class {
 
 	prepare_dom() {
 		this.wrapper.append(
-			`<section class="payment-container" style="grid-column:span 5 / span 5;">
+			`<section class="payment-container" style="grid-column:span 4 / span 4;">
 				<div class="fields-numpad-container">
 					<div class="fields-section">
 						<div class="section-label payment-section">${__("Payment Method")}</div>
@@ -300,13 +300,16 @@ custom_app.PointOfSale.Payment = class {
 
 		this.$component.on("click", ".submit-order-btn", () => {
 			const doc = this.events.get_frm().doc;
-			const paid_amount = doc.paid_amount;
+			const paid_amount = parseFloat(doc.paid_amount).toFixed(2);  // Convert to 2 decimal places
 			const items = doc.items;
 			const payments = doc.payments;
+			
 		
 			const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
-				? doc.grand_total
-				: doc.rounded_total;
+				? parseFloat(doc.grand_total).toFixed(2)  // Convert to 2 decimal places
+				: parseFloat(doc.rounded_total).toFixed(2);  // Convert to 2 decimal places
+		
+			console.log("GrandTotal", grand_total);
 		
 			// Validate that there are items and a non-zero paid amount
 			if (paid_amount === 0 || !items.length) {
@@ -318,12 +321,16 @@ custom_app.PointOfSale.Payment = class {
 				return;
 			}
 		
-		
-			// Check if any non-cash payment exceeds the grand total
 			const total_paid_amount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+			// Round to 2 decimal places to avoid floating-point precision issues
+			const rounded_total_paid = parseFloat(total_paid_amount).toFixed(2);
+			const rounded_grand_total = parseFloat(grand_total).toFixed(2);
+
 			const cash_payment_present = payments.some(p => p.mode_of_payment === 'Cash' && p.amount > 0);
-		
-			if (total_paid_amount > grand_total && !cash_payment_present) {
+
+			// Compare the rounded values
+			if (parseFloat(rounded_total_paid) > parseFloat(rounded_grand_total) && !cash_payment_present) {
 				frappe.show_alert({
 					message: __("Paid amount cannot be greater than the grand total for non-cash payments."),
 					indicator: "orange"
@@ -331,7 +338,7 @@ custom_app.PointOfSale.Payment = class {
 				frappe.utils.play_sound("error");
 				return;
 			}
-		
+
 		
 			// Validate fields based on payment method
 			if (!validate_payment_methods(doc)) {
