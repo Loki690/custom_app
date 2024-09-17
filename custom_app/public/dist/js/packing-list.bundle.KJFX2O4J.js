@@ -4277,7 +4277,7 @@
                                             <div class="col-lg">
                                                 <div class="form-group">
                                                     <label class="control-label">${__("Quantity")}</label>
-                                                    <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                                     <input class="form-control" type="number" data-fieldname="quantity" required value="1" min="1" /> </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -5720,6 +5720,8 @@
           return "VAT";
         } else if (item_data2.custom_zero_rated_amount && item_data2.custom_zero_rated_amount != 0) {
           return "ZR";
+        } else if (item_data2.custom_free === 1) {
+          return "FREE";
         } else {
           return "Unknown";
         }
@@ -10808,4 +10810,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.UTC2JLMQ.js.map
+//# sourceMappingURL=packing-list.bundle.KJFX2O4J.js.map
