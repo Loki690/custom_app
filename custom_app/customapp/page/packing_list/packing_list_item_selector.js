@@ -457,7 +457,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                             <div class="col-lg">
                                                 <div class="form-group">
                                                     <label class="control-label">${__("Quantity")}</label>
-                                                    <input class="form-control" type="number" data-fieldname="quantity" required value="1" />
+                                                     <input class="form-control" type="number" data-fieldname="quantity" required value="1" min="1" /> </div>
                                                 </div>
                                             </div>
                                         </div>
