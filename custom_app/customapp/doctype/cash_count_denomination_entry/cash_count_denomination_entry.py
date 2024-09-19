@@ -38,7 +38,6 @@ def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry
         new_entry.custom_sales_return = doc.custom_sales_return
         new_entry.custom_card_sales = doc.custom_card_sales
         new_entry.custom_qr_sales = doc.custom_qr_sales
-        new_entry.custom_date =  doc.posting_date
         new_entry.custom_gift_certificate = doc.custom_gift_certificate
         
         default_denominations = [
@@ -101,24 +100,3 @@ def get_pos_closing_invoices(parent):
         frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
-        
-@frappe.whitelist()
-def update_cash_count_passbook(doc_id, passbook_entry):
-    try:
-        cash_count_doc = frappe.get_doc('Cash Count Denomination Entry', doc_id)
-        cash_count_doc.custom_match_passbook = passbook_entry
-        cash_count_doc.save()
-        frappe.db.commit()
-        return {
-            'status': 'success',
-            'message': 'Cash Count Denomination Entry updated successfully.',
-            'doc_id': doc_id,
-            'custom_match_passbook': passbook_entry
-        }
-        
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), 'Cash Count Denomination Entry Update Error')
-        return {
-            'status': 'error',
-            'message': f'Failed to update Cash Count Denomination Entry: {str(e)}',
-        }

@@ -5,7 +5,7 @@ import frappe
 from frappe.model.document import Document
 
 
-class CSDDailySalesReport(Document):
+class CSDDailySalesReportDetailed(Document):
 	pass
 
 

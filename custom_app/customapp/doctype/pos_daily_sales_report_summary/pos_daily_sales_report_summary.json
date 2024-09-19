@@ -17,12 +17,12 @@
   "section_break_qyz7",
   "sales_details",
   "sales_details_total",
-  "sales_net_total",
   "section_break_nznb",
   "payment_details",
   "payment_details_total",
   "change_amount",
   "total",
+  "sales_total",
   "section_break_ahmo",
   "confirmed_transaction",
   "invoice_from",
@@ -249,6 +249,16 @@
    "print_hide": 1
   },
   {
+   "fieldname": "change_amount",
+   "fieldtype": "Currency",
+   "label": "Change Amount"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "TOTAL"
+  },
+  {
    "fieldname": "invoice_from",
    "fieldtype": "Data",
    "hidden": 1,
@@ -261,6 +271,12 @@
    "hidden": 1,
    "label": "Invoice To",
    "print_hide": 1
+  },
+  {
+   "fieldname": "sales_total",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Sales Total"
   },
   {
    "default": "Today",
@@ -312,31 +328,14 @@
    "fieldname": "confirmed_transaction_item_total",
    "fieldtype": "Data",
    "label": "Confirmed Transaction Item Total"
-  },
-  {
-   "fieldname": "sales_net_total",
-   "fieldtype": "Currency",
-   "label": "Sales Net Total"
-  },
-  {
-   "fieldname": "change_amount",
-   "fieldtype": "Currency",
-   "hidden": 1,
-   "label": "Change Amount"
-  },
-  {
-   "fieldname": "total",
-   "fieldtype": "Currency",
-   "hidden": 1,
-   "label": "Total"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-17 11:26:23.315435",
+ "modified": "2024-08-27 00:29:12.017962",
  "modified_by": "Administrator",
- "module": "Customapp",
+ "module": "customapp",
  "name": "POS Daily Sales Report Summary",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",

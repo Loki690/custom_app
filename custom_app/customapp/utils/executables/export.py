@@ -164,40 +164,9 @@ def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse=Non
             content += f"Total Points: \n"  # Placeholder for Total Points field
             content += "PARTICULARS\n"
 
-            zero_rated_items = []
-            vat_sales_items = []
-            vat_exempt_items = []
-
+            content += "Items:\n"
             for item in invoice.items:
-                item_str = ""
-                if item.discount_percentage != 0:
-                    item_str = f" - {item.item_name} {cint(item.qty)} x {item.rate} {item.discount_percentage}% : {item.amount}\n"
-                else:
-                    item_str = f" - {item.item_name} {cint(item.qty)} x {item.rate}: {item.amount}\n"
-
-                if invoice.customer_group == "Zero Rated":
-                    zero_rated_items.append(item_str)
-                else:
-                    if item.item_tax_template == 'Philippines Tax - ADC':
-                        vat_sales_items.append(item_str)
-                    elif item.item_tax_template == 'Philippines Tax Exempt - ADC':
-                        if invoice.customer_group == "Senior Citizen" or invoice.customer_group == "PWD":
-                            if "L" in item_str:
-                                item_str = item_str.replace("L", "LV")
-                        vat_exempt_items.append(item_str)
-
-            if zero_rated_items:
-                content += "ZERO RATED:\n"
-                content += "".join(zero_rated_items)
-
-            if vat_sales_items:
-                content += "VAT SALES\n"
-                content += "".join(vat_sales_items)
-
-            if vat_exempt_items:
-                content += "VAT EXEMPT SALES\n"
-                content += "".join(vat_exempt_items)
-                                
+                content += f" - {item.item_name} ({cint(item.qty)} x {item.rate}): {item.amount}\n"
 
             content += f"\nNo of Items: {invoice.total_qty}\n"
             content += f"Subtotal: {invoice.net_total}\n"
@@ -220,12 +189,12 @@ def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse=Non
             content += f"Cashier: {invoice.custom_cashier_name}\n"
             content += f"Printed: {format_datetime(invoice.creation)}\n"
             content += "THIS SERVES AS YOUR OFFICIAL RECEIPT"
-            content += "\nDefective or Damaged items may be returned within 7 days. \nBring this receipt. Conditions Apply.\n"
+            content += "Defective or Damaged items may be returned within 7 days. \nBring this receipt. Conditions Apply.\n"
             content += f"{invoice.company}\n"
             content += f"{company_country}\n"
             content += f"VAT REG. TIN: {tax_id}\n"
             content += f"Corner R Magsaysay Ave. & D. Suazo St. Davao City\n"
-            content += f"ACCR.NO:{invoice.custom_accr}\n"
+            content += f"ACCR.NO:{invoice.custom_accr}, Validity:2014-04-03 to 2025-07-31\n"
             content += f"PTU:{invoice.custom_ptu}\n"
             
             if invoice.custom_printed_no != 0:
