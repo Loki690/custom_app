@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-09-18 15:38:12.241043",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "invoice",
+  "mode_of_payment",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "invoice",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Invoice"
+  },
+  {
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mode Of Payment"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-09-18 15:39:50.442820",
+ "modified_by": "Administrator",
+ "module": "Customapp",
+ "name": "POS Closing Gift Cert Transactions",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
