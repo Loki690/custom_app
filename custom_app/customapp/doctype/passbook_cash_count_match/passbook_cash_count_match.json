@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-09-18 08:16:27.145157",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "cash_count",
+  "cashier_name",
+  "shift",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "cash_count",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cash Count",
+   "options": "Cash Count Denomination Entry"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount"
+  },
+  {
+   "fieldname": "cashier_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Cashier Name"
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Shift"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-09-18 11:08:10.269496",
+ "modified_by": "Administrator",
+ "module": "Customapp",
+ "name": "Passbook Cash Count Match",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

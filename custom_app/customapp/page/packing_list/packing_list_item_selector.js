@@ -1034,7 +1034,7 @@ custom_app.PointOfSale.ItemSelector = class {
 
     //end here
 
-    filter_items({ search_term = "", uom = "" } = {}) {
+    filter_items({ search_term = "", uom = "PC" } = {}) {
         if (search_term) {
             search_term = search_term.toLowerCase();
 
