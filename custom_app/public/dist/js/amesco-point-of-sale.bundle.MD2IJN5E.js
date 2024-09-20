@@ -3344,7 +3344,6 @@
         const items = doc.items;
         const payments = doc.payments;
         const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? parseFloat(doc.grand_total).toFixed(2) : parseFloat(doc.rounded_total).toFixed(2);
-        console.log("GrandTotal", grand_total);
         if (paid_amount === 0 || !items.length) {
           const message = items.length ? __("You cannot submit the order without payment.") : __("You cannot submit an empty order.");
           frappe.show_alert({ message, indicator: "orange" });
@@ -7555,4 +7554,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.DL6RMGFM.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.MD2IJN5E.js.map
