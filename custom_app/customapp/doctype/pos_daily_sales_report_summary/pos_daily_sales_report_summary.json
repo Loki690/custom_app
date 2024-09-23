@@ -17,6 +17,7 @@
   "section_break_qyz7",
   "sales_details",
   "sales_details_total",
+  "sales_net_total",
   "section_break_nznb",
   "payment_details",
   "payment_details_total",
@@ -251,11 +252,13 @@
   {
    "fieldname": "change_amount",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Change Amount"
   },
   {
    "fieldname": "total",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "TOTAL"
   },
   {
@@ -328,14 +331,19 @@
    "fieldname": "confirmed_transaction_item_total",
    "fieldtype": "Data",
    "label": "Confirmed Transaction Item Total"
+  },
+  {
+   "fieldname": "sales_net_total",
+   "fieldtype": "Currency",
+   "label": "Sales Net Total"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-08-27 00:29:12.017962",
+ "modified": "2024-09-19 17:53:01.337465",
  "modified_by": "Administrator",
- "module": "customapp",
+ "module": "Customapp",
  "name": "POS Daily Sales Report Summary",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",
