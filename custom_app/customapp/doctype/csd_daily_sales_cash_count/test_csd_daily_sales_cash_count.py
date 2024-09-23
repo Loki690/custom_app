@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestCSDDailySalesReportDetailed(FrappeTestCase):
+class TestCSDDailySalesCashCount(FrappeTestCase):
 	pass
