@@ -23,6 +23,6 @@ def update_gift_cert_code(doc, method):
                     gift_cert_doc = frappe.get_doc("Amesco Gift Certificate", gift_code.code)
                     gift_cert_doc.is_used = 1
                     gift_cert_doc.redeem_by = doc.customer
-                    gift_cert_doc.cashier = doc.custom_cashier_name
+                    gift_cert_doc.cashier = doc.custom_cashier
                     gift_cert_doc.save()
                     frappe.msgprint(f"Gift Certificate {gift_code.code} has been marked as used.")
