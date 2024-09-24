@@ -4702,7 +4702,7 @@
         this.isClicking = false;
       }, 1e3);
     }
-    filter_items({ search_term = "", uom = "" } = {}) {
+    filter_items({ search_term = "", uom = "PC" } = {}) {
       if (search_term) {
         search_term = search_term.toLowerCase();
         this.search_index = this.search_index || {};
@@ -6918,7 +6918,6 @@
         const items = doc.items;
         const payments = doc.payments;
         const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? parseFloat(doc.grand_total).toFixed(2) : parseFloat(doc.rounded_total).toFixed(2);
-        console.log("GrandTotal", grand_total);
         if (paid_amount === 0 || !items.length) {
           const message = items.length ? __("You cannot submit the order without payment.") : __("You cannot submit an empty order.");
           frappe.show_alert({ message, indicator: "orange" });
@@ -6928,7 +6927,7 @@
         const total_paid_amount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
         const rounded_total_paid = parseFloat(total_paid_amount).toFixed(2);
         const rounded_grand_total = parseFloat(grand_total).toFixed(2);
-        const cash_payment_present = payments.some((p) => p.mode_of_payment === "Cash" && p.amount > 0);
+        const cash_payment_present = payments.some((p) => p.mode_of_payment === "Cash" || p.mode_of_payment === "Gift Certificate" && p.amount > 0);
         if (parseFloat(rounded_total_paid) > parseFloat(rounded_grand_total) && !cash_payment_present) {
           frappe.show_alert({
             message: __("Paid amount cannot be greater than the grand total for non-cash payments."),
@@ -10810,4 +10809,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.KJFX2O4J.js.map
+//# sourceMappingURL=packing-list.bundle.6VDAFF6L.js.map
