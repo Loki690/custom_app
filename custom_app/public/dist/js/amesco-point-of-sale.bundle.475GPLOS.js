@@ -7337,6 +7337,7 @@
           if (this.is_current_item_being_edited(item_row) || from_selector) {
             await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
             this.update_cart_html(item_row);
+            await this.auto_add_batch(item_row);
           }
         } else {
           if (!this.frm.doc.customer)
@@ -7359,10 +7360,7 @@
           }
           await this.trigger_new_item_events(item_row);
           this.update_cart_html(item_row);
-          if (this.item_details.$component.is(":visible"))
-            this.edit_item_details_of(item_row);
-          if (this.check_serial_batch_selection_needed(item_row) && !this.item_details.$component.is(":visible"))
-            this.edit_item_details_of(item_row);
+          await this.auto_add_batch(item_row);
         }
       } catch (error) {
         console.log(error);
@@ -7477,7 +7475,87 @@
         }
       });
     }
-    update_item_field(value, field_or_action) {
+    async auto_add_batch(item_row) {
+      try {
+        let batches = await frappe.db.get_list("Batch", {
+          filters: {
+            item: item_row.item_code,
+            expiry_date: [">=", frappe.datetime.now_date()]
+          },
+          fields: ["name", "expiry_date"],
+          order_by: "expiry_date desc"
+        });
+        if (batches.length > 0) {
+          let latest_batch = batches[0];
+          let entries = [{
+            batch_no: latest_batch.name,
+            qty: item_row.qty,
+            name: "row 1",
+            warehouse: this.frm.doc.set_warehouse
+          }];
+          const res = await frappe.call({
+            method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
+            args: {
+              entries,
+              child_row: item_row,
+              doc: this.frm.doc,
+              warehouse: this.frm.doc.set_warehouse
+            }
+          });
+          frappe.model.set_value(item_row.doctype, item_row.name, {
+            serial_and_batch_bundle: res.message.name,
+            qty: Math.abs(res.message.total_qty)
+          });
+        }
+      } catch (error) {
+        frappe.show_alert({
+          message: __("Batch fetch failed. Please try again."),
+          indicator: "red"
+        });
+        console.error(error);
+      }
+    }
+    async auto_add_batch(item_row) {
+      try {
+        let batches = await frappe.db.get_list("Batch", {
+          filters: {
+            item: item_row.item_code,
+            expiry_date: [">=", frappe.datetime.now_date()]
+          },
+          fields: ["name", "expiry_date"],
+          order_by: "expiry_date desc"
+        });
+        if (batches.length > 0) {
+          let latest_batch = batches[0];
+          let entries = [{
+            batch_no: latest_batch.name,
+            qty: item_row.qty,
+            name: "row 1",
+            warehouse: this.frm.doc.set_warehouse
+          }];
+          const res = await frappe.call({
+            method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
+            args: {
+              entries,
+              child_row: item_row,
+              doc: this.frm.doc,
+              warehouse: this.frm.doc.set_warehouse
+            }
+          });
+          frappe.model.set_value(item_row.doctype, item_row.name, {
+            serial_and_batch_bundle: res.message.name,
+            qty: Math.abs(res.message.total_qty)
+          });
+        }
+      } catch (error) {
+        frappe.show_alert({
+          message: __("Batch fetch failed. Please try again."),
+          indicator: "red"
+        });
+        console.error(error);
+      }
+    }
+    async update_item_field(value, field_or_action) {
       if (field_or_action === "checkout") {
         this.item_details.toggle_item_details_section(null);
       } else if (field_or_action === "remove") {
@@ -7554,4 +7632,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.MD2IJN5E.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.475GPLOS.js.map
