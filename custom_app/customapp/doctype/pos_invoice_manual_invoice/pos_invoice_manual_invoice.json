@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "field:doc_no",
+ "autoname": "PMI-.YYYY.-.########",
  "creation": "2024-08-01 16:03:57.736722",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -74,11 +74,11 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-18 17:46:20.746997",
+ "modified": "2024-09-20 09:07:28.232536",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "POS Invoice Manual Invoice",
- "naming_rule": "By fieldname",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {

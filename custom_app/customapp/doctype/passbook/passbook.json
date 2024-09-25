@@ -50,7 +50,8 @@
    "default": "0",
    "fieldname": "has_match",
    "fieldtype": "Check",
-   "label": "Has Match"
+   "label": "Has Match",
+   "read_only": 1
   },
   {
    "fieldname": "deposit_ref",
@@ -60,7 +61,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-09-18 16:38:16.019184",
+ "modified": "2024-09-25 14:45:21.302622",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "Passbook",

@@ -3,12 +3,10 @@
 
 import frappe
 from frappe.model.document import Document
-
+# from custom_app.customapp.doctype.cash_count_denomination_entry.cash_count_denomination_entry import update_cash_count_passbook
 
 class Passbook(Document):
 	pass
-
-
 
 @frappe.whitelist()
 def update_cash_count_match_table(name, amount, cashier, shift, passbook_entry):
@@ -34,4 +32,7 @@ def update_cash_count_match_table(name, amount, cashier, shift, passbook_entry):
         frappe.log_error(frappe.get_traceback(), 'Cash Count Match Table Update Error')
         return {'status': 'error', 'message': f'Failed to update: {str(e)}'}
 
-    pass
+# def after_save(doc, method):
+#     passbook = doc.name
+#     cash_count  = doc.cash_count_match[0].cash_count    
+#     update_cash_count_passbook(cash_count, passbook)
