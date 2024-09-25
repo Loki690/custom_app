@@ -1,0 +1,43 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"Tb82Oym1IC\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Cashier Workspace</span>\",\"col\":12}},{\"id\":\"zTC_jGSAcH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Amesco Point Of Sale\",\"col\":10}}]",
+ "creation": "2024-09-01 23:30:27.119877",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Cashier Workspace",
+ "links": [],
+ "modified": "2024-09-23 15:45:22.113473",
+ "modified_by": "Administrator",
+ "module": "Customapp",
+ "name": "Cashier Workspace",
+ "number_cards": [],
+ "owner": "suaybaguiojohncesar@gmail.com",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Cashier"
+  }
+ ],
+ "sequence_id": 35.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Amesco Point Of Sale",
+   "link_to": "amesco-point-of-sale",
+   "type": "Page"
+  }
+ ],
+ "title": "Cashier Workspace"
+}

@@ -1,0 +1,44 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"cAQbvCj7ql\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Clerk</span>\",\"col\":12}},{\"id\":\"qg5GR0Pp9B\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Amesco Clerk\",\"col\":3}}]",
+ "creation": "2024-08-21 10:12:52.454105",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "retail",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Clerk",
+ "links": [],
+ "modified": "2024-09-23 15:45:36.502012",
+ "modified_by": "Administrator",
+ "module": "Customapp",
+ "name": "Clerk",
+ "number_cards": [],
+ "owner": "suaybaguiojohncesar@gmail.com",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Pharmacist Assistant"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 33.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Amesco Clerk",
+   "link_to": "packing-list",
+   "type": "Page"
+  }
+ ],
+ "title": "Clerk"
+}
