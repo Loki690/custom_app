@@ -1204,7 +1204,11 @@ custom_app.PointOfSale.ItemCart = class {
 				return 'VAT';
 			} else if (item_data.custom_zero_rated_amount && item_data.custom_zero_rated_amount != 0) {
 				return 'ZR';
+			}else if (item_data.custom_free === 1) {
+					return 'FREE';
+				
 			} else {
+
 				return 'Unknown';
 			}
 		}

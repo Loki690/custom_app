@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2024-08-28 18:19:05.772424",
+ "creation": "2024-09-20 14:29:04.994234",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -86,17 +86,16 @@
    "fetch_from": "customer.customer_name",
    "fieldname": "customer_name",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Customer Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-09-25 08:11:10.695259",
+ "modified": "2024-09-25 09:57:19.773197",
  "modified_by": "Administrator",
  "module": "Customapp",
- "name": "CSD Daily Sales Report Detail Table",
+ "name": "CSD Charge Transaction",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",
