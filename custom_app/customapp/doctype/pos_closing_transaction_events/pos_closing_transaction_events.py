@@ -144,6 +144,52 @@ def get_gift_cert_transactions(parent):
 
 
 @frappe.whitelist()
+def get_amesco_plus_transactions(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'Sales Invoice Payment',
+            filters={
+                'parent': parent,
+                'mode_of_payment': 'Amesco Plus',  # Add filter for mode_of_payment
+                'amount': ['!=', 0]
+                # Add filter for amount not equal to 0       
+            },
+            fields=['name', 'parent', 'mode_of_payment','custom_am_voucher_code', 'custom_am_plus_user_id', 'custom_am_plus_user_email' ,'amount']  # Specify the fields you want to fetch
+        )
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_cash_transactions( Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
+
+
+
+@frappe.whitelist()
+def get_charge_transactions(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'Sales Invoice Payment',
+            filters={
+                'parent': parent,
+                'mode_of_payment': 'Charge',  # Add filter for mode_of_payment
+                'amount': ['!=', 0]
+                # Add filter for amount not equal to 0       
+            },
+            fields=['name', 'parent', 'mode_of_payment','custom_customer', 'custom_charge_invoice_number', 'custom_po_number' ,'custom_representative', 'custom_id_number','custom_approved_by', 'amount']  # Specify the fields you want to fetch
+        )
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'get_cash_transactions( Error')
+        frappe.throw(_("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag
+
+
+
+@frappe.whitelist()
 def get_return_invoices(parent):
     frappe.flags.ignore_permissions = True  # Ignore permissions
     try:
