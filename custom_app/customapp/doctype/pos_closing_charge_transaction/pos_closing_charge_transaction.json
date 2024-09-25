@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-09-25 11:15:13.732370",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "invoice",
+  "mode_of_payment",
+  "customer",
+  "charge_invoice_number",
+  "po_number",
+  "representative",
+  "id_number",
+  "approved_by",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "invoice",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Invoice"
+  },
+  {
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mode Of Payment"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer"
+  },
+  {
+   "fieldname": "charge_invoice_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Charge Invoice No."
+  },
+  {
+   "fieldname": "po_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "PO No."
+  },
+  {
+   "fieldname": "representative",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Representative"
+  },
+  {
+   "fieldname": "id_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "ID No."
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Approved By"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-09-25 11:19:47.594674",
+ "modified_by": "Administrator",
+ "module": "Customapp",
+ "name": "POS Closing Charge Transaction",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
