@@ -396,10 +396,7 @@
    "field_name": "cash_denomination_amount",
    "idx": 0,
    "is_system_generated": 0,
-
-   "modified": "2024-09-17 09:44:09.566106",
-
-
+   "modified": "2024-09-25 17:34:05.502928",
    "modified_by": "Administrator",
    "module": null,
    "name": "Cash Count Denomination-cash_denomination_amount-hidden",
@@ -422,8 +419,7 @@
    "field_name": "cash_denomination_amount",
    "idx": 0,
    "is_system_generated": 0,
-
-   "modified": "2024-09-17 09:44:09.549854",
+   "modified": "2024-09-25 17:34:05.520668",
    "modified_by": "Administrator",
    "module": null,
    "name": "Cash Count Denomination-cash_denomination_amount-in_list_view",
@@ -446,11 +442,7 @@
    "field_name": "currency",
    "idx": 0,
    "is_system_generated": 0,
-
-
-   "modified": "2024-09-17 09:44:09.533717",
-
-
+   "modified": "2024-09-25 17:34:05.535498",
    "modified_by": "Administrator",
    "module": null,
    "name": "Cash Count Denomination-currency-in_list_view",
@@ -473,11 +465,7 @@
    "field_name": "denomination",
    "idx": 0,
    "is_system_generated": 0,
-
-
-   "modified": "2024-09-17 09:44:09.514301",
-
-
+   "modified": "2024-09-25 17:34:05.547688",
    "modified_by": "Administrator",
    "module": null,
    "name": "Cash Count Denomination-denomination-hidden",
@@ -500,10 +488,7 @@
    "field_name": "denomination",
    "idx": 0,
    "is_system_generated": 0,
-
-
-   "modified": "2024-09-17 09:44:09.492892",
-
+   "modified": "2024-09-25 17:34:05.559122",
    "modified_by": "Administrator",
    "module": null,
    "name": "Cash Count Denomination-denomination-in_list_view",
@@ -526,11 +511,7 @@
    "field_name": null,
    "idx": 0,
    "is_system_generated": 0,
-
-
-   "modified": "2024-09-17 09:44:09.474778",
-
-
+   "modified": "2024-09-25 17:34:05.575012",
    "modified_by": "Administrator",
    "module": null,
    "name": "Cash Count Denomination-main-field_order",
