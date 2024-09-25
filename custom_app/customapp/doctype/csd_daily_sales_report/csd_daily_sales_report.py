@@ -5,7 +5,7 @@ import frappe
 from frappe.model.document import Document
 
 
-class CSDDailySalesReportDetailed(Document):
+class CSDDailySalesReport(Document):
 	pass
 
 
@@ -14,9 +14,9 @@ def get_sales_invoice_payment(parent):
     frappe.flags.ignore_permissions = True  # Ignore permissions
     try:
         records = frappe.get_all(
-            'POS Payment Method', 
+            'Payment Entry', 
             filters={'parent': parent},
-            fields=['name', 'parent', 'mode_of_payment']  # Specify the fields you want to fetch
+            fields=['name', 'parent', 'total_allocated_amount', 'paid_amount', 'mode_of_payment']  # Specify the fields you want to fetch
         )
         
         return records
@@ -46,5 +46,27 @@ def get_sales_invoice_items(parent):
         frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
+
+
+@frappe.whitelist()
+def get_daily_sales_cash_report(parent):
+    frappe.flags.ignore_permissions = True  # Ignore permissions
+    try:
+        records = frappe.get_all(
+            'CSD Daily Sales Report Detail Table', 
+            filters={
+                'parent': parent,
+                # 'sales_order': ['!=', '']  # Ensure that sales_order is not empty
+            },
+            fields=['name', 'parent', 'date', 'customer', 'sales_order', 'invoice_type', 'sales_invoice', 'check_detail', 'check_date', 'amount','paid_out' ],  # Specify the fields you want to fetch
+            order_by='name asc'  # Sort the results by the 'name' field in ascending order
+        )
+        
+        return records
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Error')
+        frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
+    finally:
+        frappe.flags.ignore_permissions = False  # Reset the flag 
 
         

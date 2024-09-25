@@ -2656,7 +2656,9 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-05-21 08:50:43.523092",
+
    "default_value": null,
    "doc_type": "Sales Invoice Payment",
    "docstatus": 0,
@@ -2664,7 +2666,9 @@
    "field_name": "name_on_card",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-09-08 15:39:10.984403",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Sales Invoice Payment-name_on_card-collapsible",
@@ -2679,6 +2683,7 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-09-02 16:04:35.121747",
    "default_value": null,
    "doc_type": "Sales Invoice Payment",
@@ -2703,10 +2708,12 @@
    "_liked_by": null,
    "_user_tags": null,
    "creation": "2024-08-09 11:00:08.847938",
+
    "default_value": null,
    "doc_type": "Sales Invoice Payment",
    "docstatus": 0,
    "doctype_or_field": "DocField",
+
    "field_name": "gcashmaya_section",
    "idx": 0,
    "is_system_generated": 0,
@@ -2714,6 +2721,7 @@
    "modified_by": "Administrator",
    "module": null,
    "name": "Sales Invoice Payment-gcashmaya_section-collapsible",
+
    "owner": "Administrator",
    "property": "collapsible",
    "property_type": "Check",
@@ -2725,11 +2733,14 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-05-21 08:50:43.561563",
+
    "default_value": null,
    "doc_type": "Sales Invoice Payment",
    "docstatus": 0,
    "doctype_or_field": "DocField",
+
    "field_name": "card_number",
    "idx": 0,
    "is_system_generated": 0,
@@ -2737,6 +2748,7 @@
    "modified_by": "Administrator",
    "module": null,
    "name": "Sales Invoice Payment-card_number-hidden",
+
    "owner": "Administrator",
    "property": "hidden",
    "property_type": "Check",
@@ -2756,7 +2768,9 @@
    "field_name": "card_infromation_section",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-09-08 15:39:10.955789",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Sales Invoice Payment-card_infromation_section-collapsible",
@@ -2771,11 +2785,14 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-05-21 08:50:43.598188",
+
    "default_value": null,
    "doc_type": "Sales Invoice Payment",
    "docstatus": 0,
    "doctype_or_field": "DocField",
+
    "field_name": "card_exp_date",
    "idx": 0,
    "is_system_generated": 0,
@@ -2783,6 +2800,7 @@
    "modified_by": "Administrator",
    "module": null,
    "name": "Sales Invoice Payment-card_exp_date-hidden",
+
    "owner": "Administrator",
    "property": "hidden",
    "property_type": "Check",
@@ -2794,7 +2812,9 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-05-21 08:50:43.642195",
+
    "default_value": null,
    "doc_type": "Sales Invoice Payment",
    "docstatus": 0,
@@ -2802,7 +2822,9 @@
    "field_name": "card_confirmation_code",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-09-08 15:39:10.940878",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Sales Invoice Payment-card_confirmation_code-hidden",
@@ -2817,7 +2839,9 @@
    "_comments": null,
    "_liked_by": null,
    "_user_tags": null,
+
    "creation": "2024-07-12 18:03:11.330039",
+
    "default_value": null,
    "doc_type": "Sales Invoice Payment",
    "docstatus": 0,
@@ -2825,10 +2849,39 @@
    "field_name": "bank_name",
    "idx": 0,
    "is_system_generated": 0,
+
    "modified": "2024-09-08 15:39:10.933706",
+
    "modified_by": "Administrator",
    "module": null,
    "name": "Sales Invoice Payment-bank_name-hidden",
+   "owner": "Administrator",
+
+   "property": "hidden",
+   "property_type": "Check",
+
+   "row_name": null,
+   "value": "1"
+  },
+  {
+   "_assign": null,
+   "_comments": null,
+   "_liked_by": null,
+   "_user_tags": null,
+   "creation": "2024-05-21 08:50:43.523092",
+   "default_value": null,
+   "doc_type": "Sales Invoice Payment",
+   "docstatus": 0,
+   "doctype_or_field": "DocField",
+   "field_name": "name_on_card",
+   "idx": 0,
+   "is_system_generated": 0,
+
+   "modified": "2024-09-02 08:40:35.362589",
+   "modified_by": "Administrator",
+   "module": null,
+   "name": "Sales Invoice Payment-name_on_card-hidden",
+
    "owner": "Administrator",
    "property": "hidden",
    "property_type": "Check",
@@ -2848,7 +2901,7 @@
    "field_name": "name_on_card",
    "idx": 0,
    "is_system_generated": 0,
-   "modified": "2024-09-02 08:40:35.362589",
+   "modified": "2024-09-20 11:13:05.026295",
    "modified_by": "Administrator",
    "module": null,
    "name": "Sales Invoice Payment-name_on_card-hidden",

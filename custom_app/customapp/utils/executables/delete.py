@@ -1,14 +1,22 @@
 import frappe
+
 @frappe.whitelist()
 def delete_draft_pos_invoices():
     """
-    Deletes all draft POS invoices.
+    Deletes all draft POS invoices that are in 'Draft' status.
     """
     try:
-        draft_pos_invoices = frappe.get_all('POS Invoice', filters={'status': 0})
+        # Get all POS invoices that are in draft (status = 0)
+        draft_pos_invoices = frappe.get_all('POS Invoice', filters={'docstatus': 0})
+        
+        # Loop through and delete each draft invoice
         for invoice in draft_pos_invoices:
             frappe.delete_doc('POS Invoice', invoice.name, force=1, ignore_permissions=True)
+        
+        # Commit the transaction to ensure deletion
         frappe.db.commit()
+        
         frappe.logger().info(f"Deleted {len(draft_pos_invoices)} draft POS invoices.")
+    
     except Exception as e:
         frappe.logger().error(f"Failed to delete draft POS invoices: {str(e)}")

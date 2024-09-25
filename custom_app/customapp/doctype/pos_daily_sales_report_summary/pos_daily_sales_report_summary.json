@@ -23,7 +23,6 @@
   "payment_details_total",
   "change_amount",
   "total",
-  "sales_total",
   "section_break_ahmo",
   "confirmed_transaction",
   "invoice_from",
@@ -250,6 +249,7 @@
    "print_hide": 1
   },
   {
+
    "fieldname": "change_amount",
    "fieldtype": "Currency",
    "hidden": 1,
@@ -262,6 +262,7 @@
    "label": "TOTAL"
   },
   {
+
    "fieldname": "invoice_from",
    "fieldtype": "Data",
    "hidden": 1,
@@ -274,12 +275,6 @@
    "hidden": 1,
    "label": "Invoice To",
    "print_hide": 1
-  },
-  {
-   "fieldname": "sales_total",
-   "fieldtype": "Currency",
-   "hidden": 1,
-   "label": "Sales Total"
   },
   {
    "default": "Today",
@@ -341,7 +336,9 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
+
  "modified": "2024-09-19 17:53:01.337465",
+
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "POS Daily Sales Report Summary",

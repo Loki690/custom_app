@@ -309,8 +309,6 @@ custom_app.PointOfSale.Payment = class {
 				? parseFloat(doc.grand_total).toFixed(2)  // Convert to 2 decimal places
 				: parseFloat(doc.rounded_total).toFixed(2);  // Convert to 2 decimal places
 		
-			console.log("GrandTotal", grand_total);
-		
 			// Validate that there are items and a non-zero paid amount
 			if (paid_amount === 0 || !items.length) {
 				const message = items.length
@@ -327,7 +325,7 @@ custom_app.PointOfSale.Payment = class {
 			const rounded_total_paid = parseFloat(total_paid_amount).toFixed(2);
 			const rounded_grand_total = parseFloat(grand_total).toFixed(2);
 
-			const cash_payment_present = payments.some(p => p.mode_of_payment === 'Cash' && p.amount > 0);
+			const cash_payment_present = payments.some(p => p.mode_of_payment === 'Cash' || p.mode_of_payment === 'Gift Certificate' && p.amount > 0);
 
 			// Compare the rounded values
 			if (parseFloat(rounded_total_paid) > parseFloat(rounded_grand_total) && !cash_payment_present) {

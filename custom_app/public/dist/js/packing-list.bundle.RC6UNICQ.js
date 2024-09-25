@@ -4702,7 +4702,7 @@
         this.isClicking = false;
       }, 1e3);
     }
-    filter_items({ search_term = "", uom = "" } = {}) {
+    filter_items({ search_term = "", uom = "PC" } = {}) {
       if (search_term) {
         search_term = search_term.toLowerCase();
         this.search_index = this.search_index || {};
@@ -6918,7 +6918,6 @@
         const items = doc.items;
         const payments = doc.payments;
         const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? parseFloat(doc.grand_total).toFixed(2) : parseFloat(doc.rounded_total).toFixed(2);
-        console.log("GrandTotal", grand_total);
         if (paid_amount === 0 || !items.length) {
           const message = items.length ? __("You cannot submit the order without payment.") : __("You cannot submit an empty order.");
           frappe.show_alert({ message, indicator: "orange" });
@@ -6928,7 +6927,7 @@
         const total_paid_amount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
         const rounded_total_paid = parseFloat(total_paid_amount).toFixed(2);
         const rounded_grand_total = parseFloat(grand_total).toFixed(2);
-        const cash_payment_present = payments.some((p) => p.mode_of_payment === "Cash" && p.amount > 0);
+        const cash_payment_present = payments.some((p) => p.mode_of_payment === "Cash" || p.mode_of_payment === "Gift Certificate" && p.amount > 0);
         if (parseFloat(rounded_total_paid) > parseFloat(rounded_grand_total) && !cash_payment_present) {
           frappe.show_alert({
             message: __("Paid amount cannot be greater than the grand total for non-cash payments."),
@@ -9988,7 +9987,7 @@
       const show = this.recent_order_list.$component.is(":hidden");
       this.toggle_recent_order_list(show);
     }
-    save_draft_invoice() {
+    async save_draft_invoice() {
       if (this.passwordDialog) {
         this.passwordDialog.hide();
         this.passwordDialog.$wrapper.remove();
@@ -10210,7 +10209,7 @@
         pos_profile: this.pos_profile,
         settings: this.settings,
         events: {
-          item_selected: (args) => {
+          item_selected: async (args) => {
             frappe.call({
               method: "custom_app.customapp.page.packing_list.packing_list.get_pos_warehouse",
               args: {
@@ -10580,6 +10579,7 @@
           if (this.is_current_item_being_edited(item_row) || from_selector) {
             await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
             this.update_cart_html(item_row);
+            await this.auto_add_batch(item_row);
           }
         } else {
           if (!this.frm.doc.customer)
@@ -10602,10 +10602,7 @@
           }
           await this.trigger_new_item_events(item_row);
           this.update_cart_html(item_row);
-          if (this.item_details.$component.is(":visible"))
-            this.edit_item_details_of(item_row);
-          if (this.check_serial_batch_selection_needed(item_row) && !this.item_details.$component.is(":visible"))
-            this.edit_item_details_of(item_row);
+          await this.auto_add_batch(item_row);
         }
       } catch (error) {
         console.log(error);
@@ -10720,7 +10717,47 @@
         }
       });
     }
-    update_item_field(value, field_or_action) {
+    async auto_add_batch(item_row) {
+      try {
+        let batches = await frappe.db.get_list("Batch", {
+          filters: {
+            item: item_row.item_code,
+            expiry_date: [">=", frappe.datetime.now_date()]
+          },
+          fields: ["name", "expiry_date"],
+          order_by: "expiry_date desc"
+        });
+        if (batches.length > 0) {
+          let latest_batch = batches[0];
+          let entries = [{
+            batch_no: latest_batch.name,
+            qty: item_row.qty,
+            name: "row 1",
+            warehouse: this.frm.doc.set_warehouse
+          }];
+          const res = await frappe.call({
+            method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
+            args: {
+              entries,
+              child_row: item_row,
+              doc: this.frm.doc,
+              warehouse: this.frm.doc.set_warehouse
+            }
+          });
+          frappe.model.set_value(item_row.doctype, item_row.name, {
+            serial_and_batch_bundle: res.message.name,
+            qty: Math.abs(res.message.total_qty)
+          });
+        }
+      } catch (error) {
+        frappe.show_alert({
+          message: __("Batch fetch failed. Please try again."),
+          indicator: "red"
+        });
+        console.error(error);
+      }
+    }
+    async update_item_field(value, field_or_action) {
       if (field_or_action === "checkout") {
         this.item_details.toggle_item_details_section(null);
       } else if (field_or_action === "remove") {
@@ -10810,4 +10847,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.KJFX2O4J.js.map
+//# sourceMappingURL=packing-list.bundle.RC6UNICQ.js.map
