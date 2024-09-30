@@ -791,17 +791,22 @@ def get_draft_pos_invoice_item_quantity(pos_profile, item_code, actual_qty):
 import frappe
 
 @frappe.whitelist()
-def get_fifo_batch(item_code, warehouse):
-    batches = frappe.db.sql("""
-        SELECT name, expiry_date
-        FROM `tabBatch`
-        WHERE item = %s AND (expiry_date IS NULL OR expiry_date > NOW())
-        ORDER BY expiry_date ASC, creation ASC
-        LIMIT 1
-    """, (item_code,), as_dict=True)
+def fetch_latest_batch_entries(pos_profile, item_code):
+    # Fetch the warehouse linked to the POS profile
+    warehouse = frappe.db.get_value('POS Profile', pos_profile, 'warehouse')
     
-    if batches:
-        return batches[0]
-    else:
-        return None
+    if not warehouse:
+        frappe.throw(f"No warehouse found for POS Profile {pos_profile}")
 
+    # Fetch the latest entries from the Serial and Batch Entry table for the specified warehouse and item code
+    batches = frappe.db.sql("""
+        SELECT sbe.batch_no, b.expiry_date
+        FROM `tabSerial and Batch Entry` AS sbe
+        JOIN `tabSerial and Batch Bundle` AS sbb ON sbe.parent = sbb.name
+        JOIN `tabBatch` AS b ON sbe.batch_no = b.name
+        WHERE sbb.warehouse = %s AND sbb.item_code = %s
+        ORDER BY sbe.creation DESC
+        LIMIT 10  -- Change this limit as needed
+    """, (warehouse, item_code), as_dict=True)
+
+    return batches

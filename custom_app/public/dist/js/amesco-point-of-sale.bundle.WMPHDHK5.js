@@ -481,7 +481,7 @@
       this.render_item_list(message.items);
       this.filter_items({ uom: this.selected_uom });
     }
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
+    get_items({ start = 0, page_length = 20, search_term = "" }) {
       const doc = this.events.get_frm().doc;
       const price_list = doc && doc.selling_price_list || this.price_list || "default_price_list";
       let item_group = doc && doc.item_group || this.item_group || "default_item_group";
@@ -6282,7 +6282,15 @@
     check_opening_entry() {
       this.fetch_opening_entry().then((r) => {
         if (r.message.length) {
-          this.prepare_app_defaults(r.message[0]);
+          let data = r.message[0];
+          localStorage.setItem("pos_profile", data.pos_profile);
+          console.log("user: ", frappe.session.user);
+          let saved_pos_profile = localStorage.getItem("pos_profile");
+          if (saved_pos_profile) {
+            data.pos_profile = saved_pos_profile;
+            console.log("savedPosProfile:", "true");
+          }
+          this.prepare_app_defaults(data);
         } else {
           this.create_opening_voucher();
         }
@@ -7264,6 +7272,8 @@
       return new Promise((resolve) => {
         if (this.frm) {
           this.frm = this.get_new_frm(this.frm);
+          console.log("this.frm", this.frm);
+          this.frm.doc.pos_profile = this.pos_profile;
           this.frm.doc.items = [];
           this.frm.doc.is_pos = 1;
           resolve();
@@ -7337,7 +7347,6 @@
           if (this.is_current_item_being_edited(item_row) || from_selector) {
             await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
             this.update_cart_html(item_row);
-            await this.auto_add_batch(item_row);
           }
         } else {
           if (!this.frm.doc.customer)
@@ -7360,7 +7369,10 @@
           }
           await this.trigger_new_item_events(item_row);
           this.update_cart_html(item_row);
-          await this.auto_add_batch(item_row);
+          if (this.item_details.$component.is(":visible"))
+            this.edit_item_details_of(item_row);
+          if (this.check_serial_batch_selection_needed(item_row) && !this.item_details.$component.is(":visible"))
+            this.edit_item_details_of(item_row);
         }
       } catch (error) {
         console.log(error);
@@ -7515,46 +7527,6 @@
         console.error(error);
       }
     }
-    async auto_add_batch(item_row) {
-      try {
-        let batches = await frappe.db.get_list("Batch", {
-          filters: {
-            item: item_row.item_code,
-            expiry_date: [">=", frappe.datetime.now_date()]
-          },
-          fields: ["name", "expiry_date"],
-          order_by: "expiry_date desc"
-        });
-        if (batches.length > 0) {
-          let latest_batch = batches[0];
-          let entries = [{
-            batch_no: latest_batch.name,
-            qty: item_row.qty,
-            name: "row 1",
-            warehouse: this.frm.doc.set_warehouse
-          }];
-          const res = await frappe.call({
-            method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
-            args: {
-              entries,
-              child_row: item_row,
-              doc: this.frm.doc,
-              warehouse: this.frm.doc.set_warehouse
-            }
-          });
-          frappe.model.set_value(item_row.doctype, item_row.name, {
-            serial_and_batch_bundle: res.message.name,
-            qty: Math.abs(res.message.total_qty)
-          });
-        }
-      } catch (error) {
-        frappe.show_alert({
-          message: __("Batch fetch failed. Please try again."),
-          indicator: "red"
-        });
-        console.error(error);
-      }
-    }
     async update_item_field(value, field_or_action) {
       if (field_or_action === "checkout") {
         this.item_details.toggle_item_details_section(null);
@@ -7632,4 +7604,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.475GPLOS.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.WMPHDHK5.js.map

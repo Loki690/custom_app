@@ -119,7 +119,7 @@ custom_app.PointOfSale.ItemSelector = class {
 
     }
 
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
+    get_items({ start = 0, page_length = 20, search_term = "" }) {
         const doc = this.events.get_frm().doc;
     
         // Use fallback default values

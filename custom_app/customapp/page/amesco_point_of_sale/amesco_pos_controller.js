@@ -13,16 +13,29 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	check_opening_entry() {
-		this.fetch_opening_entry().then((r) => {
-			if (r.message.length) {
-				// assuming only one opening voucher is available for the current user
-				this.prepare_app_defaults(r.message[0]);
-			} else {
-				this.create_opening_voucher();
-			}
-		});
-	}
+        this.fetch_opening_entry().then((r) => {
+            if (r.message.length) {
+                // assuming only one opening voucher is available for the current user
+                let data = r.message[0];
+                localStorage.setItem('pos_profile', data.pos_profile);
 
+                // console.log('r.message:', r.message[0].pos_profile);
+                console.log('user: ', frappe.session.user);
+
+                let saved_pos_profile = localStorage.getItem('pos_profile');
+
+                if (saved_pos_profile) {
+                    data.pos_profile = saved_pos_profile;
+                    console.log('savedPosProfile:', 'true');
+                }
+
+                this.prepare_app_defaults(data);
+
+            } else {
+                this.create_opening_voucher();
+            }
+        });
+    }
 
 	// Example JavaScript code to make the API call
 
@@ -1287,6 +1300,8 @@ custom_app.PointOfSale.Controller = class {
 		return new Promise((resolve) => {
 			if (this.frm) {
 				this.frm = this.get_new_frm(this.frm);
+				console.log('this.frm', this.frm)
+				this.frm.doc.pos_profile = this.pos_profile;
 				this.frm.doc.items = [];
 				this.frm.doc.is_pos = 1;
 				resolve();
@@ -1300,6 +1315,7 @@ custom_app.PointOfSale.Controller = class {
 			}
 		});
 	}
+
 
 	get_new_frm(_frm) {
 		const doctype = "POS Invoice";
@@ -1373,7 +1389,7 @@ custom_app.PointOfSale.Controller = class {
 					await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
 					this.update_cart_html(item_row);
 
-					await this.auto_add_batch(item_row);
+					// await this.auto_add_batch(item_row);
 				}
 			} else {
 				if (!this.frm.doc.customer) return this.raise_customer_selection_alert();
@@ -1403,15 +1419,15 @@ custom_app.PointOfSale.Controller = class {
 
 				this.update_cart_html(item_row);
 				
-				await this.auto_add_batch(item_row);
+				// await this.auto_add_batch(item_row);
 
-				// if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
+				if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
 
-				// if (
-				// 	this.check_serial_batch_selection_needed(item_row) &&
-				// 	!this.item_details.$component.is(":visible")
-				// )
-				// 	this.edit_item_details_of(item_row);
+				if (
+					this.check_serial_batch_selection_needed(item_row) &&
+					!this.item_details.$component.is(":visible")
+				)
+					this.edit_item_details_of(item_row);
 			}
 		} catch (error) {
 			console.log(error);
@@ -1599,49 +1615,6 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 
-	async auto_add_batch(item_row) {
-		try {
-			let batches = await frappe.db.get_list('Batch', {
-				filters: {
-					item: item_row.item_code,
-					expiry_date: ['>=', frappe.datetime.now_date()]
-				},
-				fields: ['name', 'expiry_date'],
-				order_by: 'expiry_date desc'
-			});
-	
-			if (batches.length > 0) {
-				let latest_batch = batches[0];
-				let entries = [{
-					batch_no: latest_batch.name,
-					qty: item_row.qty,
-					name: "row 1",
-					warehouse: this.frm.doc.set_warehouse
-				}];
-	
-				const res = await frappe.call({
-					method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
-					args: {
-						entries: entries,
-						child_row: item_row,
-						doc: this.frm.doc,
-						warehouse: this.frm.doc.set_warehouse
-					},
-				});
-	
-				frappe.model.set_value(item_row.doctype, item_row.name, {
-					serial_and_batch_bundle: res.message.name,
-					qty: Math.abs(res.message.total_qty),
-				});
-			} 
-		} catch (error) {
-			frappe.show_alert({
-				message: __('Batch fetch failed. Please try again.'),
-				indicator: 'red',
-			});
-			console.error(error);
-		}
-	}
 
 	async update_item_field(value, field_or_action) {
 
