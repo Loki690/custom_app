@@ -16,7 +16,21 @@ custom_app.PointOfSale.Controller = class {
 		this.fetch_opening_entry().then((r) => {
 			if (r.message.length) {
 				// assuming only one opening voucher is available for the current user
-				this.prepare_app_defaults(r.message[0]);
+				let data = r.message[0];
+				localStorage.setItem('pos_profile', data.pos_profile);
+
+				console.log('r.message:', r.message[0].pos_profile);
+				console.log('user: ', frappe.session.user);
+
+				let saved_pos_profile = localStorage.getItem('pos_profile');
+
+				if (saved_pos_profile) {
+					data.pos_profile = saved_pos_profile;
+					console.log('savedPosProfile:', 'true');
+				}
+
+				this.prepare_app_defaults(data);
+				
 			} else {
 				this.create_opening_voucher();
 			}
@@ -471,61 +485,82 @@ custom_app.PointOfSale.Controller = class {
 	}
 
 	amesco_plus_scan() {
-
-		const me = this
-		const doc = me.frm
-		
-		new frappe.ui.Scanner({
-			dialog: true, // open camera scanner in a dialog
-			multiple: false, // stop after scanning one value
-			on_scan(data) {
-				// Assuming the scanned data is comma-separated
-				let scannedData = data.decodedText.split(',');
-				// Extracting fields from the scanned data
-				let user_id = scannedData[0];
-				let userName = scannedData[2];
-				let email = scannedData[3];
-				let points = scannedData[4];
-
-				doc.set_value('custom_ameso_user', email);
-				doc.set_value('custom_amesco_user_id', user_id);
-
-				// Creating a dialog to display the extracted data
-				let userDetailsDialog = new frappe.ui.Dialog({
-					title: __('Scanned User Details'),
-					fields: [
-						{
-							label: 'Name',
-							fieldname: 'user_name',
-							fieldtype: 'Data',
-							read_only: 1,
-							default: userName
-						},
-						{
-							label: 'Email',
-							fieldname: 'email',
-							fieldtype: 'Data',
-							read_only: 1,
-							default: email
-						},
-						{
-							label: 'Points',
-							fieldname: 'points',
-							fieldtype: 'Data',
-							read_only: 1,
-							default: points
-						}
-					],
-					primary_action_label: __('Close'),
-					primary_action: function() {
-						userDetailsDialog.hide();
-					}
-				});
+		const me = this;
+		const doc = me.frm;
 	
-				// Show the dialog with user details
-				userDetailsDialog.show();
+		// Create a dialog with a data field for manual input
+		let manualInputDialog = new frappe.ui.Dialog({
+			title: __('Enter Scanned Data'),
+			fields: [
+				{
+					label: 'Scanned Data',
+					fieldname: 'scanned_data',
+					fieldtype: 'Data',
+					reqd: 1, // Make this field mandatory
+					description: 'Enter the scanned data (comma-separated format)'
+				}
+			],
+			primary_action_label: __('Submit'),
+			primary_action(values) {
+				let scannedData = values.scanned_data.split(',');  // Assuming the data is comma-separated
+	
+				if (scannedData.length >= 5) {
+					// Extracting fields from the scanned data
+					let user_id = scannedData[0];
+					let userName = scannedData[2];
+					let email = scannedData[3];
+					let points = scannedData[4];
+	
+					// Set the extracted values in the document
+					doc.set_value('custom_ameso_user', email);
+					doc.set_value('custom_amesco_user_id', user_id);
+	
+					// Display the extracted user details in another dialog
+					let userDetailsDialog = new frappe.ui.Dialog({
+						title: __('Scanned User Details'),
+						fields: [
+							{
+								label: 'Name',
+								fieldname: 'user_name',
+								fieldtype: 'Data',
+								read_only: 1,
+								default: userName
+							},
+							{
+								label: 'Email',
+								fieldname: 'email',
+								fieldtype: 'Data',
+								read_only: 1,
+								default: email
+							},
+							{
+								label: 'Points',
+								fieldname: 'points',
+								fieldtype: 'Data',
+								read_only: 1,
+								default: points
+							}
+						],
+						primary_action_label: __('Close'),
+						primary_action: function() {
+							userDetailsDialog.hide();
+						}
+					});
+	
+					// Show the dialog with the user details
+					userDetailsDialog.show();
+	
+				} else {
+					frappe.msgprint(__('Invalid data format. Please enter at least 5 comma-separated values.'));
+				}
+	
+				// Hide the manual input dialog after submission
+				manualInputDialog.hide();
 			}
-		})
+		});
+	
+		// Show the manual input dialog
+		manualInputDialog.show();
 	}
 
 
@@ -1287,6 +1322,7 @@ custom_app.PointOfSale.Controller = class {
 		return new Promise((resolve) => {
 			if (this.frm) {
 				this.frm = this.get_new_frm(this.frm);
+				this.frm.doc.pos_profile = this.pos_profile;
 				this.frm.doc.items = [];
 				this.frm.doc.is_pos = 1;
 				resolve();
@@ -1373,7 +1409,7 @@ custom_app.PointOfSale.Controller = class {
 					await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
 					this.update_cart_html(item_row);
 
-					await this.auto_add_batch(item_row);
+					// await this.auto_add_batch(item_row);
 				}
 			} else {
 				if (!this.frm.doc.customer) return this.raise_customer_selection_alert();
@@ -1403,15 +1439,15 @@ custom_app.PointOfSale.Controller = class {
 
 				this.update_cart_html(item_row);
 				
-				await this.auto_add_batch(item_row);
+				// await this.auto_add_batch(item_row);
 
-				// if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
+				if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
 
-				// if (
-				// 	this.check_serial_batch_selection_needed(item_row) &&
-				// 	!this.item_details.$component.is(":visible")
-				// )
-				// 	this.edit_item_details_of(item_row);
+				if (
+					this.check_serial_batch_selection_needed(item_row) &&
+					!this.item_details.$component.is(":visible")
+				)
+					this.edit_item_details_of(item_row);
 			}
 		} catch (error) {
 			console.log(error);
@@ -1551,51 +1587,6 @@ custom_app.PointOfSale.Controller = class {
 				me.item_stock_map[item_code][warehouse] = res.message;
 			},
 		});
-	}
-
-
-	async auto_add_batch(item_row) {
-		try {
-			let batches = await frappe.db.get_list('Batch', {
-				filters: {
-					item: item_row.item_code,
-					expiry_date: ['>=', frappe.datetime.now_date()]
-				},
-				fields: ['name', 'expiry_date'],
-				order_by: 'expiry_date desc'
-			});
-	
-			if (batches.length > 0) {
-				let latest_batch = batches[0];
-				let entries = [{
-					batch_no: latest_batch.name,
-					qty: item_row.qty,
-					name: "row 1",
-					warehouse: this.frm.doc.set_warehouse
-				}];
-	
-				const res = await frappe.call({
-					method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
-					args: {
-						entries: entries,
-						child_row: item_row,
-						doc: this.frm.doc,
-						warehouse: this.frm.doc.set_warehouse
-					},
-				});
-	
-				frappe.model.set_value(item_row.doctype, item_row.name, {
-					serial_and_batch_bundle: res.message.name,
-					qty: Math.abs(res.message.total_qty),
-				});
-			} 
-		} catch (error) {
-			frappe.show_alert({
-				message: __('Batch fetch failed. Please try again.'),
-				indicator: 'red',
-			});
-			console.error(error);
-		}
 	}
 
 

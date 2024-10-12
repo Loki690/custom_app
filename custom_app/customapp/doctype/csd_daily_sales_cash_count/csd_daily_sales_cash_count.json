@@ -24,6 +24,8 @@
   "column_break_yfyz",
   "charge_sales",
   "qr_sales",
+  "online_sales",
+  "bank_transfers",
   "column_break_mglw",
   "grand_total_sales"
  ],
@@ -101,7 +103,8 @@
   {
    "fieldname": "grand_total_sales",
    "fieldtype": "Currency",
-   "label": "Grand Total Sales"
+   "label": "Grand Total Sales",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_mglw",
@@ -135,7 +138,8 @@
   {
    "fieldname": "card_sales",
    "fieldtype": "Currency",
-   "label": "Card Sales"
+   "label": "Card Sales",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_yfyz",
@@ -144,13 +148,26 @@
   {
    "fieldname": "qr_sales",
    "fieldtype": "Currency",
-   "label": "QR Sales"
+   "label": "QR Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "online_sales",
+   "fieldtype": "Currency",
+   "label": "Online Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bank_transfers",
+   "fieldtype": "Currency",
+   "label": "Bank Transfers",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-23 10:13:23.244421",
+ "modified": "2024-10-09 14:00:49.449347",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "CSD Daily Sales Cash Count",
@@ -171,6 +188,29 @@
    "select": 1,
    "share": 1,
    "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Treasury",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Treasury Assistant",
+   "share": 1,
    "write": 1
   }
  ],

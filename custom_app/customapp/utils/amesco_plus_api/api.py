@@ -3,6 +3,7 @@ import requests
 from custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate import update_gift_cert_code
 import json
 from datetime import datetime
+from custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom import calculate_amesco_plus_points
 
 def post_member_points(data):
     url = 'https://amesco-files.loyaltynow.ph/api/MemberPoint'
@@ -81,7 +82,15 @@ def return_member_item(user_id, trans_id):
 def on_submit(doc, method):
     # Loop through each item in the POS Invoice
     if doc.custom_amesco_user_id and doc.custom_ameso_user and doc.is_return == 0: 
+        excluded_customer_groups = ['Senior Citizen', 'PWD', 'Government', 'Corporate']
         for item in doc.items:
+            if not item.custom_amesco_plus_points:
+                if item.discount_amount > 0 or doc.customer_group in excluded_customer_groups:
+                    item.custom_amesco_plus_points = 0
+                else: 
+                    amesco_points = calculate_amesco_plus_points(item.amount, doc.payments)
+                    if amesco_points:
+                        item.custom_amesco_plus_points = amesco_points
             data = {
                 "UserId": doc.custom_amesco_user_id, 
                 "Points": item.custom_amesco_plus_points,

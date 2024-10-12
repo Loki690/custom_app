@@ -130,7 +130,7 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     
-    get_items({ start = 0, page_length = 40, search_term = "" }) {
+    get_items({ start = 0, page_length = 20, search_term = "" }) {
         const doc = this.events.get_frm().doc;
         const price_list = (doc && doc.selling_price_list) || this.price_list;
         let { item_group, pos_profile } = this;
@@ -400,7 +400,7 @@ custom_app.PointOfSale.ItemSelector = class {
                 callback: function (response) {
                     if (response.message) {
                         const uomPrices = response.message.uom_prices;
-                        console.log("UOM Prices:", uomPrices);
+                        // console.log("UOM Prices:", uomPrices);
 
                         const uomOptions = Object.keys(uomPrices).filter(uom => uom && uom !== "null").map(uom => ({
                             label: uom,
@@ -630,112 +630,22 @@ custom_app.PointOfSale.ItemSelector = class {
                                                 frappe.msgprint(__("Entered Quantity Exceeded"));
                                                 return;
                                             }
-        
-                                            // Check if the quantity exceeds the total available stock after considering draft invoices
-                                            frappe.call({
-                                                method: "custom_app.customapp.page.packing_list.packing_list.get_draft_pos_invoice_items",
-                                                args: {
-                                                    pos_profile: pos_profile,// Replace with your actual pos_profile
-                                                    item_code: item_code // Replace with your actual item_code
-                                                },
-                                                callback: function (response) {
-                                                    if (response.message) {
-                                                        const { invoices, total_qty } = response.message;
-                                                        let item_total_qty = total_qty; // Use the total_qty from the response
-            
-                                                        // console.log("Draft POS Invoices with specified item:", invoices);
-                                                        // console.log(`Total Quantity of Item (${item_code}): ${item_total_qty}`);
-            
-                                                        if ((item_total_qty + quantity) > qty) {
-                                                            const formatted_invoices = invoices.map(invoice => {
-                                                                const item_qty = invoice.items.reduce((total, item) => total + item.qty, 0);
-                                                                return {
-                                                                    name: invoice.name,
-                                                                    customer: invoice.customer, 
-                                                                    item_qty: item_qty
-                                                                };
-                                                            });
-                                                        
-                                                            const invoice_dialog = new frappe.ui.Dialog({
-                                                                title: 'Items ordered by other customers',
-                                                                fields: [
-                                                                    {
-                                                                        fieldtype: 'HTML',
-                                                                        fieldname: 'invoices_table_html',
-                                                                        options: renderInvoicesTable(formatted_invoices)
-                                                                    }
-                                                                ],
-                                                                primary_action_label: __("Ok"),
-                                                                primary_action: function () {
-                                                                    invoice_dialog.hide();
-                                                                }
-                                                            });
 
-                                                            invoice_dialog.$wrapper.on("keydown", (e) => {
-                                                                if (e.key === "Enter") {
-                                                                    e.preventDefault(); // Prevent default action
-                                                                    invoice_dialog.get_primary_btn().trigger("click"); // Trigger the primary action
-                                                                }
-                                                            });
+                                            me.selectedItem.find(".item-uom").text(selectedUOM);
             
-                                                            function renderInvoicesTable(data) {
-                                                                // Start building the HTML table
-                                                                let tableHtml = '<table class="table table-bordered">';
-                                                                tableHtml += '<thead><tr>';
-                                                                tableHtml += '<th>ID</th>';
-                                                                // tableHtml += '<th>Customer</th>';
-                                                                tableHtml += '<th>Quantity</th>';
-                                                                tableHtml += '</tr></thead>';
-                                                                tableHtml += '<tbody>';
-                                                            
-                                                                // Populate table rows with data
-                                                                data.forEach(row => {
-                                                                    tableHtml += '<tr>';
-                                                                    tableHtml += `<td>${row.name}</td>`;
-                                                                    // tableHtml += `<td>${row.customer}</td>`;
-                                                                    tableHtml += `<td>${row.item_qty}</td>`;
-                                                                    tableHtml += '</tr>';
-                                                                });
-                                                            
-                                                                tableHtml += '</tbody>';
-                                                                tableHtml += '</table>';
-                                                            
-                                                                return tableHtml;
-                                                            }
-                                                        
-                                                            invoice_dialog.show();
-                                                            return;
-                                                        }
-            
-                                                     
-            
-                                                        // Proceed with adding the item to the cart if conditions are not met
-                                                        me.selectedItem.find(".item-uom").text(selectedUOM);
-            
-                                                        const itemCode = unescape(me.selectedItem.attr("data-item-code"));
-                                                        const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
-                                                        const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
-            
-                                                        me.events.item_selected({
-                                                            field: "qty",
-                                                            value: "+" + quantity,
-                                                            item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
-                                                        });
-            
-                                                        me.search_field.set_focus();
-            
-                                                        dialog.hide();
-            
-            
-                                                        
-                                                    } else {
-                                                        console.log("No matching draft POS invoices found.");
-                                                    }
-                                                },
-                                                error: function (error) {
-                                                    console.error("Error fetching draft POS invoices:", error);
-                                                }
+                                            const itemCode = unescape(me.selectedItem.attr("data-item-code"));
+                                            const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
+                                            const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
+
+                                            me.events.item_selected({
+                                                field: "qty",
+                                                value: "+" + quantity,
+                                                item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate: totalAmount },
                                             });
+
+                                            me.search_field.set_focus();
+
+                                            dialog.hide();
         
                                         } else {
                                             frappe.msgprint(__("Failed to fetch UOM conversion factor."));

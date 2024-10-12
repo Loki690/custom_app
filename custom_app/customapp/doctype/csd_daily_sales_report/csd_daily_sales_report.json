@@ -18,10 +18,12 @@
   "total_cash",
   "total_check",
   "total_credit",
+  "total_online_payment",
   "column_break_lqkt",
   "total_charge",
   "total_debit",
   "total_qr",
+  "total_bank_transfer",
   "column_break_koap",
   "sales_grand_total"
  ],
@@ -120,12 +122,22 @@
   {
    "fieldname": "column_break_koap",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_online_payment",
+   "fieldtype": "Currency",
+   "label": "Total Online Payment"
+  },
+  {
+   "fieldname": "total_bank_transfer",
+   "fieldtype": "Currency",
+   "label": "Total Bank Transfer"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-20 17:09:14.082994",
+ "modified": "2024-10-09 13:43:45.693499",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "CSD Daily Sales Report",
@@ -142,6 +154,29 @@
    "report": 1,
    "role": "System Manager",
    "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Treasury",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Treasury Assistant",
    "share": 1,
    "write": 1
   }

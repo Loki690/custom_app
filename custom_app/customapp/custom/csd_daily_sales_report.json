@@ -1,0 +1,32 @@
+{
+ "custom_fields": [],
+ "custom_perms": [],
+ "doctype": "CSD Daily Sales Report",
+ "links": [],
+ "property_setters": [
+  {
+   "_assign": null,
+   "_comments": null,
+   "_liked_by": null,
+   "_user_tags": null,
+   "creation": "2024-10-04 07:23:36.166009",
+   "default_value": null,
+   "doc_type": "CSD Daily Sales Report",
+   "docstatus": 0,
+   "doctype_or_field": "DocType",
+   "field_name": null,
+   "idx": 0,
+   "is_system_generated": 1,
+   "modified": "2024-10-04 07:23:36.166009",
+   "modified_by": "igmaglangit@gmail.com",
+   "module": null,
+   "name": "CSD Daily Sales Report-main-default_print_format",
+   "owner": "igmaglangit@gmail.com",
+   "property": "default_print_format",
+   "property_type": "Data",
+   "row_name": null,
+   "value": "CSD DSRS"
+  }
+ ],
+ "sync_on_migrate": 1
+}

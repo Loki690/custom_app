@@ -249,7 +249,6 @@
    "print_hide": 1
   },
   {
-
    "fieldname": "change_amount",
    "fieldtype": "Currency",
    "hidden": 1,
@@ -262,7 +261,6 @@
    "label": "TOTAL"
   },
   {
-
    "fieldname": "invoice_from",
    "fieldtype": "Data",
    "hidden": 1,
@@ -336,9 +334,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
-
- "modified": "2024-09-19 17:53:01.337465",
-
+ "modified": "2024-10-05 23:58:26.486295",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "POS Daily Sales Report Summary",
@@ -346,6 +342,8 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,

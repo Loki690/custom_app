@@ -165,8 +165,6 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             {bin_join_condition}
         GROUP BY
             item.name, item.item_name, item.description, item.stock_uom, item.image, item.is_stock_item
-        ORDER BY
-            item.item_name ASC
         LIMIT
             {page_length} OFFSET {start}
         """.format(
@@ -299,10 +297,16 @@ def search_for_serial_or_batch_or_barcode_number(search_value: str) -> dict[str,
 
 
 def get_conditions(search_term):
+    search_term_escaped = frappe.db.escape(search_term + "%")  # Match words starting with search_term
+
     condition = "("
-    condition += """item.name like {search_term}
-        or item.item_name like {search_term}
-        or item.custom_generic_name like {search_term}""".format(search_term=frappe.db.escape("%" + search_term + "%"))
+    condition += """
+        item.name LIKE {search_term}
+        OR item.item_name LIKE {search_term}
+        OR item.custom_generic_name LIKE {search_term}
+    """.format(search_term=search_term_escaped)
+
+    # Add additional search fields if necessary
     condition += add_search_fields_condition(search_term)
     condition += ")"
 
