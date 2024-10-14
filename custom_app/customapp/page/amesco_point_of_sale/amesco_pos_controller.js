@@ -450,18 +450,37 @@ custom_app.PointOfSale.Controller = class {
 
 	add_new_order() {
 		frappe.run_serially([
-			() => frappe.dom.freeze(),
+			() => frappe.dom.freeze(__('Starting new order...')),  // Freeze screen with message
 			() => this.frm.call("reset_mode_of_payments"),
-			() => this.cart.load_invoice(),
-			() => this.remove_pos_cart_items(),
-			() => this.make_new_invoice(),
-			() => this.item_selector.toggle_component(),
-			() => this.item_details.toggle_item_details_section(),
-			() => this.toggle_recent_order_list(false),
-			() => frappe.dom.unfreeze(),
-			// () => this.item_selector.refresh(),
-		]);
+			() => this.cart.load_invoice(),  // Load new empty invoice in the cart
+			() => this.remove_pos_cart_items(),  // Clear all items from cart
+			() => this.make_new_invoice(),  // Create new invoice instance
+			() => this.item_selector.toggle_component(true),  // Ensure item selector is visible
+			() => this.item_details.toggle_item_details_section(false),  // Collapse item details section
+			() => this.toggle_recent_order_list(false),  // Hide recent orders list
+			() => frappe.dom.unfreeze(),  // Unfreeze screen after loading is complete
+			// () => this.item_selector.refresh(),  // Optional: refresh selector if needed
+		]).then(() => {
+			frappe.show_alert({
+				message: __("New order started successfully!"),
+				indicator: "green",
+			});
+	
+			// Ensure Enter key bindings or other interactions are reset if needed
+			$(document).off('keydown.changeDialog');
+		}).catch(err => {
+			frappe.msgprint({
+				title: __('Error'),
+				message: __('Failed to start a new order: ') + err.message,
+				indicator: 'red'
+			});
+			console.error('Error in add_new_order:', err);
+			frappe.dom.unfreeze();  // Ensure unfreeze even if an error occurs
+		});
 	}
+	
+
+	
 
 
 	remove_pos_cart_items() {
@@ -469,18 +488,31 @@ custom_app.PointOfSale.Controller = class {
 		localStorage.removeItem('posCartItems');
 	}
 
+	// order_list() {
+	// 	frappe.run_serially([
+	// 		() => frappe.dom.freeze(),
+	// 		() => this.frm.call("reset_mode_of_payments"),
+	// 		() => this.cart.load_invoice(),
+	// 		() => this.make_new_invoice(),
+	// 		() => this.item_selector.toggle_component(true),
+	// 		() => this.item_details.toggle_item_details_section(),
+	// 		() => this.toggle_recent_order_list(true),
+	// 		// () => window.location.reload(),
+	// 		() => frappe.dom.unfreeze(),
+
+	// 	]);
+	// }
+	
 	order_list() {
 		frappe.run_serially([
-			() => frappe.dom.freeze(),
+			() => this.cart.load_invoice(),  // No need to freeze UI here
+			() => frappe.dom.freeze(),  // Freeze only for critical steps
 			() => this.frm.call("reset_mode_of_payments"),
-			() => this.cart.load_invoice(),
 			() => this.make_new_invoice(),
+			() => frappe.dom.unfreeze(),  // Unfreeze right after critical steps
 			() => this.item_selector.toggle_component(true),
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(true),
-			() => window.location.reload(),
-			() => frappe.dom.unfreeze(),
-
 		]);
 	}
 
@@ -924,32 +956,28 @@ custom_app.PointOfSale.Controller = class {
 				submit_invoice: () => {
 					// Calculate the total payment amount
 					let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
-
+				
 					// Check if payment is sufficient
 					if (parseFloat(payment_amount.toFixed(2)) < this.frm.doc.grand_total) {
-
 						// Show dialog indicating insufficient payment
 						const insufficientPaymentDialog = new frappe.ui.Dialog({
 							title: __('Insufficient Payment'),
 							primary_action_label: __('OK'),
-							primary_action: () => {
-								insufficientPaymentDialog.hide();
-							}
+							primary_action: () => insufficientPaymentDialog.hide()
 						});
-
+				
 						insufficientPaymentDialog.body.innerHTML = `
 							<div style="text-align: center; font-size: 30px; margin: 20px 0;">
 								${__('The payment amount is not enough to cover the grand total.')}
 							</div>
 						`;
-
 						insufficientPaymentDialog.show();
 						return; // Exit the function if payment is not sufficient
 					}
-
-					// Proceed with submitting the invoice if payment is sufficient
-					let errorOccurred = false; // Flag to track if an error occurred
-
+				
+					// Proceed with submitting the invoice
+					let errorOccurred = false; // Track if any error occurs
+				
 					this.frm.save('Submit', undefined, undefined, () => {
 						// Error handling during save
 						frappe.show_alert({
@@ -957,54 +985,54 @@ custom_app.PointOfSale.Controller = class {
 							indicator: "red",
 						});
 						frappe.utils.play_sound("error"); 
-						errorOccurred = true; // Set error flag
+						errorOccurred = true;
 					}).then(() => {
 						if (errorOccurred) return; // Skip further actions if an error occurred
-
+				
+						// Reset components after submission
 						this.toggle_components(false);
-						// Customized Layout to toggle off Cart
 						this.cart.toggle_component(false);
 						this.order_summary.toggle_component(false);
 						this.remove_pos_cart_items();
 						this.order_summary.load_summary_of(this.frm.doc, true);
 						this.order_summary.print_receipt();
-
-
+				
 						// Calculate the change
 						let change_amount = payment_amount - this.frm.doc.grand_total;
-
+				
 						// Show change in a dialog
 						const changeDialog = new frappe.ui.Dialog({
 							title: __('Change Amount'),
-							primary_action_label: __('OK (Press Enter)'),
-							primary_action: () => {
-								window.location.reload();
+							secondary_action_label: __('Item Selector'),
+							secondary_action: () => {
+								this.add_new_order(); // Reset the POS form
 								changeDialog.hide();
+								
 							},
-						
-
+							primary_action_label: __('Pending Orders'),
+							primary_action: () => {
+								this.order_list(); 
+								changeDialog.hide();
+							}
 						});
-
-						// Add custom HTML with large text for the change amount
+				
+						// Display change amount in large text
 						changeDialog.body.innerHTML = `
 							<div style="text-align: center; font-size: 60px; margin: 20px 0;">
 								${format_currency(change_amount)}
 							</div>
 						`;
-
 						changeDialog.show();
-
-						$(document).on('keydown', function(e) {
+				
+						// Prevent multiple bindings of 'Enter' key events
+						$(document).off('keydown.changeDialog').on('keydown.changeDialog', (e) => {
 							if (e.key === 'Enter') {
-								// Trigger primary action (OK button) on Enter key press
-								e.preventDefault();
-								changeDialog.primary_action();
-							} 
+								e.preventDefault(); // Prevent default behavior
+								changeDialog.primary_action(); // Trigger dialog action
+							}
 						});
-						
 					});
 				}
-
 			},
 		});
 	}
