@@ -132,6 +132,7 @@ def check_password_without_username(pwd, doctype="User", fieldname="password"):
                         "email": user_doc.email,
                         "full_name": user_doc.full_name,
                         "enabled": user_doc.enabled,
+                        "password":pwd
                     }
             except AuthenticationError:
                 continue

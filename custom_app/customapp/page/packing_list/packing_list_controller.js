@@ -490,16 +490,66 @@ custom_app.PointOfSale.Controller = class {
 			primary_action_label: __('Ok'),
 			primary_action: () => {
 				let password = document.getElementById('sumbit_password').value;
+				let errorOccurred = false;
+				const user_data = JSON.parse(localStorage.getItem('user_data'));
+
+				if (user_data && user_data.password === password) {
+					this.set_pharmacist_assist(this.frm, user_data.name);
+					this.frm
+						.save(undefined, undefined, undefined, () => {
+							// Error handling during save
+							frappe.show_alert({
+								message: ("There was an error saving the document."),
+								indicator: "red",
+							});
+							frappe.utils.play_sound("error");
+							errorOccurred = true;  // Set error flag
+						})
+						.then(() => {
+							if (errorOccurred) return;  // Skip further actions if an error occurred
 			
-				let errorOccurred = false;  // Flag to track errors
+							this.passwordDialog.hide();
 			
+							// Load the order summary and print the receipt
+							this.order_summary.load_summary_of(this.frm.doc, true);
+							this.order_summary.print_receipt();
+			
+							// Remove stored data from local storage
+							localStorage.removeItem('posCartItems');
+			
+							// Show alert after printing
+							frappe.show_alert({
+								message: ("Invoice Printed"),
+								indicator: "blue",
+							});
+			
+							// Only run this block if no error occurred
+							frappe.run_serially([
+								() => frappe.dom.freeze(),
+								() => this.make_new_invoice(),
+								() => frappe.dom.unfreeze(),
+								() => window.location.reload()
+							]);
+						})
+						.catch((err) => {
+							// Handle any unanticipated errors
+							frappe.show_alert({
+								message: __('An unexpected error occurred while saving the document. Please try again.'),
+								indicator: 'red'
+							});
+							errorOccurred = true;  // Set error flag
+						});
+				} else {
+
 				frappe.call({
 					method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
 					args: { password: password },
 					callback: (r) => {
 						if (r.message && r.message.name) {
+
+							localStorage.setItem('user_data', JSON.stringify(r.message));
+
 							this.set_pharmacist_assist(this.frm, r.message.name);
-							console.log("USER DATA",r.message)
 			
 							this.frm
 								.save(undefined, undefined, undefined, () => {
@@ -556,6 +606,8 @@ custom_app.PointOfSale.Controller = class {
 						}
 					}
 				});
+			}
+
 			}
 			
 		});

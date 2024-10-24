@@ -520,6 +520,13 @@ custom_app.PointOfSale.PastOrderSummary = class {
 	}
 
 	toggle_component(show) {
-		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
+		if (show) {
+			this.$component.css({
+				"display": "flex",
+				"grid-column": "span 6 / span 6"
+			});
+		} else {
+			this.$component.css("display", "none");
+		}
 	}
 };

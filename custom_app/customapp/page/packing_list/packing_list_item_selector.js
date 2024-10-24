@@ -174,7 +174,7 @@ custom_app.PointOfSale.ItemSelector = class {
             this.$items_container.append(item_html);
         });
 
-        this.highlighted_row_index = -1;
+        this.highlighted_row_index = 0;
         this.highlight_row(this.highlighted_row_index);
     }
 

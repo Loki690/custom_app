@@ -409,33 +409,72 @@ def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 	return new_pos_opening.as_dict()
 
 
-@frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, limit=10000):
-	fields = ["name","customer_name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
-	invoice_list = []
+# @frappe.whitelist()
+# def get_past_order_list(search_term, status, pos_profile, limit=100):
+# 	fields = ["name","customer_name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
+# 	invoice_list = []
 
-	if search_term and status:
-		invoices_by_customer = frappe.db.get_all(
-			"POS Invoice",
-			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
-			fields=fields,
-			order_by="posting_time desc", 
-			page_length=limit,
-		)
-		invoices_by_name = frappe.db.get_all(
-			"POS Invoice",
-			filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
-			fields=fields,
-			page_length=limit,
-		)
+# 	if search_term and status:
+# 		invoices_by_customer = frappe.db.get_all(
+# 			"POS Invoice",
+# 			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
+# 			fields=fields,
+# 			order_by="posting_time desc", 
+# 			page_length=limit,
+# 		)
+# 		invoices_by_name = frappe.db.get_all(
+# 			"POS Invoice",
+# 			filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
+# 			fields=fields,
+# 			page_length=limit,
+# 		)
 
-		invoice_list = invoices_by_customer + invoices_by_name
-	elif status:
-		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time desc",   page_length=limit
-		)
+# 		invoice_list = invoices_by_customer + invoices_by_name
+# 	elif status:
+# 		invoice_list = frappe.db.get_all(
+# 			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time desc",   page_length=limit
+# 		)
 		
-	return invoice_list
+# 	return invoice_list
+
+@frappe.whitelist()
+def get_past_order_list(search_term=None, status=None, pos_profile=None, limit=40, limit_start=0):
+    fields = ["name", "customer_name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
+    invoice_list = []
+
+    # Apply filters and search term logic
+    if search_term and status:
+        # Search by customer and by name, apply limit and limit_start for pagination
+        invoices_by_customer = frappe.db.get_all(
+            "POS Invoice",
+            filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
+            fields=fields,
+            order_by="posting_time desc",
+            limit=limit,
+            limit_start=limit_start  # Use limit_start instead of offset
+        )
+        invoices_by_name = frappe.db.get_all(
+            "POS Invoice",
+            filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
+            fields=fields,
+            limit=limit,
+            limit_start=limit_start  # Use limit_start instead of offset
+        )
+
+        invoice_list = invoices_by_customer + invoices_by_name
+    elif status:
+        # Fetch invoices by status and pos_profile, apply pagination
+        invoice_list = frappe.db.get_all(
+            "POS Invoice",
+            filters={"status": status, 'pos_profile': pos_profile},
+            fields=fields,
+            order_by="posting_time desc",
+            limit=limit,
+            limit_start=limit_start  # Use limit_start instead of offset
+        )
+
+    # Return the fetched invoice list
+    return invoice_list
 
 
 @frappe.whitelist()

@@ -187,7 +187,7 @@ custom_app.PointOfSale.ItemSelector = class {
         });
     
         // Set highlighted_row_index to -1 to ensure no item is highlighted by default
-        this.highlighted_row_index = -1;
+        this.highlighted_row_index = 0;
     
         // Ensure no item is highlighted
         this.highlight_row(this.highlighted_row_index);

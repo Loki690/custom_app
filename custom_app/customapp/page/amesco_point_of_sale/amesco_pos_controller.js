@@ -269,7 +269,7 @@ custom_app.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),
-			this.order_list.bind(this),
+			this.pending_orders.bind(this),
 			false,
 			"f2"
 		);
@@ -289,7 +289,7 @@ custom_app.PointOfSale.Controller = class {
 		const buttons = [
 
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
-			{label: __("Pending Transaction (F2)"), action: this.order_list.bind(this), shortcut: "f2"},
+			{label: __("Pending Transaction (F2)"), action: this.pending_orders.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
 			{ label: __("Amesco Plus Member"), action: this.amesco_plus_scan.bind(this), shortcut: "f4" },
 			// {label: __("Cash Count"), action: this.cash_count.bind(this), shortcut: "Ctrl+B"},
@@ -448,39 +448,95 @@ custom_app.PointOfSale.Controller = class {
 		this.showPasswordDialog('OIC Authorization Required for Check Encashment Entry', onSuccess);
 	}
 
+	// add_new_order() {
+    //     frappe.run_serially([
+    //         () => frappe.dom.freeze(('Starting new order...')),  // Freeze screen with message
+    //         () => this.frm.call("reset_mode_of_payments"),
+    //         () => this.cart.load_invoice(),  // Load new empty invoice in the cart
+    //         () => this.remove_pos_cart_items(),  // Clear all items from cart
+    //         () => this.make_new_invoice(),  // Create new invoice instance
+    //         () => this.item_selector.toggle_component(true),  // Ensure item selector is visible
+    //         () => this.item_details.toggle_item_details_section(false),  // Collapse item details section
+    //         () => this.toggle_recent_order_list(false),  // Hide recent orders list
+    //         () => frappe.dom.unfreeze(),  // Unfreeze screen after loading is complete
+    //         // () => this.item_selector.refresh(),  // Optional: refresh selector if needed
+    //     ]).then(() => {
+    //         frappe.show_alert({
+    //             message: ("New order started successfully!"),
+    //             indicator: "green",
+    //         });
+
+    //         // Ensure Enter key bindings or other interactions are reset if needed
+    //         $(document).off('keydown.changeDialog');
+    //     }).catch(err => {
+    //         frappe.msgprint({
+    //             title: ('Error'),
+    //             message: ('Failed to start a new order: ') + err.message,
+    //             indicator: 'red'
+    //         });
+    //         console.error('Error in add_new_order:', err);
+    //         frappe.dom.unfreeze();  // Ensure unfreeze even if an error occurs
+    //     });
+    // }
 	add_new_order() {
 		frappe.run_serially([
-			() => frappe.dom.freeze(),
+			() => this.frm.reload_doc(),
+			() => frappe.dom.freeze(__('Starting new order...')),  // Freeze screen with message
 			() => this.frm.call("reset_mode_of_payments"),
-			() => this.cart.load_invoice(),
-			() => this.remove_pos_cart_items(),
-			() => this.make_new_invoice(),
-			() => this.item_selector.toggle_component(),
-			() => this.item_details.toggle_item_details_section(),
-			() => this.toggle_recent_order_list(false),
-			() => frappe.dom.unfreeze(),
-			// () => this.item_selector.refresh(),
-		]);
+			() => this.cart.load_invoice(),  // Load new empty invoice in the cart
+			() => this.remove_pos_cart_items(),  // Clear all items from cart
+			() => this.make_new_invoice(),  // Create new invoice instance
+			() => this.item_selector.toggle_component(true),  // Ensure item selector is visible
+			() => this.item_details.toggle_item_details_section(false),  // Collapse item details section
+			() => this.toggle_recent_order_list(false),  // Hide recent orders list
+			() => $(".payment-container").css("display", "none"),
+			() => frappe.dom.unfreeze(),  // Unfreeze screen after loading is complete
+			// () => this.item_selector.refresh(),  // Optional: refresh selector if needed
+		]).then(() => {
+			frappe.show_alert({
+				message: __("New order started successfully!"),
+				indicator: "green",
+			});
+	
+			// Ensure Enter key bindings or other interactions are reset if needed
+			$(document).off('keydown.changeDialog');
+		}).catch(err => {
+			frappe.msgprint({
+				title: __('Error'),
+				message: __('Failed to start a new order: ') + err.message,
+				indicator: 'red'
+			});
+			console.error('Error in add_new_order:', err);
+			frappe.dom.unfreeze();  // Ensure unfreeze even if an error occurs
+		});
 	}
-
 
 	remove_pos_cart_items() {
 		// console.log('Remove cart items')
 		localStorage.removeItem('posCartItems');
 	}
 
-	order_list() {
-		frappe.run_serially([
-			() => frappe.dom.freeze(),
-			() => this.frm.call("reset_mode_of_payments"),
-			() => this.cart.load_invoice(),
-			() => this.make_new_invoice(),
-			() => this.item_selector.toggle_component(true),
-			() => this.item_details.toggle_item_details_section(),
-			() => this.toggle_recent_order_list(true),
-			() => window.location.reload(),
-			() => frappe.dom.unfreeze(),
+	// order_list() {
+	// 	frappe.run_serially([
+	// 		() => this.cart.load_invoice(),  // No need to freeze UI here
+	// 		// () => frappe.dom.freeze(),  // Freeze only for critical steps
+	// 		() => this.frm.call("reset_mode_of_payments"),
+	// 		() => this.make_new_invoice(),
+	// 		() => window.location.reload(),
+	// 		// () => frappe.dom.unfreeze(),  // Unfreeze right after critical steps
+	// 		() => this.item_selector.toggle_component(true),
+	// 		() => this.item_details.toggle_item_details_section(),
+	// 		() => this.toggle_recent_order_list(true),
+	// 	]);
+	// }
 
+	pending_orders() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),  // Freeze only for critical steps
+			() => this.item_selector.toggle_component(false),
+			() => this.toggle_recent_order_list(true),
+			() => $(".payment-container").css("display", "none"),
+			() => frappe.dom.unfreeze(),  // Unfreeze right after critical steps
 		]);
 	}
 
@@ -976,14 +1032,18 @@ custom_app.PointOfSale.Controller = class {
 						// Show change in a dialog
 						const changeDialog = new frappe.ui.Dialog({
 							title: __('Change Amount'),
-							primary_action_label: __('OK (Press Enter)'),
-							primary_action: () => {
-								window.location.reload();
+							secondary_action_label: __('Item Selector(F1)'),
+							secondary_action: () => {
+								this.add_new_order(); 
 								changeDialog.hide();
 							},
-						
-
+							primary_action_label: __('Pending Orders'),
+							primary_action: () => {
+								this.pending_orders(); 
+								changeDialog.hide();
+							}
 						});
+
 
 						// Add custom HTML with large text for the change amount
 						changeDialog.body.innerHTML = `
@@ -994,12 +1054,18 @@ custom_app.PointOfSale.Controller = class {
 
 						changeDialog.show();
 
-						$(document).on('keydown', function(e) {
+						$(document).off('keydown.changeDialog').on('keydown.changeDialog', (e) => {
 							if (e.key === 'Enter') {
-								// Trigger primary action (OK button) on Enter key press
-								e.preventDefault();
-								changeDialog.primary_action();
+								e.preventDefault(); // Prevent default behavior
+								changeDialog.primary_action(); // Trigger primary dialog action
 							} 
+						});
+
+						$(document).off('keydown.changeDialog').on('keydown.changeDialog', (e) => {
+							if (e.key === 'F1') {
+								e.preventDefault(); // Prevent default behavior
+								changeDialog.secondary_action(); // Trigger secondary dialog action (Item Selector)
+							}
 						});
 						
 					});
@@ -1077,15 +1143,17 @@ custom_app.PointOfSale.Controller = class {
 				proceed_order: (name) => {
 					this.recent_order_list.toggle_component(false);
 					frappe.run_serially([
-
+						() => this.frm.reload_doc(),
 						() => this.frm.refresh(name),
 						() => this.cart.load_invoice(),
 						() => this.item_selector.toggle_component(true),
+						() => this.payment.toggle_component(true),
 						() => this.save_and_checkout(true),
 						() => this.cart.toggle_checkout_btn(false),
 
 					]);
 				},
+
 
 
 				order_list: () => {

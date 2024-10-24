@@ -119,28 +119,64 @@ custom_app.PointOfSale.PastOrderList = class {
 		}, 100);
 	}
 
-	refresh_list() {
+	// refresh_list() {
+	// 	frappe.dom.freeze();
+	// 	this.events.reset_summary();
+	// 	const search_term = this.search_field.get_value();
+	// 	const status = this.status_field.get_value();
+	// 	const pos_profile = this.events.pos_profile();
+	// 	const source_warehouse = this.events.source_warehouse();
+
+	// 	this.$invoices_container.html("");
+
+	// 	return frappe.call({
+	// 		method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_past_order_list",
+	// 		freeze: true,
+	// 		args: { search_term, status, pos_profile },
+	// 		callback: (response) => {
+	// 			frappe.dom.unfreeze();
+	// 			response.message.forEach((invoice) => {
+	// 				const invoice_html = this.get_invoice_html(invoice);
+	// 				this.$invoices_container.append(invoice_html);
+	// 			});
+			
+	// 			this.$invoice_count.text(response.message.length);
+	// 		},
+	// 	});
+	// }
+
+	refresh_list(page = 1) {
 		frappe.dom.freeze();
 		this.events.reset_summary();
+		
 		const search_term = this.search_field.get_value();
 		const status = this.status_field.get_value();
 		const pos_profile = this.events.pos_profile();
 		const source_warehouse = this.events.source_warehouse();
-
+	
 		this.$invoices_container.html("");
-
+	
+		const limit = 40;  // Page limit: 40 invoices per page
+		const offset = (page - 1) * limit;  // Calculate offset based on the current page
+	
 		return frappe.call({
 			method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_past_order_list",
 			freeze: true,
-			args: { search_term, status, pos_profile },
+			args: { search_term, status, pos_profile, limit, offset },  // Pass limit and offset
 			callback: (response) => {
 				frappe.dom.unfreeze();
+	
+				// Render the fetched invoices
 				response.message.forEach((invoice) => {
 					const invoice_html = this.get_invoice_html(invoice);
 					this.$invoices_container.append(invoice_html);
 				});
-			
+	
+				// Update the invoice count
 				this.$invoice_count.text(response.message.length);
+	
+				// Add pagination controls if needed
+				this.render_pagination_controls(page, response.message.length);
 			},
 		});
 	}
