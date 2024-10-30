@@ -1477,7 +1477,7 @@ custom_app.PointOfSale.Controller = class {
 					await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
 					this.update_cart_html(item_row);
 
-					// await this.auto_add_batch(item_row);
+					await this.auto_add_batch(item_row);
 				}
 			} else {
 				if (!this.frm.doc.customer) return this.raise_customer_selection_alert();
@@ -1507,15 +1507,15 @@ custom_app.PointOfSale.Controller = class {
 
 				this.update_cart_html(item_row);
 				
-				// await this.auto_add_batch(item_row);
+				await this.auto_add_batch(item_row);
 
-				if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
+				// if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
 
-				if (
-					this.check_serial_batch_selection_needed(item_row) &&
-					!this.item_details.$component.is(":visible")
-				)
-					this.edit_item_details_of(item_row);
+				// if (
+				// 	this.check_serial_batch_selection_needed(item_row) &&
+				// 	!this.item_details.$component.is(":visible")
+				// )
+				// 	this.edit_item_details_of(item_row);
 			}
 		} catch (error) {
 			console.log(error);
@@ -1660,6 +1660,7 @@ custom_app.PointOfSale.Controller = class {
 
 	async auto_add_batch(item_row) {
 		try {
+			// Fetching batches based on item code and expiry date
 			let batches = await frappe.db.get_list('Batch', {
 				filters: {
 					item: item_row.item_code,
@@ -1688,9 +1689,12 @@ custom_app.PointOfSale.Controller = class {
 					},
 				});
 	
+				// Set batch details on POS Invoice Item
 				frappe.model.set_value(item_row.doctype, item_row.name, {
 					serial_and_batch_bundle: res.message.name,
 					qty: Math.abs(res.message.total_qty),
+					custom_batch_number: latest_batch.name,    // Set batch number
+					custom_batch_expiry: latest_batch.expiry_date  // Set batch expiry date
 				});
 			} 
 		} catch (error) {
@@ -1701,7 +1705,7 @@ custom_app.PointOfSale.Controller = class {
 			console.error(error);
 		}
 	}
-
+	
 	async update_item_field(value, field_or_action) {
 
 

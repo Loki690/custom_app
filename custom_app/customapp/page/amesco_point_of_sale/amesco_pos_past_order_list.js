@@ -18,7 +18,6 @@ custom_app.PointOfSale.PastOrderList = class {
 				<div class="filter-section">
 					<div class="label">${__("Pending Orders")} <span class="invoice-count ml-3 badge rounded-pill bg-danger text-white"></span> </div>
 					<div class="search-field"></div>
-					<div class="status-field"></div>
 				</div>
 				<div class="invoices-container"></div>
 			</section>`
@@ -176,7 +175,6 @@ custom_app.PointOfSale.PastOrderList = class {
 				this.$invoice_count.text(response.message.length);
 	
 				// Add pagination controls if needed
-				this.render_pagination_controls(page, response.message.length);
 			},
 		});
 	}

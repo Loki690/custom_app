@@ -141,7 +141,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         SELECT
             item.name AS item_code,
             item.item_name,
-			item.custom_generic_name,
+            item.custom_generic_name,
+			item.custom_barcode_shortcut,
             item.description,
 			item.item_group,
             item.custom_is_vatable,
@@ -304,6 +305,7 @@ def get_conditions(search_term):
         item.name LIKE {search_term}
         OR item.item_name LIKE {search_term}
         OR item.custom_generic_name LIKE {search_term}
+        OR item.custom_barcode_shortcut LIKE {search_term}
     """.format(search_term=search_term_escaped)
 
     # Add additional search fields if necessary
@@ -437,43 +439,63 @@ def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 		
 # 	return invoice_list
 
+import frappe
+from frappe.utils import today
+
 @frappe.whitelist()
 def get_past_order_list(search_term=None, status=None, pos_profile=None, limit=40, limit_start=0):
-    fields = ["name", "customer_name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
-    invoice_list = []
+    fields = [
+        "name", "customer_name", "grand_total", "currency", 
+        "customer", "posting_time", "posting_date", "pos_profile"
+    ]
 
-    # Apply filters and search term logic
-    if search_term and status:
-        # Search by customer and by name, apply limit and limit_start for pagination
+    # Get today's date
+    current_date = today()
+
+    filters = {
+        "posting_date": current_date,  # Only fetch invoices from today
+        "docstatus": 0,  # Fetch only draft invoices
+        "pos_profile": pos_profile,  # Filter by POS profile
+        "consolidated_invoice": ["is", "not set"]  # Exclude consolidated invoices
+    }
+
+    # Apply status filter if provided
+    if status:
+        filters["status"] = status
+
+    # If a search term is provided, fetch by customer name or invoice name
+    if search_term:
         invoices_by_customer = frappe.db.get_all(
             "POS Invoice",
-            filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
+            filters={**filters, "customer_name": ["like", f"%{search_term}%"]},
             fields=fields,
             order_by="posting_time desc",
             limit=limit,
-            limit_start=limit_start  # Use limit_start instead of offset
+            limit_start=limit_start
         )
         invoices_by_name = frappe.db.get_all(
             "POS Invoice",
-            filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
-            fields=fields,
-            limit=limit,
-            limit_start=limit_start  # Use limit_start instead of offset
-        )
-
-        invoice_list = invoices_by_customer + invoices_by_name
-    elif status:
-        # Fetch invoices by status and pos_profile, apply pagination
-        invoice_list = frappe.db.get_all(
-            "POS Invoice",
-            filters={"status": status, 'pos_profile': pos_profile},
+            filters={**filters, "name": ["like", f"%{search_term}%"]},
             fields=fields,
             order_by="posting_time desc",
             limit=limit,
-            limit_start=limit_start  # Use limit_start instead of offset
+            limit_start=limit_start
         )
 
-    # Return the fetched invoice list
+        # Combine and deduplicate by 'name' (if overlapping)
+        invoice_dict = {inv["name"]: inv for inv in invoices_by_customer + invoices_by_name}
+        invoice_list = list(invoice_dict.values())
+    else:
+        # Fetch all invoices matching the filters (no search term)
+        invoice_list = frappe.db.get_all(
+            "POS Invoice",
+            filters=filters,
+            fields=fields,
+            order_by="posting_time desc",
+            limit=limit,
+            limit_start=limit_start
+        )
+
     return invoice_list
 
 
