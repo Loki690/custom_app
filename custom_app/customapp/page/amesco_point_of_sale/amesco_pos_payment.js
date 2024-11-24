@@ -3065,132 +3065,144 @@ custom_app.PointOfSale.Payment = class {
 			if (p.mode_of_payment === "Amesco Plus") {
 				let button = frappe.ui.form.make_control({
 					df: {
-						label: 'Scan',
+						label: 'Scan Voucher Code',
 						fieldtype: 'Button',
 						btn_size: 'sm', // xs, sm, lg
 						click: function () {
-							// console.log('Click');
-							new frappe.ui.Scanner({
-								dialog: true, // open camera scanner in a dialog
-								multiple: false, // stop after scanning one value
-								on_scan(data) {
-									// Assuming the scanned data is comma-separated
-									let scannedData = data.decodedText.split(',');
-									console.log("scannedData", scannedData);
-									// Extracting fields from the scanned data
-									let voucher_code = scannedData[0]; //'AVQR8105441319'
-									let user_id = scannedData[1];
-									// let date = scannedData[3];
-									let email = scannedData[4];
-									let amesco_points = scannedData[2];
-
-									frappe.call({
-										method: "custom_app.customapp.doctype.used_ameco_plus_code.used_ameco_plus_code.check_used_amesco_plus_code",
-										args: {
-											code: voucher_code
-										},
-										callback: function(response) {
-											if (response.message) {
-												frappe.msgprint(__('Amesco Plus voucher is already used.'));
-											} else {
-												let details_dialog = new frappe.ui.Dialog({
-												title: __('Scanned Amesco Plus User'),
-												fields: [
-													{
-														label: 'Voucher Code',
-														fieldname: 'voucher_code',
-														fieldtype: 'Data',
-														read_only: 1,
-														default: voucher_code
-													},
-													{
-														label: 'User ID',
-														fieldname: 'user_id',
-														fieldtype: 'Data',
-														read_only: 1,
-														default: user_id
-													},
-													{
-														label: 'Email',
-														fieldname: 'email',
-														fieldtype: 'Data',
-														read_only: 1,
-														default: email
-													},
-													{
-														label: 'Redeem Points',
-														fieldname: 'points',
-														fieldtype: 'Data',
-														read_only: 1,
-														default: amesco_points
-													}
-												],
-												primary_action_label: __('Ok'),
-												primary_action: function () {
-													frappe.model.set_value(p.doctype, p.name, "custom_am_voucher_code", voucher_code);
-													frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
-													frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
-													frappe.model.set_value(p.doctype, p.name, "amount", flt(amesco_points));
-													frm.add_child("custom_ameco_plus_code_used", {
-														code: voucher_code,
-													});
-													details_dialog.hide();
-												}
-											});
-											details_dialog.show();
-											}
-										}
-									});
-
+							let manualInputDialog = new frappe.ui.Dialog({
+								title: __('Enter Scanned Data'),
+								fields: [
+									{
+										label: 'Scanned Data',
+										fieldname: 'scanned_data',
+										fieldtype: 'Data',
+										reqd: 1, // Make this field mandatory
+										description: 'Enter the scanned data (comma-separated format)'
+									}
+								],
+								primary_action_label: __('Submit'),
+								primary_action(values) {
+									let scannedData = values.scanned_data.split(','); 
 									
+									console.log(scannedData);
+									// Assuming the data is comma-separated
+									if (scannedData.length >= 5) {
+										// Extracting fields from the scanned data
+										let voucher_code = scannedData[0];
+										let user_id = scannedData[1];
+										let email = scannedData[3];
+										let points = scannedData[5];
+			
+										// Check if the voucher code has been used
+										frappe.call({
+											method: "custom_app.customapp.doctype.used_ameco_plus_code.used_ameco_plus_code.check_used_amesco_plus_code",
+											args: {
+												code: voucher_code
+											},
+											callback: function(response) {
+												if (response.message) {
+													frappe.msgprint(__('Amesco Plus voucher is already used.'));
+												} else {
+													// Display user details in a new dialog
+													let userDetailsDialog = new frappe.ui.Dialog({
+														title: __('Scanned User Details'),
+														fields: [
+															{
+																label: 'Voucher Code',
+																fieldname: 'voucher_code',
+																fieldtype: 'Data',
+																read_only: 1,
+																default: voucher_code
+															},
+															{
+																label: 'User ID',
+																fieldname: 'user_id',
+																fieldtype: 'Data',
+																read_only: 1,
+																default: user_id
+															},
+															{
+																label: 'Email',
+																fieldname: 'email',
+																fieldtype: 'Data',
+																read_only: 1,
+																default: email
+															},
+															{
+																label: 'Points',
+																fieldname: 'points',
+																fieldtype: 'Data',
+																read_only: 1,
+																default: points
+															}
+														],
+														primary_action_label: __('Ok'),
+														primary_action: function () {
+															// Save details to the document fields on close
+															frappe.model.set_value(p.doctype, p.name, "custom_am_voucher_code", voucher_code);
+															frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
+															frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
+															frappe.model.set_value(p.doctype, p.name, "amount", flt(points));
+															frm.add_child("custom_ameco_plus_code_used", { code: voucher_code });
+															userDetailsDialog.hide();
+														}
+													});
+			
+													// Show the user details dialog
+													userDetailsDialog.show();
+												}
+											}
+										});
+			
+									} else {
+										frappe.msgprint(__('Invalid data format. Please enter at least 5 comma-separated values.'));
+									}
+			
+									// Hide the manual input dialog after submission
+									manualInputDialog.hide();
 								}
-							})
+							});
+			
+							// Show the manual input dialog
+							manualInputDialog.show();
 						}
-
 					},
 					parent: this.$payment_modes.find(`.${mode}.button-amesco-plus`)[0],
 					render_input: true
 				});
 				button.refresh();
-
+			
 				let discard_button = $('<button class="btn btn-secondary" >Discard</button>');
 				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
 				const me = this;
-				// Attach an event listener to the save button
-
+			
 				discard_button.on('click', function() {
 					me[`${mode}_control`].set_value('');
-					// let reference_no = reference_no_control.get_value()
 					frappe.model.set_value(p.doctype, p.name, "amount", 0);
-					// frappe.model.set_value(p.doctype, p.name, "reference_no", reference_no);
-			
+					
 					const dialog = frappe.msgprint({
 						message: __('Payment details have been discarded.'),
 						indicator: 'blue',
 						primary_action: {
 							label: __('OK'),
 							action: function() {
-								// Close the dialog
 								frappe.msg_dialog.hide();
 							}
 						}
 					});
-
-
+			
 					$(document).on('keydown', function(e) {
 						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
 							dialog.get_primary_btn().trigger('click');
 						}
 					});
-	
-					// Remove event listener when dialog is closed
+			
 					dialog.$wrapper.on('hidden.bs.modal', function () {
 						$(document).off('keydown');
 					});
 				});
-				const controls = [
-					me[`${mode}_control`],
-				];
+			
+				const controls = [ me[`${mode}_control`] ];
 				controls.forEach(control => {
 					control.$input && control.$input.keypress(function (e) {
 						if (e.which === 13) { // Enter key pressed
@@ -3198,9 +3210,6 @@ custom_app.PointOfSale.Payment = class {
 						}
 					});
 				});
-
-
-
 			}
 			// this[`${mode}_control`].toggle_label(true);
 			this[`${mode}_control`].set_value(p.amount);

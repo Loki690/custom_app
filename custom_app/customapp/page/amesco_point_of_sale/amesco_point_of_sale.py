@@ -405,33 +405,52 @@ def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 	return new_pos_opening.as_dict()
 
 
+# @frappe.whitelist()
+# def get_past_order_list(search_term=None, status="Draft", pos_profile=None, limit=10):
+#     if not pos_profile or not status:
+#         return []
+
+#     filters = f"pos_profile = '{pos_profile}' AND status = '{status}'"
+    
+#     if search_term:
+#         search_term_filter = f"AND (customer_name LIKE '%{search_term}%' OR name LIKE '%{search_term}%')"
+#         filters += f" {search_term_filter}"
+        
+#     query = f"""
+#         SELECT 
+#             name, customer_name, grand_total, currency, customer, posting_time, posting_date, pos_profile 
+#         FROM 
+#             `tabPOS Invoice` 
+#         WHERE 
+#             {filters}
+#         ORDER BY 
+#             posting_time DESC
+#         LIMIT {limit}
+#     """
+
+#     invoice_list = frappe.db.sql(query, as_dict=True)
+#     return invoice_list
+
+
 @frappe.whitelist()
-def get_past_order_list(search_term, status, pos_profile, limit=10000):
-	fields = ["name","customer_name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
-	invoice_list = []
-
-	if search_term and status:
-		invoices_by_customer = frappe.db.get_all(
-			"POS Invoice",
-			filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
-			fields=fields,
-			order_by="posting_time desc", 
-			page_length=limit,
-		)
-		invoices_by_name = frappe.db.get_all(
-			"POS Invoice",
-			filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
-			fields=fields,
-			page_length=limit,
-		)
-
-		invoice_list = invoices_by_customer + invoices_by_name
-	elif status:
-		invoice_list = frappe.db.get_all(
-			"POS Invoice", filters={"status": status, 'pos_profile': pos_profile }, fields=fields, order_by="posting_time desc",   page_length=limit
-		)
-		
-	return invoice_list
+def get_past_order_list(search_term=None, status=None, limit=20):
+    query = """
+        SELECT
+            name, grand_total, currency, customer, posting_time, posting_date
+        FROM
+            `tabPOS Invoice`
+        WHERE
+            status = %s
+            AND (customer LIKE %s OR name LIKE %s)
+        ORDER BY
+            posting_date DESC
+        LIMIT %s
+    """
+    
+    search_value = f"%{search_term}%" if search_term else ""
+    invoices = frappe.db.sql(query, (status, search_value, search_value, limit), as_dict=True)
+    
+    return invoices
 
 
 @frappe.whitelist()
@@ -595,4 +614,9 @@ def create_and_submit_pos_closing_entry(cashier, pos_profile, company, pos_openi
 
     except Exception as e:
         frappe.throw(frappe._("An error occurred while creating the document: {0}").format(str(e)))
-    
+
+# Function to broadcast real-time updates
+def broadcast_pos_invoice_update(doc, method=None):
+    frappe.publish_realtime('pos_invoice_update', {
+        "message": f"POS Invoice {doc.name} has been updated or created."
+    }, user='all')

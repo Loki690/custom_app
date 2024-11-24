@@ -71,13 +71,13 @@
   },
   {
    "fieldname": "date_from",
-   "fieldtype": "Datetime",
+   "fieldtype": "Date",
    "label": "Date From",
    "read_only_depends_on": "eval:frappe.user_roles.includes('Cashier') && !frappe.user_roles.includes('System Manager')"
   },
   {
    "fieldname": "date_to",
-   "fieldtype": "Datetime",
+   "fieldtype": "Date",
    "label": "Date To"
   },
   {
@@ -334,7 +334,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-17 11:26:23.315435",
+ "modified": "2024-10-15 14:06:56.077961",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "POS Daily Sales Report Summary",

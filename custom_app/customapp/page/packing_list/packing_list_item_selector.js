@@ -402,7 +402,7 @@ custom_app.PointOfSale.ItemSelector = class {
                 callback: function (response) {
                     if (response.message) {
                         const uomPrices = response.message.uom_prices;
-                        console.log("UOM Prices:", uomPrices);
+                        // console.log("UOM Prices:", uomPrices);
 
                         const uomOptions = Object.keys(uomPrices).filter(uom => uom && uom !== "null").map(uom => ({
                             label: uom,
@@ -709,7 +709,6 @@ custom_app.PointOfSale.ItemSelector = class {
                                                             return;
                                                         }
             
-                                                     
             
                                                         // Proceed with adding the item to the cart if conditions are not met
                                                         me.selectedItem.find(".item-uom").text(selectedUOM);

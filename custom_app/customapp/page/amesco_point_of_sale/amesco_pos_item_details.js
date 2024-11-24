@@ -166,6 +166,7 @@ custom_app.PointOfSale.ItemDetails = class {
 	}
 	
 	render_form(item) {
+
 		const fields_to_display = this.get_form_fields(item);
 		this.$form_container.html("");
 	
@@ -188,10 +189,6 @@ custom_app.PointOfSale.ItemDetails = class {
 				df: {
 					...field_meta,
 					onchange: function () {
-						if (fieldname === "uom") {
-							// If the selected field is UOM, calculate and display the conversion factor
-							me.calculate_conversion_factor(this.value, item);
-						}
 						me.events.form_updated(me.current_item, fieldname, this.value);
 						me.is_oic_authenticated = false;
 					},
@@ -205,14 +202,35 @@ custom_app.PointOfSale.ItemDetails = class {
 			// Add event listener for discount_percentage and discount_amount field click
 			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
 				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
-					if (!me.is_oic_authenticated) {
-						me.oic_authentication(fieldname, item);
+			
+					let has_pricing_rules = false;
+			
+					// Check if pricing_rules is a valid JSON string with entries
+					if (item.pricing_rules) {
+						try {
+							const parsed_rules = JSON.parse(item.pricing_rules);
+							if (Array.isArray(parsed_rules) && parsed_rules.length > 0) {
+								has_pricing_rules = true; // Set flag if there are valid entries
+							}
+						} catch (error) {
+							console.error("Error parsing pricing_rules:", error);
+						}
+					}
+			
+					if (has_pricing_rules) {
+						frappe.msgprint({
+							title: __("Pricing Rule Found"),
+							indicator: "blue",
+							message: __("This item already has a pricing rule applied.")
+						});
+					} else {
+						// Check if user is an OIC
+						if (!me.is_oic_authenticated) {
+							me.oic_authentication(fieldname, item);
+						}
 					}
 				});
 			}
-
-
-
 		});
 	
 		this.make_auto_serial_selection_btn(item);
@@ -307,27 +325,19 @@ custom_app.PointOfSale.ItemDetails = class {
 		const fields = [
 			"custom_free",
 			"qty",
-			'price_list_rate',
+			// 'price_list_rate',
 			"rate",
 			"uom",
-			// "custom_expiry_date",
-			//"conversion_factor",
 			"discount_percentage",
 			"discount_amount", 
 			"custom_batch_number",
 			"custom_batch_expiry",
-			//"custom_item_discount_amount",
-			//"warehouse",
-			//"actual_qty",
-			//"price_list_rate",
-			// "is_free_item",
-
 			'custom_vat_amount',
 			'custom_vatable_amount',
 			'custom_vat_exempt_amount',
 			'custom_zero_rated_amount',
-			//"custom_free",
 			"custom_remarks",
+			"pricing_rules"
 		];
 		if (item.has_serial_no) fields.push("serial_no");
 		if (item.has_batch_no) fields.push("batch_no");
@@ -488,15 +498,15 @@ custom_app.PointOfSale.ItemDetails = class {
 			this.batch_no_control.refresh();
 		}
 
-		if (this.uom_control) {
-			this.uom_control.df.onchange = function () {
-				me.events.form_updated(me.current_item, "uom", this.value);
+		// if (this.uom_control) {
+		// 	this.uom_control.df.onchange = function () {
+		// 		me.events.form_updated(me.current_item, "uom", this.value);
 
-				const item_row = frappe.get_doc(me.doctype, me.name);
-				me.conversion_factor_control.df.read_only = item_row.stock_uom == this.value;
-				me.conversion_factor_control.refresh();
-			};
-		}
+		// 		const item_row = frappe.get_doc(me.doctype, me.name);
+		// 		me.conversion_factor_control.df.read_only = item_row.stock_uom == this.value;
+		// 		me.conversion_factor_control.refresh();
+		// 	};
+		// }
 
 		frappe.model.on("POS Invoice Item", "*", (fieldname, value, item_row) => {
 			const field_control = this[`${fieldname}_control`];

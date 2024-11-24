@@ -110,33 +110,36 @@ def check_password_without_username(pwd, doctype="User", fieldname="password"):
     If it matches, return the user's details if they have the allowed roles.
     """
     try:
-        # Fetch all user documents
-        all_users = frappe.get_all("User", fields=["name", "email", "full_name", "enabled"])
+        # Define allowed roles
+        allowed_roles = ['Cashier', 'Pharmacist Assistant', 'Officer-in-Charge', 'System Manager', 'IT Manager']
 
-        for user in all_users:
-            # Check if the entered password matches the stored hashed password
+        # Fetch all users who have any of the allowed roles and are enabled
+        users_with_roles = frappe.db.sql("""
+            SELECT DISTINCT u.name, u.email, u.full_name, u.enabled
+            FROM `tabUser` u
+            JOIN `tabHas Role` r ON u.name = r.parent
+            WHERE r.role IN %s AND u.enabled = 1
+        """, (tuple(allowed_roles),), as_dict=True)
+
+        # Iterate through filtered users and check the password
+        for user in users_with_roles:
             try:
                 if check_password(user["name"], pwd):
+                    # Return user details if password matches
                     user_doc = frappe.get_doc("User", user["name"])
-                    user_roles = [d.role for d in user_doc.get("roles")]
-                    
-                    allowed_roles = ['Cashier', 'Pharmacist Assistant', 'Officer-in-Charge', 'System Manager', 'IT Manager ']
-                    
-                    # Check if user has any of the allowed roles
-                    if any(role in allowed_roles for role in user_roles):
-                        return {
-                            "name": user_doc.name,
-                            "email": user_doc.email,
-                            "full_name": user_doc.full_name,
-                            "roles": user_roles,
-                            "enabled": user_doc.enabled,
-                        }
+                    return {
+                        "name": user_doc.name,
+                        "email": user_doc.email,
+                        "full_name": user_doc.full_name,
+                        "enabled": user_doc.enabled,
+                        "password":pwd
+                    }
             except AuthenticationError:
                 continue
 
         return {"error": "Invalid password or no matching roles"}
     except Exception as e:
-        return {"error": str(e)}  
+        return {"error": str(e)}
 
 
 def check_password_cashier(pwd, doctype="User", fieldname="password"):
@@ -217,31 +220,36 @@ def check_oic_password(pwd, doctype="User", fieldname="password"):
     If it matches, return the user's details if they have the allowed roles.
     """
     try:
-        # Fetch all user documents
-        all_users = frappe.get_all("User", fields=["name", "email", "full_name", "enabled"])
+        # Define allowed roles
+        allowed_roles = ['Officer-in-Charge', 'System Manager', 'IT Manager']
 
-        for user in all_users:
-            # Check if the entered password matches the stored hashed password
+        # Fetch all users who have any of the allowed roles and are enabled
+        users_with_roles = frappe.db.sql("""
+            SELECT DISTINCT u.name, u.email, u.full_name, u.enabled
+            FROM `tabUser` u
+            JOIN `tabHas Role` r ON u.name = r.parent
+            WHERE r.role IN %s AND u.enabled = 1
+        """, (tuple(allowed_roles),), as_dict=True)
+
+        # Iterate through filtered users and check the password
+        for user in users_with_roles:
             try:
                 if check_password(user["name"], pwd):
+                    # Return user details if password matches
                     user_doc = frappe.get_doc("User", user["name"])
-                    user_roles = [d.role for d in user_doc.get("roles")]
-                    
-                    allowed_roles = ['Officer-in-Charge', 'System Manager', 'IT Manager ']
-                    
-                    # Check if user has any of the allowed roles
-                    if any(role in allowed_roles for role in user_roles):
-                        return {
-                            "name": user_doc.name,
-                            "email": user_doc.email,
-                            "full_name": user_doc.full_name,
-                            "roles": user_roles,
-                            "enabled": user_doc.enabled,
-                        }
+                    return {
+                        "name": user_doc.name,
+                        "email": user_doc.email,
+                        "full_name": user_doc.full_name,
+                        "enabled": user_doc.enabled,
+                        "password":pwd
+                    }
             except AuthenticationError:
                 continue
 
+        # Return error if no matching user found
         return {"error": "Invalid password or no matching roles"}
+    
     except Exception as e:
         return {"error": str(e)}
     

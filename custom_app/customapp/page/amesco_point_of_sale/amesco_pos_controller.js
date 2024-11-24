@@ -16,7 +16,21 @@ custom_app.PointOfSale.Controller = class {
 		this.fetch_opening_entry().then((r) => {
 			if (r.message.length) {
 				// assuming only one opening voucher is available for the current user
-				this.prepare_app_defaults(r.message[0]);
+				let data = r.message[0];
+				localStorage.setItem('pos_profile', data.pos_profile);
+
+				// console.log('r.message:', r.message[0].pos_profile);
+				console.log('user: ', frappe.session.user);
+
+				let saved_pos_profile = localStorage.getItem('pos_profile');
+
+				if (saved_pos_profile) {
+					data.pos_profile = saved_pos_profile;
+					console.log('savedPosProfile:', 'true');
+				}
+
+				this.prepare_app_defaults(data);
+				
 			} else {
 				this.create_opening_voucher();
 			}
@@ -186,7 +200,6 @@ custom_app.PointOfSale.Controller = class {
 		this.item_stock_map = {};
 		this.settings = {};
 
-		// console.log('this.setting:', this.settings)
 
 		frappe.db.get_value("Stock Settings", undefined, "allow_negative_stock").then(({ message }) => {
 			this.allow_negative_stock = flt(message.allow_negative_stock) || false;
@@ -197,10 +210,7 @@ custom_app.PointOfSale.Controller = class {
 			args: { pos_profile: this.pos_profile },
 			callback: (res) => {
 				const profile = res.message;
-
-
 				Object.assign(this.settings, profile);
-
 				this.settings.customer_groups = profile.customer_groups.map((group) => group.name);
 				this.make_app();
 			},
@@ -227,9 +237,6 @@ custom_app.PointOfSale.Controller = class {
 		this.add_buttons_to_toolbar();
 		this.prepare_menu();
 		this.make_new_invoice();
-
-
-
 	}
 	//Customized Layout For Cashier
 	prepare_dom() {
@@ -464,68 +471,88 @@ custom_app.PointOfSale.Controller = class {
 			() => this.item_selector.toggle_component(true),
 			() => this.item_details.toggle_item_details_section(),
 			() => this.toggle_recent_order_list(true),
-			() => window.location.reload(),
 			() => frappe.dom.unfreeze(),
 
 		]);
 	}
 
 	amesco_plus_scan() {
-
-		const me = this
-		const doc = me.frm
-		
-		new frappe.ui.Scanner({
-			dialog: true, // open camera scanner in a dialog
-			multiple: false, // stop after scanning one value
-			on_scan(data) {
-				// Assuming the scanned data is comma-separated
-				let scannedData = data.decodedText.split(',');
-				// Extracting fields from the scanned data
-				let user_id = scannedData[0];
-				let userName = scannedData[2];
-				let email = scannedData[3];
-				let points = scannedData[4];
-
-				doc.set_value('custom_ameso_user', email);
-				doc.set_value('custom_amesco_user_id', user_id);
-
-				// Creating a dialog to display the extracted data
-				let userDetailsDialog = new frappe.ui.Dialog({
-					title: __('Scanned User Details'),
-					fields: [
-						{
-							label: 'Name',
-							fieldname: 'user_name',
-							fieldtype: 'Data',
-							read_only: 1,
-							default: userName
-						},
-						{
-							label: 'Email',
-							fieldname: 'email',
-							fieldtype: 'Data',
-							read_only: 1,
-							default: email
-						},
-						{
-							label: 'Points',
-							fieldname: 'points',
-							fieldtype: 'Data',
-							read_only: 1,
-							default: points
-						}
-					],
-					primary_action_label: __('Close'),
-					primary_action: function() {
-						userDetailsDialog.hide();
-					}
-				});
+		const me = this;
+		const doc = me.frm;
 	
-				// Show the dialog with user details
-				userDetailsDialog.show();
+		// Create a dialog with a data field for manual input
+		let manualInputDialog = new frappe.ui.Dialog({
+			title: __('Enter Scanned Data'),
+			fields: [
+				{
+					label: 'Scanned Data',
+					fieldname: 'scanned_data',
+					fieldtype: 'Data',
+					reqd: 1, // Make this field mandatory
+					description: 'Enter the scanned data (comma-separated format)'
+				}
+			],
+			primary_action_label: __('Submit'),
+			primary_action(values) {
+				let scannedData = values.scanned_data.split(',');  // Assuming the data is comma-separated
+	
+				if (scannedData.length >= 5) {
+					// Extracting fields from the scanned data
+					let user_id = scannedData[0];
+					let userName = scannedData[2];
+					let email = scannedData[3];
+					let points = scannedData[4];
+	
+					// Set the extracted values in the document
+					doc.set_value('custom_ameso_user', email);
+					doc.set_value('custom_amesco_user_id', user_id);
+	
+					// Display the extracted user details in another dialog
+					let userDetailsDialog = new frappe.ui.Dialog({
+						title: __('Scanned User Details'),
+						fields: [
+							{
+								label: 'Name',
+								fieldname: 'user_name',
+								fieldtype: 'Data',
+								read_only: 1,
+								default: userName
+							},
+							{
+								label: 'Email',
+								fieldname: 'email',
+								fieldtype: 'Data',
+								read_only: 1,
+								default: email
+							},
+							{
+								label: 'Points',
+								fieldname: 'points',
+								fieldtype: 'Data',
+								read_only: 1,
+								default: points
+							}
+						],
+						primary_action_label: __('Close'),
+						primary_action: function() {
+							userDetailsDialog.hide();
+						}
+					});
+	
+					// Show the dialog with the user details
+					userDetailsDialog.show();
+	
+				} else {
+					frappe.msgprint(__('Invalid data format. Please enter at least 5 comma-separated values.'));
+				}
+	
+				// Hide the manual input dialog after submission
+				manualInputDialog.hide();
 			}
-		})
+		});
+	
+		// Show the manual input dialog
+		manualInputDialog.show();
 	}
 
 
@@ -1287,6 +1314,7 @@ custom_app.PointOfSale.Controller = class {
 		return new Promise((resolve) => {
 			if (this.frm) {
 				this.frm = this.get_new_frm(this.frm);
+				this.frm.doc.pos_profile = this.pos_profile;
 				this.frm.doc.items = [];
 				this.frm.doc.is_pos = 1;
 				resolve();

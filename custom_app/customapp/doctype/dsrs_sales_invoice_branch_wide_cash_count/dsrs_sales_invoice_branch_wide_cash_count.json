@@ -1,0 +1,204 @@
+{
+ "actions": [],
+ "autoname": "BH-CCD-.YYYY.-.########",
+ "creation": "2024-11-19 16:14:49.001288",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "branch_wide_daily_sales_report",
+  "warehouse",
+  "column_break_hhol",
+  "date",
+  "section_break_oklx",
+  "cash_count_cash_invoice",
+  "section_break_nbsv",
+  "column_break_spvf",
+  "column_break_qgiv",
+  "total",
+  "section_break_vclz",
+  "cash_sales",
+  "check_sales",
+  "charge_sales",
+  "card_sales",
+  "qr_sales",
+  "online_sales",
+  "grand_total_sales",
+  "column_break_mglw",
+  "overshort",
+  "count_status",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "DSRS Sales Invoice Branch Wide Cash Count",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_hhol",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_oklx",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "cash_count_cash_invoice",
+   "fieldtype": "Table",
+   "label": "Cash Count Cash Invoice",
+   "options": "CSD Daily Sales Cash Count Table"
+  },
+  {
+   "fieldname": "section_break_nbsv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_spvf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_qgiv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Cash Count Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_vclz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "cash_sales",
+   "fieldtype": "Currency",
+   "label": "Cash Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "check_sales",
+   "fieldtype": "Currency",
+   "label": "Check Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "charge_sales",
+   "fieldtype": "Currency",
+   "label": "Charge Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "grand_total_sales",
+   "fieldtype": "Currency",
+   "label": "Grand Total Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_mglw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "overshort",
+   "fieldtype": "Currency",
+   "label": "Over/Short",
+   "read_only": 1
+  },
+  {
+   "fieldname": "count_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Count Status",
+   "options": "Balance\nOver\nShort",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "DSRS Sales Invoice Branch Wide Cash Count",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "branch_wide_daily_sales_report",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "DSRS Sales Invoice Branch Wide",
+   "options": "DSRS Sales Invoice Branch Wide",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "card_sales",
+   "fieldtype": "Currency",
+   "label": "Card Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qr_sales",
+   "fieldtype": "Currency",
+   "label": "QR Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "online_sales",
+   "fieldtype": "Currency",
+   "label": "Online Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Warehouse",
+   "read_only": 1,
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-11-19 18:07:42.447549",
+ "modified_by": "Administrator",
+ "module": "Customapp",
+ "name": "DSRS Sales Invoice Branch Wide Cash Count",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

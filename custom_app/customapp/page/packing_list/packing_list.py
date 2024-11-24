@@ -274,8 +274,6 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             {bin_join_condition}
         GROUP BY
             item.name, item.item_name, item.description, item.stock_uom, item.image, item.is_stock_item
-        ORDER BY
-            item.item_name ASC
         LIMIT
             {page_length} OFFSET {start}
         """.format(
@@ -341,10 +339,16 @@ def search_for_serial_or_batch_or_barcode_number(search_value: str) -> dict[str,
 
 
 def get_conditions(search_term):
+    search_term_escaped = frappe.db.escape(search_term + "%")  # Match words starting with search_term
+
     condition = "("
-    condition += """item.name like {search_term}
-        or item.item_name like {search_term}
-        or item.custom_generic_name like {search_term}""".format(search_term=frappe.db.escape("%" + search_term + "%"))
+    condition += """
+        item.name LIKE {search_term}
+        OR item.item_name LIKE {search_term}
+        OR item.custom_generic_name LIKE {search_term}
+    """.format(search_term=search_term_escaped)
+
+    # Add additional search fields if necessary
     condition += add_search_fields_condition(search_term)
     condition += ")"
 
@@ -691,35 +695,55 @@ def get_draft_pos_invoice_items(pos_profile, item_code):
     :return: A list of draft POS invoices that contain the specified item code, including batch details, and the total quantity of the item.
     """
     try:
-        # Fetch all draft POS invoices for the specified POS profile
-        draft_invoices = frappe.get_all('POS Invoice', filters={
-            'docstatus': 0,
-            'pos_profile': pos_profile
-        }, fields=['name', 'customer', 'grand_total'])
+        # Query both POS Invoice and POS Invoice Item in a single query
+        query = """
+            SELECT
+                pi.name AS invoice_name,
+                pi.customer AS customer,
+                pi.grand_total AS grand_total,
+                pii.item_code AS item_code,
+                pii.item_name AS item_name,
+                pii.qty AS qty,
+                pii.rate AS rate
+            FROM `tabPOS Invoice` pi
+            JOIN `tabPOS Invoice Item` pii ON pi.name = pii.parent
+            WHERE
+                pi.docstatus = 0
+                AND pi.pos_profile = %s
+                AND pii.item_code = %s
+        """
 
-        # Initialize a list to store invoices containing the item code
-        matching_invoices = []
+        # Execute the query with pos_profile and item_code as parameters
+        draft_invoices = frappe.db.sql(query, (pos_profile, item_code), as_dict=True)
 
-        # Initialize total quantity
+        # Initialize a dictionary to store invoices and item details
+        matching_invoices = {}
         total_qty = 0
 
-        # Iterate through the draft invoices to find matching items
-        for invoice in draft_invoices:
-            invoice_items = frappe.get_all('POS Invoice Item', filters={
-                'parent': invoice.name,
-                'item_code': item_code
-            }, fields=['item_code', 'item_name', 'qty', 'rate'])
+        # Process the result and organize by invoice
+        for row in draft_invoices:
+            invoice_name = row['invoice_name']
+            if invoice_name not in matching_invoices:
+                matching_invoices[invoice_name] = {
+                    'name': invoice_name,
+                    'customer': row['customer'],
+                    'grand_total': row['grand_total'],
+                    'items': []
+                }
 
-            if invoice_items:
-                invoice['items'] = invoice_items
-                matching_invoices.append(invoice)
+            # Add item to the invoice
+            matching_invoices[invoice_name]['items'].append({
+                'item_code': row['item_code'],
+                'item_name': row['item_name'],
+                'qty': row['qty'],
+                'rate': row['rate']
+            })
 
-                # Sum the quantity of the item in this invoice
-                for item in invoice_items:
-                    total_qty += item.qty
+            # Sum total quantity
+            total_qty += row['qty']
 
         return {
-            'invoices': matching_invoices,
+            'invoices': list(matching_invoices.values()),
             'total_qty': total_qty
         }
 

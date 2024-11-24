@@ -14,29 +14,33 @@
   "column_break_yfhm",
   "date_from",
   "date_to",
+  "column_break_kext",
   "section_break_qyz7",
-  "sales_details",
-  "sales_details_total",
   "net_sales",
+  "vat",
+  "grand_total",
+  "column_break_qsjl",
+  "vatable_sales",
+  "vat_exempt_sales",
+  "zero_rated_sales",
+  "column_break_qkbj",
   "section_break_nznb",
   "payment_details",
   "payment_details_total",
   "section_break_ahmo",
-  "confirmed_transaction",
   "confirmed_transaction_total",
   "confirmed_transaction_item_total",
-  "section_break_wpvr",
-  "pending_transaction",
-  "section_break_dzex",
-  "clerk_sales",
+  "column_break_pflk",
+  "beginning_invoice",
+  "ending_invoice",
+  "column_break_cgsr",
   "section_break_fczr",
   "column_break_glwo",
+  "old_accumulated_sales",
   "accumulated_sales",
   "column_break_adyb",
-  "clerk_sales_no_of_transaction_total",
-  "column_break_zlon",
-  "clerk_sales_amount_total",
-  "amended_from"
+  "amended_from",
+  "column_break_zlon"
  ],
  "fields": [
   {
@@ -44,33 +48,10 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "sales_details",
-   "fieldtype": "Table",
-   "label": "Sales Details",
-   "options": "Z Sales Details"
-  },
-  {
    "fieldname": "payment_details",
    "fieldtype": "Table",
    "label": "Payment Details",
    "options": "Z Payment Details"
-  },
-  {
-   "fieldname": "confirmed_transaction",
-   "fieldtype": "Table",
-   "label": "Confirmed Transaction",
-   "options": "Z Confirmed Trasaction"
-  },
-  {
-   "fieldname": "clerk_sales",
-   "fieldtype": "Table",
-   "label": "Clerk Sales",
-   "options": "Z Clerk Sales"
-  },
-  {
-   "fieldname": "sales_details_total",
-   "fieldtype": "Currency",
-   "label": "Sales Details Total"
   },
   {
    "fieldname": "section_break_ahmo",
@@ -83,16 +64,13 @@
   {
    "fieldname": "payment_details_total",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Payment Details Total"
   },
   {
    "fieldname": "confirmed_transaction_total",
-   "fieldtype": "Int",
+   "fieldtype": "Data",
    "label": "Confirmed Transaction Total"
-  },
-  {
-   "fieldname": "section_break_dzex",
-   "fieldtype": "Section Break"
   },
   {
    "fieldname": "section_break_fczr",
@@ -107,18 +85,8 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "clerk_sales_no_of_transaction_total",
-   "fieldtype": "Int",
-   "label": "Clerk Sales No of Transaction Total"
-  },
-  {
    "fieldname": "column_break_zlon",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "clerk_sales_amount_total",
-   "fieldtype": "Currency",
-   "label": "Clerk Sales Amount Total"
   },
   {
    "fieldname": "amended_from",
@@ -141,6 +109,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "fetch_from": "pos_profile.custom_last_z_reading",
    "fieldname": "date_from",
    "fieldtype": "Datetime",
    "label": "Date From"
@@ -149,16 +118,6 @@
    "fieldname": "date_to",
    "fieldtype": "Datetime",
    "label": "Date To"
-  },
-  {
-   "fieldname": "section_break_wpvr",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "pending_transaction",
-   "fieldtype": "Table",
-   "label": "Pending Transaction",
-   "options": "Z Pending Transaction"
   },
   {
    "fetch_from": "pos_profile.custom_vat_reg_tin",
@@ -198,21 +157,80 @@
   {
    "fieldname": "net_sales",
    "fieldtype": "Currency",
-   "label": "Net Sales",
-   "read_only": 1
+   "label": "Net Sales"
   },
   {
    "fieldname": "accumulated_sales",
    "fieldtype": "Currency",
    "label": "Accumulated Sales"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total"
+  },
+  {
+   "fieldname": "vatable_sales",
+   "fieldtype": "Currency",
+   "label": "Vatable Sales"
+  },
+  {
+   "fieldname": "vat_exempt_sales",
+   "fieldtype": "Currency",
+   "label": "Vat Exempt Sales"
+  },
+  {
+   "fieldname": "zero_rated_sales",
+   "fieldtype": "Currency",
+   "label": "Zero Rated Sales"
+  },
+  {
+   "fieldname": "vat",
+   "fieldtype": "Currency",
+   "label": "VAT"
+  },
+  {
+   "fieldname": "column_break_kext",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_qsjl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_qkbj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_pflk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_cgsr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "beginning_invoice",
+   "fieldtype": "Data",
+   "label": "Beginning Invoice"
+  },
+  {
+   "fieldname": "ending_invoice",
+   "fieldtype": "Data",
+   "label": "Ending Invoice"
+  },
+  {
+   "fieldname": "old_accumulated_sales",
+   "fieldtype": "Currency",
+   "label": "Old Accumulated Sales"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-08-27 16:46:33.279903",
+ "modified": "2024-11-20 22:09:50.310969",
  "modified_by": "Administrator",
- "module": "customapp",
+ "module": "Customapp",
  "name": "POS Z Reading",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",

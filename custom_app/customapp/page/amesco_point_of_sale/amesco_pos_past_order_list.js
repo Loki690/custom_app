@@ -2,6 +2,7 @@ custom_app.PointOfSale.PastOrderList = class {
 	constructor({ wrapper, events }) {
 		this.wrapper = wrapper;
 		this.events = events;
+		this.all_invoices = []; // Initialize empty array to store invoices
 
 		this.init_component();
 	}
@@ -30,13 +31,13 @@ custom_app.PointOfSale.PastOrderList = class {
 	}
 
 	bind_events() {
-		this.search_field.$input.on("input", (e) => {
-			clearTimeout(this.last_search);
-			this.last_search = setTimeout(() => {
-				const search_term = e.target.value;
-				this.refresh_list(search_term, this.status_field.get_value());
-			}, 300);
-		});
+		// this.search_field.$input.on("input", (e) => {
+		// 	clearTimeout(this.last_search);
+		// 	this.last_search = setTimeout(() => {
+		// 		const search_term = e.target.value;
+		// 		this.refresh_list(search_term, this.status_field.get_value());
+		// 	}, 300);
+		// });
 		const me = this;
 		this.$invoices_container.on("click", ".invoice-wrapper", function () {
 			const invoice_name = unescape($(this).attr("data-invoice-name"));
@@ -80,70 +81,135 @@ custom_app.PointOfSale.PastOrderList = class {
 			ignore_inputs: true,
 			page: cur_page.page.page // Replace with your actual page context
 		});
-
-
-
-
 	}
 
 	make_filter_section() {
-		const me = this;
-		this.search_field = frappe.ui.form.make_control({
-			df: {
-				label: __("Search"),
-				fieldtype: "Data",
-				placeholder: __("Search by invoice id or customer name"),
-			},
-			parent: this.$component.find(".search-field"),
-			render_input: true,
-		});
-		this.status_field = frappe.ui.form.make_control({
-			df: {
-				label: __("Invoice Status"),
-				fieldtype: "Select",
-				options: `Draft`,
-				placeholder: __("Filter by invoice status"),
-				onchange: function () {
-					if (me.$component.is(":visible")) me.refresh_list();
-				},
-			},
-			parent: this.$component.find(".status-field"),
-			render_input: true,
-		});
-		this.search_field.toggle_label(true);
-		this.status_field.toggle_label(false);
-		this.status_field.set_value("Draft");
+        const me = this;
+    
+        this.search_field = frappe.ui.form.make_control({
+            df: {
+                label: __("Search"),
+                fieldtype: "Data",
+                placeholder: __("Search by invoice id or customer name"),
+            },
+            parent: this.$component.find(".search-field"),
+            render_input: true,
+        });
+    
+        this.search_field.$input.on("input", (e) => {
+            clearTimeout(this.last_search);
+            this.last_search = setTimeout(() => {
+                const search_term = e.target.value;
+				console.log(search_term);
+                this.filter_invoices(search_term, this.status_field.get_value());
+            }, 300);
+        });
+    
+        this.status_field = frappe.ui.form.make_control({
+            df: {
+                label: __("Invoice Status"),
+                fieldtype: "Select",
+                options: `Draft`,
+                placeholder: __("Filter by invoice status"),
+                onchange: function () {
+                    if (me.$component.is(":visible")) me.refresh_list();
+                },
+            },
+            parent: this.$component.find(".status-field"),
+            render_input: true,
+        });
 
-		setTimeout(() => {
-			this.search_field.$input.focus();
-		}, 100);
-	}
+        this.search_field.toggle_label(true);
+        this.status_field.toggle_label(false);
+        this.status_field.set_value("Draft");
+
+        setTimeout(() => {
+            this.search_field.$input.focus();
+        }, 100);
+    }
+	
+
+	// refresh_list() {
+    //     this.events.reset_summary();
+    //     const search_term = this.search_field.get_value();
+    //     const status = this.status_field.get_value();
+    //     // added pos profile variable for filter
+    //     const pos_profile = this.events.pos_profile();
+
+    //     // const current_user = frappe.session.user;
+
+    //     this.$invoices_container.html("");
+
+    //     return frappe.call({
+    //         method: "custom_app.customapp.page.packing_list.packing_list.get_past_order_list",
+    //         // freeze: true,
+    //         args: { search_term, status, pos_profile}, // added pos_profile for filtering
+    //         callback: (response) => {
+    //             // console.log(response.message);
+
+    //             response.message.forEach((invoice) => {
+    //                 const invoice_html = this.get_invoice_html(invoice);
+    //                 this.$invoices_container.append(invoice_html);
+    //             });
+
+    //             this.$invoice_count.text(response.message.length);
+    //         },
+    //     });
+    // }
+
 
 	refresh_list() {
-		frappe.dom.freeze();
-		this.events.reset_summary();
-		const search_term = this.search_field.get_value();
-		const status = this.status_field.get_value();
-		const pos_profile = this.events.pos_profile();
-		const source_warehouse = this.events.source_warehouse();
+        frappe.dom.freeze();
+        this.events.reset_summary();
+        const search_term = this.search_field.get_value();
+        const status = this.status_field.get_value();
 
-		this.$invoices_container.html("");
+        this.$invoices_container.html("");
 
-		return frappe.call({
-			method: "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.get_past_order_list",
-			freeze: true,
-			args: { search_term, status, pos_profile },
-			callback: (response) => {
-				frappe.dom.unfreeze();
-				response.message.forEach((invoice) => {
-					const invoice_html = this.get_invoice_html(invoice);
-					this.$invoices_container.append(invoice_html);
-				});
-			
-				this.$invoice_count.text(response.message.length);
-			},
+        return frappe.call({
+            method: "erpnext.selling.page.point_of_sale.point_of_sale.get_past_order_list",
+            freeze: true,
+            args: { search_term, status },
+            callback: (response) => {
+                frappe.dom.unfreeze();
+                this.all_invoices = response.message || []; // Ensure it's an array even if response is empty
+                this.display_invoices(this.all_invoices);
+            },
+        });
+    }
+
+	filter_invoices(search_term, status) {
+		console.log("Search Term:", search_term);
+		console.log("Status:", status);
+		console.log("All Invoices:", this.all_invoices);
+	
+		// Filter stored invoices based on search term and status
+		const filtered_invoices = this.all_invoices.filter((invoice) => {
+			const matches_search = invoice.name.includes(search_term) || invoice.customer.includes(search_term);
+
+	
+			console.log("Invoice:", invoice);
+			console.log("Matches Search:", matches_search);
+	
+			return matches_search;
 		});
+	
+		console.log("Filtered Invoices:", filtered_invoices);
+	
+		// Display the filtered invoices
+		this.display_invoices(filtered_invoices);
 	}
+	
+    
+    display_invoices(invoices) {
+		console.log(invoices);
+        this.$invoices_container.html("");
+        invoices.forEach((invoice) => {
+            const invoice_html = this.get_invoice_html(invoice);
+            this.$invoices_container.append(invoice_html);
+        });
+        this.$invoice_count.text(invoices.length);
+    }
 
 	get_invoice_html(invoice) {
 		const posting_datetime = moment(invoice.posting_date + " " + invoice.posting_time).format(
@@ -169,7 +235,7 @@ custom_app.PointOfSale.PastOrderList = class {
 
 	toggle_component(show) {
 		show
-			? this.$component.css("display", "flex") && this.refresh_list()
+			? this.$component.css("display", "flex")
 			: this.$component.css("display", "none");
 	}
 };

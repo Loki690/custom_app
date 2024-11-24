@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "autoname": "PSBK-.YYYY.-.########",
  "creation": "2024-09-17 16:22:24.155461",
  "doctype": "DocType",
@@ -61,7 +62,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-09-25 14:45:21.302622",
+ "modified": "2024-10-09 14:31:46.884345",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "Passbook",
@@ -77,6 +78,19 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Treasury",
    "share": 1,
    "write": 1
   }

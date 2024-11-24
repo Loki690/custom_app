@@ -188,11 +188,34 @@ custom_app.PointOfSale.ItemDetails = class {
 			// Add event listener for discount_percentage and discount_amount field click
 			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
 				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
-					if (!me.is_oic_authenticated) {
-						me.oic_authentication(fieldname, item);
+			
+					let has_pricing_rules = false;
+			
+					// Check if pricing_rules is a valid JSON string with entries
+					if (item.pricing_rules) {
+						try {
+							const parsed_rules = JSON.parse(item.pricing_rules);
+							if (Array.isArray(parsed_rules) && parsed_rules.length > 0) {
+								has_pricing_rules = true; // Set flag if there are valid entries
+							}
+						} catch (error) {
+							console.error("Error parsing pricing_rules:", error);
+						}
+					}
+			
+					if (has_pricing_rules) {
+						frappe.msgprint({
+							title: __("Pricing Rule Found"),
+							indicator: "blue",
+							message: __("This item already has a pricing rule applied.")
+						});
+					} else {
+						// Check if user is an OIC
+						if (!me.is_oic_authenticated) {
+							me.oic_authentication(fieldname, item);
+						}
 					}
 				});
-	
 			}
 	
 		});
@@ -227,7 +250,6 @@ custom_app.PointOfSale.ItemDetails = class {
 					callback: (r) => {
 						if (r.message) {
 
-							// console.log('User: ', r.message)
 							
 							if (r.message.name) {
 								frappe.show_alert({
@@ -235,7 +257,8 @@ custom_app.PointOfSale.ItemDetails = class {
 									indicator: 'green'
 								});
 								passwordDialog.hide();
-	
+								localStorage.setItem('oic_user_data', JSON.stringify(r.message));
+								console.log('OIC User Data:', r.message);
 								me.enable_discount_input(fieldname);
 								me.set_discount_log(doc, item, r)
 								me.is_oic_authenticated = true;
@@ -278,7 +301,7 @@ custom_app.PointOfSale.ItemDetails = class {
 		const fields = [
 			"custom_free",
 			"qty",
-			'price_list_rate',
+			// 'price_list_rate',
 			"rate",
 			"uom",
 			"discount_percentage",
@@ -531,20 +554,100 @@ custom_app.PointOfSale.ItemDetails = class {
 		});
 	}
 
+	// bind_auto_serial_fetch_event() {
+	// 	this.$form_container.on("click", ".auto-fetch-btn", () => {
+
+	// 		console.log('Auto Fetch Button Clicked')
+	// 		console.log('Item Row:', this.item_row)
+	// 		console.log('Events:', this.events.get_frm())
+			
+	// 		let frm = this.events.get_frm();
+	// 		let item_row = this.item_row;
+	// 		item_row.type_of_transaction = "Outward";
+
+	// 		new erpnext.SerialBatchPackageSelector(frm, item_row, (r) => {
+	// 			if (r) {
+	// 				frappe.model.set_value(item_row.doctype, item_row.name, {
+	// 					serial_and_batch_bundle: r.name,
+	// 					qty: Math.abs(r.total_qty),
+	// 				});
+	// 			}
+	// 		});
+	// 	});
+	// }
+
+
 	bind_auto_serial_fetch_event() {
-		this.$form_container.on("click", ".auto-fetch-btn", () => {
+		
+		this.$form_container.on("click", ".auto-fetch-btn", async () => {
+
+			console.log('Auto Fetch Button Clicked');
+			console.log('Item Row:', this.item_row);
+			console.log('Events:', this.events.get_frm());
+
 			let frm = this.events.get_frm();
 			let item_row = this.item_row;
 			item_row.type_of_transaction = "Outward";
-
-			new erpnext.SerialBatchPackageSelector(frm, item_row, (r) => {
-				if (r) {
-					frappe.model.set_value(item_row.doctype, item_row.name, {
-						serial_and_batch_bundle: r.name,
-						qty: Math.abs(r.total_qty),
-					});
-				}
+			
+			// console.log('Frm:', frm.doc.set_warehouse);
+			// Fetch available batches
+			let batches = await frappe.db.get_list('Batch', {
+				filters: {
+					item: item_row.item_code,
+					expiry_date: ['>=', frappe.datetime.now_date()]
+				},
+				fields: ['name', 'expiry_date'],
+				order_by: 'expiry_date desc'
 			});
+
+			if (batches.length > 0) {
+				// Select the latest batch
+				let latest_batch = batches[0];
+
+				console.log('Latest Batch:', latest_batch);
+
+				let entries = [{
+					batch_no: latest_batch.name,
+					qty: item_row.qty,
+					name: "row 1",
+					warehouse: frm.doc.set_warehouse
+				}];
+
+				console.log('Entries:', entries);
+
+				frappe
+				.call({
+					method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
+					args: {
+						entries: entries,
+						child_row: item_row,
+						doc: frm.doc,
+						warehouse: frm.doc.set_warehouse
+					},
+				})
+				.then((r) => {
+					// console.log('Response:', r);
+					const res = r.message;
+					// console.log(res)
+					frappe.model.set_value(item_row.doctype, item_row.name, {
+						serial_and_batch_bundle: res.name,
+						qty: Math.abs(res.total_qty),
+					});
+				});
+
+				// Set the batch and quantity values
+				
+
+				// frappe.show_alert({
+				// 	message: __('Batch {0} selected automatically.', [latest_batch.name]),
+				// 	indicator: 'green'
+				// });
+			} else {
+				frappe.show_alert({
+					message: __('No available batches found for the item.'),
+					indicator: 'red'
+				});
+			}
 		});
 	}
 

@@ -8,6 +8,7 @@
  "field_order": [
   "date",
   "customer",
+  "customer_name",
   "sales_order",
   "invoice_type",
   "sales_invoice",
@@ -80,14 +81,21 @@
    "fieldtype": "Text",
    "in_list_view": 1,
    "label": "Notes"
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-08-28 18:25:11.768883",
+ "modified": "2024-11-18 17:34:38.499460",
  "modified_by": "Administrator",
- "module": "customapp",
+ "module": "Customapp",
  "name": "CSD Daily Sales Report Detail Table",
  "owner": "Administrator",
  "permissions": [],

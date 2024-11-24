@@ -1,0 +1,48 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2024-11-08 13:59:07.979655",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Check Voucher",
+ "letterhead": null,
+ "modified": "2024-11-08 13:59:07.979655",
+ "modified_by": "Administrator",
+ "module": "Customapp",
+ "name": "Stock Ledger Branch",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Stock Ledger Entry",
+ "report_name": "Stock Ledger Branch",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Purchaser"
+  },
+  {
+   "role": "Procurement Supervisor"
+  },
+  {
+   "role": "Purchase Manager"
+  },
+  {
+   "role": "Treasury"
+  },
+  {
+   "role": "Sales Master Manager"
+  },
+  {
+   "role": "Stock Manager"
+  },
+  {
+   "role": "Sales Manager"
+  }
+ ]
+}

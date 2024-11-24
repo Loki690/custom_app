@@ -236,6 +236,8 @@ doc_events = {
         "before_save": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.before_save",
         "validate": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.validate",
         "on_submit": "custom_app.customapp.utils.amesco_plus_api.api.on_submit_pos_invoice",
+        "after_insert": "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.broadcast_pos_invoice_update",
+        "on_update":  "custom_app.customapp.page.amesco_point_of_sale.amesco_point_of_sale.broadcast_pos_invoice_update",
         #"on_submit": "custom_app.customapp.doctype.pos_invoice_custom.pos_invoice_custom.export_multiple_pos_invoices"
         # "on_submit": "custom_app.customapp.doctype.amesco_gift_certificate.amesco_gift_certificate.update_gift_cert_code"
     },
@@ -257,7 +259,13 @@ doc_events = {
 #     }
     'POS Daily Sales Report Summary': {
         'before_insert': 'custom_app.customapp.doctype.pos_daily_sales_report_summary.pos_daily_sales_report_summary.before_insert'
-    }
+    },
+    # 'Passbook': {
+    #     'after_save': 'custom_app.customapp.doctype.cash_count_denomination_entry.cash_count_denomination_entry.after_save'
+    # }
+    # 'Customer': {
+    #     'before_save': 'custom_app.customapp.doctype.customer.customer.before_save'
+    # }
 }
 
 scheduler_events = { 

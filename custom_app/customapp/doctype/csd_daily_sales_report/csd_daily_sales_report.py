@@ -46,5 +46,42 @@ def get_sales_invoice_items(parent):
         frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
     finally:
         frappe.flags.ignore_permissions = False  # Reset the flag
-
         
+
+@frappe.whitelist()
+def get_payments_sales_invoice(reference_name):
+    """
+    Retrieve the payment entry and its corresponding Payment Entry Reference details
+    based on the payment entry name and reference name.
+    
+    :param payment_name: The name of the payment entry.
+    :param reference_name: The reference name in the Payment Entry Reference.
+    :return: Payment Entry and Payment Entry Reference details.
+    """
+    try:
+        # Define the query using Frappe ORM
+        result = frappe.db.sql("""
+            SELECT 
+                pe.name AS payment_entry_name,
+                pe.posting_date,
+                pe.party_type,
+                pe.party,
+                pe.paid_amount,
+                per.reference_name,
+                per.reference_doctype,
+                per.allocated_amount,
+                pe.mode_of_payment
+            FROM 
+                `tabPayment Entry` pe
+            JOIN 
+                `tabPayment Entry Reference` per ON pe.name = per.parent
+            WHERE 
+                per.reference_name = %s
+        """, (reference_name), as_dict=True)
+
+        # Return the result
+        return result
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), frappe._("Error fetching payment entry details"))
+        frappe.throw(frappe._("An error occurred while fetching payment entry details: {0}").format(str(e))) 

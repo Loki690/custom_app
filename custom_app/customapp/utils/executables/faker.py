@@ -6,7 +6,7 @@ import random
 
 def generate_fake_passbook_entries(count=100):
     """
-    Generate fake Passbook entries using Faker library
+    Generate fake Passbook entries
     """
     fake = Faker()
     passbook_entries = []

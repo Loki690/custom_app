@@ -24,7 +24,6 @@ def on_submit(doc, method):
         frappe.throw(frappe._("An error occurred during on_submit: {0}").format(str(e)))
 
 def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry_id, pos_closing_entry_id, shift, doc):
-
     try:
         new_entry = frappe.new_doc('Cash Count Denomination Entry')
         new_entry.custom_cashier = cashier
