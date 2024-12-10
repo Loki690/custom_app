@@ -844,12 +844,30 @@ custom_app.PointOfSale.ItemCart = class {
 		if (!frm) frm = this.events.get_frm();
 		// console.log(frm.doc);
 		
-		this.render_vatable_sales(frm.doc.custom_vatable_sales);
-		this.render_vat_exempt_sales(frm.doc.custom_vat_exempt_sales);
-		this.render_zero_rated_sales(frm.doc.custom_zero_rated_sales);
+		const custom_vatable_sales = cint(frappe.sys_defaults.disable_rounded_total)
+			? frm.doc.custom_vatable_sales
+			: frm.doc.rounded_total;
+
+		const custom_vat_exempt_sales = cint(frappe.sys_defaults.disable_rounded_total)
+			? frm.doc.custom_vat_exempt_sales
+			: frm.doc.rounded_total;
+
+		const custom_zero_rated_sales = cint(frappe.sys_defaults.disable_rounded_total)
+			? frm.doc.custom_zero_rated_sales
+			: frm.doc.rounded_total;
+
+		this.render_vatable_sales(custom_vatable_sales);
+		this.render_vat_exempt_sales(custom_vat_exempt_sales );
+		this.render_zero_rated_sales(custom_zero_rated_sales);
+		
 		// this.render_vat(frm.doc.custom_vat_amount)
 		// this.render_ex_total(frm.doc.custom_ex_total)
-		this.render_net_total(frm.doc.net_total);
+
+		const net_total = cint(frappe.sys_defaults.disable_rounded_total)
+			? frm.doc.net_total
+			: frm.doc.rounded_total;
+
+		this.render_net_total(net_total);
 		this.render_total_item_qty(frm.doc.items);
 
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
@@ -860,7 +878,7 @@ custom_app.PointOfSale.ItemCart = class {
 		// this.render_taxes(frm.doc.taxes);
 		this.render_total_vat(frm.doc.total_taxes_and_charges);
 	}
-
+	
 	render_net_total(value) {
 		const currency = this.events.get_frm().doc.currency;
 		this.$totals_section
@@ -1649,6 +1667,7 @@ custom_app.PointOfSale.ItemCart = class {
 				this.$cart_items_wrapper.html("");
 				frm.doc.items.forEach((item) => {
 					this.update_item_html(item);
+
 				});
 			}
 			this.update_totals_section(frm);

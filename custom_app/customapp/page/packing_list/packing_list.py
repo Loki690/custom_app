@@ -162,13 +162,19 @@ def get_item_uoms(item_code):
 
 #Only get Standard Selling OUM Price rates
 @frappe.whitelist()
-def get_item_uom_prices(item_code):
+def get_item_uom_prices(item_code, pos_profile):
     uom_prices = {}
+
+    # Fetch the selling_price_list based on the given POS Profile
+    selling_price_list = frappe.db.get_value("POS Profile", pos_profile, "selling_price_list")
     
-    # Fetch only the prices from the 'Standard Selling' price list
+    if not selling_price_list:
+        frappe.throw(f"No Selling Price List found for POS Profile: {pos_profile}")
+    
+    # Fetch item prices from the specified Selling Price List
     item_prices = frappe.get_all(
         'Item Price',
-        filters={'item_code': item_code, 'price_list': 'Standard Selling'},
+        filters={'item_code': item_code, 'price_list': selling_price_list},
         fields=['uom', 'price_list_rate']
     )
     
@@ -177,6 +183,8 @@ def get_item_uom_prices(item_code):
         uom_prices[price.uom] = price.price_list_rate
 
     return {'uom_prices': uom_prices}
+
+
 
 
 
@@ -317,8 +325,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             uom = next(filter(lambda x: x.uom == price.uom, uoms), {})
 
             if price.uom != item.stock_uom and uom and uom.conversion_factor:
-                item.actual_qty = item.actual_qty // uom.conversion_factor
-
+                # item.actual_qty = item.actual_qty // uom.conversion_factor
+                item.actual_qty = item.actual_qty
             result.append(
                 {
                     **item,

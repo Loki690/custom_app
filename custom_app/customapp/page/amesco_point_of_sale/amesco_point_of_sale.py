@@ -12,6 +12,7 @@ from frappe.utils.nestedset import get_root_of
 
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
+from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_pos_reserved_qty
 from erpnext.stock.utils import scan_barcode
 #from frappe.utils.password import check_oic_password, check_password
 from custom_app.customapp.utils.password import check_oic_password, check_password, check_system_manager_password
@@ -141,7 +142,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         SELECT
             item.name AS item_code,
             item.item_name,
-			item.custom_generic_name,
+            item.custom_generic_name,
+			item.custom_barcode_shortcut,
             item.description,
 			item.item_group,
             item.custom_is_vatable,
@@ -208,8 +210,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             uom = next(filter(lambda x: x.uom == price.uom, uoms), {})
 
             if price.uom != item.stock_uom and uom and uom.conversion_factor:
-                item.actual_qty = item.actual_qty // uom.conversion_factor
-
+                # item.actual_qty = item.actual_qty // uom.conversion_factor
+                item.actual_qty = item.actual_qty 
             result.append(
                 {
                     **item,
@@ -304,6 +306,7 @@ def get_conditions(search_term):
         item.name LIKE {search_term}
         OR item.item_name LIKE {search_term}
         OR item.custom_generic_name LIKE {search_term}
+        OR item.custom_barcode_shortcut LIKE {search_term}
     """.format(search_term=search_term_escaped)
 
     # Add additional search fields if necessary
@@ -437,43 +440,63 @@ def create_opening_voucher(pos_profile, company, balance_details, custom_shift):
 		
 # 	return invoice_list
 
+import frappe
+from frappe.utils import today
+
 @frappe.whitelist()
 def get_past_order_list(search_term=None, status=None, pos_profile=None, limit=40, limit_start=0):
-    fields = ["name", "customer_name", "grand_total", "currency", "customer", "posting_time", "posting_date", "pos_profile"]
-    invoice_list = []
+    fields = [
+        "name", "customer_name", "grand_total", "currency", 
+        "customer", "posting_time", "posting_date", "pos_profile"
+    ]
 
-    # Apply filters and search term logic
-    if search_term and status:
-        # Search by customer and by name, apply limit and limit_start for pagination
+    # Get today's date
+    current_date = today()
+
+    filters = {
+        "posting_date": current_date,  # Only fetch invoices from today
+        "docstatus": 0,  # Fetch only draft invoices
+        "pos_profile": pos_profile,  # Filter by POS profile
+        "consolidated_invoice": ["is", "not set"]  # Exclude consolidated invoices
+    }
+
+    # Apply status filter if provided
+    if status:
+        filters["status"] = status
+
+    # If a search term is provided, fetch by customer name or invoice name
+    if search_term:
         invoices_by_customer = frappe.db.get_all(
             "POS Invoice",
-            filters={"customer": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
+            filters={**filters, "customer_name": ["like", f"%{search_term}%"]},
             fields=fields,
             order_by="posting_time desc",
             limit=limit,
-            limit_start=limit_start  # Use limit_start instead of offset
+            limit_start=limit_start
         )
         invoices_by_name = frappe.db.get_all(
             "POS Invoice",
-            filters={"name": ["like", f"%{search_term}%"], 'pos_profile': pos_profile, "status": status},
-            fields=fields,
-            limit=limit,
-            limit_start=limit_start  # Use limit_start instead of offset
-        )
-
-        invoice_list = invoices_by_customer + invoices_by_name
-    elif status:
-        # Fetch invoices by status and pos_profile, apply pagination
-        invoice_list = frappe.db.get_all(
-            "POS Invoice",
-            filters={"status": status, 'pos_profile': pos_profile},
+            filters={**filters, "name": ["like", f"%{search_term}%"]},
             fields=fields,
             order_by="posting_time desc",
             limit=limit,
-            limit_start=limit_start  # Use limit_start instead of offset
+            limit_start=limit_start
         )
 
-    # Return the fetched invoice list
+        # Combine and deduplicate by 'name' (if overlapping)
+        invoice_dict = {inv["name"]: inv for inv in invoices_by_customer + invoices_by_name}
+        invoice_list = list(invoice_dict.values())
+    else:
+        # Fetch all invoices matching the filters (no search term)
+        invoice_list = frappe.db.get_all(
+            "POS Invoice",
+            filters=filters,
+            fields=fields,
+            order_by="posting_time desc",
+            limit=limit,
+            limit_start=limit_start
+        )
+
     return invoice_list
 
 
@@ -638,4 +661,162 @@ def create_and_submit_pos_closing_entry(cashier, pos_profile, company, pos_openi
 
     except Exception as e:
         frappe.throw(frappe._("An error occurred while creating the document: {0}").format(str(e)))
+
+
+@frappe.whitelist()
+def validate_child_items_qty(doc):
+    doc = frappe.parse_json(doc)
+    errors = []
+
+    for item in doc.get('items', []):
+        # Get projected_qty from Bin based on item code and warehouse
+        bin_info = frappe.db.get_value("Bin", {"item_code": item.item_code, "warehouse": item.s_warehouse}, ["actual_qty", "projected_qty"], as_dict=True)
+
+        if bin_info:
+            actual_qty = bin_info.actual_qty or 0
+            projected_qty = bin_info.projected_qty or 0
+            
+            # Get reserved_qty_for_pos for the item in the specific warehouse
+            reserved_qty_for_pos = get_pos_reserved_qty(item.item_code, item.s_warehouse) or 0
+
+            # Adjust projected_qty by subtracting reserved_qty_for_pos
+            adjusted_projected_qty = projected_qty - reserved_qty_for_pos
+
+            # Validate that requested qty does not exceed the adjusted projected qty
+            if item.qty > adjusted_projected_qty:
+                errors.append(_("Row #{0}: Requested qty ({1}) exceeds available qty ({2}) after POS reservation for item {3} in warehouse {4}.")
+                             .format(item.idx, item.qty, adjusted_projected_qty, item.item_code, item.s_warehouse))
+
+    # Return validation errors to the client if any issues found
+    if errors:
+        return {
+            'status': 'error',
+            'detail': "<br>".join(errors)
+        }
+
+    # If validation passes for all items
+    return {
+        'status': 'valid'
+    }
+
+
+@frappe.whitelist()
+def get_adjusted_projected_qty(item_code, warehouse):
+    """
+    Returns the adjusted projected quantity for an item in a specified warehouse,
+    accounting for POS reserved quantities.
+    """
+    bin_info = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, 
+                                   ["projected_qty"], as_dict=True)
+
+    if bin_info:
+        projected_qty = bin_info.projected_qty or 0
+        reserved_qty_for_pos = get_pos_reserved_qty(item_code, warehouse) or 0
+        adjusted_projected_qty = projected_qty - reserved_qty_for_pos
+        return adjusted_projected_qty
+
+    return 0
+
+
+
+# custom_app/custom_script.py
+@frappe.whitelist()
+def get_batches_with_stock(item_code, warehouse):
+    # Step 1: Fetch batches for the item, ordered by expiry date
+    batches = frappe.db.sql("""
+        SELECT 
+            name AS batch_name, 
+            expiry_date 
+        FROM 
+            `tabBatch`
+        WHERE 
+            item = %s AND expiry_date >= %s
+        ORDER BY 
+            expiry_date ASC
+        """, (item_code, frappe.utils.nowdate()), as_dict=True)
+
+    # Step 2: For each batch, calculate stock levels in the specified warehouse
+    batch_stock_info = []
+    for batch in batches:
+        # Sum stock quantities from Stock Ledger Entry table for each batch in the specified warehouse
+        stock_qty = frappe.db.sql("""
+            SELECT 
+                COALESCE(SUM(actual_qty), 0) AS stock_qty 
+            FROM 
+                `tabStock Ledger Entry`
+            WHERE 
+                item_code = %s AND 
+                batch_no = %s AND 
+                warehouse = %s
+            """, (item_code, batch.batch_name, warehouse), as_dict=True)[0].get('stock_qty')
+
+        # Only add batches that have stock
+        if stock_qty > 0:
+            batch['stock_qty'] = stock_qty
+            batch_stock_info.append(batch)
+
+    return batch_stock_info
+
+
+
+
+@frappe.whitelist()
+def get_reconciliation_data(date=None):
+    # Use current date if no date is provided
+    if not date:
+        date = frappe.utils.nowdate()
+
+    query = """
+        SELECT
+            bin.item_code AS "Item Code",
+            pii.item_name AS "Item Name",
+            bin.warehouse  AS "Warehouse",
+            bin.actual_qty AS "Current Stock Quantity",
+            COALESCE(SUM(CASE 
+                WHEN pi.status = 'Paid' AND pi.set_warehouse = bin.warehouse THEN pii.qty
+                ELSE 0
+            END), 0) AS "Total Paid Quantity",
+            (bin.actual_qty - COALESCE(SUM(CASE 
+                WHEN pi.status = 'Paid' AND pi.set_warehouse = bin.warehouse THEN pii.qty
+                ELSE 0
+            END), 0)) AS "Remaining Stock Quantity",
+            CASE 
+                WHEN COALESCE(SUM(CASE 
+                    WHEN pi.status = 'Paid' AND pi.set_warehouse = bin.warehouse THEN pii.qty
+                    ELSE 0
+                END), 0) > bin.actual_qty THEN 'For Reconciliation'
+                ELSE 'In Balance'
+            END AS "Reconciliation Status"
+        FROM
+            `tabBin` bin
+        LEFT JOIN
+            `tabPOS Invoice Item` pii ON pii.item_code = bin.item_code
+        LEFT JOIN
+            `tabPOS Invoice` pi ON pi.name = pii.parent
+        WHERE
+            pi.posting_date = %(date)s
+        GROUP BY
+            bin.item_code, bin.warehouse
+        HAVING
+            COALESCE(SUM(CASE 
+                WHEN pi.status = 'Paid' AND pi.set_warehouse = bin.warehouse THEN pii.qty
+                ELSE 0
+            END), 0) > bin.actual_qty
+        ORDER BY
+            bin.warehouse , bin.item_code;
+    """
+
+    result = frappe.db.sql(query, {'date': date}, as_dict=True)
+
+    # Debug: Check the result
+    if not result:
+        frappe.msgprint(_('No records found for the specified date.'))
+
+    return result
+
+
+
+
+
+
     

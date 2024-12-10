@@ -5,7 +5,7 @@ custom_app.PointOfSale.ItemCart = class {
 		this.customer_info = undefined;
 		this.hide_images = settings.hide_images;
 		this.allowed_customer_groups = settings.customer_groups;
-		this.allowed_doctor_groups = settings.doctor_groups;
+		// this.allowed_doctor_groups = settings.doctor_groups;
 		this.allow_rate_change = settings.allow_rate_change;
 		this.allow_discount_change = settings.allow_discount_change;
 		this.init_component();
@@ -27,7 +27,7 @@ custom_app.PointOfSale.ItemCart = class {
 
 	init_child_components() {
 		this.init_customer_selector();
-		this.init_doctor_selector();
+		// this.init_doctor_selector();
 		this.init_cart_components();
 	}
 
@@ -39,17 +39,17 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 
-	init_doctor_selector() {
-		this.$component.append(`<div class="doctor-section" style="display: flex;
-		flex-direction: column;
-		padding: var(--padding-md) var(--padding-lg);
-		overflow: visible; background-color: var(--fg-color);
-		box-shadow: var(--shadow-base);
-		border-radius: var(--border-radius-md);
-	  }; margin-top: 1em;"></div>`);
-		this.$doctor_section = this.$component.find(".doctor-section");
-		this.make_doctor_selector();
-	}
+	// init_doctor_selector() {
+	// 	this.$component.append(`<div class="doctor-section" style="display: flex;
+	// 	flex-direction: column;
+	// 	padding: var(--padding-md) var(--padding-lg);
+	// 	overflow: visible; background-color: var(--fg-color);
+	// 	box-shadow: var(--shadow-base);
+	// 	border-radius: var(--border-radius-md);
+	//   }; margin-top: 1em;"></div>`);
+	// 	this.$doctor_section = this.$component.find(".doctor-section");
+	// 	this.make_doctor_selector();
+	// }
 
 
 	reset_customer_selector() {
@@ -59,12 +59,12 @@ custom_app.PointOfSale.ItemCart = class {
 		this.customer_field.set_focus();
 	}
 
-	reset_doctor_selector() {
-		const frm = this.events.get_frm();
-		frm.set_value("doctor", "");
-		this.make_doctor_selector();
-		this.doctor_field.set_focus();
-	}
+	// reset_doctor_selector() {
+	// 	const frm = this.events.get_frm();
+	// 	frm.set_value("doctor", "");
+	// 	this.make_doctor_selector();
+	// 	this.doctor_field.set_focus();
+	// }
 
 	init_cart_components() {
 		this.$component.append(
@@ -247,20 +247,20 @@ custom_app.PointOfSale.ItemCart = class {
 
 		//Doctors
 
-		this.$doctor_section.on("click", ".reset-doctor-btn", function () {
-			me.reset_doctor_selector();
-		});
+		// this.$doctor_section.on("click", ".reset-doctor-btn", function () {
+		// 	me.reset_doctor_selector();
+		// });
 
-		this.$doctor_section.on("click", ".close-details-btn", function () {
-			me.toggle_doctor_info(false);
-		});
+		// this.$doctor_section.on("click", ".close-details-btn", function () {
+		// 	me.toggle_doctor_info(false);
+		// });
 
-		this.$doctor_section.on("click", ".doctor-display", function (e) {
-			if ($(e.target).closest(".reset-doctor-btn").length) return;
+		// this.$doctor_section.on("click", ".doctor-display", function (e) {
+		// 	if ($(e.target).closest(".reset-doctor-btn").length) return;
 
-			const show = me.$cart_container.is(":visible");
-			me.toggle_doctor_info(show);
-		});
+		// 	const show = me.$cart_container.is(":visible");
+		// 	me.toggle_doctor_info(show);
+		// });
 
 
 		this.$cart_items_wrapper.on("click", ".cart-item-wrapper", function () {
@@ -520,15 +520,15 @@ custom_app.PointOfSale.ItemCart = class {
 			}
 		});
 
-		this.doctor_field.parent.attr("title", `${ctrl_label}+R`);
-		frappe.ui.keys.add_shortcut({
-			shortcut: "ctrl+r",
-			action: () => this.doctor_field.set_focus(),
-			condition: () => this.$component.is(":visible"),
-			description: __("Doctor"),
-			ignore_inputs: true,
-			page: cur_page.page.page,
-		});
+		// this.doctor_field.parent.attr("title", `${ctrl_label}+R`);
+		// frappe.ui.keys.add_shortcut({
+		// 	shortcut: "ctrl+r",
+		// 	action: () => this.doctor_field.set_focus(),
+		// 	condition: () => this.$component.is(":visible"),
+		// 	description: __("Doctor"),
+		// 	ignore_inputs: true,
+		// 	page: cur_page.page.page,
+		// });
 
 		this.customer_field.parent.attr("title", `${ctrl_label}+M`);
 		frappe.ui.keys.add_shortcut({
@@ -612,55 +612,55 @@ custom_app.PointOfSale.ItemCart = class {
 		this.customer_field.toggle_label(false);
 	}
 
-	make_doctor_selector() {
-		this.$doctor_section.html(`
-        <div class="doctor-field"></div>
-    `);
-		const me = this;
-		const allowed_doctor_group = this.allowed_doctor_groups || [];
-		let filters = {};
-		if (allowed_doctor_group.length) {
-			filters = {
-				doctor_group: ["in", allowed_doctor_group],
-			};
-		}
+	// make_doctor_selector() {
+	// 	this.$doctor_section.html(`
+    //     <div class="doctor-field"></div>
+    // `);
+	// 	const me = this;
+	// 	const allowed_doctor_group = this.allowed_doctor_groups || [];
+	// 	let filters = {};
+	// 	if (allowed_doctor_group.length) {
+	// 		filters = {
+	// 			doctor_group: ["in", allowed_doctor_group],
+	// 		};
+	// 	}
 
-		this.doctor_field = frappe.ui.form.make_control({
-			df: {
-				label: __("Doctor"),
-				fieldtype: "Link",
-				options: "Doctor",
-				placeholder: __("Doctor"),
-				onchange: function () {
-					if (this.value) {
-						const frm = me.events.get_frm();
-						frappe.dom.freeze();
-						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
-						frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
-							frappe.run_serially([
-								// () => me.fetch_customer_details(this.value),
-								// () => me.events.customer_details_updated(me.customer_info),
-								// () => me.update_customer_section(),
-								// () => me.update_totals_section(),
-								() => frappe.dom.unfreeze(),
-							]);
-						});
-					}
-				},
-			},
-			parent: this.$doctor_section.find(".doctor-field"),
-			render_input: true,
-		});
-		this.doctor_field.toggle_label(false);
+	// 	this.doctor_field = frappe.ui.form.make_control({
+	// 		df: {
+	// 			label: __("Doctor"),
+	// 			fieldtype: "Link",
+	// 			options: "Doctor",
+	// 			placeholder: __("Doctor"),
+	// 			onchange: function () {
+	// 				if (this.value) {
+	// 					const frm = me.events.get_frm();
+	// 					frappe.dom.freeze();
+	// 					frappe.model.set_value(frm.doc.doctype, frm.doc.name, "custom_doctors_information", this.value);
+	// 					frm.script_manager.trigger("custom_doctors_information", frm.doc.doctype, frm.doc.name).then(() => {
+	// 						frappe.run_serially([
+	// 							// () => me.fetch_customer_details(this.value),
+	// 							// () => me.events.customer_details_updated(me.customer_info),
+	// 							// () => me.update_customer_section(),
+	// 							// () => me.update_totals_section(),
+	// 							() => frappe.dom.unfreeze(),
+	// 						]);
+	// 					});
+	// 				}
+	// 			},
+	// 		},
+	// 		parent: this.$doctor_section.find(".doctor-field"),
+	// 		render_input: true,
+	// 	});
+	// 	this.doctor_field.toggle_label(false);
 
-		// Add shortcut key to focus on doctor field
-		$(document).on('keydown', function (event) {
-			// Use Alt + D as shortcut (you can change this key combination as needed)
-			if (event.altKey && event.key === 'd') {
-				me.doctor_field.$input.focus();
-			}
-		});
-	}
+	// 	// Add shortcut key to focus on doctor field
+	// 	$(document).on('keydown', function (event) {
+	// 		// Use Alt + D as shortcut (you can change this key combination as needed)
+	// 		if (event.altKey && event.key === 'd') {
+	// 			me.doctor_field.$input.focus();
+	// 		}
+	// 	});
+	// }
 
 
 	fetch_customer_details(customer) {

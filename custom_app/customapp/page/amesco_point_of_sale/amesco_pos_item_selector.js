@@ -187,7 +187,7 @@ custom_app.PointOfSale.ItemSelector = class {
         });
     
         // Set highlighted_row_index to -1 to ensure no item is highlighted by default
-        this.highlighted_row_index = 0;
+        this.highlighted_row_index = -1;
     
         // Ensure no item is highlighted
         this.highlight_row(this.highlighted_row_index);
@@ -236,7 +236,7 @@ custom_app.PointOfSale.ItemSelector = class {
             data-batch-no="${escape(batch_no)}" data-uom="${escape(uom)}"
             data-rate="${escape(price_list_rate || 0)}" data-description="${escape(item_description)}" data-qty="${qty_to_display}">
             <td class="item-code" style=" width: 1rem;">${item_code}</td> 
-             <td class="item-name" style="width: 15rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
+            <td class="item-name" style="width: 15rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${item.item_name}</td>
             <td class="item-name" style="width: 8rem; white-space: normal; overflow: hidden; text-overflow: ellipsis;">${custom_generic_name ? custom_generic_name : ''}</td>
             <td class="item-vat" style=" width: 10%;">${custom_is_vatable == 0 ? "VAT-Exempt" : "VATable"}</td>
             <td class="item-rate" style=" width:8%;">${format_currency(price_list_rate, item.currency)}</td>
@@ -249,6 +249,7 @@ custom_app.PointOfSale.ItemSelector = class {
         const item_abbr = $($img).attr("alt");
         $($img).parent().replaceWith(`<div class="item-display abbr">${item_abbr}</div>`);
     }
+    
     make_search_bar() {
 		const me = this;
 		const doc = me.events.get_frm().doc;
@@ -415,19 +416,21 @@ custom_app.PointOfSale.ItemSelector = class {
             const description = unescape($item.attr("data-description"));
             const qty = parseFloat(unescape($item.attr("data-qty")));
             const pos_profile = me.events.get_pos_profile();
-
+           
+            console.log(pos_profile);
             // Debugging logs
             // console.log("Item Clicked:", item_code, uom, rate, description, qty);
 
             frappe.call({
                 method: 'custom_app.customapp.page.packing_list.packing_list.get_item_uom_prices',
                 args: {
-                    item_code: item_code
+                    item_code: item_code,
+                    pos_profile:pos_profile
                 },
                 callback: function (response) {
                     if (response.message) {
                         const uomPrices = response.message.uom_prices;
-                        // console.log("UOM Prices:", uomPrices);
+                        console.log("UOM Prices:", uomPrices);
 
                         const uomOptions = Object.keys(uomPrices).filter(uom => uom && uom !== "null").map(uom => ({
                             label: uom,
@@ -925,11 +928,6 @@ custom_app.PointOfSale.ItemSelector = class {
     
         // Ensure highlighted_row_index is valid
         if (this.highlighted_row_index === -1) {
-            frappe.msgprint({
-                title: __("No Item Highlighted"),
-                indicator: "orange",
-                message: __("Please select an item to highlight before proceeding.")
-            });
             return;
         }
     

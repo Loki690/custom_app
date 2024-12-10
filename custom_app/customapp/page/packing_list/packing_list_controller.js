@@ -1510,9 +1510,10 @@ custom_app.PointOfSale.Controller = class {
 			},
 		});
 	}
-
+	
 	async auto_add_batch(item_row) {
 		try {
+			// Fetch batches for the item with a valid expiry date
 			let batches = await frappe.db.get_list('Batch', {
 				filters: {
 					item: item_row.item_code,
@@ -1523,7 +1524,7 @@ custom_app.PointOfSale.Controller = class {
 			});
 	
 			if (batches.length > 0) {
-				let latest_batch = batches[0];
+				let latest_batch = batches[0];  // Get the most recent batch
 				let entries = [{
 					batch_no: latest_batch.name,
 					qty: item_row.qty,
@@ -1531,6 +1532,7 @@ custom_app.PointOfSale.Controller = class {
 					warehouse: this.frm.doc.set_warehouse
 				}];
 	
+				// Call the server-side method to process batch entries
 				const res = await frappe.call({
 					method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
 					args: {
@@ -1541,11 +1543,24 @@ custom_app.PointOfSale.Controller = class {
 					},
 				});
 	
-				frappe.model.set_value(item_row.doctype, item_row.name, {
-					serial_and_batch_bundle: res.message.name,
-					qty: Math.abs(res.message.total_qty),
+				// Update POS Invoice Item with batch_no and expiry_date
+				if (res.message) {
+					// Update batch_no and expiry_date fields
+					frappe.model.set_value(item_row.doctype, item_row.name, {
+						serial_and_batch_bundle: res.message.name,
+						qty: Math.abs(res.message.total_qty),
+						custom_batch_number: latest_batch.name,    // Set batch number
+						custom_batch_expiry: latest_batch.expiry_date, 
+					});
+				}
+	
+			} else {
+				frappe.show_alert({
+					message: __('No batches found for the selected item.'),
+					indicator: 'red',
 				});
-			} 
+			}
+	
 		} catch (error) {
 			frappe.show_alert({
 				message: __('Batch fetch failed. Please try again.'),
@@ -1554,7 +1569,8 @@ custom_app.PointOfSale.Controller = class {
 			console.error(error);
 		}
 	}
-
+	
+	
 
 	async update_item_field(value, field_or_action) {
 

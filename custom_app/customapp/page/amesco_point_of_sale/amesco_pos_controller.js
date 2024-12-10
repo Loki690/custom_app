@@ -480,8 +480,8 @@ custom_app.PointOfSale.Controller = class {
     // }
 	add_new_order() {
 		frappe.run_serially([
-			() => this.frm.reload_doc(),
 			() => frappe.dom.freeze(__('Starting new order...')),  // Freeze screen with message
+			() => this.frm.reload_doc(), 
 			() => this.frm.call("reset_mode_of_payments"),
 			() => this.cart.load_invoice(),  // Load new empty invoice in the cart
 			() => this.remove_pos_cart_items(),  // Clear all items from cart
@@ -533,6 +533,7 @@ custom_app.PointOfSale.Controller = class {
 	pending_orders() {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),  // Freeze only for critical steps
+			() => this.frm.reload_doc(), 
 			() => this.item_selector.toggle_component(false),
 			() => this.toggle_recent_order_list(true),
 			() => $(".payment-container").css("display", "none"),
@@ -1034,12 +1035,16 @@ custom_app.PointOfSale.Controller = class {
 							title: __('Change Amount'),
 							secondary_action_label: __('Item Selector(F1)'),
 							secondary_action: () => {
+								// window.location.reload(),
 								this.add_new_order(); 
 								changeDialog.hide();
 							},
 							primary_action_label: __('Pending Orders'),
 							primary_action: () => {
-								this.pending_orders(); 
+								if (this.recent_order_list && this.recent_order_list.search_field) {
+									this.recent_order_list.search_field.set_value("");  // Clear the search field
+								}
+								this.pending_orders();
 								changeDialog.hide();
 							}
 						});
@@ -1477,7 +1482,7 @@ custom_app.PointOfSale.Controller = class {
 					await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
 					this.update_cart_html(item_row);
 
-					// await this.auto_add_batch(item_row);
+					await this.auto_add_batch(item_row);
 				}
 			} else {
 				if (!this.frm.doc.customer) return this.raise_customer_selection_alert();
@@ -1507,15 +1512,15 @@ custom_app.PointOfSale.Controller = class {
 
 				this.update_cart_html(item_row);
 				
-				// await this.auto_add_batch(item_row);
+				await this.auto_add_batch(item_row);
 
-				if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
+				// if (this.item_details.$component.is(":visible")) this.edit_item_details_of(item_row);
 
-				if (
-					this.check_serial_batch_selection_needed(item_row) &&
-					!this.item_details.$component.is(":visible")
-				)
-					this.edit_item_details_of(item_row);
+				// if (
+				// 	this.check_serial_batch_selection_needed(item_row) &&
+				// 	!this.item_details.$component.is(":visible")
+				// )
+				// 	this.edit_item_details_of(item_row);
 			}
 		} catch (error) {
 			console.log(error);
@@ -1657,27 +1662,61 @@ custom_app.PointOfSale.Controller = class {
 		});
 	}
 
-
 	async auto_add_batch(item_row) {
 		try {
+
+			let item_details = await frappe.db.get_value('Item', item_row.item_code, 'has_batch_no');
+        
+			// If the item does not require batch tracking, skip batch validation
+			if (!item_details.message.has_batch_no) {
+				frappe.model.set_value(item_row.doctype, item_row.name, {
+					qty: item_row.qty
+				});
+				return;  // Exit the function as no batch validation is required
+			}
+
+			// Step 1: Fetch batches for the item with a valid expiry date
 			let batches = await frappe.db.get_list('Batch', {
 				filters: {
 					item: item_row.item_code,
-					expiry_date: ['>=', frappe.datetime.now_date()]
+					expiry_date: ['>=', frappe.datetime.now_date()],
+					batch_qty: ['>', 0] // Exclude batches with zero quantity
 				},
-				fields: ['name', 'expiry_date'],
+				fields: ['name', 'expiry_date', 'batch_qty'],
 				order_by: 'expiry_date desc'
 			});
+			
+			let valid_batch = null;
 	
-			if (batches.length > 0) {
-				let latest_batch = batches[0];
+			// Step 2: Validate stock in the specific warehouse for each batch
+			for (let batch of batches) {
+				// Use the `get_batch_qty` method to fetch the stock level for the batch in the warehouse
+				let batch_qty = await frappe.call({
+					method: "erpnext.stock.doctype.batch.batch.get_batch_qty",
+					args: {
+						batch_no: batch.name,
+						warehouse: this.frm.doc.set_warehouse,
+						item_code: item_row.item_code
+					}
+				});
+	
+				// Check if there’s enough stock for this batch
+				if (batch_qty.message && batch_qty.message > 0) {
+					valid_batch = batch;
+					break; // Use the first batch that has stock
+				}
+			}
+	
+			// If a valid batch with stock is found, proceed
+			if (valid_batch) {
 				let entries = [{
-					batch_no: latest_batch.name,
+					batch_no: valid_batch.name,
 					qty: item_row.qty,
 					name: "row 1",
 					warehouse: this.frm.doc.set_warehouse
 				}];
 	
+				// Call to add the serial and batch ledgers
 				const res = await frappe.call({
 					method: "erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle.add_serial_batch_ledgers",
 					args: {
@@ -1688,11 +1727,18 @@ custom_app.PointOfSale.Controller = class {
 					},
 				});
 	
+				// Set batch details on POS Invoice Item
 				frappe.model.set_value(item_row.doctype, item_row.name, {
 					serial_and_batch_bundle: res.message.name,
 					qty: Math.abs(res.message.total_qty),
+					custom_batch_number: valid_batch.name,
+					custom_batch_expiry: valid_batch.expiry_date
 				});
-			} 
+				
+			} else {
+				frappe.throw(`Item is Expired or No valid batches available with stock for item ${item_row.item_code} in warehouse ${item_row.warehouse}.`);
+			}
+	
 		} catch (error) {
 			frappe.show_alert({
 				message: __('Batch fetch failed. Please try again.'),
@@ -1701,10 +1747,14 @@ custom_app.PointOfSale.Controller = class {
 			console.error(error);
 		}
 	}
-
+	
+	
+	
+	
+	
+	
+	
 	async update_item_field(value, field_or_action) {
-
-
 
 		if (field_or_action === "checkout") {
 			this.item_details.toggle_item_details_section(null);
