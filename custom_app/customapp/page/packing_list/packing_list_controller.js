@@ -60,6 +60,7 @@ custom_app.PointOfSale.Controller = class {
 		this.warehouse = data.warehouse || null;
 		this.item_stock_map = {};
 		this.settings = {};
+		
 
 		frappe.db.get_value("Stock Settings", undefined, "allow_negative_stock").then(({ message }) => {
 			this.allow_negative_stock = flt(message.allow_negative_stock) || false;
@@ -122,6 +123,7 @@ custom_app.PointOfSale.Controller = class {
 
 	prepare_menu() {
 		this.page.clear_menu();
+		this.page.add_menu_item(__("Item Search"), this.item_available.bind(this), false, "f1");
 		this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
 		this.page.add_menu_item(
 			__("Pending Transaction (F2)"),
@@ -138,6 +140,7 @@ custom_app.PointOfSale.Controller = class {
 
 	add_buttons_to_toolbar() {
 		const buttons = [
+			{ label: __("Item Search"), action: this.item_available.bind(this), shortcut: "f1" },
 			{ label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
 			{ label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2" },
 			{ label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3" },
@@ -167,6 +170,106 @@ custom_app.PointOfSale.Controller = class {
 			() => window.location.reload(),
 			() => frappe.dom.unfreeze(),
 		]);
+	}
+
+	item_available() {
+		this.frm = this.get_new_frm(this.frm);
+		frappe.call({
+			method: "custom_app.customapp.page.packing_list.packing_list.get_items_by_principal_supplier",
+			args: {
+				warehouse:  this.frm.doc.set_warehouse
+			},
+			callback: function (r) {
+				if (r.message) {
+					const data = r.message;
+	
+					// Create the dialog
+					const dialog = new frappe.ui.Dialog({
+						title: `Items Available in Warehouse`,
+						fields: [
+							{
+								fieldname: "item_table",
+								fieldtype: "Table",
+								label: "Items",
+								cannot_add_rows: true,  // Prevent adding new rows by the user
+								cannot_delete_rows: true,  // Disable row deletion
+								in_place_edit: false,  // Disable direct cell editing
+								fields: [
+									{
+										fieldname: "supplier_name",
+										fieldtype: "Data",
+										label: "Supplier Name",
+										read_only: 1,
+										in_list_view: 1,
+										width: 50,
+									},
+									{
+										fieldname: "custom_principal",
+										fieldtype: "Data",
+										label: "Principal",
+										read_only: 1,
+										in_list_view: 1,
+										width: 50,
+									},
+									{
+										fieldname: "generic_name",
+										fieldtype: "Data",
+										label: "Generic Name",
+										read_only: 1,
+										in_list_view: 1,
+										width: 50, // Adjust the width to make it more visible
+									},
+									// {
+									// 	fieldname: "item_code",
+									// 	fieldtype: "Data",
+									// 	label: "Item Code",
+									// 	read_only: 1,
+									// 	in_list_view: 1,
+									// 	width: 100,
+									// },
+									{
+										fieldname: "item_name",
+										fieldtype: "Data",
+										label: "Item Name",
+										read_only: 1,
+										in_list_view: 1,
+										width: 100,
+									},
+									// {
+									// 	fieldname: "warehouse",
+									// 	fieldtype: "Data",
+									// 	label: "Warehouse",
+									// 	read_only: 1,
+									// 	in_list_view: 1,
+									// 	width: 100,
+									// },
+									{
+										fieldname: "actual_qty",
+										fieldtype: "Float",
+										label: "Quantity",
+										read_only: 1,
+										in_list_view: 1,
+										width: 100, // Adjust the width for the Quantity column
+									},
+								],
+							},
+						],
+						size: 'extra-large',
+						primary_action_label: "Close",
+						primary_action: () => dialog.hide(),
+					});
+	
+					// Populate the table
+					dialog.fields_dict.item_table.df.data = data;
+					dialog.fields_dict.item_table.grid.refresh();
+	
+					// Show the dialog
+					dialog.show();
+				} else {
+					frappe.msgprint("No data found for the selected warehouse.");
+				}
+			},
+		});
 	}
 
 	order_list() {
@@ -271,53 +374,6 @@ custom_app.PointOfSale.Controller = class {
 		console.log("Scanned Barcode:", barcode);
 		// Add your barcode handling logic here
 	}
-
-	// prepare_buttons() {
-	// 	this.page.clear_actions(); // Clear any existing buttons
-	// 	this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-	// 	this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-	// 	this.page.add_button(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary");
-	// 	// Add a button for "Toggle Recent Orders"
-	// 	this.page.add_button(__("Toggle Pending Transaction (F6)"), this.toggle_recent_order.bind(this), "octicon octicon-sync", "btn-secondary", "Ctrl+O");
-
-	// 	// Add a button for "Complete Order"
-	// 	//this.page.add_button(__("Complete Order"), this.save_draft_invoice.bind(this), "octicon octicon-check", "btn-primary");
-
-	// 	// Add a button for "Branch Item Lookup"
-	// 	this.page.add_button(__("Branch Item Lookup"), () => {
-	// 		this.show_branch_selection_dialog()
-	// 	}, "octicon octicon-search", "btn-secondary");
-	// }
-
-	// setup_shortcuts() {
-	// 	// Add shortcut for "Toggle Recent Orders" - F1
-	// 	frappe.ui.keys.add_shortcut({
-	// 		shortcut: 'f1',
-	// 		action: () => this.toggle_recent_order(),
-	// 		description: __('Toggle Recent Orders'),
-	// 		page: this.page
-	// 	});
-
-	// 	// Add shortcut for "Complete Order" - F2
-	// 	frappe.ui.keys.add_shortcut({
-	// 		shortcut: 'f2',
-	// 		action: () => this.save_draft_invoice(),
-	// 		description: __('Complete Order'),
-	// 		page: this.page
-	// 	});
-
-	// 	// Add shortcut for "Branch Item Lookup" - F3
-	// 	frappe.ui.keys.add_shortcut({
-	// 		shortcut: 'f3',
-	// 		action: () => this.show_branch_selection_dialog(),
-	// 		description: __('Branch Item Lookup'),
-	// 		page: this.page
-	// 	});
-	// }
-
-	// buttons() {
-	// 	page.set_secondary_action('Refresh', () => refresh(), 'octicon octicon-sync')
-	// }
 
 	show_branch_selection_dialog() {
 		const selectedWarehouse = localStorage.getItem('selected_warehouse') || '';
@@ -621,123 +677,6 @@ custom_app.PointOfSale.Controller = class {
 		this.passwordDialog.show();
 	}
 	
-
-	// save_draft_invoice() {
-	// 	if (!this.$components_wrapper.is(":visible")) return;
-	// 	let payment_amount = this.frm.doc.payments.reduce((sum, payment) => sum + payment.amount, 0);
-
-
-	// 	if (payment_amount < this.frm.doc.grand_total) {
-	// 		// Show dialog indicating insufficient payment
-	// 		const insufficientPaymentDialog = new frappe.ui.Dialog({
-	// 			title: __('Insufficient Payment'),
-	// 			primary_action_label: __('OK'),
-	// 			primary_action: () => {
-	// 				insufficientPaymentDialog.hide();
-	// 			}
-	// 		});
-
-	// 		insufficientPaymentDialog.body.innerHTML = `
-	// 			<div style="text-align: center; font-size: 30px; margin: 20px 0;">
-	// 				${__('The payment amount is not enough to cover the grand total.')}
-	// 			</div>
-	// 		`;
-
-	// 		insufficientPaymentDialog.show();
-	// 		return; // Exit the function if payment is not sufficient
-	// 	}
-
-	// 	if (this.frm.doc.items.length == 0) {
-	// 		frappe.show_alert({
-	// 			message: __("You must add atleast one item to complete the order."),
-	// 			indicator: "red",
-	// 		});
-	// 		frappe.utils.play_sound("error");
-	// 		return;
-	// 	}
-
-	// 	const passwordDialog = new frappe.ui.Dialog({
-	// 		title: __('Enter Your Password'),
-	// 		fields: [
-	// 			{
-	// 				fieldname: 'password',
-	// 				fieldtype: 'Password',
-	// 				label: __('Password'),
-	// 				reqd: 1
-	// 			}
-	// 		],
-	// 		primary_action_label: __('Ok'),
-	// 		primary_action: (values) => {
-    //             let password = values.password;
-	// 			let errorOccurred = false;
-				
-    //             frappe.call({
-    //                 method: "custom_app.customapp.page.packing_list.packing_list.get_user_details_by_password",
-    //                 args: { password: password },
-    //                 callback: (r) => {
-    //                     if (r.message) {
-    //                         if(r.message.name) {
-    //                             this.set_pharmacist_assist(this.frm, r.message.name)
-	// 							console.log(this.frm, r.message.name)
-    //                             this.frm
-    //                                 .save(undefined, undefined, undefined, () => {
-    //                                     frappe.show_alert({
-    //                                         message: ("There was an error saving the document."),
-    //                                         indicator: "red",
-    //                                     });
-    //                                     frappe.utils.play_sound("error");
-	// 									errorOccurred = true;  
-    //                                 })
-    //                                 .then(() => {
-
-	// 									if (errorOccurred) return; 
-
-    //                                     frappe.run_serially([
-    //                                         () => frappe.dom.freeze(),
-    //                                         () => this.make_new_invoice(),
-    //                                         () => frappe.dom.unfreeze(),
-	// 										() => window.location.reload()
-
-    //                                     ]);
-    //                                     passwordDialog.hide();
-
-    //                                     this.order_summary.load_summary_of(this.frm.doc, true);
-    //                                     this.order_summary.print_receipt();
-    //                                    // reload after successfull entered password
-    //                                     localStorage.removeItem('posCartItems'); // remove stored data from local storage
-    //                                     frappe.show_alert({
-    //                                         message: ("Invoice Printed"),
-    //                                         indicator: "blue",
-    //                                     }).catch((err) => {
-	// 										// Handle any unanticipated errors
-	// 										frappe.show_alert({
-	// 											message: __('An unexpected error occurred while saving the document. Please try again.'),
-	// 											indicator: 'red'
-	// 										});
-	// 										errorOccurred = true;  // Set error flag
-	// 									});
-    //                                 });
-    //                         }else{
-    //                             frappe.show_alert({
-    //                                 message: ('Incorrect password'),
-    //                                 indicator: 'red'
-    //                             });
-	// 							errorOccurred = true;  
-    //                         }
-    //                     } else {
-    //                         frappe.show_alert({
-    //                             message: ('Incorrect password'),
-    //                             indicator: 'red'
-    //                         });
-    //                     }
-    //                 }
-    //             });
-    //         }
-	// 	})
-	// 	passwordDialog.show();
-	// }
-
-
 	save_draft() {
 		// Cleanup any existing dialog
 		if (this.passwordDialog) {
@@ -1512,79 +1451,6 @@ custom_app.PointOfSale.Controller = class {
 		}
 	}
 
-	// remove_item_from_cart() {	
-	// 	frappe.dom.freeze();
-	// 	const { doctype, name, current_item } = this.item_details;
-
-	// 	return frappe.model
-	// 		.set_value(doctype, name, "qty", 0)
-	// 		.then(() => {
-	// 			frappe.model.clear_doc(doctype, name);
-	// 			this.update_cart_html(current_item, true);
-	// 			this.item_details.toggle_item_details_section(null);
-	// 			frappe.dom.unfreeze();
-	// 		})
-	// 	.catch((e) => console.log(e));
-	// }
-
-	
-
-	// remove_item_from_cart() {
-
-	// 	//Authenticate OIC to Remove
-	// 	const passwordDialog = new frappe.ui.Dialog({
-	// 		title: __('Enter OIC Password'),
-	// 		fields: [
-	// 			{
-	// 				fieldname: 'password',
-	// 				fieldtype: 'Password',
-	// 				label: __('Password'),
-	// 				reqd: 1
-	// 			}
-	// 		],
-	// 		primary_action_label: __('Remove'),
-	// 		primary_action: (values) => {
-	// 			let password = values.password;
-	// 			let role = "oic";
-	
-	// 			frappe.call({
-	// 				method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
-	// 				args: { password: password, role: role },
-	// 				callback: (r) => {
-	// 					if (r.message) {
-	// 						// Password authenticated, proceed with item removal
-	// 						frappe.dom.freeze();
-	// 						const { doctype, name, current_item } = this.item_details;
-	
-	// 						frappe.model
-	// 							.set_value(doctype, name, "qty", 0)
-	// 							.then(() => {
-	// 								frappe.model.clear_doc(doctype, name);
-	// 								this.update_cart_html(current_item, true);
-	// 								this.item_details.toggle_item_details_section(null);
-	// 								frappe.dom.unfreeze();
-	// 								passwordDialog.hide();
-	// 							})
-	// 							.catch((e) => {
-	// 								console.log(e);
-	// 								frappe.dom.unfreeze();
-	// 								passwordDialog.hide();
-	// 							});
-	// 					} else {
-	// 						frappe.show_alert({
-	// 							message: __('Incorrect password or user is not an OIC'),
-	// 							indicator: 'red'
-	// 						});
-	// 					}
-	// 				}
-	// 			});
-	// 		}
-	// 	});
-	// 	passwordDialog.show();
-	// }
-
-
-
 	remove_item_from_cart() {
 		// Destroy any previous instances of the dialog
 		if (this.passwordDialog) {
@@ -1662,77 +1528,6 @@ custom_app.PointOfSale.Controller = class {
 		});
 	}
 	
-
-	// remove_item_from_cart() {
-
-	// 	//Authenticate OIC to Remove
-	// 	const passwordDialog = new frappe.ui.Dialog({
-	// 		title: __('Enter OIC Password'),
-	// 		fields: [
-	// 			{
-	// 				fieldname: 'password',
-	// 				fieldtype: 'Password',
-	// 				label: __('Password'),
-	// 				reqd: 1
-	// 			}
-	// 		],
-	// 		primary_action_label: __('Ok'),
-	// 		primary_action: (values) => {
-    //             let password = values.password;
-    //             frappe.call({
-    //                 method: "custom_app.customapp.page.packing_list.packing_list.confirm_user_password",
-    //                 args: { password: password },
-    //                 callback: (r) => {
-    //                     if (r.message) {
-    //                         if(r.message.name) {
-    //                             this.set_pharmacist_assist(this.frm, r.message.name)
-	// 							console.log(this.frm, r.message.name)
-    //                             this.frm
-    //                                 .save(undefined, undefined, undefined, () => {
-    //                                     frappe.show_alert({
-    //                                         message: ("There was an error saving the document."),
-    //                                         indicator: "red",
-    //                                     });
-    //                                     frappe.utils.play_sound("error");
-    //                                 })
-    //                                 .then(() => {
-	// 									frappe.dom.freeze();
-	// 									const { doctype, name, current_item } = this.item_details;
-				
-	// 									frappe.model
-	// 										.set_value(doctype, name, "qty", 0)
-	// 										.then(() => {
-	// 											frappe.model.clear_doc(doctype, name);
-	// 											this.update_cart_html(current_item, true);
-	// 											this.item_details.toggle_item_details_section(null);
-	// 											frappe.dom.unfreeze();
-	// 											passwordDialog.hide();
-	// 										})
-	// 										.catch((e) => {
-	// 											console.log(e);
-	// 											frappe.dom.unfreeze();
-	// 											passwordDialog.hide();
-	// 										});
-    //                                 });
-    //                         }else{
-    //                             frappe.show_alert({
-    //                                 message: ('Incorrect password'),
-    //                                 indicator: 'red'
-    //                             });
-    //                         }
-    //                     } else {
-    //                         frappe.show_alert({
-    //                             message: ('Incorrect password'),
-    //                             indicator: 'red'
-    //                         });
-    //                     }
-    //                 }
-    //             });
-    //         }
-	// 	})
-	// 	passwordDialog.show();
-	// }
-
 
 	async save_and_checkout() {
 		if (this.frm.is_dirty()) {

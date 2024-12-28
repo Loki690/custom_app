@@ -394,6 +394,7 @@
       this.bind_events();
       this.attach_shortcuts();
       this.inject_css();
+      localStorage.setItem("is_generics", 0);
     }
     inject_css() {
       const css = `
@@ -443,6 +444,10 @@
                     </div>
                     <div class="item-uoms" style="flex: 1;">
                         <input type="text"  value="PC" placeholder="Select UOM" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                     <div class="generics" style="flex: 1;">
+                        <input type="checkbox" id="generics">
+                        <label for="generics">Generics</label>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -517,7 +522,8 @@
           item_group,
           search_term,
           pos_profile: this.pos_profile,
-          selected_warehouse
+          selected_warehouse,
+          is_generics: localStorage.getItem("is_generics") || 0
         }
       });
     }
@@ -571,6 +577,7 @@
       this.$component.find(".search-field").html("");
       this.$component.find(".item-group-field").html("");
       this.$component.find(".item-uoms").html("");
+      this.$component.find(".generics").html("");
       this.search_field = frappe.ui.form.make_control({
         df: {
           label: __("Search"),
@@ -627,6 +634,19 @@
           }
         },
         parent: this.$component.find(".item-uoms"),
+        render_input: true
+      });
+      this.generics = frappe.ui.form.make_control({
+        df: {
+          label: __("Is Generics"),
+          fieldtype: "Check",
+          onchange: () => {
+            const is_generics = this.generics.get_value();
+            localStorage.setItem("is_generics", is_generics);
+            me.filter_items();
+          }
+        },
+        parent: this.$component.find(".generics"),
         render_input: true
       });
       this.item_uom.refresh();
@@ -5454,8 +5474,7 @@
                       label: "Scanned Data",
                       fieldname: "scanned_data",
                       fieldtype: "Data",
-                      reqd: 1,
-                      description: "Enter the scanned data (comma-separated format)"
+                      reqd: 1
                     }
                   ],
                   primary_action_label: __("Submit"),
@@ -5466,7 +5485,8 @@
                       let voucher_code = scannedData[0];
                       let user_id = scannedData[1];
                       let email = scannedData[3];
-                      let points = scannedData[5];
+                      let points = scannedData[2];
+                      let earned_points = scannedData[5];
                       frappe.call({
                         method: "custom_app.customapp.doctype.used_ameco_plus_code.used_ameco_plus_code.check_used_amesco_plus_code",
                         args: {
@@ -5501,7 +5521,14 @@
                                   default: email
                                 },
                                 {
-                                  label: "Points",
+                                  label: "Earned Points",
+                                  fieldname: "earned_points",
+                                  fieldtype: "Data",
+                                  read_only: 1,
+                                  default: earned_points
+                                },
+                                {
+                                  label: "Voucher Points",
                                   fieldname: "points",
                                   fieldtype: "Data",
                                   read_only: 1,
@@ -5514,6 +5541,7 @@
                                 frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
                                 frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
                                 frappe.model.set_value(p.doctype, p.name, "amount", flt(points));
+                                frm.clear_table("custom_ameco_plus_code_used");
                                 frm.add_child("custom_ameco_plus_code_used", { code: voucher_code });
                                 userDetailsDialog.hide();
                               }
@@ -6727,8 +6755,7 @@
             label: "Scanned Data",
             fieldname: "scanned_data",
             fieldtype: "Data",
-            reqd: 1,
-            description: "Enter the scanned data (comma-separated format)"
+            reqd: 1
           }
         ],
         primary_action_label: __("Submit"),
@@ -6736,9 +6763,9 @@
           let scannedData = values.scanned_data.split(",");
           if (scannedData.length >= 5) {
             let user_id = scannedData[0];
-            let userName = scannedData[2];
+            let user_name = scannedData[2];
             let email = scannedData[3];
-            let points = scannedData[4];
+            let earned_points = scannedData[4];
             doc.set_value("custom_ameso_user", email);
             doc.set_value("custom_amesco_user_id", user_id);
             let userDetailsDialog = new frappe.ui.Dialog({
@@ -6749,7 +6776,7 @@
                   fieldname: "user_name",
                   fieldtype: "Data",
                   read_only: 1,
-                  default: userName
+                  default: user_name
                 },
                 {
                   label: "Email",
@@ -6759,11 +6786,11 @@
                   default: email
                 },
                 {
-                  label: "Points",
-                  fieldname: "points",
+                  label: "Earned Points",
+                  fieldname: "earned_points",
                   fieldtype: "Data",
                   read_only: 1,
-                  default: points
+                  default: earned_points
                 }
               ],
               primary_action_label: __("Close"),
@@ -7635,4 +7662,4 @@
     }
   };
 })();
-//# sourceMappingURL=amesco-point-of-sale.bundle.65QL6CHC.js.map
+//# sourceMappingURL=amesco-point-of-sale.bundle.MZU7YEMD.js.map

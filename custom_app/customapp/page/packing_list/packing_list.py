@@ -211,7 +211,7 @@ def get_item_uom_conversion(item_code, uom_code):
 
 
 @frappe.whitelist()
-def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None):
+def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None, is_generics=0):
     # Fetch selected warehouse from the request or POS Profile
     if selected_warehouse:
         warehouse = selected_warehouse
@@ -225,17 +225,23 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
     result = []
 
+    # Check if search term is provided
     if search_term:
         result = search_by_term(search_term, warehouse, price_list) or []
         if result:
             return result
 
+    # Verify item group exists, or fetch the root group
     if not frappe.db.exists("Item Group", item_group):
         item_group = get_root_of("Item Group")
 
     condition = get_conditions(search_term)
     condition += get_item_group_condition(pos_profile)
 
+    # Add the is_generics condition
+    if cint(is_generics) == 1:  # Check if is_generics is enabled
+        condition += " AND item.custom_principal = 'Generics'"
+        
     lft, rgt = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"])
 
     bin_join_selection, bin_join_condition = "", ""
@@ -245,6 +251,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             "AND bin.warehouse = %(warehouse)s AND bin.item_code = item.name AND bin.actual_qty > 0"
         )
 
+    # SQL query with generics filter
     items_data = frappe.db.sql(
         """
         SELECT
@@ -257,6 +264,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             item.stock_uom,
             item.image AS item_image,
             item.is_stock_item,
+            item.custom_principal,
             MAX(batch.name) as batch_no,
             MAX(batch.expiry_date) AS latest_expiry_date
         FROM
@@ -297,7 +305,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
         uoms = frappe.get_doc("Item", item.item_code).get("uoms", [])
 
         item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
-        #item.actual_qty = get_draft_pos_invoice_item_quantity(pos_profile, item.item_code, item.actual_qty)
+        # item.actual_qty = get_draft_pos_invoice_item_quantity(pos_profile, item.item_code, item.actual_qty)
         item.uom = item.stock_uom
 
         item_price = frappe.get_all(
@@ -829,3 +837,31 @@ def get_fifo_batch(item_code, warehouse):
     else:
         return None
 
+@frappe.whitelist()
+def get_items_by_principal_supplier(warehouse = "Suazo - ADC"):
+    warehouse_filter = f"b.warehouse = '{warehouse}'" if warehouse else "1=1"
+    query = f"""
+        SELECT
+            s.supplier_name AS supplier_name,
+            i.custom_principal AS custom_principal,
+            b.warehouse AS warehouse,
+            b.item_code AS item_code,
+            i.item_name AS item_name,
+            i.custom_generic_name as generic_name,
+            i.stock_uom AS uom,
+            b.actual_qty AS actual_qty
+        FROM
+            `tabBin` b
+        LEFT JOIN
+            `tabItem` i ON b.item_code = i.name
+        LEFT JOIN
+            `tabItem Supplier` it_supp ON it_supp.parent = i.name
+        LEFT JOIN
+            `tabSupplier` s ON s.name = it_supp.supplier
+        WHERE
+            {warehouse_filter}
+        ORDER BY
+            b.item_code, b.warehouse
+    """
+    data = frappe.db.sql(query, as_dict=True)
+    return data

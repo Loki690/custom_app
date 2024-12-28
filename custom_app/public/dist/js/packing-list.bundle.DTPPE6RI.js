@@ -3945,6 +3945,7 @@
       this.bind_events();
       this.attach_shortcuts();
       this.inject_css();
+      localStorage.setItem("is_generics", 0);
     }
     inject_css() {
       const css = `
@@ -3981,6 +3982,7 @@
     }
     prepare_dom() {
       const selectedWarehouse = localStorage.getItem("selected_warehouse");
+      const is_generics = localStorage.getItem("is_generics");
       this.wrapper.append(
         `<section class="items-selector" style="margin-top:0.3rem; grid-column: span 4 / span 4;">
 
@@ -3988,14 +3990,12 @@
                     <div class="label" style="flex: 1;">
                         ${__("All Items")} ${selectedWarehouse ? selectedWarehouse : ""}
                     </div>
-                    <div class="search-field" style="flex: 2;">
-                        <input type="text" placeholder="Search by item code, serial number or barcode" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    <div class="search-field" style="flex: 4;">
+                        <input type="text" placeholder="Search by item code, barcode, generic name" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
-                    <div class="item-group-field" style="flex: 1;">
-                        <input type="text" placeholder="Select item group" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-                    </div>
-                    <div class="item-uoms" style="flex: 1;">
-                        <input type="text"  value="PC" placeholder="Select UOM" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    <div class="generics" style="flex: 1;">
+                        <input type="checkbox" id="generics">
+                        <label for="generics">Generics</label>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -4029,11 +4029,6 @@
         const res = await frappe.db.get_value("POS Profile", this.pos_profile, "selling_price_list");
         this.price_list = res.message.selling_price_list;
       }
-      this.selected_uom = "PC";
-      if (this.item_uom) {
-        this.item_uom.set_value("PC");
-        this.item_uom.refresh();
-      }
       const { message } = await this.get_items({});
       this.render_item_list(message.items);
       this.filter_items({ uom: this.selected_uom });
@@ -4054,7 +4049,8 @@
           item_group,
           search_term,
           pos_profile,
-          selected_warehouse
+          selected_warehouse,
+          is_generics: localStorage.getItem("is_generics") || 0
         }
       });
     }
@@ -4106,8 +4102,7 @@
       const me = this;
       const doc = me.events.get_frm().doc;
       this.$component.find(".search-field").html("");
-      this.$component.find(".item-group-field").html("");
-      this.$component.find(".item-uoms").html("");
+      this.$component.find(".generics").html("");
       this.search_field = frappe.ui.form.make_control({
         df: {
           label: __("Search"),
@@ -4123,53 +4118,21 @@
           this.load_items_data();
         }
       });
-      this.item_group_field = frappe.ui.form.make_control({
+      this.generics = frappe.ui.form.make_control({
         df: {
-          label: __("Item Group"),
-          fieldtype: "Link",
-          options: "Item Group",
-          placeholder: __("Select item group"),
-          onchange: function() {
-            me.item_group = this.value;
-            !me.item_group && (me.item_group = me.parent_item_group);
-            me.filter_items();
-          },
-          get_query: function() {
-            return {
-              query: "custom_app.customapp.page.packing_list.packing_list.item_group_query",
-              filters: {
-                pos_profile: doc ? doc.pos_profile : ""
-              }
-            };
+          label: __("Is Generics"),
+          fieldtype: "Check",
+          onchange: () => {
+            const is_generics = this.generics.get_value();
+            localStorage.setItem("is_generics", is_generics);
+            this.set_search_value("");
+            me.filter_items({});
           }
         },
-        parent: this.$component.find(".item-group-field"),
+        parent: this.$component.find(".generics"),
         render_input: true
       });
-      this.item_group_field.$input.on("input", () => {
-        let value = this.item_group_field.get_value().trim();
-        if (!value) {
-          this.load_items_data();
-        }
-      });
-      this.item_uom = frappe.ui.form.make_control({
-        df: {
-          label: __("UOM"),
-          fieldtype: "Link",
-          options: "UOM",
-          placeholder: __("Select UOM"),
-          onchange: function() {
-            me.selected_uom = this.value;
-            me.filter_items({ uom: me.selected_uom });
-          }
-        },
-        parent: this.$component.find(".item-uoms"),
-        render_input: true
-      });
-      this.item_uom.refresh();
-      this.item_uom.toggle_label(false);
       this.search_field.toggle_label(false);
-      this.item_group_field.toggle_label(false);
       this.attach_clear_btn();
     }
     attach_clear_btn() {
@@ -4614,15 +4577,6 @@
         action: () => this.search_field.set_focus(),
         condition: () => this.$component.is(":visible"),
         description: __("Focus on search input"),
-        ignore_inputs: true,
-        page: cur_page.page.page
-      });
-      this.item_group_field.parent.attr("title", `${ctrl_label}+G`);
-      frappe.ui.keys.add_shortcut({
-        shortcut: "ctrl+g",
-        action: () => this.item_group_field.set_focus(),
-        condition: () => this.$component.is(":visible"),
-        description: __("Focus on Item Group filter"),
         ignore_inputs: true,
         page: cur_page.page.page
       });
@@ -9889,6 +9843,7 @@
     }
     prepare_menu() {
       this.page.clear_menu();
+      this.page.add_menu_item(__("Item Search"), this.item_available.bind(this), false, "f1");
       this.page.add_menu_item(__("Item Selector (F1)"), this.add_new_order.bind(this), false, "f1");
       this.page.add_menu_item(
         __("Pending Transaction (F2)"),
@@ -9902,6 +9857,7 @@
     }
     add_buttons_to_toolbar() {
       const buttons = [
+        { label: __("Item Search"), action: this.item_available.bind(this), shortcut: "f1" },
         { label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1" },
         { label: __("Pending Transaction (F2"), action: this.order_list.bind(this), shortcut: "f2" },
         { label: __("Save as Draft (F3)"), action: this.save_draft.bind(this), shortcut: "f3" },
@@ -9925,6 +9881,83 @@
         () => window.location.reload(),
         () => frappe.dom.unfreeze()
       ]);
+    }
+    item_available() {
+      this.frm = this.get_new_frm(this.frm);
+      frappe.call({
+        method: "custom_app.customapp.page.packing_list.packing_list.get_items_by_principal_supplier",
+        args: {
+          warehouse: this.frm.doc.set_warehouse
+        },
+        callback: function(r) {
+          if (r.message) {
+            const data = r.message;
+            const dialog2 = new frappe.ui.Dialog({
+              title: `Items Available in Warehouse`,
+              fields: [
+                {
+                  fieldname: "item_table",
+                  fieldtype: "Table",
+                  label: "Items",
+                  cannot_add_rows: true,
+                  cannot_delete_rows: true,
+                  in_place_edit: false,
+                  fields: [
+                    {
+                      fieldname: "supplier_name",
+                      fieldtype: "Data",
+                      label: "Supplier Name",
+                      read_only: 1,
+                      in_list_view: 1,
+                      width: 50
+                    },
+                    {
+                      fieldname: "custom_principal",
+                      fieldtype: "Data",
+                      label: "Principal",
+                      read_only: 1,
+                      in_list_view: 1,
+                      width: 50
+                    },
+                    {
+                      fieldname: "generic_name",
+                      fieldtype: "Data",
+                      label: "Generic Name",
+                      read_only: 1,
+                      in_list_view: 1,
+                      width: 50
+                    },
+                    {
+                      fieldname: "item_name",
+                      fieldtype: "Data",
+                      label: "Item Name",
+                      read_only: 1,
+                      in_list_view: 1,
+                      width: 100
+                    },
+                    {
+                      fieldname: "actual_qty",
+                      fieldtype: "Float",
+                      label: "Quantity",
+                      read_only: 1,
+                      in_list_view: 1,
+                      width: 100
+                    }
+                  ]
+                }
+              ],
+              size: "extra-large",
+              primary_action_label: "Close",
+              primary_action: () => dialog2.hide()
+            });
+            dialog2.fields_dict.item_table.df.data = data;
+            dialog2.fields_dict.item_table.grid.refresh();
+            dialog2.show();
+          } else {
+            frappe.msgprint("No data found for the selected warehouse.");
+          }
+        }
+      });
     }
     order_list() {
       frappe.run_serially([
@@ -10943,4 +10976,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.SA5W4CXE.js.map
+//# sourceMappingURL=packing-list.bundle.DTPPE6RI.js.map

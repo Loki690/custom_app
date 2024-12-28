@@ -18,16 +18,15 @@
   "sales_details",
   "sales_details_total",
   "sales_net_total",
+  "sales_grand_total",
   "section_break_nznb",
   "payment_details",
   "payment_details_total",
   "change_amount",
   "total",
   "section_break_ahmo",
-  "confirmed_transaction",
   "invoice_from",
   "invoice_to",
-  "confirmed_transactions",
   "confirmed_transaction_total",
   "confirmed_transaction_item_total",
   "section_break_wpvr",
@@ -116,7 +115,7 @@
   },
   {
    "fieldname": "confirmed_transaction_total",
-   "fieldtype": "Int",
+   "fieldtype": "Data",
    "label": "Confirmed Transaction Total"
   },
   {
@@ -164,12 +163,6 @@
    "fieldname": "clerk_sales_amount_total",
    "fieldtype": "Currency",
    "label": "Clerk Sales Amount Total"
-  },
-  {
-   "fieldname": "confirmed_transactions",
-   "fieldtype": "Table",
-   "label": "Confirmed Transactions",
-   "options": "Z From To Transaction"
   },
   {
    "fieldname": "section_break_qafn",
@@ -239,14 +232,6 @@
   {
    "fieldname": "section_break_gkqu",
    "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "confirmed_transaction",
-   "fieldtype": "Table",
-   "hidden": 1,
-   "label": "Confirmed Transaction",
-   "options": "Z Confirmed Trasaction",
-   "print_hide": 1
   },
   {
    "fieldname": "invoice_from",
@@ -329,12 +314,17 @@
    "fieldtype": "Currency",
    "hidden": 1,
    "label": "Total"
+  },
+  {
+   "fieldname": "sales_grand_total",
+   "fieldtype": "Currency",
+   "label": "Sales Grand Total"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-10-15 14:06:56.077961",
+ "modified": "2024-11-25 10:35:26.620860",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "POS Daily Sales Report Summary",

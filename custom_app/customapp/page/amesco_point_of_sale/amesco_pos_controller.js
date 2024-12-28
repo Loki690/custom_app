@@ -488,20 +488,20 @@ custom_app.PointOfSale.Controller = class {
 					label: 'Scanned Data',
 					fieldname: 'scanned_data',
 					fieldtype: 'Data',
-					reqd: 1, // Make this field mandatory
-					description: 'Enter the scanned data (comma-separated format)'
+					reqd: 1, 
 				}
 			],
 			primary_action_label: __('Submit'),
 			primary_action(values) {
+
 				let scannedData = values.scanned_data.split(',');  // Assuming the data is comma-separated
 	
 				if (scannedData.length >= 5) {
 					// Extracting fields from the scanned data
 					let user_id = scannedData[0];
-					let userName = scannedData[2];
+					let user_name = scannedData[2];
 					let email = scannedData[3];
-					let points = scannedData[4];
+					let earned_points = scannedData[4];
 	
 					// Set the extracted values in the document
 					doc.set_value('custom_ameso_user', email);
@@ -516,7 +516,7 @@ custom_app.PointOfSale.Controller = class {
 								fieldname: 'user_name',
 								fieldtype: 'Data',
 								read_only: 1,
-								default: userName
+								default: user_name
 							},
 							{
 								label: 'Email',
@@ -526,11 +526,11 @@ custom_app.PointOfSale.Controller = class {
 								default: email
 							},
 							{
-								label: 'Points',
-								fieldname: 'points',
+								label: 'Earned Points',
+								fieldname: 'earned_points',
 								fieldtype: 'Data',
 								read_only: 1,
-								default: points
+								default: earned_points
 							}
 						],
 						primary_action_label: __('Close'),

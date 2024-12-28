@@ -110,29 +110,23 @@ def check_password_without_username(pwd, doctype="User", fieldname="password"):
     If it matches, return the user's details if they have the allowed roles.
     """
     try:
-        # Define allowed roles
         allowed_roles = ['Cashier', 'Pharmacist Assistant', 'Officer-in-Charge', 'System Manager', 'IT Manager']
 
-        # Fetch all users who have any of the allowed roles and are enabled
         users_with_roles = frappe.db.sql("""
-            SELECT DISTINCT u.name, u.email, u.full_name, u.enabled
+            SELECT DISTINCT u.name, u.full_name, u.enabled
             FROM `tabUser` u
             JOIN `tabHas Role` r ON u.name = r.parent
             WHERE r.role IN %s AND u.enabled = 1
         """, (tuple(allowed_roles),), as_dict=True)
 
-        # Iterate through filtered users and check the password
         for user in users_with_roles:
             try:
                 if check_password(user["name"], pwd):
-                    # Return user details if password matches
-                    user_doc = frappe.get_doc("User", user["name"])
                     return {
-                        "name": user_doc.name,
-                        "email": user_doc.email,
-                        "full_name": user_doc.full_name,
-                        "enabled": user_doc.enabled,
-                        "password":pwd
+                        "name": user["name"],
+                        "full_name": user["full_name"],
+                        "enabled": user["enabled"],
+                        "password": pwd
                     }
             except AuthenticationError:
                 continue

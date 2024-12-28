@@ -3077,7 +3077,7 @@ custom_app.PointOfSale.Payment = class {
 										fieldname: 'scanned_data',
 										fieldtype: 'Data',
 										reqd: 1, // Make this field mandatory
-										description: 'Enter the scanned data (comma-separated format)'
+										//description: 'Enter the scanned data (comma-separated format)'
 									}
 								],
 								primary_action_label: __('Submit'),
@@ -3091,7 +3091,8 @@ custom_app.PointOfSale.Payment = class {
 										let voucher_code = scannedData[0];
 										let user_id = scannedData[1];
 										let email = scannedData[3];
-										let points = scannedData[5];
+										let points = scannedData[2];
+										let earned_points = scannedData[5];
 			
 										// Check if the voucher code has been used
 										frappe.call({
@@ -3129,7 +3130,14 @@ custom_app.PointOfSale.Payment = class {
 																default: email
 															},
 															{
-																label: 'Points',
+																label: 'Earned Points',
+																fieldname: 'earned_points',
+																fieldtype: 'Data',
+																read_only: 1,
+																default: earned_points
+															},
+															{
+																label: 'Voucher Points',
 																fieldname: 'points',
 																fieldtype: 'Data',
 																read_only: 1,
@@ -3143,12 +3151,12 @@ custom_app.PointOfSale.Payment = class {
 															frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_id", user_id);
 															frappe.model.set_value(p.doctype, p.name, "custom_am_plus_user_email", email);
 															frappe.model.set_value(p.doctype, p.name, "amount", flt(points));
+															frm.clear_table('custom_ameco_plus_code_used');
 															frm.add_child("custom_ameco_plus_code_used", { code: voucher_code });
 															userDetailsDialog.hide();
 														}
 													});
-			
-													// Show the user details dialog
+
 													userDetailsDialog.show();
 												}
 											}

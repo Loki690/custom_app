@@ -119,7 +119,7 @@ def on_submit(doc, method):
                     "storeBranch": doc.set_warehouse,  
                     "transactionId": payment.name,  
                     "description": "Redemption of points via QR voucher",  
-                    "used": True  
+                    "used": True
                     }
             if redeem_data and redeem_data.get('usedpoints') and redeem_data.get('trailLog'):
                 redeem_member_transaction(redeem_data)

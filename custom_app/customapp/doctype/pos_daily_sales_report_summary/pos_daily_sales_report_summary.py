@@ -9,46 +9,7 @@ class POSDailySalesReportSummary(Document):
 	pass
 
 def before_insert(doc, method):
-    total_items_count = 0  # Initialize a counter for the total items
-    
-    for transaction in doc.confirmed_transaction:
-        pos_invoice = get_pos_invoice(transaction.pos_trasaction)
-        if pos_invoice:
-            # Fetch the POS Invoice items related to the invoice
-            pos_invoice_items = get_pos_invoice_items(pos_invoice[0].name)
-            # Count the number of items and add to the total count
-            total_items_count += len(pos_invoice_items)
-    
-    doc.confirmed_transaction_item_total = total_items_count
-    
-def get_pos_invoice(invoice):
-    try:
-        record = frappe.get_all(
-            'POS Invoice', 
-            filters={'custom_invoice_series': invoice},
-            fields=['name']
-        )
-        
-        return record
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), 'get_pos_invoice Error')
-        frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
-
-def get_pos_invoice_items(parent):
-    frappe.flags.ignore_permissions = True 
-    try:
-        records = frappe.get_all(
-            'POS Invoice Item', 
-            filters={'parent': parent},
-            fields=['name', 'parent']  # Specify the fields you want to fetch
-        )
-        
-        return records
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), 'get_pos_invoice_items Error')
-        frappe.throw(frappe._("Error occurred while fetching data: {0}").format(str(e)))
-    finally:
-        frappe.flags.ignore_permissions = False  # Reset the flag
+    pass
         
 @frappe.whitelist()
 def get_pos_invoices(pos_profile, from_date, to_date):
@@ -77,10 +38,15 @@ def get_pos_invoices(pos_profile, from_date, to_date):
             WHERE
                 pos_profile = %s
                 AND posting_date BETWEEN %s AND %s
-                AND status != 'Draft'
+                AND docstatus != 2
         """
         # Execute the query and get the records
         records = frappe.db.sql(query, (pos_profile, from_date, to_date), as_dict=True)
+
+        net_total = 0
+        grand_total = 0
+        total_transaction = 0  # Variable to count total transactions (invoices)
+        total_items = 0  # Variable to sum total items across all invoices
 
         # Initialize the total values
         totals = {
@@ -89,11 +55,14 @@ def get_pos_invoices(pos_profile, from_date, to_date):
             'total_zero_rated_sales': 0,
             'total_vat_amount': 0,
             'total_taxes_and_charges': 0,
-            'total_net_total': 0,
-            'total_grand_total': 0,
             'total_change_amount': 0
         }
+
+        # Dictionary to accumulate payment totals by mode of payment
+        payment_totals = {}
         
+        clerk_totals = {}
+
         # Loop through the records to calculate the totals
         for record in records:
             totals['total_vatable_sales'] += record.get('custom_vatable_sales', 0)
@@ -101,14 +70,99 @@ def get_pos_invoices(pos_profile, from_date, to_date):
             totals['total_zero_rated_sales'] += record.get('custom_zero_rated_sales', 0)
             totals['total_vat_amount'] += record.get('custom_vat_amount', 0)
             totals['total_taxes_and_charges'] += record.get('total_taxes_and_charges', 0)
-            totals['total_net_total'] += record.get('net_total', 0)
-            totals['total_grand_total'] += record.get('grand_total', 0)
+            net_total += record.get('net_total', 0)
+            grand_total += record.get('grand_total', 0)
             totals['total_change_amount'] += record.get('change_amount', 0)
+
+            # Count each invoice (transaction)
+            total_transaction += 1
+
+            # Fetch items associated with each invoice
+            item_query = """
+                SELECT
+                    qty
+                FROM
+                    `tabPOS Invoice Item`
+                WHERE
+                    parent = %s
+            """
+            items = frappe.db.sql(item_query, (record['name'],), as_dict=True)
+
+            # Sum the quantities of items in each invoice
+            total_items += sum(item.get('qty', 0) for item in items)
+
+            # Fetch payments for each invoice
+            payment_query = """
+                SELECT
+                    mode_of_payment,
+                    SUM(amount) AS total_amount
+                FROM
+                    `tabSales Invoice Payment`
+                WHERE
+                    parent = %s
+                    AND amount > 0
+                GROUP BY
+                    mode_of_payment
+            """
+            payments = frappe.db.sql(payment_query, (record['name'],), as_dict=True)
+
+            # Aggregate payments by mode of payment
+            for payment in payments:
+                mode = payment['mode_of_payment']
+                payment_totals[mode] = payment_totals.get(
+                    mode, 0) + payment['total_amount']
+
+            # Update clerk totals and transaction counts
+
+            clerk_name = record['custom_pa_name']
+            grand_total_for_invoice = record.get('grand_total', 0)
+                
+            if clerk_name in clerk_totals:
+                clerk_totals[clerk_name]['grand_total'] += grand_total_for_invoice
+                clerk_totals[clerk_name]['transaction_count'] += 1
+            else:
+                clerk_totals[clerk_name] = {
+                    'grand_total': grand_total_for_invoice,
+                    'transaction_count': 1
+                }
+
+        # Calculate non-cash payment total
+        non_cash_payment = sum(
+            total for mode, total in payment_totals.items() if mode.lower() != "cash"
+        )
+
+        # Calculate cash payment
+        cash_payment = grand_total - non_cash_payment
+
+        # Update payment totals dictionary
+        payment_totals["Cash"] = cash_payment
+
+        # Convert payment totals dictionary into an array
+        aggregated_payments = [
+            {'mode_of_payment': mode, 'total_amount': total}
+            for mode, total in payment_totals.items()
+        ]
         
-        # Return both the records and the calculated totals
+        # Build the clerk transactions list
+        clerk_transactions = [
+            {
+                'clerk_name': clerk_name,
+                'grand_total': totals['grand_total'],
+                'transaction_count': totals['transaction_count']
+            }
+            for clerk_name, totals in clerk_totals.items()
+        ]
+
+        # Return the result
         return {
             'records': records,
-            'totals': totals
+            'totals': totals,
+            'net_total': net_total,
+            'grand_total': grand_total,
+            'payments': aggregated_payments,
+            'total_transaction': total_transaction,
+            'total_items': total_items,
+            'clerk_transactions': clerk_transactions
         }
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), 'get_pos_invoices Error')

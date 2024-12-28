@@ -88,7 +88,12 @@ def export_multiple_pos_invoices(from_date, to_date, warehouse):
         return f"An error occurred while exporting invoices: {str(e)}"
 
 @frappe.whitelist()
-def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse):
+def export_multiple_pos_invoices_all_warehouse(from_date, to_date, pos_profile):
+    
+    
+    # Fetch all POS Invoices POS Profile under the warehouse
+    
+    
     try:
         # Build base query with required fields
         query = """
@@ -139,20 +144,20 @@ def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse):
         """
 
         # If a warehouse is specified, add it to the query
-        if warehouse:
-            query += " AND pos.set_warehouse = %(warehouse)s"
+        if pos_profile:
+            query += " AND pos.pos_profile = %(pos_profile)s"
 
         # Order by invoice series
         query += " ORDER BY pos.custom_invoice_series ASC"
 
         # Execute the query
-        pos_invoices = frappe.db.sql(query, {"from_date": from_date, "to_date": to_date, "warehouse": warehouse}, as_dict=True)
+        pos_invoices = frappe.db.sql(query, {"from_date": from_date, "to_date": to_date, "pos_profile": pos_profile}, as_dict=True)
 
         if not pos_invoices:
             return {"message": "No invoices found for the specified criteria."}
 
         # Dictionary to hold the content for each warehouse
-        warehouse_contents = {}
+        profile_contents = {}
         processed_series = set()
 
         for invoice in pos_invoices:
@@ -163,12 +168,12 @@ def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse):
             # Mark this series as processed
             processed_series.add(invoice['custom_invoice_series'])
 
-            # Initialize content for the warehouse if not already initialized
-            if invoice['set_warehouse'] not in warehouse_contents:
-                warehouse_contents[invoice['set_warehouse']] = ""
+          # Initialize content for the POS Profile if not already initialized
+            if invoice['pos_profile'] not in profile_contents:
+                profile_contents[invoice['pos_profile']] = ""
 
             # Prepare content string for the invoice
-            content = warehouse_contents[invoice['set_warehouse']]
+            content = profile_contents[invoice['pos_profile']]
 
             # Fetch customer ID (OSCA or PWD)
             customer_id = invoice.get('custom_osca_id') or invoice.get('custom_pwd_id', '')
@@ -282,9 +287,9 @@ def export_multiple_pos_invoices_all_warehouse(from_date, to_date, warehouse):
             content += "\n-----------------------------------------------------\n\n"
 
             # Update warehouse content
-            warehouse_contents[invoice['set_warehouse']] = content
+            profile_contents[invoice['pos_profile']] = content
 
-        return warehouse_contents
+        return profile_contents
 
     except Exception as e:
         frappe.log_error(f"Error exporting POS invoices: {str(e)}", "POS Invoice Export Error")

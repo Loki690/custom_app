@@ -269,9 +269,14 @@ doc_events = {
 }
 
 scheduler_events = { 
-    "daily": [
+    "daily": [ # Run at 12AM every day
         "custom_app.customapp.utils.executables.delete.delete_draft_pos_invoices",
     ],
+    "cron": {
+        "0 3 * * *": [  # Run at 3AM every day
+            "custom_app.customapp.utils.dropbox_price_update.dropbox_price_update.upload_item_prices_to_dropbox"
+        ]
+    }
 }
 
 jenv = {

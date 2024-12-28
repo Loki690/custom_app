@@ -102,7 +102,7 @@ def search_by_term(search_term, warehouse, price_list):
 
 
 @frappe.whitelist()
-def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None):
+def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None, is_generics=0):
     # Fetch selected warehouse from the request or POS Profile
     if selected_warehouse:
         warehouse = selected_warehouse
@@ -126,6 +126,10 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
     condition = get_conditions(search_term)
     condition += get_item_group_condition(pos_profile)
+    
+     # Add the is_generics condition
+    if cint(is_generics) == 1:  # Check if is_generics is enabled
+        condition += " AND item.custom_principal = 'Generics'"
 
     lft, rgt = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"])
 
@@ -165,8 +169,6 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             {bin_join_condition}
         GROUP BY
             item.name, item.item_name, item.description, item.stock_uom, item.image, item.is_stock_item
-        ORDER BY
-            item.item_name ASC
         LIMIT
             {page_length} OFFSET {start}
         """.format(
