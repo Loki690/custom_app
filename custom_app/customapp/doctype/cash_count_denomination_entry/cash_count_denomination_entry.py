@@ -32,9 +32,9 @@ def create_cash_count_denomination_entry(cashier, pos_profile, pos_opening_entry
         new_entry.custom_pos_opening_entry_id = pos_opening_entry_id
         new_entry.custom_pos_closing_entry_id = pos_closing_entry_id
         new_entry.custom_shift = shift
-        new_entry.custom_cash_sales = doc.custom_cash_sales
-        new_entry.custom_check_sales = doc.custom_check_sales
-        new_entry.custom_total_cashcheck_sales = doc.custom_total_cash_and_check_sales
+        # new_entry.custom_cash_sales = doc.custom_cash_sales
+        # new_entry.custom_check_sales = doc.custom_check_sales
+        # new_entry.custom_total_cashcheck_sales = doc.custom_total_cash_and_check_sales
         new_entry.custom_cash_check_voucher = doc.custom_cash_and_check_voucher
         new_entry.custom_sales_return = doc.custom_sales_return
         new_entry.custom_card_sales = doc.custom_card_sales

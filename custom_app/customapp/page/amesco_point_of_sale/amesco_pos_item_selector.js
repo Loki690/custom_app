@@ -17,6 +17,7 @@ custom_app.PointOfSale.ItemSelector = class {
         this.bind_events();
         this.attach_shortcuts();
 		this.inject_css(); 
+        localStorage.setItem('is_generics', 0);
     }
 	//For highlight items 
 	inject_css() {
@@ -66,6 +67,10 @@ custom_app.PointOfSale.ItemSelector = class {
                     </div>
                     <div class="item-group-field" style="flex: 1;">
                         <input type="text" placeholder="Select item group" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                      <div class="generics" style="flex: 1;">
+                        <input type="checkbox" id="generics">
+                        <label for="generics">Generics</label>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -165,7 +170,8 @@ custom_app.PointOfSale.ItemSelector = class {
                 item_group,
                 search_term,
                 pos_profile: this.pos_profile,
-                selected_warehouse
+                selected_warehouse,
+                is_generics: localStorage.getItem('is_generics') || 0,
             },
         });
     }
@@ -187,7 +193,7 @@ custom_app.PointOfSale.ItemSelector = class {
         });
     
         // Set highlighted_row_index to -1 to ensure no item is highlighted by default
-        this.highlighted_row_index = 0;
+        this.highlighted_row_index = -1;
     
         // Ensure no item is highlighted
         this.highlight_row(this.highlighted_row_index);
@@ -257,6 +263,7 @@ custom_app.PointOfSale.ItemSelector = class {
         // this.$component.find(".item-uoms").html("");
 		//branch field
 		// this.$component.find(".branch-field").html("");
+        this.$component.find(".generics").html("");
 
 		this.search_field = frappe.ui.form.make_control({
 			df: {
@@ -324,8 +331,22 @@ custom_app.PointOfSale.ItemSelector = class {
         //     render_input: true,
         // });
 
+        this.generics = frappe.ui.form.make_control({
+            df: {
+                label: __("Generics"),
+                fieldtype: "Check",
+                onchange: () => {
+                    // if check it
+                    const is_generics = this.generics.get_value();
+                    localStorage.setItem('is_generics', is_generics);
+                    this.set_search_value("");
+                    me.filter_items();
+                },
+            },
+            parent: this.$component.find(".generics"),
+            render_input: true,
+        });
      
-
         // // this.item_uom.set_value("PC");
         // this.item_uom.refresh();
        
@@ -925,11 +946,11 @@ custom_app.PointOfSale.ItemSelector = class {
     
         // Ensure highlighted_row_index is valid
         if (this.highlighted_row_index === -1) {
-            frappe.msgprint({
-                title: __("No Item Highlighted"),
-                indicator: "orange",
-                message: __("Please select an item to highlight before proceeding.")
-            });
+            // frappe.msgprint({
+            //     title: __("No Item Highlighted"),
+            //     indicator: "orange",
+            //     message: __("Please select an item to highlight before proceeding.")
+            // });
             return;
         }
     

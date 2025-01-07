@@ -36,8 +36,7 @@
    "in_list_view": 1,
    "label": "POS Invoice rs#",
    "read_only": 1,
-   "reqd": 1,
-   "unique": 1
+   "reqd": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -74,7 +73,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-20 09:07:28.232536",
+ "modified": "2024-11-18 13:29:59.936808",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "POS Invoice Manual Invoice",
@@ -82,6 +81,9 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
    "delete": 1,
    "email": 1,
    "export": 1,
@@ -89,6 +91,23 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Area Operations Manager",
+   "select": 1,
    "share": 1,
    "submit": 1,
    "write": 1

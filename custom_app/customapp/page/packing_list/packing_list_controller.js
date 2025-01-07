@@ -158,6 +158,7 @@ custom_app.PointOfSale.Controller = class {
 	add_new_order() {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
+			() => this.frm.reload_doc(), 
 			() => this.frm.call("reset_mode_of_payments"),
 			() => this.cart.load_invoice(),
 			() => this.make_new_invoice(),
@@ -190,7 +191,7 @@ custom_app.PointOfSale.Controller = class {
 					fieldname: 'scanned_data',
 					fieldtype: 'Data',
 					reqd: 1, // Make this field mandatory
-					description: 'Enter the scanned data (comma-separated format)'
+					description: 'Enter the scanned data'
 				}
 			],
 			primary_action_label: __('Submit'),
@@ -200,9 +201,9 @@ custom_app.PointOfSale.Controller = class {
 				if (scannedData.length >= 5) {
 					// Extracting fields from the scanned data
 					let user_id = scannedData[0];
-					let userName = scannedData[2];
+					let user_name = scannedData[2];
 					let email = scannedData[3];
-					let points = scannedData[4];
+					let earned_points = scannedData[4];
 	
 					// Set the extracted values in the document
 					doc.set_value('custom_ameso_user', email);
@@ -217,7 +218,7 @@ custom_app.PointOfSale.Controller = class {
 								fieldname: 'user_name',
 								fieldtype: 'Data',
 								read_only: 1,
-								default: userName
+								default: user_name
 							},
 							{
 								label: 'Email',
@@ -227,11 +228,11 @@ custom_app.PointOfSale.Controller = class {
 								default: email
 							},
 							{
-								label: 'Points',
+								label: 'Earned Points',
 								fieldname: 'points',
 								fieldtype: 'Data',
 								read_only: 1,
-								default: points
+								default: earned_points
 							}
 						],
 						primary_action_label: __('Close'),

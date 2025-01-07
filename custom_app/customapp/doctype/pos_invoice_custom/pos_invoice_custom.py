@@ -6,6 +6,15 @@ from frappe.utils import now_datetime
 
 def before_insert(doc, method):
     set_custom_naming_series(doc)
+    for item in doc.items:
+        item_tax_template = item.get("item_tax_template")  # Safely get item_tax_template, returns None if missing
+        if not item_tax_template:
+            item_tax_template = 'Philippines Tax - ADC'
+            frappe.db.set_value("POS Invoice Item", item.name, { 
+                    "item_tax_template": item_tax_template
+                    })
+        calculate_vat_fields(doc, item)
+    calculate_summary(doc)
 
 def generate_pl_series(doc):
     pos_profile = doc.pos_profile
@@ -60,9 +69,9 @@ def calculate_amesco_plus_points(amount, payments):
     """Calculate Amesco Plus points based on the payment method and amount."""
     
     # Check if the payment mode is 'Credit Card' and the amount is greater than 0
-    mode_of_payment = ["Credit Card", "Wire Transfer", "Bank Draft", "Debit Card", "Cards"]
+    mode_of_payment = ["Credit Card", "Wire Transfer", "Bank Draft", "Debit Card", "Cards", "QR Payment"]
     for payment in payments:
-        if payment.mode_of_payment == "Credit Card" and payment.amount > 0:
+        if payment.mode_of_payment in mode_of_payment and payment.amount > 0:
             return (amount / 200) * 0.75
         elif payment.mode_of_payment == "Charge" and payment.amount > 0:
             return 0
@@ -317,3 +326,76 @@ def validate(doc, method):
     # Check if the customer field is empty
     if not doc.customer:  # Check if the customer field is empty or None
         frappe.throw(frappe._("Customer cannot be empty. Please specify the actual customer's name before saving."))
+def calculate_summary(doc):
+    total_vatable = 0
+    total_vat_exempt = 0
+    total_zero_rated = 0  # Total for zero-rated sales
+
+    # Loop through each item in the 'items' table
+    for item in doc.items:
+        if doc.customer_group == 'Zero Rated':
+            total_zero_rated += item.custom_zero_rated_amount or item.amount or 0
+        else:
+            if item.item_tax_template == 'Philippines Tax - ADC':
+                total_vatable += item.custom_vatable_amount or 0
+            elif item.item_tax_template == 'Philippines Tax Exempt - ADC':
+                total_vat_exempt += item.custom_vat_exempt_amount or 0
+
+    # Make sure total amounts are negative if this is a return
+    if doc.is_return:
+        total_vatable = -abs(total_vatable)
+        total_vat_exempt = -abs(total_vat_exempt)
+        total_zero_rated = -abs(total_zero_rated)
+
+    # Set the calculated totals to the appropriate summary fields
+    doc.custom_vatable_sales = round(total_vatable, 2)
+    doc.custom_vat_exempt_sales = round(total_vat_exempt, 2)
+    if doc.customer_group == 'Zero Rated':
+        doc.custom_zero_rated_sales = round(total_zero_rated, 2)
+        
+    validate_discrepancy(doc)
+        
+def calculate_vat_fields(doc, item):
+    # If customer group is Zero Rated, all items should be VAT Exempt
+    if doc.customer_group == 'Zero Rated':
+        set_zero_rated_amount(doc, item)
+    else:
+        # Check the tax template and calculate VAT or VAT-exempt accordingly
+        if item.item_tax_template == 'Philippines Tax - ADC':
+            set_vat_vatable_amount(doc, item)
+        elif item.item_tax_template == 'Philippines Tax Exempt - ADC':
+            set_vat_exempt_amount(doc, item)
+            
+def set_vat_vatable_amount(doc, item):
+    # Calculate the amount after applying discount percentage
+    amount = item.net_amount
+    if doc.is_return:
+        amount = -amount
+        
+    item.custom_vatable_amount = amount
+    
+def set_vat_exempt_amount(doc, item):
+    amount = item.net_amount
+    if doc.is_return:
+        amount = -amount
+    item.custom_vat_exempt_amount = amount
+
+def set_zero_rated_amount(doc, item):
+    amount = item.net_amount
+    if doc.is_return:
+        amount = -amount
+    item.custom_zero_rated_amount = amount
+
+def validate_discrepancy(doc):
+    total_sales = (
+        doc.custom_vatable_sales +
+        doc.custom_vat_exempt_sales +
+        doc.custom_zero_rated_sales +
+        doc.total_taxes_and_charges
+    )
+    discrepancy = doc.grand_total - total_sales
+    if abs(discrepancy) <= 0.01:
+        if discrepancy > 0:
+            doc.custom_vatable_sales += discrepancy
+        else:
+            doc.custom_vatable_sales -= abs(discrepancy)

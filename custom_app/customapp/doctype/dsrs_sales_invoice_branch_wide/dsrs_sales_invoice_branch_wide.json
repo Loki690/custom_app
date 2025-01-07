@@ -1,0 +1,212 @@
+{
+ "actions": [],
+ "autoname": "SI-DSRS-.YYYY.-.########",
+ "creation": "2024-11-19 22:33:08.370358",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "branch",
+  "column_break_uewp",
+  "date",
+  "section_break_hwv4",
+  "daily_sales",
+  "section_break_caht",
+  "payments",
+  "section_break_bcfx",
+  "total_amount",
+  "total_balance",
+  "column_break_xjwx",
+  "total_cash",
+  "total_check",
+  "total_credit",
+  "total_online_payment",
+  "column_break_lqkt",
+  "total_charge",
+  "total_debit",
+  "total_qr",
+  "total_bank_transfer",
+  "column_break_koap",
+  "sales_grand_total",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "DSRS Sales Invoice Branch Wide",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_uewp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "section_break_hwv4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "daily_sales",
+   "fieldtype": "Table",
+   "label": "Daily Sales",
+   "options": "CSD Daily Sales Report Detail Table"
+  },
+  {
+   "fieldname": "section_break_caht",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "payments",
+   "fieldtype": "Table",
+   "label": "Payments",
+   "options": "CSD Daily Sales Payments"
+  },
+  {
+   "fieldname": "section_break_bcfx",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount"
+  },
+  {
+   "fieldname": "column_break_xjwx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_cash",
+   "fieldtype": "Currency",
+   "label": "Total Cash"
+  },
+  {
+   "fieldname": "total_check",
+   "fieldtype": "Currency",
+   "label": "Total Check"
+  },
+  {
+   "fieldname": "total_credit",
+   "fieldtype": "Currency",
+   "label": "Total Credit"
+  },
+  {
+   "fieldname": "total_online_payment",
+   "fieldtype": "Currency",
+   "label": "Total Online Payment"
+  },
+  {
+   "fieldname": "column_break_lqkt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_charge",
+   "fieldtype": "Currency",
+   "label": "Total Charge"
+  },
+  {
+   "fieldname": "total_debit",
+   "fieldtype": "Currency",
+   "label": "Total Debit"
+  },
+  {
+   "fieldname": "total_qr",
+   "fieldtype": "Currency",
+   "label": "Total QR"
+  },
+  {
+   "fieldname": "total_bank_transfer",
+   "fieldtype": "Currency",
+   "label": "Total Bank Transfer"
+  },
+  {
+   "fieldname": "column_break_koap",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sales_grand_total",
+   "fieldtype": "Currency",
+   "label": "Sales Grand Total"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "DSRS Sales Invoice Branch Wide",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Branch",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_balance",
+   "fieldtype": "Currency",
+   "label": "Total Balance"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-11-26 14:46:35.013828",
+ "modified_by": "Administrator",
+ "module": "Customapp",
+ "name": "DSRS Sales Invoice Branch Wide",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Treasury",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Treasury Assistant",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

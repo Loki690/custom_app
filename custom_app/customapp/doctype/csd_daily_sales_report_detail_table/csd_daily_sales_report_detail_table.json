@@ -16,6 +16,8 @@
   "check_date",
   "amount",
   "paid_out",
+  "balance",
+  "payment_entry",
   "notes"
  ],
  "fields": [
@@ -72,7 +74,7 @@
   },
   {
    "fieldname": "paid_out",
-   "fieldtype": "Data",
+   "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Paid Out"
   },
@@ -88,12 +90,25 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Customer Name"
+  },
+  {
+   "fieldname": "balance",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Balance"
+  },
+  {
+   "fieldname": "payment_entry",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Payment Entry",
+   "options": "Payment Entry"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-09-25 08:11:10.695259",
+ "modified": "2024-11-21 14:28:23.714286",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "CSD Daily Sales Report Detail Table",

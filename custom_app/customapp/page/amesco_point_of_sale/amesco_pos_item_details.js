@@ -205,8 +205,32 @@ custom_app.PointOfSale.ItemDetails = class {
 			// Add event listener for discount_percentage and discount_amount field click
 			if (fieldname === "discount_percentage" || fieldname === "discount_amount" || fieldname === "rate") {
 				this.$form_container.find(`.${fieldname}-control input`).on("focus", function () {
-					if (!me.is_oic_authenticated) {
-						me.oic_authentication(fieldname, item);
+			
+					let has_pricing_rules = false;
+			
+					// Check if pricing_rules is a valid JSON string with entries
+					if (item.pricing_rules) {
+						try {
+							const parsed_rules = JSON.parse(item.pricing_rules);
+							if (Array.isArray(parsed_rules) && parsed_rules.length > 0) {
+								has_pricing_rules = true; // Set flag if there are valid entries
+							}
+						} catch (error) {
+							console.error("Error parsing pricing_rules:", error);
+						}
+					}
+			
+					if (has_pricing_rules) {
+						frappe.msgprint({
+							title: __("Pricing Rule Found"),
+							indicator: "blue",
+							message: __("This item already has a pricing rule applied.")
+						});
+					} else {
+						// Check if user is an OIC
+						if (!me.is_oic_authenticated) {
+							me.oic_authentication(fieldname, item);
+						}
 					}
 				});
 			}

@@ -413,17 +413,17 @@ custom_app.PointOfSale.PastOrderSummary = class {
 
 	get_condition_btn_map(after_submission) {
 		if (after_submission)
-			return [{ condition: true, visible_btns: ["Print Receipt", "Email Receipt", "New Order"] }];
+			return [{ condition: true, visible_btns: [] }];
 
 		return [
 			{ condition: this.doc.docstatus === 0, visible_btns: ["Edit Order", "Proceed Order"] },
 			{
 				condition: !this.doc.is_return && this.doc.docstatus === 1,
-				visible_btns: ["Print Receipt", "Email Receipt", "Return"],
+				visible_btns: [],
 			},
 			{
 				condition: this.doc.is_return && this.doc.docstatus === 1,
-				visible_btns: ["Print Receipt", "Email Receipt"],
+				visible_btns: [],
 			},
 		];
 	}

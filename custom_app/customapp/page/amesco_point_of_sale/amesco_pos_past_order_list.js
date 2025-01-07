@@ -30,13 +30,13 @@ custom_app.PointOfSale.PastOrderList = class {
 	}
 
 	bind_events() {
-		this.search_field.$input.on("input", (e) => {
-			clearTimeout(this.last_search);
-			this.last_search = setTimeout(() => {
-				const search_term = e.target.value;
-				this.refresh_list(search_term, this.status_field.get_value());
-			}, 300);
-		});
+		// this.search_field.$input.on("input", (e) => {
+		// 	clearTimeout(this.last_search);
+		// 	this.last_search = setTimeout(() => {
+		// 		const search_term = e.target.value;
+		// 		this.refresh_list(search_term, this.status_field.get_value());
+		// 	}, 300);
+		// });
 		const me = this;
 		this.$invoices_container.on("click", ".invoice-wrapper", function () {
 			const invoice_name = unescape($(this).attr("data-invoice-name"));
@@ -88,6 +88,8 @@ custom_app.PointOfSale.PastOrderList = class {
 
 	make_filter_section() {
 		const me = this;
+		
+		// Search field for invoice ID or customer name
 		this.search_field = frappe.ui.form.make_control({
 			df: {
 				label: __("Search"),
@@ -97,6 +99,8 @@ custom_app.PointOfSale.PastOrderList = class {
 			parent: this.$component.find(".search-field"),
 			render_input: true,
 		});
+		
+		// Status field for filtering invoices by status
 		this.status_field = frappe.ui.form.make_control({
 			df: {
 				label: __("Invoice Status"),
@@ -104,19 +108,35 @@ custom_app.PointOfSale.PastOrderList = class {
 				options: `Draft`,
 				placeholder: __("Filter by invoice status"),
 				onchange: function () {
+					// Auto-refresh the list when the status is changed
 					if (me.$component.is(":visible")) me.refresh_list();
 				},
 			},
 			parent: this.$component.find(".status-field"),
 			render_input: true,
 		});
+	
+		// Show label for search field and hide it for status field
 		this.search_field.toggle_label(true);
 		this.status_field.toggle_label(false);
+	
+		// Set default value for the status field to "Draft"
 		this.status_field.set_value("Draft");
-
+	
+		// Focus on the search field after rendering
 		setTimeout(() => {
 			this.search_field.$input.focus();
 		}, 100);
+	
+		// Debounce function to delay search execution while typing
+		let last_search = null;
+		this.search_field.$input.on("input", function (e) {
+			clearTimeout(last_search);
+			last_search = setTimeout(() => {
+				const search_term = e.target.value;
+				me.refresh_list(search_term, me.status_field.get_value());
+			}, 300); // Adjust the delay (in ms) as needed
+		});
 	}
 
 	// refresh_list() {
@@ -174,9 +194,6 @@ custom_app.PointOfSale.PastOrderList = class {
 	
 				// Update the invoice count
 				this.$invoice_count.text(response.message.length);
-	
-				// Add pagination controls if needed
-				this.render_pagination_controls(page, response.message.length);
 			},
 		});
 	}
@@ -205,7 +222,7 @@ custom_app.PointOfSale.PastOrderList = class {
 
 	toggle_component(show) {
 		show
-			? this.$component.css("display", "flex") && this.refresh_list()
+			? this.$component.css("display", "flex")
 			: this.$component.css("display", "none");
 	}
 };

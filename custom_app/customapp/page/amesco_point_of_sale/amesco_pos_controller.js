@@ -287,7 +287,7 @@ custom_app.PointOfSale.Controller = class {
 
 	add_buttons_to_toolbar() {
 		const buttons = [
-
+			{label: __("Load Pending"), action: this.load_pending_list.bind(this), shortcut: "00"},
 			{label: __("Item Selector (F1)"), action: this.add_new_order.bind(this), shortcut: "f1"},
 			{label: __("Pending Transaction (F2)"), action: this.pending_orders.bind(this), shortcut: "f2"},
 			{label: __("Save as Draft (F3)"), action: this.save_draft_invoice.bind(this), shortcut: "f3"},
@@ -480,8 +480,8 @@ custom_app.PointOfSale.Controller = class {
     // }
 	add_new_order() {
 		frappe.run_serially([
-			() => this.frm.reload_doc(),
-			() => frappe.dom.freeze(__('Starting new order...')),  // Freeze screen with message
+			() => frappe.dom.freeze(__('Starting new order...')), 
+			() => this.frm.reload_doc(), // Freeze screen with message
 			() => this.frm.call("reset_mode_of_payments"),
 			() => this.cart.load_invoice(),  // Load new empty invoice in the cart
 			() => this.remove_pos_cart_items(),  // Clear all items from cart
@@ -532,11 +532,20 @@ custom_app.PointOfSale.Controller = class {
 
 	pending_orders() {
 		frappe.run_serially([
-			() => frappe.dom.freeze(),  // Freeze only for critical steps
+			() => frappe.dom.freeze(),  
+			() => window.location.reload(), // Freeze only for critical steps
 			() => this.item_selector.toggle_component(false),
 			() => this.toggle_recent_order_list(true),
 			() => $(".payment-container").css("display", "none"),
 			() => frappe.dom.unfreeze(),  // Unfreeze right after critical steps
+		]);
+	}
+
+	load_pending_list() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),
+			() => this.recent_order_list.refresh_list(),
+			() => frappe.dom.unfreeze(),
 		]);
 	}
 
@@ -553,7 +562,7 @@ custom_app.PointOfSale.Controller = class {
 					fieldname: 'scanned_data',
 					fieldtype: 'Data',
 					reqd: 1, // Make this field mandatory
-					description: 'Enter the scanned data (comma-separated format)'
+					description: 'Enter the scanned data'
 				}
 			],
 			primary_action_label: __('Submit'),
@@ -563,9 +572,9 @@ custom_app.PointOfSale.Controller = class {
 				if (scannedData.length >= 5) {
 					// Extracting fields from the scanned data
 					let user_id = scannedData[0];
-					let userName = scannedData[2];
+					let user_name = scannedData[2];
 					let email = scannedData[3];
-					let points = scannedData[4];
+					let earned_points = scannedData[4];
 	
 					// Set the extracted values in the document
 					doc.set_value('custom_ameso_user', email);
@@ -580,7 +589,7 @@ custom_app.PointOfSale.Controller = class {
 								fieldname: 'user_name',
 								fieldtype: 'Data',
 								read_only: 1,
-								default: userName
+								default: user_name
 							},
 							{
 								label: 'Email',
@@ -594,7 +603,7 @@ custom_app.PointOfSale.Controller = class {
 								fieldname: 'points',
 								fieldtype: 'Data',
 								read_only: 1,
-								default: points
+								default: earned_points
 							}
 						],
 						primary_action_label: __('Close'),

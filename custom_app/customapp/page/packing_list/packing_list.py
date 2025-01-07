@@ -211,7 +211,7 @@ def get_item_uom_conversion(item_code, uom_code):
 
 
 @frappe.whitelist()
-def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None):
+def get_items(start, page_length, price_list, item_group, pos_profile, search_term="", selected_warehouse=None, is_generics=0):
     # Fetch selected warehouse from the request or POS Profile
     if selected_warehouse:
         warehouse = selected_warehouse
@@ -235,6 +235,9 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
     condition = get_conditions(search_term)
     condition += get_item_group_condition(pos_profile)
+    # Add the is_generics condition
+    if cint(is_generics) == 1:  # Check if is_generics is enabled
+        condition += " AND item.custom_principal = 'Generics'"
 
     lft, rgt = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"])
 
@@ -317,7 +320,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
             uom = next(filter(lambda x: x.uom == price.uom, uoms), {})
 
             if price.uom != item.stock_uom and uom and uom.conversion_factor:
-                item.actual_qty = item.actual_qty // uom.conversion_factor
+                # item.actual_qty = item.actual_qty // uom.conversion_factor
+                item.actual_qty = item.actual_qty
 
             result.append(
                 {
@@ -828,3 +832,61 @@ def fetch_latest_batch_entries(pos_profile, item_code):
     """, (warehouse, item_code), as_dict=True)
 
     return batches
+
+import frappe
+
+@frappe.whitelist()
+def fetch_pos_invoice_data(custom_cashier, pos_profile, from_date, to_date):
+    # Validate input parameters
+    if not from_date or not custom_cashier:
+        return []
+
+    # Query to fetch data based on custom_cashier, pos_profile, from_date, and to_date
+    # Include a condition to filter out rows where the amount is zero
+    query = """
+        SELECT
+            pi.name AS pos_invoice,
+            pi.pos_profile,
+            pi.customer_name,
+            pi.posting_date,
+            pi.custom_invoice_series AS invoice_series,
+            pi.custom_cashier_name AS cashier_name,
+            sip.mode_of_payment,
+            CASE
+                WHEN sip.mode_of_payment IN ('Credit Card', 'Debit Card') THEN sip.custom_approval_code
+                WHEN sip.mode_of_payment = 'QR Payment' THEN sip.custom_qr_reference_number
+                ELSE NULL
+            END AS reference_code,
+            sip.custom_payment_type AS payment_type,
+            sip.custom_card_name AS name_on_card,
+            CASE
+                WHEN sip.mode_of_payment IN ('Credit Card', 'Debit Card') THEN sip.custom_bank_name
+                WHEN sip.mode_of_payment = 'QR Payment' THEN sip.custom_bank_type
+                ELSE NULL
+            END AS bankqr_used,
+            pi.change_amount as change_amount,
+            CASE
+                WHEN sip.mode_of_payment = 'Cash' THEN sip.amount - pi.change_amount
+                ELSE sip.amount
+            END AS payment_amount
+           
+        FROM
+            `tabPOS Invoice` pi
+        LEFT JOIN
+            `tabSales Invoice Payment` sip ON sip.parent = pi.name
+        WHERE
+            pi.docstatus = 1
+            AND pi.custom_cashier = %s
+            AND pi.pos_profile = %s
+            AND pi.custom_date_time_posted BETWEEN %s AND %s
+            AND sip.amount IS NOT NULL
+            AND sip.amount != 0
+        ORDER BY
+            pi.name, sip.idx
+    """
+    
+    # Execute the query with the provided parameters
+    data = frappe.db.sql(query, (custom_cashier, pos_profile, from_date, to_date), as_dict=True)
+    
+    # Return the fetched data
+    return data

@@ -8,6 +8,7 @@
  "field_order": [
   "invoice",
   "customer",
+  "customer_name",
   "mode_of_payment",
   "return_against",
   "amount"
@@ -43,14 +44,20 @@
    "in_list_view": 1,
    "label": "Customer",
    "options": "Customer"
+  },
+  {
+   "fetch_from": "return_against.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-08-15 13:34:40.613211",
+ "modified": "2024-10-29 15:52:01.951509",
  "modified_by": "Administrator",
- "module": "customapp",
+ "module": "Customapp",
  "name": "POS Closing Entry Returns",
  "owner": "Administrator",
  "permissions": [],
