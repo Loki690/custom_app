@@ -1,4 +1,5 @@
 import frappe
+from custom_app.customapp.utils.dropbox_price_update.dropbox_price_update import upload_item_prices_to_dropbox
 
 @frappe.whitelist()
 def delete_draft_pos_invoices():
@@ -7,6 +8,7 @@ def delete_draft_pos_invoices():
     """
     try:
         # Get all POS invoices that are in draft (status = 0)
+        upload_item_prices_to_dropbox()
         draft_pos_invoices = frappe.get_all('POS Invoice', filters={'docstatus': 0})
         
         # Loop through and delete each draft invoice

@@ -82,7 +82,7 @@ def return_member_item(user_id, trans_id):
 def on_submit(doc, method):
     # Loop through each item in the POS Invoice
     if doc.custom_amesco_user_id and doc.custom_ameso_user and doc.is_return == 0: 
-        excluded_customer_groups = ['Senior Citizen', 'PWD', 'Government', 'Corporate']
+        excluded_customer_groups = ['Government', 'Corporate'] #['Senior Citizen', 'PWD', 'Government', 'Corporate']
         for item in doc.items:
             if not item.custom_amesco_plus_points:
                 if item.discount_amount > 0 or doc.customer_group in excluded_customer_groups:

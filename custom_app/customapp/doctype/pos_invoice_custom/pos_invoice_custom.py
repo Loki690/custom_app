@@ -55,7 +55,7 @@ def before_save(doc, method):
         doc.custom_pa_name = get_user_full_name(doc.custom_pharmacist_assistant)
         
     doc.custom_barcode = doc.name
-    excluded_customer_groups = ['Senior Citizen', 'PWD', 'Government', 'Corporate']
+    excluded_customer_groups = ['Government', 'Corporate'] #['Senior Citizen', 'PWD', 'Government', 'Corporate']
     for item in doc.items:
         if item.discount_amount > 0 or doc.customer_group in excluded_customer_groups:
             item.custom_amesco_plus_points = 0
