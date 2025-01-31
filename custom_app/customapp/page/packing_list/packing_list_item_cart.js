@@ -1235,12 +1235,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="item-qty-rate">
 						<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
-							<div class="item-rate" style="font-size:11px;">${format_currency(
-								item_data.pricing_rules === '[\n "PRLE-0005330"\n]' ? item_data.amount : 
-								(item_data.pricing_rules === "" ? item_data.amount : 
-									(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount)
-								), currency
-							)}</div>
+							<div class="item-rate" style="font-size:11px;">${format_currency(item_data.amount, currency)}</div>
 						</div>
 					</div>`;
 			} else {

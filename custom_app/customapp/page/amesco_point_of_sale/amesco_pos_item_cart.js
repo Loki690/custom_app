@@ -842,42 +842,56 @@ custom_app.PointOfSale.ItemCart = class {
 
 	update_totals_section(frm) {
 		if (!frm) frm = this.events.get_frm();
-		// console.log(frm.doc);
-		
+	
+		// Retrieve and render vatable sales
 		const custom_vatable_sales = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.custom_vatable_sales
 			: frm.doc.rounded_total;
-
+		this.render_vatable_sales(custom_vatable_sales);
+	
+		// Retrieve and render VAT-exempt sales
 		const custom_vat_exempt_sales = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.custom_vat_exempt_sales
 			: frm.doc.rounded_total;
-
+		this.render_vat_exempt_sales(custom_vat_exempt_sales);
+	
+		// Retrieve and render zero-rated sales
 		const custom_zero_rated_sales = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.custom_zero_rated_sales
 			: frm.doc.rounded_total;
-
-		this.render_vatable_sales(custom_vatable_sales);
-		this.render_vat_exempt_sales(custom_vat_exempt_sales );
 		this.render_zero_rated_sales(custom_zero_rated_sales);
-		
-		// this.render_vat(frm.doc.custom_vat_amount)
-		// this.render_ex_total(frm.doc.custom_ex_total)
-
+	
+		// Retrieve and render net total
 		const net_total = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.net_total
 			: frm.doc.rounded_total;
-
 		this.render_net_total(net_total);
+	
+		// Render total item quantity
 		this.render_total_item_qty(frm.doc.items);
-
+	
+		// Retrieve and render grand total
 		const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
 			? frm.doc.grand_total
 			: frm.doc.rounded_total;
-			
 		this.render_grand_total(grand_total);
-		// this.render_taxes(frm.doc.taxes);
+	
+		// Render total VAT
 		this.render_total_vat(frm.doc.total_taxes_and_charges);
+	
+		// Refresh specific fields to ensure updated data is displayed
+		frm.refresh_field("custom_vatable_sales");
+		frm.refresh_field("custom_vat_exempt_sales");
+		frm.refresh_field("custom_zero_rated_sales");
+		frm.refresh_field("net_total");
+		frm.refresh_field("items");
+		frm.refresh_field("grand_total");
+		frm.refresh_field("total_taxes_and_charges");
+	
+		// Optionally refresh the entire form if needed
+		// frm.refresh();
 	}
+	
 	
 	render_net_total(value) {
 		const currency = this.events.get_frm().doc.currency;
@@ -1207,12 +1221,7 @@ custom_app.PointOfSale.ItemCart = class {
 					<div class="item-qty-rate">
 						<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
-							<div class="item-rate" style="font-size:11px;">${format_currency(
-								item_data.pricing_rules === '[\n "PRLE-0005330"\n]' ? item_data.amount : 
-								(item_data.pricing_rules === "" ? item_data.amount : 
-									(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount)
-								), currency
-							)}</div>
+							<div class="item-rate" style="font-size:11px;">${format_currency(item_data.amount, currency)}</div>
 						</div>
 					</div>`;
 			} else {

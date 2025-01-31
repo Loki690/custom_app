@@ -1570,9 +1570,19 @@ custom_app.PointOfSale.Controller = class {
 
 	update_cart_html(item_row, remove_item) {
 		this.cart.update_item_html(item_row, remove_item);
-		this.cart.update_totals_section(this.frm);
+	
+		// Debounce the save action to prevent multiple saves
+		clearTimeout(this.saveTimeout); // Clear any existing timeout
+		this.saveTimeout = setTimeout(() => {
+			this.frm.save().then(() => {
+				// Update the totals section in the cart
+				this.cart.update_totals_section(this.frm);
+			}).catch((error) => {
+				console.error("Error saving the document:", error);
+			});
+		}, 200); // Adjust the delay as needed (500ms in this case)
 	}
-
+	
 	check_serial_batch_selection_needed(item_row) {
 		// right now item details is shown for every type of item.
 		// if item details is not shown for every item then this fn will be needed
@@ -1683,9 +1693,8 @@ custom_app.PointOfSale.Controller = class {
 					batch_qty: ['>', 0] // Exclude batches with zero quantity
 				},
 				fields: ['name', 'expiry_date', 'batch_qty'],
-				order_by: 'expiry_date desc'
 			});
-			
+
 			let valid_batch = null;
 	
 			// Step 2: Validate stock in the specific warehouse for each batch

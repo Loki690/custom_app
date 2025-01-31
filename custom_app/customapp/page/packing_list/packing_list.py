@@ -836,3 +836,118 @@ def fetch_latest_batch_entries(pos_profile, item_code):
     """, (warehouse, item_code), as_dict=True)
 
     return batches
+
+
+
+import frappe
+
+@frappe.whitelist()
+def fetch_pos_invoice_data(custom_cashier, pos_profile, from_date, to_date):
+    # Validate input parameters
+    if not from_date or not custom_cashier:
+        return []
+
+    # Query to fetch data based on custom_cashier, pos_profile, from_date, and to_date
+    # Include a condition to filter out rows where the amount is zero
+    query = """
+        SELECT
+            pi.name AS pos_invoice,
+            pi.pos_profile,
+            pi.customer_name,
+            pi.posting_date,
+            pi.custom_invoice_series AS invoice_series,
+            pi.custom_cashier_name AS cashier_name,
+            sip.mode_of_payment,
+            CASE
+                WHEN sip.mode_of_payment IN ('Credit Card', 'Debit Card') THEN sip.custom_approval_code
+                WHEN sip.mode_of_payment ='Cheque' THEN sip.custom_check_number
+                WHEN sip.mode_of_payment = 'QR Payment' THEN sip.custom_qr_reference_number
+                ELSE NULL
+            END AS reference_code,
+            sip.custom_payment_type AS payment_type,
+
+            CASE
+                 WHEN sip.mode_of_payment IN ('Credit Card', 'Debit Card') THEN sip.custom_card_name
+                 WHEN sip.mode_of_payment ='Cheque' THEN sip.custom_check_bank_name
+                 else NULL
+            END AS name_on_card,
+
+            CASE
+                WHEN sip.mode_of_payment IN ('Credit Card', 'Debit Card') THEN sip.custom_bank_name
+                WHEN sip.mode_of_payment ='Cheque' THEN sip.custom_check_bank_name
+                WHEN sip.mode_of_payment = 'QR Payment' THEN sip.custom_bank_type
+                ELSE NULL
+            END AS bankqr_used,
+            pi.change_amount as change_amount,
+            CASE
+                WHEN sip.mode_of_payment = 'Cash' THEN sip.amount - pi.change_amount
+                ELSE sip.amount
+            END AS payment_amount
+           
+        FROM
+            `tabPOS Invoice` pi
+        LEFT JOIN
+            `tabSales Invoice Payment` sip ON sip.parent = pi.name
+        WHERE
+            pi.docstatus = 1
+            AND pi.custom_cashier = %s
+            AND pi.pos_profile = %s
+            AND pi.custom_date_time_posted BETWEEN %s AND %s
+            AND sip.amount IS NOT NULL
+            AND sip.amount != 0
+        ORDER BY
+            pi.name, sip.idx
+    """
+    
+    # Execute the query with the provided parameters
+    data = frappe.db.sql(query, (custom_cashier, pos_profile, from_date, to_date), as_dict=True)
+    
+    # Return the fetched data
+    return data
+
+
+
+
+import frappe
+from frappe.utils import cint
+
+@frappe.whitelist()
+def get_material_requests_by_supplier(supplier, date_from,  date_to):
+    # Fetch data
+    results = frappe.db.sql("""
+      SELECT
+            isup.supplier AS supplier_id,
+            se.name AS stock_entry,
+            se.posting_date AS transaction_date,
+            se.stock_entry_type AS stock_entry_type,
+            sed.item_code AS item_code,
+            sed.item_name AS item_name,
+            sed.s_warehouse AS source_warehouse,
+            i.custom_principal AS principal,
+            GROUP_CONCAT(DISTINCT s.supplier_name SEPARATOR ', ') AS supplier,
+            sed.qty AS quantity,
+            sed.uom AS uom
+        FROM
+            `tabStock Entry` se
+        LEFT JOIN
+            `tabStock Entry Detail` sed ON sed.parent = se.name
+        LEFT JOIN
+            `tabItem Supplier` isup ON isup.parent = sed.item_code
+        LEFT JOIN
+            `tabSupplier` s ON s.name = isup.supplier
+        LEFT JOIN
+            `tabItem` i ON i.item_code = sed.item_code
+        WHERE
+            se.stock_entry_type = 'Material Issue'
+            AND isup.supplier = %(supplier)s    
+            AND  se.posting_date BETWEEN %(date_from)s AND %(date_to)s
+        GROUP BY
+            se.name,  se.posting_date, se.stock_entry_type,
+            sed.item_code, sed.item_name, i.custom_principal,
+            sed.qty, sed.uom
+        ORDER BY
+            sed.item_name ASC
+    """, {"supplier": supplier, "date_from":date_from, "date_to": date_to}, as_dict=True)
+
+    # Return results
+    return results

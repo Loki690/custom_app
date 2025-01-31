@@ -1419,8 +1419,19 @@ custom_app.PointOfSale.Controller = class {
 
 	update_cart_html(item_row, remove_item) {
 		this.cart.update_item_html(item_row, remove_item);
-		this.cart.update_totals_section(this.frm);
+	
+		// Debounce the save action to prevent multiple saves
+		clearTimeout(this.saveTimeout); // Clear any existing timeout
+		this.saveTimeout = setTimeout(() => {
+			this.frm.save().then(() => {
+				// Update the totals section in the cart
+				this.cart.update_totals_section(this.frm);
+			}).catch((error) => {
+				console.error("Error saving the document:", error);
+			});
+		}, 500); // Adjust the delay as needed (500ms in this case)
 	}
+	
 
 	check_serial_batch_selection_needed(item_row) {
 		// right now item details is shown for every type of item.
