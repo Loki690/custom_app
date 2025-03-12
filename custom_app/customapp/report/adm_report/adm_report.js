@@ -13,17 +13,10 @@ frappe.query_reports["ADM Report"] = {
             "reqd": 1
         },
 		{
-            "fieldname": "item_code",
-            "label": __("Item Code"),
+            "fieldname": "suppliers",
+            "label": __("Suppliers"),
             "fieldtype": "Link",
-			"options": "Item",
-            "reqd": 0
-        },
-		{
-            "fieldname": "warehouse",
-            "label": __("Branch/Warehouse"),
-            "fieldtype": "Link",
-			"options": "Warehouse",
+			"options": "Supplier",
             "reqd": 0
         }
         

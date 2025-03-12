@@ -571,7 +571,15 @@ custom_app.PointOfSale.Controller = class {
 					// Set the extracted values in the document
 					doc.set_value('custom_ameso_user', email);
 					doc.set_value('custom_amesco_user_id', user_id);
+
+					me.scannedData = scannedData;
+
+					// Call function from pos_item_cart.js to validate scannedData
+					if (me.cart && me.cart.validate_scanned_data) {
+						me.cart.validate_scanned_data(scannedData);
+					}
 	
+					// me.make_customer_selector("CUST-00027538");
 					// Display the extracted user details in another dialog
 					let userDetailsDialog = new frappe.ui.Dialog({
 						title: __('Scanned User Details'),
@@ -606,6 +614,7 @@ custom_app.PointOfSale.Controller = class {
 	
 					// Show the dialog with the user details
 					userDetailsDialog.show();
+					
 	
 				} else {
 					frappe.msgprint(__('Invalid data format. Please enter at least 5 comma-separated values.'));
@@ -613,6 +622,7 @@ custom_app.PointOfSale.Controller = class {
 	
 				// Hide the manual input dialog after submission
 				manualInputDialog.hide();
+	
 			}
 		});
 	

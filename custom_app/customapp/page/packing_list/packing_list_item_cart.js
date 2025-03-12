@@ -612,6 +612,35 @@ custom_app.PointOfSale.ItemCart = class {
 		this.customer_field.toggle_label(false);
 	}
 
+
+	validate_scanned_data(scannedData) {
+		const me = this;
+		const frm = me.events.get_frm();
+	
+		if (scannedData && scannedData.length > 0) {
+			// If Amesco Plus is scanned, automatically set the customer
+			frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "CUST-00027987");
+	
+			// frappe.msgprint({
+			// 	title: __('Success'),
+			// 	message: __('Amesco Plus scanned successfully.'),
+			// 	indicator: 'green'
+			// });
+	
+			frappe.run_serially([
+				() => me.fetch_customer_details("CUST-00027987"),
+				() => me.events.customer_details_updated(me.customer_info),
+				() => me.update_customer_section()
+			]);
+		} else {
+			frappe.msgprint({
+				title: __('Error'),
+				message: __('Scanned data is invalid or missing'),
+				indicator: 'red'
+			});
+		}
+	}
+
 	// make_doctor_selector() {
 	// 	this.$doctor_section.html(`
     //     <div class="doctor-field"></div>

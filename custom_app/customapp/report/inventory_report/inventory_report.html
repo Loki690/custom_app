@@ -1,0 +1,45 @@
+<div class="row">
+    <div class="col-xs-6">
+        <img src="/files/amesco-logo-v3-long.png" alt="Company Logo" width="250">
+        <p style="font-size:10px;">{%= ("Corner R.Magsaysay Ave. & D.Suazo., Davao City, Philippines") %}</p>
+        <p style="font-size:10px; margin-top:-0.1rem;">{%= ("VAT-Reg. TIN: 008 - 024 - 612") %}</p>
+        <p style="font-size:10px; margin-top:-0.1rem;">{%= ("Tel. (+63.82) 227.8080 / 227.3163 / 227.5431") %}</p>
+    </div>
+    <div class="col-xs-6">
+        <h2 style="padding-left:20rem; font-weight:bold; font-size: 18px; padding-top:3rem;">{%=("INVENTORY BOOK")%}</h2>
+    </div>
+</div>
+<hr style="margin-top:-0rem;">
+<div class="row">
+   <div class="col-xs-12">
+        <p>{%= ("Item Code:") %} {{filters.item_code}}</p>
+        <p>{%= ("Warehouse:") %} {{filters.warehouse}}</p>
+   </div>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+
+        <tr>
+            <th> {%= ("Item Code") %}</th>
+            <th> {%= ("Description") %}</th>
+            <th> {%= ("Unit") %}</th>
+            <th> {%= ("Price Per Unit") %}</th>
+            <th> {%= __("Amount") %}</th>
+        </tr>
+
+    </thead>
+ 
+    <tbody>
+        {% for row in data %}
+        <tr>
+            <td>{{ row.item_code }}</td>
+            <td>{{ row.item_name }}</td>
+            <td>{{ row.uom }}</td>
+            <td>{{ row.selling_price }}</td>
+            <td>{{ row.amount }}</td>
+        </tr>
+    {% endfor %}
+
+    </tbody>
+</table>

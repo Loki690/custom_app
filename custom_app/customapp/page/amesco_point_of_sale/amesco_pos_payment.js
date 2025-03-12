@@ -151,9 +151,12 @@ custom_app.PointOfSale.Payment = class {
 			$(`.save-button`).hide();
 			$(`.discard-button`).hide();
 			$(`.cash-button`).hide();
+			$(`.transfer-date`).hide();
 			me.$payment_modes.find(`.pay-amount`).css("display", "inline");
 			me.$payment_modes.find(`.loyalty-amount-name`).hide();
 		}
+
+	
 	
 		function focusAndHighlightAmountField(mode_clicked) {
 			const $amountField = mode_clicked.find(".frappe-control.input-max-width[data-fieldtype='Currency'] input");
@@ -239,13 +242,21 @@ custom_app.PointOfSale.Payment = class {
 					mode_clicked.find(".amesco-code").css("display", "flex");
 					mode_clicked.find(".button-amesco-plus").css("display", "flex");
 					mode_clicked.find(".discard-button").css("display", "flex");
-				} 
+				} else if (mode === "bank_transfer") {
+					mode_clicked.find(".transfer-date").css("display", "flex");
+					mode_clicked.find(".bank-name").css("display", "flex");
+					mode_clicked.find(".reference-number").css("display", "flex");
+					mode_clicked.find(".save-button").css("display", "flex");
+					mode_clicked.find(".discard-button").css("display", "flex");
+				}
 				focusAndHighlightAmountField(mode_clicked);
 				// me.selected_mode = me[`${mode}_control`];
 				me.selected_mode && me.selected_mode.$input.get();
 				me.auto_set_remaining_amount();
 			}
 		});
+
+		
 
 		// Hide all fields if clicking outside mode-of-payment
 		$(document).on("click", function (e) {
@@ -467,6 +478,15 @@ custom_app.PointOfSale.Payment = class {
 									return false; // Stop validation
 								}
 								break;
+					case  'Bank Transfer':
+							const bt_missing_fields = validate_fields(['amount', 'custom_transfer_date', 'custom_bt_name', 'custom_bt_reference_number'], p);
+							if (bt_missing_fields.length) {
+										console.log('Missing fields for Bank Transfer payment:', bt_missing_fields);
+										show_validation_warning(__('The following fields are required for QR payment: {0}', [bt_missing_fields.join(', ')]));
+										has_error = true;
+										return false; // Stop validation
+							}
+							break;
 
 		
 						// Add cases for other payment methods as needed
@@ -825,6 +845,19 @@ custom_app.PointOfSale.Payment = class {
 							</div>	
 							
 							   `;
+						break;
+
+					case "Bank Transfer":
+						paymentModeHtml += `
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} reference-number"></div>
+							<div class="${mode} transfer-date"></div>
+							<div class="${mode} button-row" style="display: flex; gap: 3px; align-items: center;">
+								<div class="${mode} save-button"></div>
+								<div class="${mode} discard-button"></div>
+							</div>	
+								
+							`;
 						break;
 				}
 
@@ -3205,8 +3238,237 @@ custom_app.PointOfSale.Payment = class {
 				});
 
 
+			}
+
+
+
+			if (p.mode_of_payment === "Bank Transfer") {
+				let existing_custom_transfer_date = frappe.model.get_value(p.doctype, p.name, "custom_transfer_date");
+				let transfer_date_control = frappe.ui.form.make_control({
+					df: {
+						label: 'Date',
+						fieldtype: "Date",
+						placeholder: 'Transfer Date',
+						reqd: true
+
+						// onchange: function () {
+						// 	frappe.model.set_value(p.doctype, p.name, "custom_phone_number", this.value);
+						// },
+					},
+					parent: this.$payment_modes.find(`.${mode}.transfer-date`),
+					render_input: true,
+				});
+				transfer_date_control.set_value(existing_custom_transfer_date || '');
+				transfer_date_control.refresh();
+
+
+
+				let existing_custom_bt_name = frappe.model.get_value(p.doctype, p.name, "custom_bt_name");
+
+				let bt_name_controller = frappe.ui.form.make_control({
+					df: {
+						label: 'Bank Name',
+						fieldtype: "Data",
+						placeholder: 'Bank Name',
+						reqd: true
+
+						// onchange: function () {
+						// 	frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
+						// },
+					},
+					parent: this.$payment_modes.find(`.${mode}.bank-name`),
+					render_input: true,
+					// default: p.reference_no || ''
+				});
+
+				bt_name_controller.set_value(existing_custom_bt_name || '');
+				bt_name_controller.refresh();
+
+
+				let existing_custom_bt_reference_number = frappe.model.get_value(p.doctype, p.name, "custom_bt_reference_number");
+
+				let bt_reference_controller = frappe.ui.form.make_control({
+					df: {
+						label: 'Reference No',
+						fieldtype: "Data",
+						placeholder: 'Reference No.',
+						reqd: true
+
+						// onchange: function () {
+						// 	frappe.model.set_value(p.doctype, p.name, "reference_no", this.value);
+						// },
+					},
+					parent: this.$payment_modes.find(`.${mode}.reference-number`),
+					render_input: true,
+					default: p.reference_no || ''
+				});
+
+				bt_reference_controller.set_value(existing_custom_bt_reference_number || '');
+				bt_reference_controller.refresh();
+
+
+				let save_button = $('<button class="btn btn-primary" style="text-align: right;">save</button>');
+				this.$payment_modes.find(`.${mode}.save-button`).append(save_button);
+
+				// Create discard button
+				let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+				this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+
+				const me = this;
+
+				// Attach event listener to the save button
+				save_button.on('click', function () {
+					let amount = me[`${mode}_control`].get_value(); // Get amount value
+					let tranfer_date = transfer_date_control.get_value();
+					let bank_name = bt_name_controller.get_value();
+					let reference_no = bt_reference_controller.get_value();
+
+
+					if (!amount || !reference_no) {
+						const dialog = frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('All fields are required.'),
+							indicator: 'orange',
+							primary_action: {
+								label: __('OK'),
+								action: function () {
+									// Close the dialog
+									frappe.msg_dialog.hide();
+								}
+							}
+						});
+
+						$(document).on('keydown', function (e) {
+							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+								dialog.get_primary_btn().trigger('click');
+							}
+						});
+
+						// Remove event listener when dialog is closed
+						dialog.$wrapper.on('hidden.bs.modal', function () {
+							$(document).off('keydown');
+						});
+						return;
+					}
+
+					const grand_total = cint(frappe.sys_defaults.disable_rounded_total)
+						? doc.grand_total
+						: doc.rounded_total;
+					const currency = doc.currency;
+
+
+					if (amount > grand_total) {
+
+						const dialog = frappe.msgprint({
+							title: __('Validation Warning'),
+							message: __('Amount must not exceed the grand total.'),
+							indicator: 'orange',
+							primary_action: {
+								label: __('OK'),
+								action: function () {
+									// Close the dialog
+									frappe.msg_dialog.hide();
+								}
+							}
+						});
+
+						$(document).on('keydown', function (e) {
+							if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+								dialog.get_primary_btn().trigger('click');
+							}
+						});
+
+						// Remove event listener when dialog is closed
+						dialog.$wrapper.on('hidden.bs.modal', function () {
+							$(document).off('keydown');
+						});
+						return;
+
+					}
+
+					frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+					frappe.model.set_value(p.doctype, p.name, "custom_transfer_date", tranfer_date);
+					frappe.model.set_value(p.doctype, p.name, "custom_bt_name", bank_name);
+					frappe.model.set_value(p.doctype, p.name, "custom_bt_reference_number", reference_no);
+
+
+
+					const dialog = frappe.msgprint({
+						title: __('Success'),
+						message: __('Payment details have been saved.'),
+						indicator: 'green',
+						primary_action: {
+							label: __('OK'),
+							action: function () {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
+
+					$(document).on('keydown', function (e) {
+						if (e.which === 13 && dialog.$wrapper.is(':visible')) { // 13 is the Enter key code
+							dialog.get_primary_btn().trigger('click');
+						}
+					});
+
+					// Remove event listener when dialog is closed
+					dialog.$wrapper.on('hidden.bs.modal', function () {
+						$(document).off('keydown');
+					});
+
+				});
+
+				// Attach event listener to the discard button
+		
+
+
+				discard_button.on('click', function () {
+					// Clear all the fields
+					me[`${mode}_control`].set_value(0);
+					transfer_date_control.set_value('');
+					bt_name_controller.set_value('');
+					bt_reference_controller.set_value('')
+
+					// Set values in the model to null or empty string
+					frappe.model.set_value(p.doctype, p.name, "amount", 0);
+					frappe.model.set_value(p.doctype, p.name, "custom_transfer_date", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_bt_name", '');
+					frappe.model.set_value(p.doctype, p.name, "custom_bt_reference_number", '');
+
+
+					frappe.msgprint({
+						message: __('Payment details have been discarded.'),
+						indicator: 'blue',
+						primary_action: {
+							label: __('OK'),
+							action: function () {
+								// Close the dialog
+								frappe.msg_dialog.hide();
+							}
+						}
+					});
+				});
+
+
+				const controls = [
+					me[`${mode}_control`],
+					transfer_date_control,
+					bt_name_controller,
+					bt_reference_controller
+				];
+
+				controls.forEach(control => {
+					control.$input && control.$input.keypress(function (e) {
+						if (e.which === 13) { // Enter key pressed
+							save_button.click();
+						}
+					});
+				});
+
 
 			}
+
 			// this[`${mode}_control`].toggle_label(true);
 			this[`${mode}_control`].set_value(p.amount);
 		});

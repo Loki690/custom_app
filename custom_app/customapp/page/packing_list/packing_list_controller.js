@@ -207,6 +207,13 @@ custom_app.PointOfSale.Controller = class {
 					// Set the extracted values in the document
 					doc.set_value('custom_ameso_user', email);
 					doc.set_value('custom_amesco_user_id', user_id);
+
+					me.scannedData = scannedData;
+
+					// Call function from pos_item_cart.js to validate scannedData
+					if (me.cart && me.cart.validate_scanned_data) {
+						me.cart.validate_scanned_data(scannedData);
+					}
 	
 					// Display the extracted user details in another dialog
 					let userDetailsDialog = new frappe.ui.Dialog({

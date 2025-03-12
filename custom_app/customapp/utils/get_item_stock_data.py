@@ -4,7 +4,7 @@ import frappe
 def get_item_stock_data(supplier=None, item=None, principal=None):
     # Build the query dynamically
     query = """
-        SELECT
+        SELECT DISTINCT
             i.name AS item_code,
             i.item_name AS item_name,
             i.custom_principal AS principal,
@@ -13,8 +13,11 @@ def get_item_stock_data(supplier=None, item=None, principal=None):
             SUM(COALESCE(b_return.actual_qty, 0)) AS total_return_warehouse_qty
         FROM
             `tabItem` i
-        LEFT JOIN
-            `tabItem Supplier` isup ON isup.parent = i.name
+        LEFT JOIN (
+                    SELECT parent AS item_code, MIN(supplier) AS supplier
+                    FROM `tabItem Supplier`
+                    GROUP BY parent
+                ) isup ON isup.item_code = i.name
         LEFT JOIN
             `tabSupplier` s ON s.name = isup.supplier
         LEFT JOIN
@@ -48,7 +51,7 @@ def get_item_stock_data(supplier=None, item=None, principal=None):
         GROUP BY
             i.name, i.item_name, i.custom_principal
         ORDER BY
-            total_return_warehouse_qty DESC
+            i.item_name ASC
     """
     
     # Execute query and return results

@@ -5219,6 +5219,24 @@
       });
       this.customer_field.toggle_label(false);
     }
+    validate_scanned_data(scannedData) {
+      const me = this;
+      const frm = me.events.get_frm();
+      if (scannedData && scannedData.length > 0) {
+        frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "CUST-00027987");
+        frappe.run_serially([
+          () => me.fetch_customer_details("CUST-00027987"),
+          () => me.events.customer_details_updated(me.customer_info),
+          () => me.update_customer_section()
+        ]);
+      } else {
+        frappe.msgprint({
+          title: __("Error"),
+          message: __("Scanned data is invalid or missing"),
+          indicator: "red"
+        });
+      }
+    }
     fetch_customer_details(customer) {
       if (customer) {
         return new Promise((resolve) => {
@@ -6703,6 +6721,7 @@
         $(`.save-button`).hide();
         $(`.discard-button`).hide();
         $(`.cash-button`).hide();
+        $(`.transfer-date`).hide();
         me.$payment_modes.find(`.pay-amount`).css("display", "inline");
         me.$payment_modes.find(`.loyalty-amount-name`).hide();
       }
@@ -6778,6 +6797,12 @@
           } else if (mode === "amesco_plus") {
             mode_clicked.find(".amesco-code").css("display", "flex");
             mode_clicked.find(".button-amesco-plus").css("display", "flex");
+            mode_clicked.find(".discard-button").css("display", "flex");
+          } else if (mode === "bank_transfer") {
+            mode_clicked.find(".transfer-date").css("display", "flex");
+            mode_clicked.find(".bank-name").css("display", "flex");
+            mode_clicked.find(".reference-number").css("display", "flex");
+            mode_clicked.find(".save-button").css("display", "flex");
             mode_clicked.find(".discard-button").css("display", "flex");
           }
           focusAndHighlightAmountField(mode_clicked);
@@ -7108,6 +7133,18 @@
 							</div>	
 							
 							   `;
+              break;
+            case "Bank Transfer":
+              paymentModeHtml += `
+							<div class="${mode} bank-name"></div>
+							<div class="${mode} reference-number"></div>
+							<div class="${mode} transfer-date"></div>
+							<div class="${mode} button-row" style="display: flex; gap: 3px; align-items: center;">
+								<div class="${mode} save-button"></div>
+								<div class="${mode} discard-button"></div>
+							</div>	
+									
+							`;
               break;
           }
           paymentModeHtml += `
@@ -8875,6 +8912,158 @@
             });
           });
         }
+        if (p.mode_of_payment === "Bank Transfer") {
+          let existing_custom_transfer_date = frappe.model.get_value(p.doctype, p.name, "custom_transfer_date");
+          let transfer_date_control = frappe.ui.form.make_control({
+            df: {
+              label: "Date",
+              fieldtype: "Date",
+              placeholder: "Transfer Date"
+            },
+            parent: this.$payment_modes.find(`.${mode}.transfer-date`),
+            render_input: true
+          });
+          transfer_date_control.set_value(existing_custom_transfer_date || "");
+          transfer_date_control.refresh();
+          let existing_custom_bt_name = frappe.model.get_value(p.doctype, p.name, "custom_bt_name");
+          let bt_name_controller = frappe.ui.form.make_control({
+            df: {
+              label: "Bank Name",
+              fieldtype: "Data",
+              placeholder: "Bank Name"
+            },
+            parent: this.$payment_modes.find(`.${mode}.bank-name`),
+            render_input: true
+          });
+          bt_name_controller.set_value(existing_custom_bt_name || "");
+          bt_name_controller.refresh();
+          let existing_custom_bt_reference_number = frappe.model.get_value(p.doctype, p.name, "custom_bt_reference_number");
+          let bt_reference_controller = frappe.ui.form.make_control({
+            df: {
+              label: "Reference No",
+              fieldtype: "Data",
+              placeholder: "Reference No."
+            },
+            parent: this.$payment_modes.find(`.${mode}.reference-number`),
+            render_input: true,
+            default: p.reference_no || ""
+          });
+          bt_reference_controller.set_value(existing_custom_bt_reference_number || "");
+          bt_reference_controller.refresh();
+          let save_button2 = $('<button class="btn btn-primary" style="text-align: right;">save</button>');
+          this.$payment_modes.find(`.${mode}.save-button`).append(save_button2);
+          let discard_button = $('<button class="btn btn-secondary" style="text-align: right; margin-left: 10px;">Discard</button>');
+          this.$payment_modes.find(`.${mode}.discard-button`).append(discard_button);
+          const me2 = this;
+          save_button2.on("click", function() {
+            let amount = me2[`${mode}_control`].get_value();
+            let tranfer_date = transfer_date_control.get_value();
+            let bank_name = bt_name_controller.get_value();
+            let reference_no = bt_reference_controller.get_value();
+            if (!amount || !reference_no) {
+              const dialog3 = frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("All fields are required."),
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
+              });
+              return;
+            }
+            const grand_total = cint(frappe.sys_defaults.disable_rounded_total) ? doc.grand_total : doc.rounded_total;
+            const currency2 = doc.currency;
+            if (amount > grand_total) {
+              const dialog3 = frappe.msgprint({
+                title: __("Validation Warning"),
+                message: __("Amount must not exceed the grand total."),
+                indicator: "orange",
+                primary_action: {
+                  label: __("OK"),
+                  action: function() {
+                    frappe.msg_dialog.hide();
+                  }
+                }
+              });
+              $(document).on("keydown", function(e) {
+                if (e.which === 13 && dialog3.$wrapper.is(":visible")) {
+                  dialog3.get_primary_btn().trigger("click");
+                }
+              });
+              dialog3.$wrapper.on("hidden.bs.modal", function() {
+                $(document).off("keydown");
+              });
+              return;
+            }
+            frappe.model.set_value(p.doctype, p.name, "amount", flt(amount));
+            frappe.model.set_value(p.doctype, p.name, "custom_transfer_date", tranfer_date);
+            frappe.model.set_value(p.doctype, p.name, "custom_bt_name", bank_name);
+            frappe.model.set_value(p.doctype, p.name, "custom_bt_reference_number", reference_no);
+            const dialog2 = frappe.msgprint({
+              title: __("Success"),
+              message: __("Payment details have been saved."),
+              indicator: "green",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
+            $(document).on("keydown", function(e) {
+              if (e.which === 13 && dialog2.$wrapper.is(":visible")) {
+                dialog2.get_primary_btn().trigger("click");
+              }
+            });
+            dialog2.$wrapper.on("hidden.bs.modal", function() {
+              $(document).off("keydown");
+            });
+          });
+          discard_button.on("click", function() {
+            me2[`${mode}_control`].set_value(0);
+            transfer_date_control.set_value("");
+            bt_name_controller.set_value("");
+            bt_reference_controller.set_value("");
+            frappe.model.set_value(p.doctype, p.name, "amount", 0);
+            frappe.model.set_value(p.doctype, p.name, "custom_transfer_date", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_bt_name", "");
+            frappe.model.set_value(p.doctype, p.name, "custom_bt_reference_number", "");
+            frappe.msgprint({
+              message: __("Payment details have been discarded."),
+              indicator: "blue",
+              primary_action: {
+                label: __("OK"),
+                action: function() {
+                  frappe.msg_dialog.hide();
+                }
+              }
+            });
+          });
+          const controls = [
+            me2[`${mode}_control`],
+            transfer_date_control,
+            bt_name_controller,
+            bt_reference_controller
+          ];
+          controls.forEach((control) => {
+            control.$input && control.$input.keypress(function(e) {
+              if (e.which === 13) {
+                save_button2.click();
+              }
+            });
+          });
+        }
         this[`${mode}_control`].set_value(p.amount);
       });
       this.render_loyalty_points_payment_mode();
@@ -9790,6 +9979,10 @@
             let points = scannedData[4];
             doc.set_value("custom_ameso_user", email);
             doc.set_value("custom_amesco_user_id", user_id);
+            me.scannedData = scannedData;
+            if (me.cart && me.cart.validate_scanned_data) {
+              me.cart.validate_scanned_data(scannedData);
+            }
             let userDetailsDialog = new frappe.ui.Dialog({
               title: __("Scanned User Details"),
               fields: [
@@ -10832,4 +11025,4 @@
     }
   };
 })();
-//# sourceMappingURL=packing-list.bundle.5K4DG67H.js.map
+//# sourceMappingURL=packing-list.bundle.TDAZLLE7.js.map
