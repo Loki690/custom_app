@@ -35,7 +35,22 @@ frappe.query_reports["DC Daily Material Request Report"] = {
 			"fieldtype": "Link",
 			"options": "Warehouse",
 			"reqd": 0,
-			"get_query": function() {
+			"get_query": function () {
+				return {
+					"filters": {
+						"warehouse_type": ["!=", "Transit"]
+					}
+				};
+			},
+			"default": "DC-Vinzon - ADC"
+		},
+		{
+			"fieldname": "set_warehouse",
+			"label": __("Target Warehouse"),
+			"fieldtype": "Link",
+			"options": "Warehouse",
+			"reqd": 0,
+			"get_query": function () {
 				return {
 					"filters": {
 						"warehouse_type": ["!=", "Transit"]
@@ -44,18 +59,16 @@ frappe.query_reports["DC Daily Material Request Report"] = {
 			}
 		},
 		{
-			"fieldname": "set_warehouse",
-			"label": __("Target Warehouse"),
-			"fieldtype": "Link",
-			"options": "Warehouse",
-			"reqd": 0,
-			"get_query": function() {
-				return {
-					"filters": {
-						"warehouse_type": ["!=", "Transit"]
-					}
-				};
-			}
+			"fieldname": "from_date_required",
+			"label": __("Required by From"),
+			"fieldtype": "Date",
+			"reqd": 0
 		},
+		{
+			"fieldname": "to_date_required",
+			"label": __("Required by To"),
+			"fieldtype": "Date",
+			"reqd": 0
+		}
 	]
 };

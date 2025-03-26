@@ -2908,12 +2908,31 @@ custom_app.PointOfSale.Payment = class {
 									console.log(scannedData);
 									// Assuming the data is comma-separated
 									if (scannedData.length >= 5) {
-										// Extracting fields from the scanned data
+										// Initializing variables
 										let voucher_code = scannedData[0];
 										let user_id = scannedData[1];
-										let email = scannedData[3];
 										let points = scannedData[2];
-										let earned_points = scannedData[5];
+										let email = "";
+										let date = "";
+										let earned_points = "";
+
+										// Regex patterns for date and email validation
+										const dateRegex = /^\d{1,2}\/\d{1,2}\/\d{4}/; // Date pattern MM/DD/YYYY
+										const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Standard email pattern
+
+										// Conditional check for scanned data format
+										if (dateRegex.test(scannedData[3])) {
+											date = scannedData[3];
+											email = scannedData[4];
+											earned_points = scannedData[5];
+										} else if (emailRegex.test(scannedData[3])) {
+											email = scannedData[3];
+											date = scannedData[4];
+											earned_points = scannedData[5];
+										} else {
+											frappe.msgprint(__('Invalid scanned data format. Please check your input.'));
+											return;
+										}
 
 										// Check if the voucher code has been used
 										frappe.call({

@@ -60,8 +60,7 @@
    "allow_in_quick_entry": 1,
    "fieldname": "doc_no",
    "fieldtype": "Data",
-   "label": "Doc No.",
-   "unique": 1
+   "label": "Doc No."
   },
   {
    "allow_in_quick_entry": 1,
@@ -73,7 +72,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-18 13:29:59.936808",
+ "modified": "2025-02-24 10:46:59.524541",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "POS Invoice Manual Invoice",

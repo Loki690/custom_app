@@ -4,7 +4,7 @@ from frappe.utils.file_manager import save_file
 from frappe.utils import get_url
 
 @frappe.whitelist()
-def supplier_items(supplier=None, principal=None):
+def supplier_items(supplier=None, principal=None, item_name=None):
     filters = []
     sql_conditions = ""
 
@@ -12,14 +12,16 @@ def supplier_items(supplier=None, principal=None):
     if supplier:
         filters.append("s.name = %(supplier)s")
     if principal:
-        filters.append("i.custom_principal = %(principal)s")  # Adjust field based on your schema
+        filters.append("i.custom_principal = %(principal)s")
+    if item_name:
+        filters.append("i.item_name LIKE %(item_name)s")
 
-    # Combine filters if both provided
+    # Combine filters if any are provided
     if filters:
         sql_conditions = " AND " + " AND ".join(filters)
 
-    item_prices = frappe.db.sql(
-        f"""
+    # Query to fetch item prices
+    query = f"""
         SELECT
             i.name AS item_code,
             i.item_name AS item_name,
@@ -40,18 +42,32 @@ def supplier_items(supplier=None, principal=None):
             {sql_conditions}
         ORDER BY
             i.name ASC
-        """,
-        {"supplier": supplier, "principal": principal},
-        as_dict=True
-    )
+    """
+
+    # Execute the query
+    params = {
+        "supplier": supplier,
+        "principal": principal,
+        "item_name": f"%{item_name}%" if item_name else None
+    }
+    frappe.logger().debug(f"SQL Query: {query}, Params: {params}")
+
+    item_prices = frappe.db.sql(query, params, as_dict=True)
+
+    # Handle empty results
+    if not item_prices:
+        frappe.msgprint("No matching items found.")
+        return []
 
     # Filter only the standard price lists
     price_list = ["Standard Buying", "Standard Selling"]
     filtered_item_prices = [
-        item for item in item_prices if item["price_list"] in price_list
+        item for item in item_prices if item.get("price_list") in price_list
     ]
 
+    frappe.logger().debug(f"Filtered Result: {filtered_item_prices}")
     return filtered_item_prices
+
 
 
 
@@ -102,8 +118,4 @@ def get_item_price(item_code, price_list, uom, supplier=None):
     except Exception as e:
         frappe.log_error(f"Error fetching item price: {str(e)}", "get_item_price")
         return None
-
-
-
-
-
+    

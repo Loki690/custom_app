@@ -6,9 +6,9 @@ from frappe.utils import get_files_path
 from frappe import _
 
 # Dropbox App credentials
-APP_KEY = 'bqvqvdrhjc679f4'  # Replace with your app key
-APP_SECRET = 'pom3k05qe197kb9'  # Replace with your app secret
-REFRESH_TOKEN = 'WQ7EDcyMfkkAAAAAAAAAAZT9HfMuAF-XYrIJVlCzncKXE-vCnnNIAdls7WplwhDJ'
+APP_KEY = 'rdyekitmskfb1jp'  # Replace with your app key
+APP_SECRET = 'cjue7zlj3igmenv'  # Replace with your app secret
+REFRESH_TOKEN = 'XPCkXeWH0JAAAAAAAAAAAYJD_PklQXUPo5BkwpfKPut1OBU_Q0SFwYVgaEkYTj2f'
 
 def get_new_access_token(app_key, app_secret, refresh_token):
     """Generate a new access token using the refresh token."""

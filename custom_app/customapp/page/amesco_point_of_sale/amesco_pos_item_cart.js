@@ -574,6 +574,34 @@ custom_app.PointOfSale.ItemCart = class {
 	}
 
 
+	validate_scanned_data(scannedData) {
+		const me = this;
+		const frm = me.events.get_frm();
+	
+		if (scannedData && scannedData.length > 0) {
+			// If Amesco Plus is scanned, automatically set the customer
+			frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", "CUST-00027987");
+	
+			// frappe.msgprint({
+			// 	title: __('Success'),
+			// 	message: __('Amesco Plus scanned successfully.'),
+			// 	indicator: 'green'
+			// });
+	
+			frappe.run_serially([
+				() => me.fetch_customer_details("CUST-00027987"),
+				() => me.events.customer_details_updated(me.customer_info),
+				() => me.update_customer_section()
+			]);
+		} else {
+			frappe.msgprint({
+				title: __('Error'),
+				message: __('Scanned data is invalid or missing'),
+				indicator: 'red'
+			});
+		}
+	}
+
 	//Doctors
 
 	make_doctor_selector() {
@@ -1128,7 +1156,7 @@ custom_app.PointOfSale.ItemCart = class {
 			<div class="item-discount mx-3" style="font-size: 10px;">
 				<strong>${Math.round(item_data.discount_percentage)}%</strong>
 			</div>
-			${get_rate_discount_html(customer_group)}`
+			${get_rate_discount_html()}`
 		);
 		
 
@@ -1167,56 +1195,26 @@ custom_app.PointOfSale.ItemCart = class {
 		}
 
 
-		function get_rate_discount_html(customer_group) {
+		function get_rate_discount_html() {
 
-
-			if (customer_group === "Zero Rated") {
-
-				return `
-						<div class="item-qty-rate">
-							<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-							<div class="item-rate-amount">
-								<div class="item-rate" style="font-size:11px;">${format_currency(item_data.custom_zero_rated_amount, currency)}</div>
-								
-							</div>
-						</div>`;
-
-
-
-			} else if (customer_group === "Senior Citizen" || customer_group === "PWD") {
-
+			if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
 				return `
 					<div class="item-qty-rate">
 						<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
 						<div class="item-rate-amount">
-							<div class="item-rate" style="font-size:11px;">${format_currency(
-								item_data.pricing_rules === '[\n "PRLE-0005330"\n]' ? item_data.amount : 
-								(item_data.pricing_rules === "" ? item_data.amount : 
-									(item_data.custom_vatable_amount ? item_data.custom_vatable_amount : item_data.custom_vat_exempt_amount)
-								), currency
-							)}</div>
+							<div class="item-rate" style="font-size:11px;">${format_currency(item_data.amount, currency)}</div>
 						</div>
 					</div>`;
 			} else {
-				if (item_data.rate && item_data.amount && item_data.rate !== item_data.amount) {
-					return `
-						<div class="item-qty-rate">
-							<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-							<div class="item-rate-amount">
-								<div class="item-rate" style="font-size:11px;">${format_currency(item_data.amount, currency)}</div>
-							</div>
-						</div>`;
-				} else {
-					return `
-						<div class="item-qty-rate">
-							<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
-							<div class="item-rate-amount">
-								<div class="item-rate" style="font-size:11px;">${format_currency(item_data.rate, currency)}</div>
-							</div>
-						</div>`;
-				}
+				return `
+					<div class="item-qty-rate">
+						<div class="item-qty" style="font-size:10px;"><span>${item_data.qty || 0} ${item_data.uom}</span></div>
+						<div class="item-rate-amount">
+							<div class="item-rate" style="font-size:11px;">${format_currency(item_data.rate, currency)}</div>
+						</div>
+					</div>`;
 			}
-		}
+	}
 
 		function get_description_html() {
 			if (item_data.description) {

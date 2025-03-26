@@ -43,6 +43,25 @@ def get_columns():
             "width": 120,
         },
         {
+            "label": "MR Status",
+            "fieldname": "status",
+            "fieldtype": "Data",
+            "width": 120,
+        },
+        {
+            "label": "MR Remarks",
+            "fieldname": "remarks",
+            "fieldtype": "Small Text",
+            "width": 120,
+        },
+        {
+            "label": "MR Created By",
+            "fieldname": "owner",
+            "fieldtype": "Link",
+            "options": "User",
+            "width": 120,
+        },
+        {
             "label": "Pick List ID",
             "fieldname": "pick_list",
             "fieldtype": "Link",
@@ -103,25 +122,6 @@ def get_columns():
             "width": 120,
         },
         {
-            "label": "MR Status",
-            "fieldname": "status",
-            "fieldtype": "Data",
-            "width": 120,
-        },
-        {
-            "label": "MR Remarks",
-            "fieldname": "remarks",
-            "fieldtype": "Small Text",
-            "width": 120,
-        },
-        {
-            "label": "MR Create By",
-            "fieldname": "owner",
-            "fieldtype": "Link",
-            "options": "User",
-            "width": 120,
-        },
-        {
             "label": "% Ordered",
             "fieldname": "ordered",
             "fieldtype": "Percent",
@@ -152,8 +152,14 @@ def get_data(filters):
         conditions.append("mr.transaction_date <= %(to_date)s")
     if filters.get("mt_type"):
         conditions.append("mr.material_request_type = %(mt_type)s")
+    if filters.get("source_warehouse"):
+        conditions.append("mr.set_from_warehouse = %(source_warehouse)s")
     if filters.get("set_warehouse"):
         conditions.append("mr.set_warehouse = %(set_warehouse)s")
+    if filters.get("from_date_required"):
+        conditions.append("mr.schedule_date >= %(from_date_required)s")
+    if filters.get("to_date_required"):
+        conditions.append("mr.schedule_date <= %(to_date_required)s")
 
     where_clause = " AND ".join(conditions) if conditions else "1=1"
 

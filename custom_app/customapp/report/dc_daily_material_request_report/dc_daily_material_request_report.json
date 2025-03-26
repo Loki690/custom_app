@@ -9,7 +9,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letterhead": null,
- "modified": "2025-01-22 23:31:09.312481",
+ "modified": "2025-03-20 09:35:30.983491",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "DC Daily Material Request Report",
@@ -18,5 +18,33 @@
  "ref_doctype": "Material Request",
  "report_name": "DC Daily Material Request Report",
  "report_type": "Script Report",
- "roles": []
+ "roles": [
+  {
+   "role": "Records Head"
+  },
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Purchase Manager"
+  },
+  {
+   "role": "Warehouse Manager"
+  },
+  {
+   "role": "Procurement Supervisor"
+  },
+  {
+   "role": "Warehouse Supervisor"
+  },
+  {
+   "role": "Checker"
+  },
+  {
+   "role": "Auditor"
+  },
+  {
+   "role": "Audit Staff"
+  }
+ ]
 }

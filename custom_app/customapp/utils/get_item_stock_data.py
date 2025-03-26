@@ -1,39 +1,36 @@
 import frappe
 
 @frappe.whitelist()
-def get_item_stock_data(supplier=None, item=None):
+def get_item_stock_data(supplier=None, item=None, principal=None):
     # Build the query dynamically
     query = """
-        SELECT
-            sle.item_code AS item_code,
+        SELECT DISTINCT
+            i.name AS item_code,
             i.item_name AS item_name,
             i.custom_principal AS principal,
             GROUP_CONCAT(DISTINCT s.supplier_name SEPARATOR ', ') AS suppliers,
-            sle.warehouse AS warehouse,
-            COALESCE(b.actual_qty, 0) AS actual_qty,
-            w.custom_default_return_warehouse AS default_return_warehouse,
-            COALESCE(b_return.actual_qty, 0) AS return_warehouse_qty
+            SUM(COALESCE(b.actual_qty, 0)) AS total_actual_qty,
+            SUM(COALESCE(b_return.actual_qty, 0)) AS total_return_warehouse_qty
         FROM
-            `tabStock Ledger Entry` sle
-        JOIN
-            `tabWarehouse` w ON w.name = sle.warehouse
+            `tabItem` i
+        LEFT JOIN (
+                    SELECT parent AS item_code, MIN(supplier) AS supplier
+                    FROM `tabItem Supplier`
+                    GROUP BY parent
+                ) isup ON isup.item_code = i.name
+        LEFT JOIN
+            `tabSupplier` s ON s.name = isup.supplier
+        LEFT JOIN
+            `tabBin` b ON b.item_code = i.name
+        LEFT JOIN
+            `tabWarehouse` w ON w.name = b.warehouse
         LEFT JOIN
             `tabBin` b_return 
-            ON b_return.item_code = sle.item_code
+            ON b_return.item_code = i.name
             AND b_return.warehouse = w.custom_default_return_warehouse
-        LEFT JOIN
-            `tabBin` b 
-            ON b.item_code = sle.item_code
-            AND b.warehouse = sle.warehouse
-        LEFT JOIN
-            `tabItem` i 
-            ON i.name = sle.item_code
-        LEFT JOIN
-            `tabItem Supplier` isup ON isup.parent = sle.item_code -- Get item suppliers
-        LEFT JOIN
-            `tabSupplier` s ON s.name = isup.supplier  
         WHERE
             w.custom_default_return_warehouse IS NOT NULL
+            AND b_return.actual_qty != 0
     """
     
     # Add dynamic filters
@@ -41,7 +38,9 @@ def get_item_stock_data(supplier=None, item=None):
     if supplier:
         filters.append(f"isup.supplier = {frappe.db.escape(supplier)}")
     if item:
-        filters.append(f"sle.item_code = {frappe.db.escape(item)}")
+        filters.append(f"i.name = {frappe.db.escape(item)}")
+    if principal:
+        filters.append(f"i.custom_principal = {frappe.db.escape(principal)}")
     
     # Apply filters if present
     if filters:
@@ -50,10 +49,9 @@ def get_item_stock_data(supplier=None, item=None):
     # Group and order
     query += """
         GROUP BY
-            sle.item_code, i.item_name, sle.warehouse, 
-            w.custom_default_return_warehouse, b.actual_qty, b_return.actual_qty
+            i.name, i.item_name, i.custom_principal
         ORDER BY
-            COALESCE(b_return.actual_qty, 0) DESC
+            i.item_name ASC
     """
     
     # Execute query and return results

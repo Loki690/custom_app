@@ -47,15 +47,15 @@ custom_app.PointOfSale.ItemSelector = class {
            
 		`;
 
-		const style = document.createElement('style');
-		style.type = 'text/css';
-		if (style.styleSheet) {
-			style.styleSheet.cssText = css;
-		} else {
-			style.appendChild(document.createTextNode(css));
-		}
-		document.head.appendChild(style);
-	}
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        if (style.styleSheet) {
+            style.styleSheet.cssText = css;
+        } else {
+            style.appendChild(document.createTextNode(css));
+        }
+        document.head.appendChild(style);
+    }
 
 
     prepare_dom() {
@@ -97,11 +97,11 @@ custom_app.PointOfSale.ItemSelector = class {
             </section>
             `
         );
-    
+
         this.$component = this.wrapper.find(".items-selector");
         this.$items_container = this.$component.find(".items-container");
     }
-    
+
 
 
     async load_items_data() {
@@ -113,23 +113,23 @@ custom_app.PointOfSale.ItemSelector = class {
             const res = await frappe.db.get_value("POS Profile", this.pos_profile, "selling_price_list");
             this.price_list = res.message.selling_price_list;
         }
-    
+
         // Set the UOM to PC
         this.selected_uom = "PC";
         if (this.item_uom) {
             this.item_uom.set_value("PC");
             this.item_uom.refresh();
         }
-    
+
         // Retrieve and render items immediately after setting the values
         const { message } = await this.get_items({});
         this.render_item_list(message.items);
-    
+
         // Trigger the filter function to apply the UOM filter
         this.filter_items({ uom: this.selected_uom });
     }
 
-    
+
     get_items({ start = 0, page_length = 20, search_term = "" }) {
         const doc = this.events.get_frm().doc;
         const price_list = (doc && doc.selling_price_list) || this.price_list;
@@ -183,7 +183,7 @@ custom_app.PointOfSale.ItemSelector = class {
     get_item_html(item) {
         const me = this;
 
-        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable, custom_generic_name, item_group} = item;
+        const { item_code, item_image, serial_no, batch_no, barcode, actual_qty, uom, price_list_rate, description, latest_expiry_date, batch_number, custom_is_vatable, custom_generic_name, item_group } = item;
         const precision = flt(price_list_rate, 2) % 1 != 0 ? 2 : 0;
         let indicator_color;
         let qty_to_display = actual_qty;
@@ -207,7 +207,7 @@ custom_app.PointOfSale.ItemSelector = class {
             qty_to_display = "";
         }
         const tax_rate = 0.12;
-		const no_vat = price_list_rate / (1 + tax_rate);
+        const no_vat = price_list_rate / (1 + tax_rate);
 
 
         const item_description = description ? description : "Description not available";
@@ -243,15 +243,15 @@ custom_app.PointOfSale.ItemSelector = class {
         // this.$component.find(".branch-field").html("");
         this.$component.find(".generics").html("");
 
-    	this.search_field = frappe.ui.form.make_control({
-			df: {
-				label: __("Search"),
-				fieldtype: "Data",
-				placeholder: __("Search by item code, serial number, barcode, generic name or description"),
-			},
-			parent: this.$component.find(".search-field"),
-			render_input: true,
-		});
+        this.search_field = frappe.ui.form.make_control({
+            df: {
+                label: __("Search"),
+                fieldtype: "Data",
+                placeholder: __("Search by item code, serial number, barcode, generic name or description"),
+            },
+            parent: this.$component.find(".search-field"),
+            render_input: true,
+        });
 
 
 
@@ -331,22 +331,22 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
     attach_clear_btn() {
-		this.search_field.$wrapper.find(".control-input").append(
-			`<span class="link-btn" style="top: 2px;">
+        this.search_field.$wrapper.find(".control-input").append(
+            `<span class="link-btn" style="top: 2px;">
 				<a class="btn-open no-decoration" title="${__("Clear")}">
 					${frappe.utils.icon("close", "sm")}
 				</a>
 			</span>`
-		);
+        );
 
-		this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn");
+        this.$clear_search_btn = this.search_field.$wrapper.find(".link-btn");
 
-		this.$clear_search_btn.on("click", "a", () => {
-			this.set_search_value("");
-			this.search_field.set_focus();
+        this.$clear_search_btn.on("click", "a", () => {
+            this.set_search_value("");
+            this.search_field.set_focus();
             // this.load_items_data();
-		});
-	}
+        });
+    }
 
     set_search_value(value) {
         $(this.search_field.$input[0]).val(value).trigger("input");
@@ -395,7 +395,7 @@ custom_app.PointOfSale.ItemSelector = class {
             },
         });
 
-    
+
         let selectedUOM;
         this.$component.on("click", ".item-wrapper", async function () {
             const $item = $(this);
@@ -419,6 +419,7 @@ custom_app.PointOfSale.ItemSelector = class {
                     if (response.message) {
                         const uomPrices = response.message.uom_prices;
                         // console.log("UOM Prices:", uomPrices);
+                        const pricing_rules = response.message.pricing_rules;
 
                         const uomOptions = Object.keys(uomPrices).filter(uom => uom && uom !== "null").map(uom => ({
                             label: uom,
@@ -502,7 +503,14 @@ custom_app.PointOfSale.ItemSelector = class {
                                         </div>
                                     `
                                 },
-                                        {
+
+                                {
+                                    fieldtype: 'HTML',
+                                    label: __("Discounts"),
+                                    fieldname: 'item_discount_table_html',
+                                    options: renderItemDiscountsTable(pricing_rules, defaultRate)
+                                },
+                                {
                                     label: 'Branch Item INVTY',
                                     fieldtype: 'Button',
                                     btn_size: 'sm', // xs, sm, lg
@@ -545,7 +553,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                                 Promise.all(warehouse_data_promises).then(warehouses_with_qty => {
                                                     // Filter out warehouses with zero quantity
                                                     warehouses_with_qty = warehouses_with_qty.filter(warehouse => warehouse.actual_qty > 0);
-                                                
+
                                                     const dialog = new frappe.ui.Dialog({
                                                         title: `${item_code} ${description}`,
                                                         fields: [
@@ -560,26 +568,26 @@ custom_app.PointOfSale.ItemSelector = class {
                                                             dialog.hide();
                                                         }
                                                     });
-                                                
+
                                                     // Show the dialog and adjust its width
                                                     dialog.show();
-                                                
+
                                                     // Adjust dialog width and enable scrolling for the table
                                                     $(dialog.$wrapper).css({
                                                         "max-height": "80vh", // Adjust max height as needed
                                                         "overflow-y": "auto" // Enable vertical scrolling
                                                     });
-                                                
+
                                                     // Ensure the table within the dialog is scrollable
                                                     $(dialog.fields_dict.warehouse_table_html.$wrapper).css({
                                                         "max-height": "60vh", // Adjust table max height as needed
                                                         "overflow-y": "auto" // Enable vertical scrolling for the table
                                                     });
-                                                
+
                                                 }).catch(error => {
                                                     console.error("Error fetching warehouse data:", error);
                                                 });
-                                                
+
                                                 function renderWarehousesTable(data) {
                                                     // Start building the HTML table
                                                     let tableHtml = '<table class="table table-bordered">';
@@ -588,7 +596,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                                     tableHtml += '<th>Quantity</th>';
                                                     tableHtml += '</tr></thead>';
                                                     tableHtml += '<tbody>';
-                                                
+
                                                     // Populate table rows with data
                                                     data.forEach(row => {
                                                         tableHtml += '<tr>';
@@ -596,19 +604,20 @@ custom_app.PointOfSale.ItemSelector = class {
                                                         tableHtml += `<td>${row.actual_qty}</td>`;
                                                         tableHtml += '</tr>';
                                                     });
-                                                
+
                                                     tableHtml += '</tbody>';
                                                     tableHtml += '</table>';
-                                                
+
                                                     return tableHtml;
                                                 }
-                                                
+
                                             }
                                         });
                                     },
                                 }
 
                             ],
+                            size: 'large',
                             primary_action_label: __("Ok"),
                             primary_action: function () {
                                 const quantity = parseFloat(dialog.wrapper.find('input[data-fieldname="quantity"]').val());
@@ -639,10 +648,10 @@ custom_app.PointOfSale.ItemSelector = class {
                                     callback: function (response) {
                                         if (response.message) {
                                             let conversion_factor = response.message;
-        
+
                                             // Adjust the quantity based on the conversion factor
                                             const converted_quantity = quantity * conversion_factor;
-        
+
                                             // Check if the converted quantity exceeds the available quantity
                                             if (converted_quantity > qty) {
                                                 frappe.msgprint(__("Entered Quantity Exceeded"));
@@ -650,7 +659,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                             }
 
                                             me.selectedItem.find(".item-uom").text(selectedUOM);
-            
+
                                             const itemCode = unescape(me.selectedItem.attr("data-item-code"));
                                             const batchNo = unescape(me.selectedItem.attr("data-batch-no"));
                                             const serialNo = unescape(me.selectedItem.attr("data-serial-no"));
@@ -664,7 +673,7 @@ custom_app.PointOfSale.ItemSelector = class {
                                             me.search_field.set_focus();
 
                                             dialog.hide();
-        
+
                                         } else {
                                             frappe.msgprint(__("Failed to fetch UOM conversion factor."));
                                         }
@@ -674,20 +683,57 @@ custom_app.PointOfSale.ItemSelector = class {
 
                         });
 
-                        dialog.on_page_show = function() {
+                        function renderItemDiscountsTable(data, defaultRate) {
+
+                            // console.log("Pricing Rules: ", data);
+                            // console.log("Default UOM: ",  defaultRate);
+
+                            if (!data || data.length === 0) {
+                                return '<p>No discounts available for this item.</p>';
+                            } else {
+                                // Start building the HTML table
+                                let tableHtml = '<table class="table">';
+                                tableHtml += '<thead><tr>';
+                                tableHtml += '<th>Name</th>';
+                                tableHtml += '<th>Customer Group</th>';
+                                tableHtml += '<th>Percentage</th>';
+                                tableHtml += '<th>Amount</th>';
+                                tableHtml += '</tr></thead>';
+                                tableHtml += '<tbody>';
+
+                                // Populate table rows with data
+                                data.forEach(row => {
+                                    tableHtml += '<tr>';
+                                    tableHtml += `<td>${row.title}</td>`;
+                                    tableHtml += `<td>${row.customer_group}</td>`;
+                                    tableHtml += `<td>${row.discount_percentage}%</td>`;
+                                    let discountedAmount = defaultRate - (defaultRate * (row.discount_percentage / 100));
+                                    tableHtml += `<td>${discountedAmount.toFixed(2)}</td>`;
+                                    tableHtml += '</tr>';
+                                });
+
+                                tableHtml += '</tbody>';
+                                tableHtml += '</table>';
+
+                                return tableHtml;
+
+                            }
+                        }
+
+                        dialog.on_page_show = function () {
                             setTimeout(() => {
                                 const $quantityField = dialog.wrapper.find('input[data-fieldname="quantity"]');
                                 $quantityField.focus();
                                 $quantityField.select(); // Selects the text inside the field for easy replacement
                             }, 300); // Use a small delay to ensure the element is in the DOM
                         };
-                        
+
                         dialog.show();
-                    
+
                         // Set the default UOM and amount fields
                         dialog.wrapper.find('select[data-fieldname="uom"]').val(defaultUOM);
                         dialog.wrapper.find('input[data-fieldname="total_amount"]').val(defaultRate.toFixed(2));
-                        
+
 
                         dialog.wrapper.find('input[data-fieldname="quantity"]').on('input', function () {
                             const quantity = parseFloat($(this).val());
@@ -696,6 +742,8 @@ custom_app.PointOfSale.ItemSelector = class {
                             if (!isNaN(quantity)) {
                                 const totalAmount = (quantity * rate).toFixed(2);
                                 dialog.wrapper.find('input[data-fieldname="total_amount"]').val(totalAmount);
+                                const discountsTableHtml = renderItemDiscountsTable(response.message.pricing_rules, totalAmount);
+                                dialog.fields_dict.item_discount_table_html.$wrapper.html(discountsTableHtml);
                             } else {
                                 dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
                             }
@@ -711,9 +759,12 @@ custom_app.PointOfSale.ItemSelector = class {
                             } else {
                                 dialog.wrapper.find('input[data-fieldname="total_amount"]').val(rate.toFixed(2));
                             }
+                            // Update the discounts table with the new rate
+                            const discountsTableHtml = renderItemDiscountsTable(response.message.pricing_rules, rate);
+                            dialog.fields_dict.item_discount_table_html.$wrapper.html(discountsTableHtml);
                         });
 
-                        dialog.wrapper.find('input[data-fieldname="quantity"]').on('keypress', function(e) {
+                        dialog.wrapper.find('input[data-fieldname="quantity"]').on('keypress', function (e) {
                             if (e.which === 13) { // Enter key pressed
                                 e.preventDefault();
                                 dialog.primary_action();
@@ -723,7 +774,7 @@ custom_app.PointOfSale.ItemSelector = class {
                 }
             });
         });
-       
+
         // this.$component.on("click", ".item-wrapper", function () {
         // 	const $item = $(this);
         // 	const item_code = unescape($item.attr("data-item-code"));
@@ -762,7 +813,7 @@ custom_app.PointOfSale.ItemSelector = class {
 
         this.$component.on("keydown", (e) => {
             const key = e.which || e.keyCode;
-            const isCtrlPressed = e.ctrlKey; 
+            const isCtrlPressed = e.ctrlKey;
             switch (key) {
                 case 38: // up arrow
                     e.preventDefault();
@@ -826,12 +877,12 @@ custom_app.PointOfSale.ItemSelector = class {
         frappe.ui.keys.on("enter", (e) => {
 
             if (e.ctrlKey) return; // Skip handling if Shift + Enter is pressed
-        
+
             const selector_is_visible = this.$component.is(":visible");
             const dialog_is_open = document.querySelector(".modal.show");
-        
+
             if (!selector_is_visible || this.search_field.get_value() === "") return;
-        
+
             if (this.items.length == 0 && this.barcode_scanned) {
                 frappe.show_alert({
                     message: __("No items found. Scan barcode again."),
@@ -842,27 +893,27 @@ custom_app.PointOfSale.ItemSelector = class {
                 this.set_search_value("");
             }
 
-            
+
 
             if (dialog_is_open && document.activeElement.tagName === "SELECT") {
                 // Trigger action to add the selected item to the cart
                 this.selectedItem.find(".item-uom").text(dialog.wrapper.find('select[data-fieldname="uom"]').val());
-        
+
                 const itemCode = unescape(this.selectedItem.attr("data-item-code"));
                 const batchNo = unescape(this.selectedItem.attr("data-batch-no"));
                 const serialNo = unescape(this.selectedItem.attr("data-serial-no"));
-        
+
                 this.events.item_selected({
                     field: "qty",
                     value: quantity,
                     item: { item_code: itemCode, batch_no: batchNo, serial_no: serialNo, uom: selectedUOM, quantity, rate },
                 });
-        
+
                 this.search_field.set_focus();
             }
         });
-        
-        
+
+
 
     }
 
@@ -927,7 +978,7 @@ custom_app.PointOfSale.ItemSelector = class {
     select_highlighted_item() {
         // Check if a click action is already in progress
         if (this.isClicking) return;
-    
+
         // Ensure highlighted_row_index is valid
         if (this.highlighted_row_index === -1) {
             // frappe.msgprint({
@@ -937,24 +988,24 @@ custom_app.PointOfSale.ItemSelector = class {
             // });
             return;
         }
-    
+
         // Set the isClicking flag to true to indicate that a click action is in progress
         this.isClicking = true;
-    
+
         // Proceed to select the highlighted item
         const highlightedItem = this.$items_container.find(".item-wrapper").eq(this.highlighted_row_index);
         if (highlightedItem.length) {
             highlightedItem.click(); // Simulate click action
         }
-    
+
         // Reset the isClicking flag after a short delay to allow for the click action to complete
         setTimeout(() => {
             this.isClicking = false;
         }, 1000); // Adjust the delay (in milliseconds) as needed
     }
-    
-    
-    
+
+
+
 
 
 

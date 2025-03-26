@@ -14,6 +14,7 @@ def before_insert(doc, method):
                     "item_tax_template": item_tax_template
                     })
         calculate_vat_fields(doc, item)
+        create_auto_batch_bundle(doc, item)
     calculate_summary(doc)
 
 def generate_pl_series(doc):
@@ -55,9 +56,9 @@ def before_save(doc, method):
         doc.custom_pa_name = get_user_full_name(doc.custom_pharmacist_assistant)
         
     doc.custom_barcode = doc.name
-    excluded_customer_groups = ['Government', 'Corporate'] #['Senior Citizen', 'PWD', 'Government', 'Corporate']
+    excluded_customer_groups = ['Senior Citizen', 'PWD', 'Government', 'Corporate']#['Government', 'Corporate'] #['Senior Citizen', 'PWD', 'Government', 'Corporate']
     for item in doc.items:
-        if item.discount_amount > 0 or doc.customer_group in excluded_customer_groups:
+        if doc.customer_group in excluded_customer_groups:
             item.custom_amesco_plus_points = 0
         else:
             # Calculate Amesco Plus points if payment mode is 'Credit Card'
@@ -399,3 +400,91 @@ def validate_discrepancy(doc):
             doc.custom_vatable_sales += discrepancy
         else:
             doc.custom_vatable_sales -= abs(discrepancy)
+            
+            
+def create_auto_batch_bundle(doc, item):
+    """
+    Automatically creates a batch bundle for return invoices if the item has a batch number.
+    """
+    if doc.is_return:
+        # Check if the item exists and has batch numbers enabled
+        item_doc = frappe.get_doc("Item", item.item_code)
+        if item_doc.has_batch_no:
+            return create_batch_bundle(doc, item)
+    return None
+
+
+def create_batch_bundle(doc, item):
+    """
+    Creates a new Serial and Batch Bundle document for returned items.
+    """
+    batch = frappe.new_doc("Serial and Batch Bundle")
+    batch.company = doc.company
+    batch.voucher_no = doc.name
+    batch.voucher_type = "POS Invoice"
+    batch.item_code = item.item_code
+    batch.type_of_transaction = "Inward"
+    batch.warehouse = item.warehouse
+    batch.has_batch_no = 1
+    batch.voucher_detail_no = item.name
+    
+    batch_no = ""
+
+    # Fetch the latest batch number of the item based on FIFO
+    serial_batch_bundle = frappe.get_all(
+        "Serial and Batch Bundle",
+        filters={"voucher_no": doc.return_against},
+        fields=["name"],
+        limit=1
+    )
+
+    if serial_batch_bundle:
+        bundle_name = serial_batch_bundle[0]["name"]
+
+        # Fetch all batch numbers from Serial and Batch Entry child table
+        batch_entries = frappe.get_all(
+            "Serial and Batch Entry",
+            filters={"parent": bundle_name},
+            fields=["batch_no", "qty"]
+        )
+
+        if batch_entries:
+            remaining_qty = abs(item.qty)
+
+            for batch_entry in batch_entries:
+                if remaining_qty <= 0:
+                    break
+
+                batch_no = batch_entry["batch_no"]
+                batch_qty = batch_entry["qty"]
+
+                # Determine the quantity to allocate from this batch
+                allocated_qty = min(remaining_qty, batch_qty)
+
+                batch.append("entries", {
+                    "batch_no": batch_no,
+                    "qty": allocated_qty,
+                    "warehouse": item.warehouse
+                })
+
+                remaining_qty -= allocated_qty
+
+            if hasattr(item, "pos_invoice_item"):
+                batch.returned_against = item.pos_invoice_item
+
+                batch.insert()
+                item.use_serial_batch_fields = 1
+                item.serial_and_batch_bundle = batch.name
+                
+                frappe.msgprint(
+                    f"Batch Bundle Created: {batch.name}, Total Qty: {abs(item.qty)}",
+                    alert=True,
+                    indicator="green"
+                )
+            else:
+                frappe.msgprint(
+                    "No batch entries found for this Serial and Batch Bundle.",
+                    alert=True,
+                    indicator="red"
+                )
+

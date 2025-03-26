@@ -163,20 +163,52 @@ def get_item_uoms(item_code):
 #Only get Standard Selling OUM Price rates
 @frappe.whitelist()
 def get_item_uom_prices(item_code):
+    """
+    Fetch UOM prices from the 'Standard Selling' price list and pricing rules for a given item.
+    """
+    if not item_code:
+        frappe.throw(_("Item code is required"))
+
     uom_prices = {}
-    
-    # Fetch only the prices from the 'Standard Selling' price list
+
+    # Fetch prices from the 'Standard Selling' price list for the given item
     item_prices = frappe.get_all(
-        'Item Price',
-        filters={'item_code': item_code, 'price_list': 'Standard Selling'},
-        fields=['uom', 'price_list_rate']
+        "Item Price",
+        filters={"item_code": item_code, "price_list": "Standard Selling"},
+        fields=["uom", "price_list_rate"],
     )
-    
-    # Construct the dictionary of UOM and their corresponding prices
+
+    # Add the fetched UOM and price list rates to the dictionary
     for price in item_prices:
         uom_prices[price.uom] = price.price_list_rate
 
-    return {'uom_prices': uom_prices}
+    # Fetch specific pricing rules for the item
+    pricing_rules = frappe.get_all(
+        "Pricing Rule",
+        filters={
+            "disable": 0,
+            "selling": 1,
+            "apply_on": ["in", ["Item Code", "Item Group"]],
+        },
+        fields=[
+            "title",
+            "customer_group",
+            "discount_percentage",
+        ],
+        or_filters=[
+            {"item_code": item_code},  # Specific item match
+        ],
+    )
+
+    if not pricing_rules:
+        pricing_rules = []
+
+    # Return the results
+    return {
+        "uom_prices": uom_prices,
+        "item_code": item_code,
+        "pricing_rules": pricing_rules if pricing_rules else [],
+    }
 
 
 

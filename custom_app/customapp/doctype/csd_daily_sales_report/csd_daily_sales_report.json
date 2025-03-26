@@ -137,7 +137,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-10-09 13:43:45.693499",
+ "modified": "2025-02-12 08:29:48.357867",
  "modified_by": "Administrator",
  "module": "Customapp",
  "name": "CSD Daily Sales Report",
@@ -145,6 +145,8 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -155,6 +157,7 @@
    "role": "System Manager",
    "select": 1,
    "share": 1,
+   "submit": 1,
    "write": 1
   },
   {

@@ -32,7 +32,30 @@ def update_cash_count_match_table(name, amount, cashier, shift, passbook_entry):
         frappe.log_error(frappe.get_traceback(), 'Cash Count Match Table Update Error')
         return {'status': 'error', 'message': f'Failed to update: {str(e)}'}
 
-# def after_save(doc, method):
-#     passbook = doc.name
-#     cash_count  = doc.cash_count_match[0].cash_count    
-#     update_cash_count_passbook(cash_count, passbook)
+@frappe.whitelist()
+def unmatched_passbook(name):
+    try:
+        passbook = frappe.get_doc("Passbook", name)  # Fetch the passbook document
+        
+        # Update the passbook document
+        passbook.has_match = 0
+        for entry in passbook.cash_count_match:
+            unmatched_cashcount(entry.cash_count)
+        passbook.cash_count_match = []
+        passbook.save()
+        frappe.db.commit()
+        
+        return {'status': 'success', 'message': 'Passbook updated successfully.'}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Unmatched Passbook Error')
+        return {'status': 'error', 'message': f'Failed to update passbook: {str(e)}'}
+
+def unmatched_cashcount(name):
+    try:
+        cash_count = frappe.get_doc("Cash Count Denomination Entry", name)  # Fetch the cash count document
+        cash_count.custom_match_passbook = ""
+        cash_count.save()
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), 'Unmatched Cash Count Error')
+        return {'status': 'error', 'message': f'Failed to update cash count: {str(e)}'}
