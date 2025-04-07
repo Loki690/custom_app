@@ -217,6 +217,21 @@ custom_app.PointOfSale.ItemDetails = class {
 					}
 				});
 			}
+
+			// Add validation for discount_percentage field
+			if (fieldname === "discount_percentage") {
+				this.$form_container.find(`.${fieldname}-control input`).on("input", function () {
+					let value = parseFloat($(this).val());
+					if (value > 5) {
+						frappe.msgprint({
+							title: __("Warning"),
+							indicator: "red",
+							message: __("Discount percentage cannot exceed 5%.")
+						});
+						$(this).val(0); // Reset to 5 if exceeded
+					}
+				});
+			}
 	
 		});
 		

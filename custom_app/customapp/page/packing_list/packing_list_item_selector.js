@@ -130,7 +130,7 @@ custom_app.PointOfSale.ItemSelector = class {
     }
 
 
-    get_items({ start = 0, page_length = 20, search_term = "" }) {
+    get_items({ start = 0, page_length = 60, search_term = "" }) {
         const doc = this.events.get_frm().doc;
         const price_list = (doc && doc.selling_price_list) || this.price_list;
         let { item_group, pos_profile } = this;
@@ -797,12 +797,18 @@ custom_app.PointOfSale.ItemSelector = class {
         // 	me.search_field.set_focus();
         // });
 
+        // trigger the search when the user types in the search field
         this.search_field.$input.on("input", (e) => {
             clearTimeout(this.last_search);
+            const search_term = e.target.value;
+
+            if (search_term.length >= 4) {
             this.last_search = setTimeout(() => {
-                const search_term = e.target.value;
                 this.filter_items({ search_term });
             }, 300);
+            } else {
+            // this.$items_container.html(""); // Clear the items container if less than 4 characters
+            }
 
             this.$clear_search_btn.toggle(Boolean(this.search_field.$input.val()));
         });
